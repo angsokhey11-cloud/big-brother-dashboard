@@ -537,7 +537,18 @@
       </div>
 
       <button type="button" class="shell-nav-link" onclick="showDashboardSection('stock')">📦 Stock</button>
-      <button type="button" class="shell-nav-link" onclick="showDashboardSection('ar')">💰 A/R</button>
+
+      <div class="nav-group" id="arNavGroup">
+        <button type="button" id="arMenuButton" class="nav-toggle" aria-expanded="false" aria-controls="arSubmenu" onclick="toggleARMenu()">
+          <span class="nav-toggle-main"><span>💰</span><span>Account Receivable</span></span>
+          <span class="nav-arrow">▼</span>
+        </button>
+        <div id="arSubmenu" class="nav-submenu">
+          <button type="button" id="navARAll" onclick="loadWorkspace('ar-all')">📋 All Receivable</button>
+          <button type="button" id="navARYour" onclick="loadWorkspace('ar-siemreap')">👤 Your Receivable</button>
+        </div>
+      </div>
+
       <button type="button" class="shell-nav-link" onclick="showDashboardSection('reports')">📊 Reports</button>
       <button type="button" class="shell-nav-link" onclick="showDashboardSection('master')">🗂️ Master Data</button>
 
@@ -1028,20 +1039,37 @@
 <script>
   const MODULE_URLS = {
     invoice: "https://angsokhey11-cloud.github.io/big-brother-invoice-generator/",
-    history: "https://angsokhey11-cloud.github.io/invoice-history/?embed=1&v=471"
+    history: "https://angsokhey11-cloud.github.io/invoice-history/?embed=1&v=471",
+    "ar-all": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=all&v=2",
+    "ar-siemreap": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=siemreap&v=2"
   };
 
   function setShellActive(moduleName) {
     document.querySelectorAll('.shell-nav-link, .nav-submenu button').forEach(el => el.classList.remove('active'));
-    const submenu = document.getElementById('salesSubmenu');
+    const salesSub = document.getElementById('salesSubmenu');
+    const salesBtn = document.getElementById('salesMenuButton');
+    const arSub = document.getElementById('arSubmenu');
+    const arBtn = document.getElementById('arMenuButton');
+
+    const setOpen = (sub, btn, open) => {
+      sub?.classList.toggle('open', open);
+      btn?.classList.toggle('open', open);
+      btn?.setAttribute('aria-expanded', String(open));
+      const arrow = btn?.querySelector('.nav-arrow');
+      if (arrow) arrow.textContent = open ? '▲' : '▼';
+    };
+
     if (moduleName === 'invoice' || moduleName === 'history') {
-      submenu?.classList.add('open');
-      const btn = document.getElementById('salesMenuButton');
-      btn?.classList.add('open');
-      btn?.setAttribute('aria-expanded','true');
-      const arrow = btn?.querySelector('.nav-arrow'); if (arrow) arrow.textContent='▲';
+      setOpen(salesSub, salesBtn, true);
+      setOpen(arSub, arBtn, false);
       document.getElementById(moduleName === 'invoice' ? 'navNewInvoice' : 'navInvoiceHistory')?.classList.add('active');
+    } else if (moduleName === 'ar-all' || moduleName === 'ar-siemreap') {
+      setOpen(salesSub, salesBtn, false);
+      setOpen(arSub, arBtn, true);
+      document.getElementById(moduleName === 'ar-all' ? 'navARAll' : 'navARSiemReap')?.classList.add('active');
     } else {
+      setOpen(salesSub, salesBtn, false);
+      setOpen(arSub, arBtn, false);
       document.getElementById('navDashboard')?.classList.add('active');
     }
   }
@@ -1049,6 +1077,18 @@
   function toggleSalesMenu() {
     const submenu = document.getElementById('salesSubmenu');
     const button = document.getElementById('salesMenuButton');
+    if (!submenu || !button) return;
+    const open = !submenu.classList.contains('open');
+    submenu.classList.toggle('open', open);
+    button.classList.toggle('open', open);
+    button.setAttribute('aria-expanded', String(open));
+    const arrow = button.querySelector('.nav-arrow');
+    if (arrow) arrow.textContent = open ? '▲' : '▼';
+  }
+
+  function toggleARMenu() {
+    const submenu = document.getElementById('arSubmenu');
+    const button = document.getElementById('arMenuButton');
     if (!submenu || !button) return;
     const open = !submenu.classList.contains('open');
     submenu.classList.toggle('open', open);
@@ -1091,7 +1131,7 @@
   function openInitialWorkspace() {
     const params = new URLSearchParams(location.search);
     const moduleName = params.get('module');
-    if (moduleName === 'invoice' || moduleName === 'history') loadWorkspace(moduleName, false);
+    if (moduleName === 'invoice' || moduleName === 'history' || moduleName === 'ar-all' || moduleName === 'ar-siemreap') loadWorkspace(moduleName, false);
     else showDashboardHome(false);
   }
 
