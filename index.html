@@ -1066,7 +1066,7 @@
     } else if (moduleName === 'ar-all' || moduleName === 'ar-your') {
       setOpen(salesSub, salesBtn, false);
       setOpen(arSub, arBtn, true);
-      document.getElementById(moduleName === 'ar-all' ? 'navARAll' : 'navARSiemReap')?.classList.add('active');
+      document.getElementById(moduleName === 'ar-all' ? 'navARAll' : 'navARYour')?.classList.add('active');
     } else {
       setOpen(salesSub, salesBtn, false);
       setOpen(arSub, arBtn, false);
@@ -1120,10 +1120,11 @@
     const frame = document.getElementById('moduleFrame');
     home.hidden = true;
     workspace.hidden = false;
-    if (frame.dataset.module !== moduleName) {
-      frame.dataset.module = moduleName;
-      frame.src = url;
-    }
+    // Always force the requested module/view into the iframe.
+    // This prevents the A/R iframe from keeping the previous All/Your mode.
+    frame.dataset.module = moduleName;
+    const separator = url.includes('?') ? '&' : '?';
+    frame.src = url + separator + 'shellModule=' + encodeURIComponent(moduleName) + '&t=' + Date.now();
     setShellActive(moduleName);
     if (updateUrl) history.replaceState(null, '', '?module=' + encodeURIComponent(moduleName));
   }
