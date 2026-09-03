@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BIG BROTHER — Dashboard</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    :root {
+      --navy: #17457a;
+      --navy-dark: #123861;
+      --blue: #2f6fed;
+      --bg: #eef3f8;
+      --card: #ffffff;
+      --text: #172b4d;
+      --muted: #667085;
+      --border: #d9e2ef;
+      --green: #18864b;
+      --orange: #d97706;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .app {
+      min-height: 100vh;
+      display: flex;
+    }
+
+    .sidebar {
+      width: 250px;
+      background: var(--navy-dark);
+      color: white;
+      padding: 24px 16px;
+      position: fixed;
+      inset: 0 auto 0 0;
+      overflow-y: auto;
+    }
+
+    .brand {
+      padding: 4px 12px 28px;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+      margin-bottom: 18px;
+    }
+
+    .brand-title {
+      font-size: 25px;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+
+    .brand-subtitle {
+      margin-top: 5px;
+      color: #b8c9df;
+      font-size: 12px;
+    }
+
+    .nav-title {
+      padding: 10px 12px 7px;
+      color: #91a9c6;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+    }
+
+    .nav {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .nav a {
+      color: #e8f0fa;
+      text-decoration: none;
+      padding: 12px;
+      border-radius: 9px;
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav a:hover,
+    .nav a.active {
+      background: rgba(255,255,255,.12);
+    }
+
+    .main {
+      margin-left: 250px;
+      width: calc(100% - 250px);
+      padding: 28px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 26px;
+    }
+
+    .page-title {
+      margin: 0;
+      font-size: 28px;
+      color: var(--navy);
+    }
+
+    .page-subtitle {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .system-pill {
+      background: #e5effc;
+      color: var(--navy);
+      border-radius: 999px;
+      padding: 9px 13px;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .welcome {
+      background: linear-gradient(135deg, #17457a, #2f6fed);
+      color: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 8px 22px rgba(23,69,122,.16);
+      margin-bottom: 24px;
+    }
+
+    .welcome h2 {
+      margin: 0 0 7px;
+      font-size: 22px;
+    }
+
+    .welcome p {
+      margin: 0;
+      color: #dbe9fb;
+      font-size: 14px;
+    }
+
+    .section-title {
+      margin: 25px 0 12px;
+      font-size: 17px;
+      color: var(--navy);
+    }
+
+    .modules {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 15px;
+    }
+
+    .module {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-top: 4px solid var(--blue);
+      border-radius: 13px;
+      padding: 18px;
+      min-height: 150px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 3px 10px rgba(16,42,67,.05);
+    }
+
+    .module.disabled {
+      border-top-color: #b8c3d1;
+      opacity: .82;
+    }
+
+    .module-icon {
+      font-size: 27px;
+      margin-bottom: 10px;
+    }
+
+    .module h3 {
+      margin: 0;
+      font-size: 17px;
+    }
+
+    .module p {
+      margin: 7px 0 15px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+      flex: 1;
+    }
+
+    .module a,
+    .module button {
+      border: 0;
+      background: var(--navy);
+      color: white;
+      text-decoration: none;
+      text-align: center;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .module button {
+      background: #cbd5e1;
+      color: #64748b;
+      cursor: not-allowed;
+    }
+
+    .quick-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 15px;
+    }
+
+    .quick-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .quick-label {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .quick-value {
+      margin-top: 7px;
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--navy);
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+
+    .footer {
+      margin-top: 30px;
+      color: #98a2b3;
+      text-align: center;
+      font-size: 11px;
+    }
+
+    .mobile-header {
+      display: none;
+    }
+
+    @media (max-width: 1050px) {
+      .modules { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .quick-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 720px) {
+      .sidebar {
+        position: static;
+        width: 100%;
+        min-height: auto;
+      }
+
+      .app {
+        display: block;
+      }
+
+      .main {
+        margin-left: 0;
+        width: 100%;
+        padding: 18px;
+      }
+
+      .topbar {
+        align-items: flex-start;
+      }
+
+      .page-title {
+        font-size: 23px;
+      }
+
+      .modules,
+      .quick-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        padding: 16px 12px;
+      }
+
+      .brand {
+        padding-bottom: 16px;
+      }
+
+      .nav {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .nav-title {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-title">BIG BROTHER</div>
+      <div class="brand-subtitle">Sales & Accounting System</div>
+    </div>
+
+    <div class="nav-title">Main Menu</div>
+    <nav class="nav">
+      <a href="index.html" class="active">🏠 Dashboard</a>
+      <a href="#sales">🧾 Sales</a>
+      <a href="#stock">📦 Stock</a>
+      <a href="#ar">💰 A/R</a>
+      <a href="#reports">📊 Reports</a>
+      <a href="#master">🗂️ Master Data</a>
+    </nav>
+  </aside>
+
+  <main class="main">
+
+    <div class="topbar">
+      <div>
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-subtitle">Central control panel for BIG BROTHER.</p>
+      </div>
+      <div class="system-pill">SYSTEM ONLINE</div>
+    </div>
+
+    <section class="welcome">
+      <h2>Welcome to BIG BROTHER 👋</h2>
+      <p>
+        One dashboard for Sales, Stock, A/R and Reports.
+        We will build each module step by step.
+      </p>
+    </section>
+
+    <h2 class="section-title" id="sales">Sales</h2>
+
+    <section class="modules">
+
+      <article class="module">
+        <div class="module-icon">🧾</div>
+        <h3>Invoice Generator</h3>
+        <p>Create sales invoices, calculate totals and record initial payments.</p>
+        <a href="https://angsokhey11-cloud.github.io/big-brother-invoice-calculator/">
+          Open Invoice Generator
+        </a>
+      </article>
+
+      <article class="module">
+        <div class="module-icon">🔄</div>
+        <h3>Sale Return</h3>
+        <p>Return products from an existing sales invoice without changing the original sale.</p>
+        <a href="https://angsokhey11-cloud.github.io/big-brother-invoice-sale-return/">
+          Open Sale Return
+        </a>
+      </article>
+
+      <article class="module disabled">
+        <div class="module-icon">💳</div>
+        <h3>Payments</h3>
+        <p>Payment records will be managed through the sales workflow and A/R.</p>
+        <button type="button">Coming Soon</button>
+      </article>
+
+    </section>
+
+    <h2 class="section-title" id="stock">Stock</h2>
+
+    <section class="modules">
+
+      <article class="module disabled">
+        <div class="module-icon">📦</div>
+        <h3>Stock Flow</h3>
+        <p>Purchase, receiving, stock movement and inventory control.</p>
+        <button type="button">Coming Soon</button>
+      </article>
+
+      <article class="module disabled">
+        <div class="module-icon">🚚</div>
+        <h3>Purchasing</h3>
+        <p>Supplier purchases and purchase transactions.</p>
+        <button type="button">Coming Soon</button>
+      </article>
+
+      <article class="module disabled">
+        <div class="module-icon">↩️</div>
+        <h3>Purchase Return</h3>
+        <p>Purchase returns will belong to the Stock/Purchasing side.</p>
+        <button type="button">Coming Soon</button>
+      </article>
+
+    </section>
+
+    <h2 class="section-title" id="ar">A/R & Reports</h2>
+
+    <section class="modules">
+
+      <article class="module disabled">
+        <div class="module-icon">💰</div>
+        <h3>Accounts Receivable</h3>
+        <p>Invoice total − Sale Returns − Payments = Outstanding A/R.</p>
+        <button type="button">Coming Soon</button>
+      </article>
+
+      <article class="module disabled" id="reports">
+        <div class="module-icon">📊</div>
+        <h3>Reports</h3>
+        <p>Sales, payments, returns, A/R and operational reports.</p>
+        <button type="button">Coming Soon</button>
+      </article>
+
+      <article class="module disabled" id="master">
+        <div class="module-icon">🗂️</div>
+        <h3>Master Data</h3>
+        <p>Customers, locations, products, prices, salespeople and system settings.</p>
+        <button type="button">Coming Soon</button>
+      </article>
+
+    </section>
+
+    <h2 class="section-title">System Status</h2>
+
+    <section class="quick-grid">
+      <div class="quick-card">
+        <div class="quick-label">Master Database</div>
+        <div class="quick-value">Connected</div>
+        <div class="status"><span class="dot"></span> Ready</div>
+      </div>
+
+      <div class="quick-card">
+        <div class="quick-label">Sales Database</div>
+        <div class="quick-value">Connected</div>
+        <div class="status"><span class="dot"></span> Ready</div>
+      </div>
+
+      <div class="quick-card">
+        <div class="quick-label">Invoice System</div>
+        <div class="quick-value">Active</div>
+        <div class="status"><span class="dot"></span> Ready</div>
+      </div>
+
+      <div class="quick-card">
+        <div class="quick-label">Sale Return</div>
+        <div class="quick-value">Active</div>
+        <div class="status"><span class="dot"></span> Ready</div>
+      </div>
+    </section>
+
+    <div class="footer">
+      BIG BROTHER • Sales & Accounting System
+    </div>
+
+  </main>
+</div>
+
+</body>
+</html>
