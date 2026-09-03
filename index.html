@@ -420,6 +420,73 @@
         display: none;
       }
     }
+  
+    /* =====================================================
+       BIG BROTHER PERMANENT SHELL V3
+       LEFT = fixed navigation, RIGHT = changing workspace
+       ===================================================== */
+    html, body { height:100%; }
+    body { overflow:hidden; }
+
+    .brand-home {
+      width:100%; border:0; padding:4px; margin:-4px;
+      background:transparent; color:inherit; text-align:left;
+      cursor:pointer; border-radius:10px; font:inherit;
+    }
+    .brand-home:hover { background:rgba(255,255,255,.08); }
+
+    .shell-nav-link,
+    .nav-submenu button {
+      width:100%; border:0; cursor:pointer; font:inherit;
+    }
+    .shell-nav-link {
+      color:#e8f0fa; background:transparent; text-align:left;
+      padding:12px; border-radius:9px; font-size:14px; font-weight:700;
+      display:flex; align-items:center; gap:10px;
+    }
+    .shell-nav-link:hover,
+    .shell-nav-link.active { background:rgba(255,255,255,.12); }
+
+    .nav-submenu button {
+      color:#dce8f7; background:transparent; text-align:left;
+      padding:10px 12px 10px 34px; border-radius:8px;
+      font-size:13px; font-weight:700; display:block;
+    }
+    .nav-submenu button:hover,
+    .nav-submenu button.active { background:rgba(255,255,255,.12); color:#fff; }
+
+    .shell-main {
+      height:100vh;
+      overflow:hidden;
+      padding:0 !important;
+    }
+    .dashboard-home {
+      height:100vh;
+      overflow-y:auto;
+      padding:28px;
+      scroll-behavior:smooth;
+    }
+    .module-workspace {
+      width:100%;
+      height:100vh;
+      background:#eef3f8;
+    }
+    .module-frame {
+      display:block;
+      width:100%;
+      height:100%;
+      border:0;
+      background:#eef3f8;
+    }
+
+    @media (max-width:720px) {
+      body { overflow:auto; }
+      .sidebar { position:relative !important; width:100% !important; min-height:auto !important; }
+      .shell-main { margin-left:0 !important; width:100% !important; height:calc(100vh - 260px); min-height:640px; }
+      .dashboard-home { height:100%; padding:18px; }
+      .module-workspace { height:100%; }
+    }
+
   </style>
 </head>
 
@@ -434,10 +501,10 @@
   <aside class="sidebar">
 
     <div class="brand">
-      <div class="brand-title">BIG BROTHER</div>
-      <div class="brand-subtitle">
-        Sales & Accounting System
-      </div>
+      <button type="button" class="brand-home" onclick="showDashboardHome()" title="Dashboard">
+        <div class="brand-title">BIG BROTHER</div>
+        <div class="brand-subtitle">Sales & Accounting System</div>
+      </button>
     </div>
 
     <div class="nav-title">
@@ -446,11 +513,11 @@
 
     <nav class="nav">
 
-      <a href="#top" class="active">
+      <button type="button" class="shell-nav-link active" id="navDashboard" onclick="showDashboardHome()">
         🏠 Dashboard
-      </a>
+      </button>
 
-      <div class="nav-group">
+      <div class="nav-group" id="salesNavGroup">
         <button
           type="button"
           id="salesMenuButton"
@@ -459,38 +526,20 @@
           aria-controls="salesSubmenu"
           onclick="toggleSalesMenu()"
         >
-          <span class="nav-toggle-main">
-            <span>🧾</span>
-            <span>Sales</span>
-          </span>
+          <span class="nav-toggle-main"><span>🧾</span><span>Sales</span></span>
           <span class="nav-arrow">▼</span>
         </button>
 
         <div id="salesSubmenu" class="nav-submenu">
-          <a href="https://angsokhey11-cloud.github.io/big-brother-invoice-generator/">
-            ➕ New Invoice
-          </a>
-          <a href="https://angsokhey11-cloud.github.io/invoice-history/">
-            📋 Invoice History
-          </a>
+          <button type="button" id="navNewInvoice" onclick="loadWorkspace('invoice')">➕ New Invoice</button>
+          <button type="button" id="navInvoiceHistory" onclick="loadWorkspace('history')">📋 Invoice History</button>
         </div>
       </div>
 
-      <a href="#stock">
-        📦 Stock
-      </a>
-
-      <a href="#ar">
-        💰 A/R
-      </a>
-
-      <a href="#reports">
-        📊 Reports
-      </a>
-
-      <a href="#master">
-        🗂️ Master Data
-      </a>
+      <button type="button" class="shell-nav-link" onclick="showDashboardSection('stock')">📦 Stock</button>
+      <button type="button" class="shell-nav-link" onclick="showDashboardSection('ar')">💰 A/R</button>
+      <button type="button" class="shell-nav-link" onclick="showDashboardSection('reports')">📊 Reports</button>
+      <button type="button" class="shell-nav-link" onclick="showDashboardSection('master')">🗂️ Master Data</button>
 
     </nav>
 
@@ -501,7 +550,8 @@
        MAIN
        ===================================================== -->
 
-  <main class="main">
+  <main class="main shell-main">
+    <div id="dashboardHome" class="dashboard-home">
 
     <!-- TOP BAR -->
 
@@ -924,6 +974,18 @@
     </div>
 
 
+  
+    </div>
+
+    <div id="moduleWorkspace" class="module-workspace" hidden>
+      <iframe
+        id="moduleFrame"
+        class="module-frame"
+        title="BIG BROTHER Workspace"
+        loading="eager"
+        referrerpolicy="strict-origin-when-cross-origin"
+      ></iframe>
+    </div>
   </main>
 
 </div>
@@ -960,6 +1022,80 @@
       }
     });
   });
+</script>
+
+
+<script>
+  const MODULE_URLS = {
+    invoice: "https://angsokhey11-cloud.github.io/big-brother-invoice-generator/",
+    history: "https://angsokhey11-cloud.github.io/invoice-history/"
+  };
+
+  function setShellActive(moduleName) {
+    document.querySelectorAll('.shell-nav-link, .nav-submenu button').forEach(el => el.classList.remove('active'));
+    const submenu = document.getElementById('salesSubmenu');
+    if (moduleName === 'invoice' || moduleName === 'history') {
+      submenu?.classList.add('open');
+      const btn = document.getElementById('salesMenuButton');
+      btn?.classList.add('open');
+      btn?.setAttribute('aria-expanded','true');
+      const arrow = btn?.querySelector('.nav-arrow'); if (arrow) arrow.textContent='▲';
+      document.getElementById(moduleName === 'invoice' ? 'navNewInvoice' : 'navInvoiceHistory')?.classList.add('active');
+    } else {
+      document.getElementById('navDashboard')?.classList.add('active');
+    }
+  }
+
+  function toggleSalesMenu() {
+    const submenu = document.getElementById('salesSubmenu');
+    const button = document.getElementById('salesMenuButton');
+    if (!submenu || !button) return;
+    const open = !submenu.classList.contains('open');
+    submenu.classList.toggle('open', open);
+    button.classList.toggle('open', open);
+    button.setAttribute('aria-expanded', String(open));
+    const arrow = button.querySelector('.nav-arrow');
+    if (arrow) arrow.textContent = open ? '▲' : '▼';
+  }
+
+  function showDashboardHome(updateUrl = true) {
+    document.getElementById('dashboardHome').hidden = false;
+    document.getElementById('moduleWorkspace').hidden = true;
+    setShellActive('dashboard');
+    if (updateUrl) history.replaceState(null, '', location.pathname);
+  }
+
+  function showDashboardSection(sectionId) {
+    showDashboardHome();
+    requestAnimationFrame(() => {
+      document.getElementById(sectionId)?.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  }
+
+  function loadWorkspace(moduleName, updateUrl = true) {
+    const url = MODULE_URLS[moduleName];
+    if (!url) return;
+    const home = document.getElementById('dashboardHome');
+    const workspace = document.getElementById('moduleWorkspace');
+    const frame = document.getElementById('moduleFrame');
+    home.hidden = true;
+    workspace.hidden = false;
+    if (frame.dataset.module !== moduleName) {
+      frame.dataset.module = moduleName;
+      frame.src = url;
+    }
+    setShellActive(moduleName);
+    if (updateUrl) history.replaceState(null, '', '?module=' + encodeURIComponent(moduleName));
+  }
+
+  function openInitialWorkspace() {
+    const params = new URLSearchParams(location.search);
+    const moduleName = params.get('module');
+    if (moduleName === 'invoice' || moduleName === 'history') loadWorkspace(moduleName, false);
+    else showDashboardHome(false);
+  }
+
+  window.addEventListener('DOMContentLoaded', openInitialWorkspace);
 </script>
 
 </body>
