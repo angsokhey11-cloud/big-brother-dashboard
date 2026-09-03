@@ -183,6 +183,13 @@
       margin-bottom: 10px;
     }
 
+    /* Sales module row can comfortably hold four cards */
+    @media (min-width: 1051px) {
+      #sales + .modules {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
+
     .module h3 {
       margin: 0;
       font-size: 17px;
@@ -381,6 +388,15 @@
         <p>Return products from an existing sales invoice without changing the original sale.</p>
         <a href="https://angsokhey11-cloud.github.io/big-brother-invoice-sale-return/">
           Open Sale Return
+        </a>
+      </article>
+
+      <article class="module">
+        <div class="module-icon">📋</div>
+        <h3>Invoice History</h3>
+        <p>Search saved invoices, review original products, prices, payments and outstanding balances.</p>
+        <a href="invoice-history.html">
+          Open Invoice History
         </a>
       </article>
 
