@@ -96,6 +96,75 @@
       background: rgba(255,255,255,.12);
     }
 
+    .nav-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .nav-toggle {
+      width: 100%;
+      border: 0;
+      background: transparent;
+      color: #e8f0fa;
+      padding: 12px;
+      border-radius: 9px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      text-align: left;
+    }
+
+    .nav-toggle:hover,
+    .nav-toggle.open {
+      background: rgba(255,255,255,.12);
+    }
+
+    .nav-toggle-main {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav-arrow {
+      font-size: 11px;
+      transition: transform .18s ease;
+    }
+
+    .nav-toggle.open .nav-arrow {
+      transform: rotate(180deg);
+    }
+
+    .nav-submenu {
+      display: none;
+      flex-direction: column;
+      gap: 4px;
+      margin: 0 0 4px 18px;
+      padding-left: 10px;
+      border-left: 1px solid rgba(255,255,255,.16);
+    }
+
+    .nav-submenu.open {
+      display: flex;
+    }
+
+    .nav-submenu a {
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #d8e6f7;
+      background: rgba(255,255,255,.04);
+    }
+
+    .nav-submenu a:hover {
+      background: rgba(255,255,255,.13);
+      color: #fff;
+    }
+
     .main {
       margin-left: 250px;
       width: calc(100% - 250px);
@@ -339,6 +408,14 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
+      .nav-group {
+        min-width: 0;
+      }
+
+      .nav-submenu {
+        margin-left: 8px;
+      }
+
       .nav-title {
         display: none;
       }
@@ -348,7 +425,7 @@
 
 <body>
 
-<div class="app">
+<div class="app" id="top">
 
   <!-- =====================================================
        SIDEBAR
@@ -369,13 +446,35 @@
 
     <nav class="nav">
 
-      <a href="index.html" class="active">
+      <a href="#top" class="active">
         🏠 Dashboard
       </a>
 
-      <a href="#sales">
-        🧾 Sales
-      </a>
+      <div class="nav-group">
+        <button
+          type="button"
+          id="salesMenuButton"
+          class="nav-toggle"
+          aria-expanded="false"
+          aria-controls="salesSubmenu"
+          onclick="toggleSalesMenu()"
+        >
+          <span class="nav-toggle-main">
+            <span>🧾</span>
+            <span>Sales</span>
+          </span>
+          <span class="nav-arrow">▼</span>
+        </button>
+
+        <div id="salesSubmenu" class="nav-submenu">
+          <a href="https://angsokhey11-cloud.github.io/big-brother-invoice-generator/">
+            ➕ New Invoice
+          </a>
+          <a href="https://angsokhey11-cloud.github.io/invoice-history/">
+            📋 Invoice History
+          </a>
+        </div>
+      </div>
 
       <a href="#stock">
         📦 Stock
@@ -471,7 +570,7 @@
           and record initial payments.
         </p>
 
-        <a href="https://angsokhey11-cloud.github.io/big-brother-invoice-calculator/">
+        <a href="https://angsokhey11-cloud.github.io/big-brother-invoice-generator/">
           Open Invoice Generator
         </a>
 
@@ -828,6 +927,40 @@
   </main>
 
 </div>
+
+<script>
+  function toggleSalesMenu(forceOpen) {
+    const button = document.getElementById("salesMenuButton");
+    const submenu = document.getElementById("salesSubmenu");
+    if (!button || !submenu) return;
+
+    const shouldOpen = typeof forceOpen === "boolean"
+      ? forceOpen
+      : !submenu.classList.contains("open");
+
+    submenu.classList.toggle("open", shouldOpen);
+    button.classList.toggle("open", shouldOpen);
+    button.setAttribute("aria-expanded", shouldOpen ? "true" : "false");
+  }
+
+  // Make all same-page Main Menu links scroll cleanly to their sections.
+  document.querySelectorAll('.nav a[href^="#"]').forEach(link => {
+    link.addEventListener("click", function(event) {
+      const targetId = this.getAttribute("href");
+      if (!targetId || targetId === "#") return;
+      const target = document.querySelector(targetId);
+      if (!target) return;
+
+      event.preventDefault();
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+
+      // Keep Sales submenu open only when the Sales area itself is selected.
+      if (targetId !== "#sales") {
+        toggleSalesMenu(false);
+      }
+    });
+  });
+</script>
 
 </body>
 </html>
