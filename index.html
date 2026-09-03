@@ -545,7 +545,7 @@
         </button>
         <div id="arSubmenu" class="nav-submenu">
           <button type="button" id="navARAll" onclick="loadWorkspace('ar-all')">📋 All Receivable</button>
-          <button type="button" id="navARYour" onclick="loadWorkspace('ar-siemreap')">👤 Your Receivable</button>
+          <button type="button" id="navARYour" onclick="loadWorkspace('ar-your')">👤 Your Receivable</button>
         </div>
       </div>
 
@@ -1041,7 +1041,7 @@
     invoice: "https://angsokhey11-cloud.github.io/big-brother-invoice-generator/",
     history: "https://angsokhey11-cloud.github.io/invoice-history/?embed=1&v=471",
     "ar-all": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=all&v=2",
-    "ar-siemreap": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=siemreap&v=2"
+    "ar-your": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=your&v=3"
   };
 
   function setShellActive(moduleName) {
@@ -1063,7 +1063,7 @@
       setOpen(salesSub, salesBtn, true);
       setOpen(arSub, arBtn, false);
       document.getElementById(moduleName === 'invoice' ? 'navNewInvoice' : 'navInvoiceHistory')?.classList.add('active');
-    } else if (moduleName === 'ar-all' || moduleName === 'ar-siemreap') {
+    } else if (moduleName === 'ar-all' || moduleName === 'ar-your') {
       setOpen(salesSub, salesBtn, false);
       setOpen(arSub, arBtn, true);
       document.getElementById(moduleName === 'ar-all' ? 'navARAll' : 'navARSiemReap')?.classList.add('active');
@@ -1131,7 +1131,7 @@
   function openInitialWorkspace() {
     const params = new URLSearchParams(location.search);
     const moduleName = params.get('module');
-    if (moduleName === 'invoice' || moduleName === 'history' || moduleName === 'ar-all' || moduleName === 'ar-siemreap') loadWorkspace(moduleName, false);
+    if (moduleName === 'invoice' || moduleName === 'history' || moduleName === 'ar-all' || moduleName === 'ar-your') loadWorkspace(moduleName, false);
     else showDashboardHome(false);
   }
 
