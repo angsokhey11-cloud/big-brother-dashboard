@@ -4,8 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BIG BROTHER — Dashboard</title>
+
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     :root {
       --navy: #17457a;
@@ -183,13 +186,6 @@
       margin-bottom: 10px;
     }
 
-    /* Sales module row can comfortably hold four cards */
-    @media (min-width: 1051px) {
-      #sales + .modules {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-      }
-    }
-
     .module h3 {
       margin: 0;
       font-size: 17px;
@@ -276,9 +272,27 @@
       display: none;
     }
 
+    /*
+     * Sales section has four modules:
+     * Invoice Generator
+     * Sale Return
+     * Invoice History
+     * Payments
+     */
+    @media (min-width: 1051px) {
+      #sales + .modules {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
+
     @media (max-width: 1050px) {
-      .modules { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .quick-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .modules {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .quick-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
     }
 
     @media (max-width: 720px) {
@@ -286,6 +300,7 @@
         position: static;
         width: 100%;
         min-height: auto;
+        padding: 16px 12px;
       }
 
       .app {
@@ -330,172 +345,488 @@
     }
   </style>
 </head>
+
 <body>
 
 <div class="app">
 
+  <!-- =====================================================
+       SIDEBAR
+       ===================================================== -->
+
   <aside class="sidebar">
+
     <div class="brand">
       <div class="brand-title">BIG BROTHER</div>
-      <div class="brand-subtitle">Sales & Accounting System</div>
+      <div class="brand-subtitle">
+        Sales & Accounting System
+      </div>
     </div>
 
-    <div class="nav-title">Main Menu</div>
+    <div class="nav-title">
+      Main Menu
+    </div>
+
     <nav class="nav">
-      <a href="index.html" class="active">🏠 Dashboard</a>
-      <a href="#sales">🧾 Sales</a>
-      <a href="#stock">📦 Stock</a>
-      <a href="#ar">💰 A/R</a>
-      <a href="#reports">📊 Reports</a>
-      <a href="#master">🗂️ Master Data</a>
+
+      <a href="index.html" class="active">
+        🏠 Dashboard
+      </a>
+
+      <a href="#sales">
+        🧾 Sales
+      </a>
+
+      <a href="#stock">
+        📦 Stock
+      </a>
+
+      <a href="#ar">
+        💰 A/R
+      </a>
+
+      <a href="#reports">
+        📊 Reports
+      </a>
+
+      <a href="#master">
+        🗂️ Master Data
+      </a>
+
     </nav>
+
   </aside>
+
+
+  <!-- =====================================================
+       MAIN
+       ===================================================== -->
 
   <main class="main">
 
+    <!-- TOP BAR -->
+
     <div class="topbar">
+
       <div>
-        <h1 class="page-title">Dashboard</h1>
-        <p class="page-subtitle">Central control panel for BIG BROTHER.</p>
+
+        <h1 class="page-title">
+          Dashboard
+        </h1>
+
+        <p class="page-subtitle">
+          Central control panel for BIG BROTHER.
+        </p>
+
       </div>
-      <div class="system-pill">SYSTEM ONLINE</div>
+
+      <div class="system-pill">
+        SYSTEM ONLINE
+      </div>
+
     </div>
 
+
+    <!-- WELCOME -->
+
     <section class="welcome">
-      <h2>Welcome to BIG BROTHER 👋</h2>
+
+      <h2>
+        Welcome to BIG BROTHER 👋
+      </h2>
+
       <p>
         One dashboard for Sales, Stock, A/R and Reports.
         We will build each module step by step.
       </p>
+
     </section>
 
-    <h2 class="section-title" id="sales">Sales</h2>
+
+    <!-- =====================================================
+         SALES
+         ===================================================== -->
+
+    <h2 class="section-title" id="sales">
+      Sales
+    </h2>
 
     <section class="modules">
 
+
+      <!-- INVOICE GENERATOR -->
+
       <article class="module">
-        <div class="module-icon">🧾</div>
-        <h3>Invoice Generator</h3>
-        <p>Create sales invoices, calculate totals and record initial payments.</p>
+
+        <div class="module-icon">
+          🧾
+        </div>
+
+        <h3>
+          Invoice Generator
+        </h3>
+
+        <p>
+          Create sales invoices, calculate totals
+          and record initial payments.
+        </p>
+
         <a href="https://angsokhey11-cloud.github.io/big-brother-invoice-calculator/">
           Open Invoice Generator
         </a>
+
       </article>
 
+
+      <!-- SALE RETURN -->
+
       <article class="module">
-        <div class="module-icon">🔄</div>
-        <h3>Sale Return</h3>
-        <p>Return products from an existing sales invoice without changing the original sale.</p>
+
+        <div class="module-icon">
+          🔄
+        </div>
+
+        <h3>
+          Sale Return
+        </h3>
+
+        <p>
+          Return products from an existing sales invoice
+          without changing the original sale.
+        </p>
+
         <a href="https://angsokhey11-cloud.github.io/big-brother-invoice-sale-return/">
           Open Sale Return
         </a>
+
       </article>
+
+
+      <!-- INVOICE HISTORY -->
 
       <article class="module">
-        <div class="module-icon">📋</div>
-        <h3>Invoice History</h3>
-        <p>Search saved invoices, review original products, prices, payments and outstanding balances.</p>
-        <a href="invoice-history.html">
+
+        <div class="module-icon">
+          📋
+        </div>
+
+        <h3>
+          Invoice History
+        </h3>
+
+        <p>
+          Search saved invoices, review original products,
+          prices, payments and outstanding balances.
+        </p>
+
+        <a href="https://angsokhey11-cloud.github.io/invoice-history/">
           Open Invoice History
         </a>
+
       </article>
 
+
+      <!-- PAYMENTS -->
+
       <article class="module disabled">
-        <div class="module-icon">💳</div>
-        <h3>Payments</h3>
-        <p>Payment records will be managed through the sales workflow and A/R.</p>
-        <button type="button">Coming Soon</button>
+
+        <div class="module-icon">
+          💳
+        </div>
+
+        <h3>
+          Payments
+        </h3>
+
+        <p>
+          Payment records will be managed through
+          the sales workflow and A/R.
+        </p>
+
+        <button type="button">
+          Coming Soon
+        </button>
+
       </article>
+
 
     </section>
 
-    <h2 class="section-title" id="stock">Stock</h2>
+
+    <!-- =====================================================
+         STOCK
+         ===================================================== -->
+
+    <h2 class="section-title" id="stock">
+      Stock
+    </h2>
 
     <section class="modules">
 
-      <article class="module disabled">
-        <div class="module-icon">📦</div>
-        <h3>Stock Flow</h3>
-        <p>Purchase, receiving, stock movement and inventory control.</p>
-        <button type="button">Coming Soon</button>
-      </article>
+
+      <!-- STOCK FLOW -->
 
       <article class="module disabled">
-        <div class="module-icon">🚚</div>
-        <h3>Purchasing</h3>
-        <p>Supplier purchases and purchase transactions.</p>
-        <button type="button">Coming Soon</button>
+
+        <div class="module-icon">
+          📦
+        </div>
+
+        <h3>
+          Stock Flow
+        </h3>
+
+        <p>
+          Purchase, receiving, stock movement
+          and inventory control.
+        </p>
+
+        <button type="button">
+          Coming Soon
+        </button>
+
       </article>
 
+
+      <!-- PURCHASING -->
+
       <article class="module disabled">
-        <div class="module-icon">↩️</div>
-        <h3>Purchase Return</h3>
-        <p>Purchase returns will belong to the Stock/Purchasing side.</p>
-        <button type="button">Coming Soon</button>
+
+        <div class="module-icon">
+          🚚
+        </div>
+
+        <h3>
+          Purchasing
+        </h3>
+
+        <p>
+          Supplier purchases and purchase transactions.
+        </p>
+
+        <button type="button">
+          Coming Soon
+        </button>
+
       </article>
+
+
+      <!-- PURCHASE RETURN -->
+
+      <article class="module disabled">
+
+        <div class="module-icon">
+          ↩️
+        </div>
+
+        <h3>
+          Purchase Return
+        </h3>
+
+        <p>
+          Purchase returns will belong to
+          the Stock/Purchasing side.
+        </p>
+
+        <button type="button">
+          Coming Soon
+        </button>
+
+      </article>
+
 
     </section>
 
-    <h2 class="section-title" id="ar">A/R & Reports</h2>
+
+    <!-- =====================================================
+         A/R & REPORTS
+         ===================================================== -->
+
+    <h2 class="section-title" id="ar">
+      A/R & Reports
+    </h2>
 
     <section class="modules">
 
+
+      <!-- ACCOUNTS RECEIVABLE -->
+
       <article class="module disabled">
-        <div class="module-icon">💰</div>
-        <h3>Accounts Receivable</h3>
-        <p>Invoice total − Sale Returns − Payments = Outstanding A/R.</p>
-        <button type="button">Coming Soon</button>
+
+        <div class="module-icon">
+          💰
+        </div>
+
+        <h3>
+          Accounts Receivable
+        </h3>
+
+        <p>
+          Invoice total − Sale Returns − Payments
+          = Outstanding A/R.
+        </p>
+
+        <button type="button">
+          Coming Soon
+        </button>
+
       </article>
+
+
+      <!-- REPORTS -->
 
       <article class="module disabled" id="reports">
-        <div class="module-icon">📊</div>
-        <h3>Reports</h3>
-        <p>Sales, payments, returns, A/R and operational reports.</p>
-        <button type="button">Coming Soon</button>
+
+        <div class="module-icon">
+          📊
+        </div>
+
+        <h3>
+          Reports
+        </h3>
+
+        <p>
+          Sales, payments, returns, A/R
+          and operational reports.
+        </p>
+
+        <button type="button">
+          Coming Soon
+        </button>
+
       </article>
+
+
+      <!-- MASTER DATA -->
 
       <article class="module disabled" id="master">
-        <div class="module-icon">🗂️</div>
-        <h3>Master Data</h3>
-        <p>Customers, locations, products, prices, salespeople and system settings.</p>
-        <button type="button">Coming Soon</button>
+
+        <div class="module-icon">
+          🗂️
+        </div>
+
+        <h3>
+          Master Data
+        </h3>
+
+        <p>
+          Customers, locations, products, prices,
+          salespeople and system settings.
+        </p>
+
+        <button type="button">
+          Coming Soon
+        </button>
+
       </article>
 
+
     </section>
 
-    <h2 class="section-title">System Status</h2>
+
+    <!-- =====================================================
+         SYSTEM STATUS
+         ===================================================== -->
+
+    <h2 class="section-title">
+      System Status
+    </h2>
 
     <section class="quick-grid">
-      <div class="quick-card">
-        <div class="quick-label">Master Database</div>
-        <div class="quick-value">Connected</div>
-        <div class="status"><span class="dot"></span> Ready</div>
-      </div>
+
+
+      <!-- MASTER DATABASE -->
 
       <div class="quick-card">
-        <div class="quick-label">Sales Database</div>
-        <div class="quick-value">Connected</div>
-        <div class="status"><span class="dot"></span> Ready</div>
+
+        <div class="quick-label">
+          Master Database
+        </div>
+
+        <div class="quick-value">
+          Connected
+        </div>
+
+        <div class="status">
+          <span class="dot"></span>
+          Ready
+        </div>
+
       </div>
 
-      <div class="quick-card">
-        <div class="quick-label">Invoice System</div>
-        <div class="quick-value">Active</div>
-        <div class="status"><span class="dot"></span> Ready</div>
-      </div>
+
+      <!-- SALES DATABASE -->
 
       <div class="quick-card">
-        <div class="quick-label">Sale Return</div>
-        <div class="quick-value">Active</div>
-        <div class="status"><span class="dot"></span> Ready</div>
+
+        <div class="quick-label">
+          Sales Database
+        </div>
+
+        <div class="quick-value">
+          Connected
+        </div>
+
+        <div class="status">
+          <span class="dot"></span>
+          Ready
+        </div>
+
       </div>
+
+
+      <!-- INVOICE SYSTEM -->
+
+      <div class="quick-card">
+
+        <div class="quick-label">
+          Invoice System
+        </div>
+
+        <div class="quick-value">
+          Active
+        </div>
+
+        <div class="status">
+          <span class="dot"></span>
+          Ready
+        </div>
+
+      </div>
+
+
+      <!-- SALE RETURN -->
+
+      <div class="quick-card">
+
+        <div class="quick-label">
+          Sale Return
+        </div>
+
+        <div class="quick-value">
+          Active
+        </div>
+
+        <div class="status">
+          <span class="dot"></span>
+          Ready
+        </div>
+
+      </div>
+
+
     </section>
+
+
+    <!-- FOOTER -->
 
     <div class="footer">
       BIG BROTHER • Sales & Accounting System
     </div>
 
+
   </main>
+
 </div>
 
 </body>
