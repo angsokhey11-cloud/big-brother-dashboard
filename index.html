@@ -533,6 +533,7 @@
         <div id="salesSubmenu" class="nav-submenu">
           <button type="button" id="navNewInvoice" onclick="loadWorkspace('invoice')">➕ New Invoice</button>
           <button type="button" id="navInvoiceHistory" onclick="loadWorkspace('history')">📋 Invoice History</button>
+          <button type="button" id="navPaymentHistory" onclick="loadWorkspace('payment-history')">💵 Payment History</button>
         </div>
       </div>
 
@@ -546,6 +547,7 @@
         <div id="arSubmenu" class="nav-submenu">
           <button type="button" id="navARAll" onclick="loadWorkspace('ar-all')">📋 All Receivable</button>
           <button type="button" id="navARYour" onclick="loadWorkspace('ar-your')">👤 Your Receivable</button>
+          <button type="button" id="navARPaymentHistory" onclick="loadWorkspace('ar-payment-history')">🧾 Receivable Payment History</button>
         </div>
       </div>
 
@@ -1040,8 +1042,10 @@
   const MODULE_URLS = {
     invoice: "https://angsokhey11-cloud.github.io/big-brother-invoice-generator/",
     history: "https://angsokhey11-cloud.github.io/invoice-history/?embed=1&v=471",
+    "payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=invoice&v=1",
     "ar-all": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=all&v=2",
-    "ar-your": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=your&v=3"
+    "ar-your": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=your&v=3",
+    "ar-payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=receivable&v=1"
   };
 
   function setShellActive(moduleName) {
@@ -1059,14 +1063,16 @@
       if (arrow) arrow.textContent = open ? '▲' : '▼';
     };
 
-    if (moduleName === 'invoice' || moduleName === 'history') {
+    if (moduleName === 'invoice' || moduleName === 'history' || moduleName === 'payment-history') {
       setOpen(salesSub, salesBtn, true);
       setOpen(arSub, arBtn, false);
-      document.getElementById(moduleName === 'invoice' ? 'navNewInvoice' : 'navInvoiceHistory')?.classList.add('active');
-    } else if (moduleName === 'ar-all' || moduleName === 'ar-your') {
+      const salesId = moduleName === 'invoice' ? 'navNewInvoice' : (moduleName === 'history' ? 'navInvoiceHistory' : 'navPaymentHistory');
+      document.getElementById(salesId)?.classList.add('active');
+    } else if (moduleName === 'ar-all' || moduleName === 'ar-your' || moduleName === 'ar-payment-history') {
       setOpen(salesSub, salesBtn, false);
       setOpen(arSub, arBtn, true);
-      document.getElementById(moduleName === 'ar-all' ? 'navARAll' : 'navARYour')?.classList.add('active');
+      const arId = moduleName === 'ar-all' ? 'navARAll' : (moduleName === 'ar-your' ? 'navARYour' : 'navARPaymentHistory');
+      document.getElementById(arId)?.classList.add('active');
     } else {
       setOpen(salesSub, salesBtn, false);
       setOpen(arSub, arBtn, false);
@@ -1132,7 +1138,7 @@
   function openInitialWorkspace() {
     const params = new URLSearchParams(location.search);
     const moduleName = params.get('module');
-    if (moduleName === 'invoice' || moduleName === 'history' || moduleName === 'ar-all' || moduleName === 'ar-your') loadWorkspace(moduleName, false);
+    if (['invoice','history','payment-history','ar-all','ar-your','ar-payment-history'].includes(moduleName)) loadWorkspace(moduleName, false);
     else showDashboardHome(false);
   }
 
