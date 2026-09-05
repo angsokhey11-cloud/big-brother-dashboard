@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BIG BROTHER — Dashboard V3.11 Purchase Menu</title>
+  <title>BIG BROTHER — Dashboard V3.12 Invoice Reversal Label</title>
 
   <style>
     * {
@@ -344,7 +344,7 @@
     /*
      * Sales section has four modules:
      * Invoice Generator
-     * Sale Return
+     * Invoice Reversal
      * Invoice History
      * Payments
      */
@@ -533,7 +533,7 @@
         <div id="salesSubmenu" class="nav-submenu">
           <button type="button" id="navNewInvoice" onclick="loadWorkspace('invoice')">➕ New Invoice</button>
           <button type="button" id="navInvoiceHistory" onclick="loadWorkspace('history')">📋 Invoice History</button>
-          <button type="button" id="navSaleReturn" onclick="loadWorkspace('sale-return')">↩️ Sale Return</button>
+          <button type="button" id="navSaleReturn" onclick="loadWorkspace('sale-return')">↩️ Invoice Reversal</button>
           <button type="button" id="navPaymentHistory" onclick="loadWorkspace('payment-history')">💵 Payment History</button>
           <button type="button" id="navDailySaleSummary" onclick="loadWorkspace('daily-sale-summary')">📊 Daily Sale Summary</button>
         </div>
@@ -663,7 +663,7 @@
       </article>
 
 
-      <!-- SALE RETURN -->
+      <!-- INVOICE REVERSAL -->
 
       <article class="module">
 
@@ -672,7 +672,7 @@
         </div>
 
         <h3>
-          Sale Return
+          Invoice Reversal
         </h3>
 
         <p>
@@ -680,8 +680,8 @@
           without changing the original sale.
         </p>
 
-        <a href="https://angsokhey11-cloud.github.io/big-brother-invoice-sale-return/">
-          Open Sale Return
+        <a href="https://angsokhey11-cloud.github.io/big-brother-invoice-reversal/">
+          Open Invoice Reversal
         </a>
 
       </article>
@@ -888,7 +888,7 @@
         </h3>
 
         <p>
-          Invoice total − Sale Returns − Payments
+          Invoice total − Invoice Reversals − Payments
           = Outstanding A/R.
         </p>
 
@@ -1021,12 +1021,12 @@
       </div>
 
 
-      <!-- SALE RETURN -->
+      <!-- INVOICE REVERSAL -->
 
       <div class="quick-card">
 
         <div class="quick-label">
-          Sale Return
+          Invoice Reversal
         </div>
 
         <div class="quick-value">
@@ -1106,7 +1106,7 @@
   const MODULE_URLS = {
     invoice: "https://angsokhey11-cloud.github.io/big-brother-invoice-generator/",
     history: "https://angsokhey11-cloud.github.io/invoice-history/?embed=1&v=471",
-    "sale-return": "https://angsokhey11-cloud.github.io/big-brother-invoice-sale-return/?embed=1&v=1",
+    "sale-return": "https://angsokhey11-cloud.github.io/big-brother-invoice-reversal/?embed=1&v=1",
     "payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=invoice&v=1",
     "daily-sale-summary": "https://angsokhey11-cloud.github.io/big-brother-daily-sale-summary/?embed=1&v=1",
     "purchase-create": "https://angsokhey11-cloud.github.io/big-brother-purchase-recorder/?embed=1&v=1",
