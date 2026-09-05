@@ -533,6 +533,7 @@
         <div id="salesSubmenu" class="nav-submenu">
           <button type="button" id="navNewInvoice" onclick="loadWorkspace('invoice')">➕ New Invoice</button>
           <button type="button" id="navInvoiceHistory" onclick="loadWorkspace('history')">📋 Invoice History</button>
+          <button type="button" id="navSaleReturn" onclick="loadWorkspace('sale-return')">↩️ Sale Return</button>
           <button type="button" id="navPaymentHistory" onclick="loadWorkspace('payment-history')">💵 Payment History</button>
           <button type="button" id="navDailySaleSummary" onclick="loadWorkspace('daily-sale-summary')">📊 Daily Sale Summary</button>
         </div>
@@ -1043,6 +1044,7 @@
   const MODULE_URLS = {
     invoice: "https://angsokhey11-cloud.github.io/big-brother-invoice-generator/",
     history: "https://angsokhey11-cloud.github.io/invoice-history/?embed=1&v=471",
+    "sale-return": "https://angsokhey11-cloud.github.io/big-brother-invoice-sale-return/?embed=1&v=1",
     "payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=invoice&v=1",
     "daily-sale-summary": "https://angsokhey11-cloud.github.io/big-brother-daily-sale-summary/?embed=1&v=1",
     "ar-all": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=all&v=2",
@@ -1065,10 +1067,18 @@
       if (arrow) arrow.textContent = open ? '▲' : '▼';
     };
 
-    if (moduleName === 'invoice' || moduleName === 'history' || moduleName === 'payment-history' || moduleName === 'daily-sale-summary') {
+    if (moduleName === 'invoice' || moduleName === 'history' || moduleName === 'sale-return' || moduleName === 'payment-history' || moduleName === 'daily-sale-summary') {
       setOpen(salesSub, salesBtn, true);
       setOpen(arSub, arBtn, false);
-      const salesId = moduleName === 'invoice' ? 'navNewInvoice' : (moduleName === 'history' ? 'navInvoiceHistory' : (moduleName === 'payment-history' ? 'navPaymentHistory' : 'navDailySaleSummary'));
+      const salesId = moduleName === 'invoice'
+        ? 'navNewInvoice'
+        : moduleName === 'history'
+          ? 'navInvoiceHistory'
+          : moduleName === 'sale-return'
+            ? 'navSaleReturn'
+            : moduleName === 'payment-history'
+              ? 'navPaymentHistory'
+              : 'navDailySaleSummary';
       document.getElementById(salesId)?.classList.add('active');
     } else if (moduleName === 'ar-all' || moduleName === 'ar-your' || moduleName === 'ar-payment-history') {
       setOpen(salesSub, salesBtn, false);
@@ -1140,7 +1150,7 @@
   function openInitialWorkspace() {
     const params = new URLSearchParams(location.search);
     const moduleName = params.get('module');
-    if (['invoice','history','payment-history','daily-sale-summary','ar-all','ar-your','ar-payment-history'].includes(moduleName)) loadWorkspace(moduleName, false);
+    if (['invoice','history','sale-return','payment-history','daily-sale-summary','ar-all','ar-your','ar-payment-history'].includes(moduleName)) loadWorkspace(moduleName, false);
     else showDashboardHome(false);
   }
 
