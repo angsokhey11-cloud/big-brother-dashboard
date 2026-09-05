@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BIG BROTHER — Dashboard</title>
+  <title>BIG BROTHER — Dashboard V3.11 Purchase Menu</title>
 
   <style>
     * {
@@ -422,7 +422,7 @@
     }
   
     /* =====================================================
-       BIG BROTHER PERMANENT SHELL V3
+       BIG BROTHER PERMANENT SHELL V3.11 — PURCHASE MENU
        LEFT = fixed navigation, RIGHT = changing workspace
        ===================================================== */
     html, body { height:100%; }
@@ -533,9 +533,30 @@
         <div id="salesSubmenu" class="nav-submenu">
           <button type="button" id="navNewInvoice" onclick="loadWorkspace('invoice')">➕ New Invoice</button>
           <button type="button" id="navInvoiceHistory" onclick="loadWorkspace('history')">📋 Invoice History</button>
-          <button type="button" id="navSaleReturn" onclick="loadWorkspace('sale-return')">↩️ Invoice Reversal</button>
+          <button type="button" id="navSaleReturn" onclick="loadWorkspace('sale-return')">↩️ Sale Return</button>
           <button type="button" id="navPaymentHistory" onclick="loadWorkspace('payment-history')">💵 Payment History</button>
           <button type="button" id="navDailySaleSummary" onclick="loadWorkspace('daily-sale-summary')">📊 Daily Sale Summary</button>
+        </div>
+      </div>
+
+      <div class="nav-group" id="purchaseNavGroup">
+        <button
+          type="button"
+          id="purchaseMenuButton"
+          class="nav-toggle"
+          aria-expanded="false"
+          aria-controls="purchaseSubmenu"
+          onclick="togglePurchaseMenu()"
+        >
+          <span class="nav-toggle-main"><span>🛒</span><span>Purchase</span></span>
+          <span class="nav-arrow">▼</span>
+        </button>
+
+        <div id="purchaseSubmenu" class="nav-submenu">
+          <button type="button" id="navCreatePurchase" onclick="loadWorkspace('purchase-create')">➕ Create Purchase</button>
+          <button type="button" id="navPurchaseHistory" onclick="loadWorkspace('purchase-history')">📋 Purchase History</button>
+          <button type="button" id="navPurchasePayable" onclick="loadWorkspace('purchase-payable')">💰 Payable Invoice</button>
+          <button type="button" id="navPurchasePaymentHistory" onclick="loadWorkspace('purchase-payment-history')">💳 Payment History</button>
         </div>
       </div>
 
@@ -600,7 +621,7 @@
       </h2>
 
       <p>
-        One dashboard for Sales, Stock, A/R and Reports.
+        One dashboard for Sales, Purchase, Stock, A/R and Reports.
         We will build each module step by step.
       </p>
 
@@ -660,7 +681,7 @@
         </p>
 
         <a href="https://angsokhey11-cloud.github.io/big-brother-invoice-sale-return/">
-          Open Invoice Reversal
+          Open Sale Return
         </a>
 
       </article>
@@ -713,6 +734,47 @@
 
       </article>
 
+
+    </section>
+
+
+    <!-- =====================================================
+         PURCHASE
+         ===================================================== -->
+
+    <h2 class="section-title" id="purchase">
+      Purchase
+    </h2>
+
+    <section class="modules">
+
+      <article class="module">
+        <div class="module-icon">🛒</div>
+        <h3>Create Purchase</h3>
+        <p>Create supplier purchases using Client Products and current purchase prices.</p>
+        <a href="#" onclick="loadWorkspace('purchase-create'); return false;">Open Create Purchase</a>
+      </article>
+
+      <article class="module">
+        <div class="module-icon">📋</div>
+        <h3>Purchase History</h3>
+        <p>Review Purchase IDs, supplier details, products, totals and outstanding balances.</p>
+        <a href="#" onclick="loadWorkspace('purchase-history'); return false;">Open Purchase History</a>
+      </article>
+
+      <article class="module">
+        <div class="module-icon">💰</div>
+        <h3>Payable Invoice</h3>
+        <p>Review outstanding supplier invoices and prepare Client Payable summaries.</p>
+        <a href="#" onclick="loadWorkspace('purchase-payable'); return false;">Open Payable Invoice</a>
+      </article>
+
+      <article class="module">
+        <div class="module-icon">💳</div>
+        <h3>Purchase Payment History</h3>
+        <p>Review supplier payment records, payment methods and transaction references.</p>
+        <a href="#" onclick="loadWorkspace('purchase-payment-history'); return false;">Open Payment History</a>
+      </article>
 
     </section>
 
@@ -1047,6 +1109,10 @@
     "sale-return": "https://angsokhey11-cloud.github.io/big-brother-invoice-sale-return/?embed=1&v=1",
     "payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=invoice&v=1",
     "daily-sale-summary": "https://angsokhey11-cloud.github.io/big-brother-daily-sale-summary/?embed=1&v=1",
+    "purchase-create": "https://angsokhey11-cloud.github.io/big-brother-purchase-recorder/?embed=1&v=1",
+    "purchase-history": "https://angsokhey11-cloud.github.io/big-brother-puchase-history/?embed=1&v=1",
+    "purchase-payable": "https://angsokhey11-cloud.github.io/big-brother-purchase-payable-invoice/?embed=1&v=1",
+    "purchase-payment-history": "https://angsokhey11-cloud.github.io/big-brother-purchase-payment-history/?embed=1&v=1",
     "ar-all": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=all&v=2",
     "ar-your": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=your&v=3",
     "ar-payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=receivable&v=1"
@@ -1056,6 +1122,8 @@
     document.querySelectorAll('.shell-nav-link, .nav-submenu button').forEach(el => el.classList.remove('active'));
     const salesSub = document.getElementById('salesSubmenu');
     const salesBtn = document.getElementById('salesMenuButton');
+    const purchaseSub = document.getElementById('purchaseSubmenu');
+    const purchaseBtn = document.getElementById('purchaseMenuButton');
     const arSub = document.getElementById('arSubmenu');
     const arBtn = document.getElementById('arMenuButton');
 
@@ -1069,6 +1137,7 @@
 
     if (moduleName === 'invoice' || moduleName === 'history' || moduleName === 'sale-return' || moduleName === 'payment-history' || moduleName === 'daily-sale-summary') {
       setOpen(salesSub, salesBtn, true);
+      setOpen(purchaseSub, purchaseBtn, false);
       setOpen(arSub, arBtn, false);
       const salesId = moduleName === 'invoice'
         ? 'navNewInvoice'
@@ -1080,13 +1149,27 @@
               ? 'navPaymentHistory'
               : 'navDailySaleSummary';
       document.getElementById(salesId)?.classList.add('active');
+    } else if (moduleName === 'purchase-create' || moduleName === 'purchase-history' || moduleName === 'purchase-payable' || moduleName === 'purchase-payment-history') {
+      setOpen(salesSub, salesBtn, false);
+      setOpen(purchaseSub, purchaseBtn, true);
+      setOpen(arSub, arBtn, false);
+      const purchaseId = moduleName === 'purchase-create'
+        ? 'navCreatePurchase'
+        : moduleName === 'purchase-history'
+          ? 'navPurchaseHistory'
+          : moduleName === 'purchase-payable'
+            ? 'navPurchasePayable'
+            : 'navPurchasePaymentHistory';
+      document.getElementById(purchaseId)?.classList.add('active');
     } else if (moduleName === 'ar-all' || moduleName === 'ar-your' || moduleName === 'ar-payment-history') {
       setOpen(salesSub, salesBtn, false);
+      setOpen(purchaseSub, purchaseBtn, false);
       setOpen(arSub, arBtn, true);
       const arId = moduleName === 'ar-all' ? 'navARAll' : (moduleName === 'ar-your' ? 'navARYour' : 'navARPaymentHistory');
       document.getElementById(arId)?.classList.add('active');
     } else {
       setOpen(salesSub, salesBtn, false);
+      setOpen(purchaseSub, purchaseBtn, false);
       setOpen(arSub, arBtn, false);
       document.getElementById('navDashboard')?.classList.add('active');
     }
@@ -1095,6 +1178,18 @@
   function toggleSalesMenu() {
     const submenu = document.getElementById('salesSubmenu');
     const button = document.getElementById('salesMenuButton');
+    if (!submenu || !button) return;
+    const open = !submenu.classList.contains('open');
+    submenu.classList.toggle('open', open);
+    button.classList.toggle('open', open);
+    button.setAttribute('aria-expanded', String(open));
+    const arrow = button.querySelector('.nav-arrow');
+    if (arrow) arrow.textContent = open ? '▲' : '▼';
+  }
+
+  function togglePurchaseMenu() {
+    const submenu = document.getElementById('purchaseSubmenu');
+    const button = document.getElementById('purchaseMenuButton');
     if (!submenu || !button) return;
     const open = !submenu.classList.contains('open');
     submenu.classList.toggle('open', open);
@@ -1150,7 +1245,7 @@
   function openInitialWorkspace() {
     const params = new URLSearchParams(location.search);
     const moduleName = params.get('module');
-    if (['invoice','history','sale-return','payment-history','daily-sale-summary','ar-all','ar-your','ar-payment-history'].includes(moduleName)) loadWorkspace(moduleName, false);
+    if (['invoice','history','sale-return','payment-history','daily-sale-summary','purchase-create','purchase-history','purchase-payable','purchase-payment-history','ar-all','ar-your','ar-payment-history'].includes(moduleName)) loadWorkspace(moduleName, false);
     else showDashboardHome(false);
   }
 
