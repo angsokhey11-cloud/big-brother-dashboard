@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BIG BROTHER — Dashboard V3.18 Pending Deposit Stage</title>
+  <title>BIG BROTHER — Dashboard V3.19 Daily Cash Collection</title>
 
   <style>
     * {
@@ -536,7 +536,7 @@
           <button type="button" id="navSaleReturn" onclick="loadWorkspace('sale-return')">↩️ Invoice Reversal</button>
           <button type="button" id="navPaymentHistory" onclick="loadWorkspace('payment-history')">💵 Payment History</button>
           <button type="button" id="navDailySaleSummary" onclick="loadWorkspace('daily-sale-summary')">📊 Daily Sale Summary</button>
-          <button type="button" id="navDailyCashSummary" onclick="loadWorkspace('daily-cash-summary')">💵 Daily Cash Summary</button>
+          <button type="button" id="navDailyCashCollection" onclick="loadWorkspace('daily-cash-collection')">💵 Daily Cash Collection</button>
         </div>
       </div>
 
@@ -1134,7 +1134,7 @@
     "sale-return": "https://angsokhey11-cloud.github.io/big-brother-invoice-reversal/?embed=1&v=1",
     "payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=invoice&v=1",
     "daily-sale-summary": "https://angsokhey11-cloud.github.io/big-brother-daily-sale-summary/?embed=1&v=1",
-    "daily-cash-summary": "https://angsokhey11-cloud.github.io/big-brother-daily-cash-summary/?embed=1&v=1",
+    "daily-cash-collection": "https://angsokhey11-cloud.github.io/big-brother-daily-cash-collection/?embed=1&v=1",
     "purchase-create": "https://angsokhey11-cloud.github.io/big-brother-purchase-recorder/?embed=1&v=1",
     "purchase-history": "https://angsokhey11-cloud.github.io/big-brother-puchase-history/?embed=1&v=1",
     "purchase-payable": "https://angsokhey11-cloud.github.io/big-brother-purchase-payable-invoice/?embed=1&v=1",
@@ -1170,7 +1170,7 @@
       if (arrow) arrow.textContent = open ? '▲' : '▼';
     };
 
-    if (moduleName === 'invoice' || moduleName === 'history' || moduleName === 'sale-return' || moduleName === 'payment-history' || moduleName === 'daily-sale-summary' || moduleName === 'daily-cash-summary') {
+    if (moduleName === 'invoice' || moduleName === 'history' || moduleName === 'sale-return' || moduleName === 'payment-history' || moduleName === 'daily-sale-summary' || moduleName === 'daily-cash-collection') {
       setOpen(salesSub, salesBtn, true);
       setOpen(purchaseSub, purchaseBtn, false);
       setOpen(arSub, arBtn, false);
@@ -1185,7 +1185,7 @@
               ? 'navPaymentHistory'
               : moduleName === 'daily-sale-summary'
                 ? 'navDailySaleSummary'
-                : 'navDailyCashSummary';
+                : 'navDailyCashCollection';
       document.getElementById(salesId)?.classList.add('active');
     } else if (moduleName === 'purchase-create' || moduleName === 'purchase-history' || moduleName === 'purchase-payable' || moduleName === 'purchase-payment-history') {
       setOpen(salesSub, salesBtn, false);
@@ -1337,7 +1337,7 @@
   function openInitialWorkspace() {
     const params = new URLSearchParams(location.search);
     const moduleName = params.get('module');
-    if (['invoice','history','sale-return','payment-history','daily-sale-summary','daily-cash-summary','purchase-create','purchase-history','purchase-payable','purchase-payment-history','ar-all','ar-your','ar-payment-history','ar-daily-receivable-cash','admin-pending-receivable','admin-pending-daily-cash','admin-pending-deposit','admin-deposit-history','admin-staff-request','admin-request'].includes(moduleName)) loadWorkspace(moduleName, false);
+    if (['invoice','history','sale-return','payment-history','daily-sale-summary','daily-cash-collection','purchase-create','purchase-history','purchase-payable','purchase-payment-history','ar-all','ar-your','ar-payment-history','ar-daily-receivable-cash','admin-pending-receivable','admin-pending-daily-cash','admin-pending-deposit','admin-deposit-history','admin-staff-request','admin-request'].includes(moduleName)) loadWorkspace(moduleName, false);
     else showDashboardHome(false);
   }
 
