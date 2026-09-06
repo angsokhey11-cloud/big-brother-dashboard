@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BIG BROTHER — Dashboard V3.17 Pending Daily Cash Request</title>
+  <title>BIG BROTHER — Dashboard V3.18 Pending Deposit Stage</title>
 
   <style>
     * {
@@ -591,7 +591,8 @@
 
         <div id="adminWorkSubmenu" class="nav-submenu">
           <button type="button" id="navAdminPendingReceivable" onclick="loadWorkspace('admin-pending-receivable')">💰 Pending Receivable Request</button>
-          <button type="button" id="navAdminPendingDeposit" onclick="loadWorkspace('admin-pending-deposit')">💵 Pending Daily Cash Request</button>
+          <button type="button" id="navAdminPendingDeposit" onclick="loadWorkspace('admin-pending-daily-cash')">💵 Pending Daily Cash Request</button>
+          <button type="button" id="navAdminPendingDepositStage" onclick="loadWorkspace('admin-pending-deposit')">🏦 Pending Deposit</button>
           <button type="button" id="navAdminDepositHistory" onclick="loadWorkspace('admin-deposit-history')">📚 Deposit History</button>
           <button type="button" id="navAdminStaffRequest" onclick="loadWorkspace('admin-staff-request')">👥 Staff Request</button>
           <button type="button" id="navAdminRequest" onclick="loadWorkspace('admin-request')">🛠️ Admin Request</button>
@@ -1143,6 +1144,7 @@
     "ar-payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=receivable&v=1",
     "ar-daily-receivable-cash": "https://angsokhey11-cloud.github.io/big-brother-daily-receivable-cash-summary/?embed=1",
     "admin-pending-receivable": "https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=pending-receivable",
+    "admin-pending-daily-cash": "https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=pending-daily-cash",
     "admin-pending-deposit": "https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=pending-deposit",
     "admin-deposit-history": "https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=deposit-history",
     "admin-staff-request": "https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=staff-request",
@@ -1214,6 +1216,7 @@
       document.getElementById(arId)?.classList.add('active');
     } else if (
       moduleName === 'admin-pending-receivable' ||
+      moduleName === 'admin-pending-daily-cash' ||
       moduleName === 'admin-pending-deposit' ||
       moduleName === 'admin-deposit-history' ||
       moduleName === 'admin-staff-request' ||
@@ -1227,10 +1230,12 @@
       const adminId =
         moduleName === 'admin-pending-receivable'
           ? 'navAdminPendingReceivable'
-          : moduleName === 'admin-pending-deposit'
+          : moduleName === 'admin-pending-daily-cash'
             ? 'navAdminPendingDeposit'
-            : moduleName === 'admin-deposit-history'
-              ? 'navAdminDepositHistory'
+            : moduleName === 'admin-pending-deposit'
+              ? 'navAdminPendingDepositStage'
+              : moduleName === 'admin-deposit-history'
+                ? 'navAdminDepositHistory'
               : moduleName === 'admin-staff-request'
                 ? 'navAdminStaffRequest'
                 : 'navAdminRequest';
@@ -1332,7 +1337,7 @@
   function openInitialWorkspace() {
     const params = new URLSearchParams(location.search);
     const moduleName = params.get('module');
-    if (['invoice','history','sale-return','payment-history','daily-sale-summary','daily-cash-summary','purchase-create','purchase-history','purchase-payable','purchase-payment-history','ar-all','ar-your','ar-payment-history','ar-daily-receivable-cash','admin-pending-receivable','admin-pending-deposit','admin-deposit-history','admin-staff-request','admin-request'].includes(moduleName)) loadWorkspace(moduleName, false);
+    if (['invoice','history','sale-return','payment-history','daily-sale-summary','daily-cash-summary','purchase-create','purchase-history','purchase-payable','purchase-payment-history','ar-all','ar-your','ar-payment-history','ar-daily-receivable-cash','admin-pending-receivable','admin-pending-daily-cash','admin-pending-deposit','admin-deposit-history','admin-staff-request','admin-request'].includes(moduleName)) loadWorkspace(moduleName, false);
     else showDashboardHome(false);
   }
 
