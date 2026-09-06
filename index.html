@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BIG BROTHER — Dashboard V3.14.1 A/R Active Label Fix</title>
+  <title>BIG BROTHER — Dashboard V3.16 Admin Work Deposit History</title>
 
   <style>
     * {
@@ -576,6 +576,28 @@
         </div>
       </div>
 
+      <div class="nav-group" id="adminWorkNavGroup">
+        <button
+          type="button"
+          id="adminWorkMenuButton"
+          class="nav-toggle"
+          aria-expanded="false"
+          aria-controls="adminWorkSubmenu"
+          onclick="toggleAdminWorkMenu()"
+        >
+          <span class="nav-toggle-main"><span>🛠️</span><span>Admin Work</span></span>
+          <span class="nav-arrow">▼</span>
+        </button>
+
+        <div id="adminWorkSubmenu" class="nav-submenu">
+          <button type="button" id="navAdminPendingReceivable" onclick="loadWorkspace('admin-pending-receivable')">💰 Pending Receivable Request</button>
+          <button type="button" id="navAdminPendingDeposit" onclick="loadWorkspace('admin-pending-deposit')">🏦 Pending Deposit Request</button>
+          <button type="button" id="navAdminDepositHistory" onclick="loadWorkspace('admin-deposit-history')">📚 Deposit History</button>
+          <button type="button" id="navAdminStaffRequest" onclick="loadWorkspace('admin-staff-request')">👥 Staff Request</button>
+          <button type="button" id="navAdminRequest" onclick="loadWorkspace('admin-request')">🛠️ Admin Request</button>
+        </div>
+      </div>
+
       <button type="button" class="shell-nav-link" onclick="showDashboardSection('reports')">📊 Reports</button>
       <button type="button" class="shell-nav-link" onclick="showDashboardSection('master')">🗂️ Master Data</button>
 
@@ -1119,7 +1141,12 @@
     "ar-all": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=all&v=2",
     "ar-your": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=your&v=3",
     "ar-payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=receivable&v=1",
-    "ar-daily-receivable-cash": "https://angsokhey11-cloud.github.io/big-brother-daily-receivable-cash-summary/?embed=1"
+    "ar-daily-receivable-cash": "https://angsokhey11-cloud.github.io/big-brother-daily-receivable-cash-summary/?embed=1",
+    "admin-pending-receivable": "https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=pending-receivable",
+    "admin-pending-deposit": "https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=pending-deposit",
+    "admin-deposit-history": "https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=deposit-history",
+    "admin-staff-request": "https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=staff-request",
+    "admin-request": "https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=admin-request"
   };
 
   function setShellActive(moduleName) {
@@ -1130,6 +1157,8 @@
     const purchaseBtn = document.getElementById('purchaseMenuButton');
     const arSub = document.getElementById('arSubmenu');
     const arBtn = document.getElementById('arMenuButton');
+    const adminSub = document.getElementById('adminWorkSubmenu');
+    const adminBtn = document.getElementById('adminWorkMenuButton');
 
     const setOpen = (sub, btn, open) => {
       sub?.classList.toggle('open', open);
@@ -1143,6 +1172,7 @@
       setOpen(salesSub, salesBtn, true);
       setOpen(purchaseSub, purchaseBtn, false);
       setOpen(arSub, arBtn, false);
+      setOpen(adminSub, adminBtn, false);
       const salesId = moduleName === 'invoice'
         ? 'navNewInvoice'
         : moduleName === 'history'
@@ -1159,6 +1189,7 @@
       setOpen(salesSub, salesBtn, false);
       setOpen(purchaseSub, purchaseBtn, true);
       setOpen(arSub, arBtn, false);
+      setOpen(adminSub, adminBtn, false);
       const purchaseId = moduleName === 'purchase-create'
         ? 'navCreatePurchase'
         : moduleName === 'purchase-history'
@@ -1171,6 +1202,7 @@
       setOpen(salesSub, salesBtn, false);
       setOpen(purchaseSub, purchaseBtn, false);
       setOpen(arSub, arBtn, true);
+      setOpen(adminSub, adminBtn, false);
       const arId =
         moduleName === 'ar-all'
           ? 'navARAll'
@@ -1180,10 +1212,36 @@
               ? 'navARPaymentHistory'
               : 'navARDailyReceivableCash';
       document.getElementById(arId)?.classList.add('active');
+    } else if (
+      moduleName === 'admin-pending-receivable' ||
+      moduleName === 'admin-pending-deposit' ||
+      moduleName === 'admin-deposit-history' ||
+      moduleName === 'admin-staff-request' ||
+      moduleName === 'admin-request'
+    ) {
+      setOpen(salesSub, salesBtn, false);
+      setOpen(purchaseSub, purchaseBtn, false);
+      setOpen(arSub, arBtn, false);
+      setOpen(adminSub, adminBtn, true);
+
+      const adminId =
+        moduleName === 'admin-pending-receivable'
+          ? 'navAdminPendingReceivable'
+          : moduleName === 'admin-pending-deposit'
+            ? 'navAdminPendingDeposit'
+            : moduleName === 'admin-deposit-history'
+              ? 'navAdminDepositHistory'
+              : moduleName === 'admin-staff-request'
+                ? 'navAdminStaffRequest'
+                : 'navAdminRequest';
+
+      document.getElementById(adminId)?.classList.add('active');
+
     } else {
       setOpen(salesSub, salesBtn, false);
       setOpen(purchaseSub, purchaseBtn, false);
       setOpen(arSub, arBtn, false);
+      setOpen(adminSub, adminBtn, false);
       document.getElementById('navDashboard')?.classList.add('active');
     }
   }
@@ -1238,6 +1296,22 @@
     });
   }
 
+
+  function toggleAdminWorkMenu() {
+    const submenu = document.getElementById('adminWorkSubmenu');
+    const button = document.getElementById('adminWorkMenuButton');
+    if (!submenu || !button) return;
+
+    const open = !submenu.classList.contains('open');
+
+    submenu.classList.toggle('open', open);
+    button.classList.toggle('open', open);
+    button.setAttribute('aria-expanded', String(open));
+
+    const arrow = button.querySelector('.nav-arrow');
+    if (arrow) arrow.textContent = open ? '▲' : '▼';
+  }
+
   function loadWorkspace(moduleName, updateUrl = true) {
     const url = MODULE_URLS[moduleName];
     if (!url) return;
@@ -1258,7 +1332,7 @@
   function openInitialWorkspace() {
     const params = new URLSearchParams(location.search);
     const moduleName = params.get('module');
-    if (['invoice','history','sale-return','payment-history','daily-sale-summary','daily-cash-summary','purchase-create','purchase-history','purchase-payable','purchase-payment-history','ar-all','ar-your','ar-payment-history','ar-daily-receivable-cash'].includes(moduleName)) loadWorkspace(moduleName, false);
+    if (['invoice','history','sale-return','payment-history','daily-sale-summary','daily-cash-summary','purchase-create','purchase-history','purchase-payable','purchase-payment-history','ar-all','ar-your','ar-payment-history','ar-daily-receivable-cash','admin-pending-receivable','admin-pending-deposit','admin-deposit-history','admin-staff-request','admin-request'].includes(moduleName)) loadWorkspace(moduleName, false);
     else showDashboardHome(false);
   }
 
