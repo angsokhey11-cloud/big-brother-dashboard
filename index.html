@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BIG BROTHER — Dashboard V3.14 Daily Receivable Cash Summary</title>
+  <title>BIG BROTHER — Dashboard V3.14.1 A/R Active Label Fix</title>
 
   <style>
     * {
@@ -1171,7 +1171,14 @@
       setOpen(salesSub, salesBtn, false);
       setOpen(purchaseSub, purchaseBtn, false);
       setOpen(arSub, arBtn, true);
-      const arId = moduleName === 'ar-all' ? 'navARAll' : (moduleName === 'ar-your' ? 'navARYour' : 'navARPaymentHistory');
+      const arId =
+        moduleName === 'ar-all'
+          ? 'navARAll'
+          : moduleName === 'ar-your'
+            ? 'navARYour'
+            : moduleName === 'ar-payment-history'
+              ? 'navARPaymentHistory'
+              : 'navARDailyReceivableCash';
       document.getElementById(arId)?.classList.add('active');
     } else {
       setOpen(salesSub, salesBtn, false);
