@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BIG BROTHER — Dashboard V3.13 Daily Cash Summary</title>
+  <title>BIG BROTHER — Dashboard V3.14 Daily Receivable Cash Summary</title>
 
   <style>
     * {
@@ -572,6 +572,7 @@
           <button type="button" id="navARAll" onclick="loadWorkspace('ar-all')">📋 All Receivable</button>
           <button type="button" id="navARYour" onclick="loadWorkspace('ar-your')">👤 Your Receivable</button>
           <button type="button" id="navARPaymentHistory" onclick="loadWorkspace('ar-payment-history')">🧾 Receivable Payment History</button>
+          <button type="button" id="navARDailyReceivableCash" onclick="loadWorkspace('ar-daily-receivable-cash')">💵 Daily Receivable Cash Summary</button>
         </div>
       </div>
 
@@ -1117,7 +1118,8 @@
     "purchase-payment-history": "https://angsokhey11-cloud.github.io/big-brother-purchase-payment-history/?embed=1&v=1",
     "ar-all": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=all&v=2",
     "ar-your": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=your&v=3",
-    "ar-payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=receivable&v=1"
+    "ar-payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=receivable&v=1",
+    "ar-daily-receivable-cash": "https://angsokhey11-cloud.github.io/big-brother-daily-receivable-cash-summary/?embed=1"
   };
 
   function setShellActive(moduleName) {
@@ -1165,7 +1167,7 @@
             ? 'navPurchasePayable'
             : 'navPurchasePaymentHistory';
       document.getElementById(purchaseId)?.classList.add('active');
-    } else if (moduleName === 'ar-all' || moduleName === 'ar-your' || moduleName === 'ar-payment-history') {
+    } else if (moduleName === 'ar-all' || moduleName === 'ar-your' || moduleName === 'ar-payment-history' || moduleName === 'ar-daily-receivable-cash') {
       setOpen(salesSub, salesBtn, false);
       setOpen(purchaseSub, purchaseBtn, false);
       setOpen(arSub, arBtn, true);
@@ -1249,7 +1251,7 @@
   function openInitialWorkspace() {
     const params = new URLSearchParams(location.search);
     const moduleName = params.get('module');
-    if (['invoice','history','sale-return','payment-history','daily-sale-summary','daily-cash-summary','purchase-create','purchase-history','purchase-payable','purchase-payment-history','ar-all','ar-your','ar-payment-history'].includes(moduleName)) loadWorkspace(moduleName, false);
+    if (['invoice','history','sale-return','payment-history','daily-sale-summary','daily-cash-summary','purchase-create','purchase-history','purchase-payable','purchase-payment-history','ar-all','ar-your','ar-payment-history','ar-daily-receivable-cash'].includes(moduleName)) loadWorkspace(moduleName, false);
     else showDashboardHome(false);
   }
 
