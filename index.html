@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BIG BROTHER — Dashboard V3.23 Products Editor Menu</title>
+  <title>BIG BROTHER — Dashboard V3.24 Sales Support Menu</title>
 
   <style>
     * {
@@ -606,6 +606,28 @@
           <button type="button" id="navPaymentHistory" onclick="loadWorkspace('payment-history')">💵 Payment History</button>
           <button type="button" id="navDailySaleSummary" onclick="loadWorkspace('daily-sale-summary')">📊 Daily Sale Summary</button>
           <button type="button" id="navDailyCashCollection" onclick="loadWorkspace('daily-cash-collection')">💵 Daily Cash Collection</button>
+        </div>
+      </div>
+
+
+      <div class="nav-group" id="salesSupportNavGroup">
+        <button
+          type="button"
+          id="salesSupportMenuButton"
+          class="nav-toggle"
+          aria-expanded="false"
+          aria-controls="salesSupportSubmenu"
+          onclick="toggleSalesSupportMenu()"
+        >
+          <span class="nav-toggle-main"><span>🛠️</span><span>Sales Support</span></span>
+          <span class="nav-arrow">▼</span>
+        </button>
+
+        <div id="salesSupportSubmenu" class="nav-submenu">
+          <button type="button" id="navSalesSupportCalculator" onclick="loadWorkspace('sales-support-calculator')">🧮 Calculator</button>
+          <button type="button" id="navSalesSupportRequestDelivery" onclick="loadWorkspace('sales-support-request-delivery')">🚚 Request Delivery</button>
+          <button type="button" id="navSalesSupportYourCustomer" onclick="loadWorkspace('sales-support-your-customer')">👥 Your Customer</button>
+          <button type="button" id="navSalesSupportSuccessfulDelivery" onclick="loadWorkspace('sales-support-successful-delivery')">✅ Successful Delivery</button>
         </div>
       </div>
 
@@ -1260,6 +1282,11 @@
     "products-editor": "https://angsokhey11-cloud.github.io/big-brother-products-editor/?embed=1&view=details&v=10",
     "products-add": "https://angsokhey11-cloud.github.io/big-brother-products-editor/?embed=1&view=add&v=10",
     "products-details": "https://angsokhey11-cloud.github.io/big-brother-products-editor/?embed=1&view=details&v=10",
+    // Salesman support workspace. No Sales Invoice write connection.
+    "sales-support-calculator": "https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=calculator&v=10",
+    "sales-support-request-delivery": "https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=request-delivery&v=10",
+    "sales-support-your-customer": "https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=your-customer&v=10",
+    "sales-support-successful-delivery": "https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=successful-delivery&v=10",
     invoice: "https://angsokhey11-cloud.github.io/big-brother-invoice-generator/",
     history: "https://angsokhey11-cloud.github.io/invoice-history/?embed=1&v=471",
     "sale-return": "https://angsokhey11-cloud.github.io/big-brother-invoice-reversal/?embed=1&v=1",
@@ -1289,6 +1316,9 @@
 
     const salesSub = document.getElementById('salesSubmenu');
     const salesBtn = document.getElementById('salesMenuButton');
+
+    const salesSupportSub = document.getElementById('salesSupportSubmenu');
+    const salesSupportBtn = document.getElementById('salesSupportMenuButton');
 
     const purchaseSub = document.getElementById('purchaseSubmenu');
     const purchaseBtn = document.getElementById('purchaseMenuButton');
@@ -1330,9 +1360,17 @@
       'products-details'
     ];
 
+    const salesSupportModules = [
+      'sales-support-calculator',
+      'sales-support-request-delivery',
+      'sales-support-your-customer',
+      'sales-support-successful-delivery'
+    ];
+
     const isCustomerModule = customerModules.includes(moduleName);
     const isClientModule = clientModules.includes(moduleName);
     const isProductModule = productModules.includes(moduleName);
+    const isSalesSupportModule = salesSupportModules.includes(moduleName);
 
     const isMasterModule =
       isCustomerModule ||
@@ -1352,9 +1390,11 @@
     setOpen(customersSub, customersBtn, isCustomerModule);
     setOpen(clientsSub, clientsBtn, isClientModule);
     setOpen(productsSub, productsBtn, isProductModule);
+    setOpen(salesSupportSub, salesSupportBtn, isSalesSupportModule);
 
     if (isMasterModule) {
       setOpen(salesSub, salesBtn, false);
+      setOpen(salesSupportSub, salesSupportBtn, false);
       setOpen(purchaseSub, purchaseBtn, false);
       setOpen(arSub, arBtn, false);
       setOpen(adminSub, adminBtn, false);
@@ -1397,6 +1437,7 @@
       moduleName === 'daily-cash-collection'
     ) {
       setOpen(salesSub, salesBtn, true);
+      setOpen(salesSupportSub, salesSupportBtn, false);
       setOpen(purchaseSub, purchaseBtn, false);
       setOpen(arSub, arBtn, false);
       setOpen(adminSub, adminBtn, false);
@@ -1415,6 +1456,28 @@
 
       document.getElementById(salesId)?.classList.add('active');
 
+    } else if (isSalesSupportModule) {
+      setOpen(salesSub, salesBtn, false);
+      setOpen(salesSupportSub, salesSupportBtn, true);
+      setOpen(purchaseSub, purchaseBtn, false);
+      setOpen(arSub, arBtn, false);
+      setOpen(adminSub, adminBtn, false);
+      setOpen(masterSub, masterBtn, false);
+      setOpen(customersSub, customersBtn, false);
+      setOpen(clientsSub, clientsBtn, false);
+      setOpen(productsSub, productsBtn, false);
+
+      const salesSupportId =
+        moduleName === 'sales-support-calculator'
+          ? 'navSalesSupportCalculator'
+          : moduleName === 'sales-support-request-delivery'
+            ? 'navSalesSupportRequestDelivery'
+            : moduleName === 'sales-support-your-customer'
+              ? 'navSalesSupportYourCustomer'
+              : 'navSalesSupportSuccessfulDelivery';
+
+      document.getElementById(salesSupportId)?.classList.add('active');
+
     } else if (
       moduleName === 'purchase-create' ||
       moduleName === 'purchase-history' ||
@@ -1422,6 +1485,7 @@
       moduleName === 'purchase-payment-history'
     ) {
       setOpen(salesSub, salesBtn, false);
+      setOpen(salesSupportSub, salesSupportBtn, false);
       setOpen(purchaseSub, purchaseBtn, true);
       setOpen(arSub, arBtn, false);
       setOpen(adminSub, adminBtn, false);
@@ -1443,6 +1507,7 @@
       moduleName === 'ar-daily-receivable-cash'
     ) {
       setOpen(salesSub, salesBtn, false);
+      setOpen(salesSupportSub, salesSupportBtn, false);
       setOpen(purchaseSub, purchaseBtn, false);
       setOpen(arSub, arBtn, true);
       setOpen(adminSub, adminBtn, false);
@@ -1467,6 +1532,7 @@
       moduleName === 'admin-request'
     ) {
       setOpen(salesSub, salesBtn, false);
+      setOpen(salesSupportSub, salesSupportBtn, false);
       setOpen(purchaseSub, purchaseBtn, false);
       setOpen(arSub, arBtn, false);
       setOpen(adminSub, adminBtn, true);
@@ -1488,6 +1554,7 @@
 
     } else {
       setOpen(salesSub, salesBtn, false);
+      setOpen(salesSupportSub, salesSupportBtn, false);
       setOpen(purchaseSub, purchaseBtn, false);
       setOpen(arSub, arBtn, false);
       setOpen(adminSub, adminBtn, false);
@@ -1503,6 +1570,18 @@
   function toggleSalesMenu() {
     const submenu = document.getElementById('salesSubmenu');
     const button = document.getElementById('salesMenuButton');
+    if (!submenu || !button) return;
+    const open = !submenu.classList.contains('open');
+    submenu.classList.toggle('open', open);
+    button.classList.toggle('open', open);
+    button.setAttribute('aria-expanded', String(open));
+    const arrow = button.querySelector('.nav-arrow');
+    if (arrow) arrow.textContent = open ? '▲' : '▼';
+  }
+
+  function toggleSalesSupportMenu() {
+    const submenu = document.getElementById('salesSupportSubmenu');
+    const button = document.getElementById('salesSupportMenuButton');
     if (!submenu || !button) return;
     const open = !submenu.classList.contains('open');
     submenu.classList.toggle('open', open);
@@ -1643,7 +1722,7 @@
   function openInitialWorkspace() {
     const params = new URLSearchParams(location.search);
     const moduleName = params.get('module');
-    if (['customers-editor','customers-add','customers-map','customers-details','clients-editor','clients-add','clients-details','products-editor','products-add','products-details','invoice','history','sale-return','payment-history','daily-sale-summary','daily-cash-collection','purchase-create','purchase-history','purchase-payable','purchase-payment-history','ar-all','ar-your','ar-payment-history','ar-daily-receivable-cash','admin-pending-receivable','admin-pending-daily-cash','admin-pending-deposit','admin-deposit-history','admin-staff-request','admin-request'].includes(moduleName)) loadWorkspace(moduleName, false);
+    if (['customers-editor','customers-add','customers-map','customers-details','clients-editor','clients-add','clients-details','products-editor','products-add','products-details','sales-support-calculator','sales-support-request-delivery','sales-support-your-customer','sales-support-successful-delivery','invoice','history','sale-return','payment-history','daily-sale-summary','daily-cash-collection','purchase-create','purchase-history','purchase-payable','purchase-payment-history','ar-all','ar-your','ar-payment-history','ar-daily-receivable-cash','admin-pending-receivable','admin-pending-daily-cash','admin-pending-deposit','admin-deposit-history','admin-staff-request','admin-request'].includes(moduleName)) loadWorkspace(moduleName, false);
     else showDashboardHome(false);
   }
 
