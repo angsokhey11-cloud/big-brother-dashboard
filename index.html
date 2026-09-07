@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BIG BROTHER — Dashboard V3.19 Daily Cash Collection</title>
+  <title>BIG BROTHER — Dashboard V3.20 Customers Editor</title>
 
   <style>
     * {
@@ -600,7 +600,15 @@
       </div>
 
       <button type="button" class="shell-nav-link" onclick="showDashboardSection('reports')">📊 Reports</button>
-      <button type="button" class="shell-nav-link" onclick="showDashboardSection('master')">🗂️ Master Data</button>
+      <div class="nav-group" id="masterNavGroup">
+        <button type="button" id="masterMenuButton" class="nav-toggle" aria-expanded="false" aria-controls="masterSubmenu" onclick="toggleMasterMenu()">
+          <span class="nav-toggle-main"><span>🗂️</span><span>Master Data</span></span>
+          <span class="nav-arrow">▼</span>
+        </button>
+        <div id="masterSubmenu" class="nav-submenu">
+          <button type="button" id="navCustomersEditor" onclick="loadWorkspace('customers-editor')">👥 Customers Editor</button>
+        </div>
+      </div>
 
     </nav>
 
@@ -950,29 +958,12 @@
 
       <!-- MASTER DATA -->
 
-      <article class="module disabled" id="master">
-
-        <div class="module-icon">
-          🗂️
-        </div>
-
-        <h3>
-          Master Data
-        </h3>
-
-        <p>
-          Customers, locations, products, prices,
-          salespeople and system settings.
-        </p>
-
-        <button type="button">
-          Coming Soon
-        </button>
-
-      </article>
-
-
-    </section>
+      <article class="module" id="master">
+        <div class="module-icon">🗂️</div>
+        <h3>Master Data</h3>
+        <p>Add and edit customers, delivery locations and customer product prices.</p>
+        <a href="#" onclick="loadWorkspace('customers-editor'); return false;">Open Customers Editor</a>
+      </article>   </section>
 
 
     <!-- =====================================================
@@ -1129,6 +1120,7 @@
 
 <script>
   const MODULE_URLS = {
+    "customers-editor": "https://angsokhey11-cloud.github.io/big-brother-customers-editor/",
     invoice: "https://angsokhey11-cloud.github.io/big-brother-invoice-generator/",
     history: "https://angsokhey11-cloud.github.io/invoice-history/?embed=1&v=471",
     "sale-return": "https://angsokhey11-cloud.github.io/big-brother-invoice-reversal/?embed=1&v=1",
@@ -1170,7 +1162,15 @@
       if (arrow) arrow.textContent = open ? '▲' : '▼';
     };
 
-    if (moduleName === 'invoice' || moduleName === 'history' || moduleName === 'sale-return' || moduleName === 'payment-history' || moduleName === 'daily-sale-summary' || moduleName === 'daily-cash-collection') {
+    setOpen(document.getElementById('masterSubmenu'), document.getElementById('masterMenuButton'), moduleName === 'customers-editor');
+
+    if (moduleName === 'customers-editor') {
+      setOpen(salesSub, salesBtn, false);
+      setOpen(purchaseSub, purchaseBtn, false);
+      setOpen(arSub, arBtn, false);
+      setOpen(adminSub, adminBtn, false);
+      document.getElementById('navCustomersEditor')?.classList.add('active');
+    } else if (moduleName === 'invoice' || moduleName === 'history' || moduleName === 'sale-return' || moduleName === 'payment-history' || moduleName === 'daily-sale-summary' || moduleName === 'daily-cash-collection') {
       setOpen(salesSub, salesBtn, true);
       setOpen(purchaseSub, purchaseBtn, false);
       setOpen(arSub, arBtn, false);
@@ -1263,6 +1263,18 @@
     if (arrow) arrow.textContent = open ? '▲' : '▼';
   }
 
+  function toggleMasterMenu() {
+    const submenu = document.getElementById('masterSubmenu');
+    const button = document.getElementById('masterMenuButton');
+    if (!submenu || !button) return;
+    const open = !submenu.classList.contains('open');
+    submenu.classList.toggle('open', open);
+    button.classList.toggle('open', open);
+    button.setAttribute('aria-expanded', String(open));
+    const arrow = button.querySelector('.nav-arrow');
+    if (arrow) arrow.textContent = open ? '▲' : '▼';
+  }
+
   function togglePurchaseMenu() {
     const submenu = document.getElementById('purchaseSubmenu');
     const button = document.getElementById('purchaseMenuButton');
@@ -1337,7 +1349,7 @@
   function openInitialWorkspace() {
     const params = new URLSearchParams(location.search);
     const moduleName = params.get('module');
-    if (['invoice','history','sale-return','payment-history','daily-sale-summary','daily-cash-collection','purchase-create','purchase-history','purchase-payable','purchase-payment-history','ar-all','ar-your','ar-payment-history','ar-daily-receivable-cash','admin-pending-receivable','admin-pending-daily-cash','admin-pending-deposit','admin-deposit-history','admin-staff-request','admin-request'].includes(moduleName)) loadWorkspace(moduleName, false);
+    if (['customers-editor','invoice','history','sale-return','payment-history','daily-sale-summary','daily-cash-collection','purchase-create','purchase-history','purchase-payable','purchase-payment-history','ar-all','ar-your','ar-payment-history','ar-daily-receivable-cash','admin-pending-receivable','admin-pending-daily-cash','admin-pending-deposit','admin-deposit-history','admin-staff-request','admin-request'].includes(moduleName)) loadWorkspace(moduleName, false);
     else showDashboardHome(false);
   }
 
@@ -1346,3 +1358,4 @@
 
 </body>
 </html>
+
