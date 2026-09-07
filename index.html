@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BIG BROTHER — Dashboard V3.21 Nested Customers Menu</title>
+  <title>BIG BROTHER — Dashboard V3.22 Clients Editor Menu</title>
 
   <style>
     * {
@@ -456,12 +456,15 @@
     .nav-submenu button.active { background:rgba(255,255,255,.12); color:#fff; }
 
     /* =====================================================
-       V3.21 — NESTED MASTER DATA / CUSTOMERS EDITOR MENU
+       V3.22 — NESTED MASTER DATA EDITORS
        Master Data
          -> Customers Editor
               -> Add Customer
               -> Customer Map
               -> All Customer Details
+         -> Clients Editor
+              -> Add Client
+              -> All Clients Details
        ===================================================== */
     .nested-nav-group {
       display:flex;
@@ -687,6 +690,25 @@
               <button type="button" id="navCustomerAdd" onclick="loadWorkspace('customers-add')">＋ Add Customer</button>
               <button type="button" id="navCustomerMap" onclick="loadWorkspace('customers-map')">📍 Customer Map</button>
               <button type="button" id="navCustomerDetails" onclick="loadWorkspace('customers-details')">👥 All Customer Details</button>
+            </div>
+          </div>
+
+          <div class="nested-nav-group" id="clientsEditorNavGroup">
+            <button
+              type="button"
+              id="clientsEditorMenuButton"
+              class="nested-nav-toggle"
+              aria-expanded="false"
+              aria-controls="clientsEditorSubmenu"
+              onclick="toggleClientsEditorMenu()"
+            >
+              <span class="nested-nav-main"><span>🏢</span><span>Clients Editor</span></span>
+              <span class="nav-arrow">▼</span>
+            </button>
+
+            <div id="clientsEditorSubmenu" class="nav-submenu nav-submenu-level2">
+              <button type="button" id="navClientAdd" onclick="loadWorkspace('clients-add')">＋ Add Client</button>
+              <button type="button" id="navClientDetails" onclick="loadWorkspace('clients-details')">🏢 All Clients Details</button>
             </div>
           </div>
 
@@ -1044,7 +1066,7 @@
       <article class="module" id="master">
         <div class="module-icon">🗂️</div>
         <h3>Master Data</h3>
-        <p>Add and edit customers, delivery locations and customer product prices.</p>
+        <p>Manage Sales Customers, Purchase Clients/Suppliers, locations and product pricing.</p>
         <a href="#" onclick="loadWorkspace('customers-details'); return false;">Open Customers Editor</a>
       </article>   </section>
 
@@ -1208,6 +1230,10 @@
     "customers-add": "https://angsokhey11-cloud.github.io/big-brother-customers-editor/?embed=1&view=add&v=21",
     "customers-map": "https://angsokhey11-cloud.github.io/big-brother-customers-editor/?embed=1&view=map&v=21",
     "customers-details": "https://angsokhey11-cloud.github.io/big-brother-customers-editor/?embed=1&view=details&v=21",
+    // Purchase-side Clients/Suppliers Editor.
+    "clients-editor": "https://angsokhey11-cloud.github.io/big-brother-clients-editor/?embed=1&view=details&v=10",
+    "clients-add": "https://angsokhey11-cloud.github.io/big-brother-clients-editor/?embed=1&view=add&v=10",
+    "clients-details": "https://angsokhey11-cloud.github.io/big-brother-clients-editor/?embed=1&view=details&v=10",
     invoice: "https://angsokhey11-cloud.github.io/big-brother-invoice-generator/",
     history: "https://angsokhey11-cloud.github.io/invoice-history/?embed=1&v=471",
     "sale-return": "https://angsokhey11-cloud.github.io/big-brother-invoice-reversal/?embed=1&v=1",
@@ -1253,6 +1279,9 @@
     const customersSub = document.getElementById('customersEditorSubmenu');
     const customersBtn = document.getElementById('customersEditorMenuButton');
 
+    const clientsSub = document.getElementById('clientsEditorSubmenu');
+    const clientsBtn = document.getElementById('clientsEditorMenuButton');
+
     const customerModules = [
       'customers-editor',
       'customers-add',
@@ -1260,7 +1289,15 @@
       'customers-details'
     ];
 
+    const clientModules = [
+      'clients-editor',
+      'clients-add',
+      'clients-details'
+    ];
+
     const isCustomerModule = customerModules.includes(moduleName);
+    const isClientModule = clientModules.includes(moduleName);
+    const isMasterModule = isCustomerModule || isClientModule;
 
     const setOpen = (sub, btn, open) => {
       sub?.classList.toggle('open', open);
@@ -1271,25 +1308,35 @@
       if (arrow) arrow.textContent = open ? '▲' : '▼';
     };
 
-    // Master Data and Customers Editor stay expanded while one of the
-    // three Customers Editor pages is active.
-    setOpen(masterSub, masterBtn, isCustomerModule);
+    setOpen(masterSub, masterBtn, isMasterModule);
     setOpen(customersSub, customersBtn, isCustomerModule);
+    setOpen(clientsSub, clientsBtn, isClientModule);
 
-    if (isCustomerModule) {
+    if (isMasterModule) {
       setOpen(salesSub, salesBtn, false);
       setOpen(purchaseSub, purchaseBtn, false);
       setOpen(arSub, arBtn, false);
       setOpen(adminSub, adminBtn, false);
 
-      const customerNavId =
-        moduleName === 'customers-add'
-          ? 'navCustomerAdd'
-          : moduleName === 'customers-map'
-            ? 'navCustomerMap'
-            : 'navCustomerDetails';
+      if (isCustomerModule) {
+        const customerNavId =
+          moduleName === 'customers-add'
+            ? 'navCustomerAdd'
+            : moduleName === 'customers-map'
+              ? 'navCustomerMap'
+              : 'navCustomerDetails';
 
-      document.getElementById(customerNavId)?.classList.add('active');
+        document.getElementById(customerNavId)?.classList.add('active');
+      }
+
+      if (isClientModule) {
+        const clientNavId =
+          moduleName === 'clients-add'
+            ? 'navClientAdd'
+            : 'navClientDetails';
+
+        document.getElementById(clientNavId)?.classList.add('active');
+      }
 
     } else if (
       moduleName === 'invoice' ||
@@ -1396,6 +1443,7 @@
       setOpen(adminSub, adminBtn, false);
       setOpen(masterSub, masterBtn, false);
       setOpen(customersSub, customersBtn, false);
+      setOpen(clientsSub, clientsBtn, false);
 
       document.getElementById('navDashboard')?.classList.add('active');
     }
@@ -1428,6 +1476,21 @@
   function toggleCustomersEditorMenu() {
     const submenu = document.getElementById('customersEditorSubmenu');
     const button = document.getElementById('customersEditorMenuButton');
+    if (!submenu || !button) return;
+
+    const open = !submenu.classList.contains('open');
+
+    submenu.classList.toggle('open', open);
+    button.classList.toggle('open', open);
+    button.setAttribute('aria-expanded', String(open));
+
+    const arrow = button.querySelector('.nav-arrow');
+    if (arrow) arrow.textContent = open ? '▲' : '▼';
+  }
+
+  function toggleClientsEditorMenu() {
+    const submenu = document.getElementById('clientsEditorSubmenu');
+    const button = document.getElementById('clientsEditorMenuButton');
     if (!submenu || !button) return;
 
     const open = !submenu.classList.contains('open');
@@ -1514,7 +1577,7 @@
   function openInitialWorkspace() {
     const params = new URLSearchParams(location.search);
     const moduleName = params.get('module');
-    if (['customers-editor','customers-add','customers-map','customers-details','invoice','history','sale-return','payment-history','daily-sale-summary','daily-cash-collection','purchase-create','purchase-history','purchase-payable','purchase-payment-history','ar-all','ar-your','ar-payment-history','ar-daily-receivable-cash','admin-pending-receivable','admin-pending-daily-cash','admin-pending-deposit','admin-deposit-history','admin-staff-request','admin-request'].includes(moduleName)) loadWorkspace(moduleName, false);
+    if (['customers-editor','customers-add','customers-map','customers-details','clients-editor','clients-add','clients-details','invoice','history','sale-return','payment-history','daily-sale-summary','daily-cash-collection','purchase-create','purchase-history','purchase-payable','purchase-payment-history','ar-all','ar-your','ar-payment-history','ar-daily-receivable-cash','admin-pending-receivable','admin-pending-daily-cash','admin-pending-deposit','admin-deposit-history','admin-staff-request','admin-request'].includes(moduleName)) loadWorkspace(moduleName, false);
     else showDashboardHome(false);
   }
 
