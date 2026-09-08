@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BIG BROTHER — Dashboard V3.29 Expenses Menu</title>
+  <title>BIG BROTHER — Dashboard V3.30 Expense History Active</title>
 
   <style>
     * {
@@ -686,7 +686,7 @@
         <div id="expensesSubmenu" class="nav-submenu">
           <button type="button" id="navExpenseAdd" onclick="loadWorkspace('expense-add')">➕ Add Expense</button>
           <button type="button" class="frozen-module" id="navExpenseAccrued" disabled aria-disabled="true" title="Coming later">⏳ Accrued Expenses</button>
-          <button type="button" class="frozen-module" id="navExpenseHistory" disabled aria-disabled="true" title="Coming later">📜 Expense History</button>
+          <button type="button" id="navExpenseHistory" onclick="loadWorkspace('expense-history')">📜 Expense History</button>
           <button type="button" class="frozen-module" id="navExpenseMonthlyReport" disabled aria-disabled="true" title="Coming later">📊 Monthly Expense Report</button>
         </div>
       </div>
@@ -1337,10 +1337,10 @@
     "purchase-payable": "https://angsokhey11-cloud.github.io/big-brother-purchase-payable-invoice/?embed=1&v=1",
     "purchase-payment-history": "https://angsokhey11-cloud.github.io/big-brother-purchase-payment-history/?embed=1&v=1",
     // Expenses workspace
-    "expense-add": "https://angsokhey11-cloud.github.io/big-brother-expenses/?embed=1&view=add-expense&v=11",
-    "expense-accrued": "https://angsokhey11-cloud.github.io/big-brother-expenses/?embed=1&view=accrued-expenses&v=11",
-    "expense-history": "https://angsokhey11-cloud.github.io/big-brother-expenses/?embed=1&view=expense-history&v=11",
-    "expense-monthly-report": "https://angsokhey11-cloud.github.io/big-brother-expenses/?embed=1&view=monthly-report&v=11",
+    "expense-add": "https://angsokhey11-cloud.github.io/big-brother-expenses/?embed=1&view=add-expense&v=12",
+    "expense-accrued": "https://angsokhey11-cloud.github.io/big-brother-expenses/?embed=1&view=accrued-expenses&v=12",
+    "expense-history": "https://angsokhey11-cloud.github.io/big-brother-expenses/?embed=1&view=expense-history&v=12",
+    "expense-monthly-report": "https://angsokhey11-cloud.github.io/big-brother-expenses/?embed=1&view=monthly-report&v=12",
     "ar-all": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=all&v=2",
     "ar-your": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=your&v=3",
     "ar-payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=receivable&v=1",
@@ -1807,7 +1807,6 @@
 
   const FROZEN_EXPENSE_MODULES = new Set([
     'expense-accrued',
-    'expense-history',
     'expense-monthly-report'
   ]);
 
