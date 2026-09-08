@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BIG BROTHER — Dashboard V3.24 Sales Support Menu</title>
+  <title>BIG BROTHER — Dashboard V3.25 Frozen Delivery Menu</title>
 
   <style>
     * {
@@ -556,7 +556,25 @@
       .module-workspace { height:100%; }
     }
 
-  </style>
+  
+    /* =====================================================
+       V3.25 — TEMPORARILY FROZEN SALES SUPPORT ITEMS
+       ===================================================== */
+    .nav-submenu button.frozen-module,
+    .nav-submenu button:disabled {
+      opacity:.42;
+      cursor:not-allowed;
+      pointer-events:none;
+      filter:grayscale(.35);
+    }
+
+    .nav-submenu button.frozen-module:hover,
+    .nav-submenu button:disabled:hover {
+      background:transparent;
+      color:#dce8f7;
+    }
+
+</style>
 </head>
 
 <body>
@@ -625,9 +643,9 @@
 
         <div id="salesSupportSubmenu" class="nav-submenu">
           <button type="button" id="navSalesSupportCalculator" onclick="loadWorkspace('sales-support-calculator')">🧮 Calculator</button>
-          <button type="button" id="navSalesSupportRequestDelivery" onclick="loadWorkspace('sales-support-request-delivery')">🚚 Request Delivery</button>
+          <button type="button" class="frozen-module" id="navSalesSupportRequestDelivery" disabled aria-disabled="true" title="Temporarily unavailable">🚚 Request Delivery</button>
           <button type="button" id="navSalesSupportYourCustomer" onclick="loadWorkspace('sales-support-your-customer')">👥 Your Customer</button>
-          <button type="button" id="navSalesSupportSuccessfulDelivery" onclick="loadWorkspace('sales-support-successful-delivery')">✅ Successful Delivery</button>
+          <button type="button" class="frozen-module" id="navSalesSupportSuccessfulDelivery" disabled aria-disabled="true" title="Temporarily unavailable">✅ Successful Delivery</button>
         </div>
       </div>
 
@@ -1702,7 +1720,15 @@
     if (arrow) arrow.textContent = open ? '▲' : '▼';
   }
 
+  const FROZEN_SALES_SUPPORT_MODULES = new Set([
+    'sales-support-request-delivery',
+    'sales-support-successful-delivery'
+  ]);
+
   function loadWorkspace(moduleName, updateUrl = true) {
+    if (FROZEN_SALES_SUPPORT_MODULES.has(moduleName)) {
+      moduleName = 'sales-support-calculator';
+    }
     const url = MODULE_URLS[moduleName];
     if (!url) return;
     const home = document.getElementById('dashboardHome');
