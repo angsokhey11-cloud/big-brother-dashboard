@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BIG BROTHER — Dashboard V3.35 Expense Fast Sync</title>
+  <title>BIG BROTHER — Dashboard V3.36 Stock Menu + Keyin</title>
 
   <style>
     * {
@@ -691,7 +691,26 @@
         </div>
       </div>
 
-      <button type="button" class="shell-nav-link" onclick="showDashboardSection('stock')">📦 Stock</button>
+      <div class="nav-group" id="stockNavGroup">
+        <button
+          type="button"
+          id="stockMenuButton"
+          class="nav-toggle"
+          aria-expanded="false"
+          aria-controls="stockSubmenu"
+          onclick="toggleStockMenu()"
+        >
+          <span class="nav-toggle-main"><span>📦</span><span>Stock</span></span>
+          <span class="nav-arrow">▼</span>
+        </button>
+
+        <div id="stockSubmenu" class="nav-submenu">
+          <button type="button" id="navStockKeyin" onclick="loadWorkspace('stock-keyin')">⌨️ Stock In-Out (Keyin)</button>
+          <button type="button" class="frozen-module" id="navStockReport" disabled aria-disabled="true" title="Next Stock release">📊 Stock Report</button>
+          <button type="button" class="frozen-module" id="navStockDamaged" disabled aria-disabled="true" title="Next Stock release">⚠️ Damaged Stock</button>
+          <button type="button" class="frozen-module" id="navStockTransactions" disabled aria-disabled="true" title="Next Stock release">📜 Stock In-Out Transaction</button>
+        </div>
+      </div>
 
       <div class="nav-group" id="arNavGroup">
         <button type="button" id="arMenuButton" class="nav-toggle" aria-expanded="false" aria-controls="arSubmenu" onclick="toggleARMenu()">
@@ -1341,6 +1360,11 @@
     "expense-accrued": "https://angsokhey11-cloud.github.io/big-brother-expenses/?embed=1&view=accrued-expenses&v=17",
     "expense-history": "https://angsokhey11-cloud.github.io/big-brother-expenses/?embed=1&view=expense-history&v=17",
     "expense-monthly-report": "https://angsokhey11-cloud.github.io/big-brother-expenses/?embed=1&view=monthly-report&v=17",
+    // Stock V2.0 Simple Flow frontend.
+    "stock-keyin": "https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=keyin&v=20",
+    "stock-report": "https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=report&v=20",
+    "stock-damaged": "https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=damaged&v=20",
+    "stock-transactions": "https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=transactions&v=20",
     "ar-all": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=all&v=2",
     "ar-your": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=your&v=3",
     "ar-payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=receivable&v=1",
@@ -1369,6 +1393,9 @@
 
     const expensesSub = document.getElementById('expensesSubmenu');
     const expensesBtn = document.getElementById('expensesMenuButton');
+
+    const stockSub = document.getElementById('stockSubmenu');
+    const stockBtn = document.getElementById('stockMenuButton');
 
     const arSub = document.getElementById('arSubmenu');
     const arBtn = document.getElementById('arMenuButton');
@@ -1421,11 +1448,19 @@
       'expense-monthly-report'
     ];
 
+    const stockModules = [
+      'stock-keyin',
+      'stock-report',
+      'stock-damaged',
+      'stock-transactions'
+    ];
+
     const isCustomerModule = customerModules.includes(moduleName);
     const isClientModule = clientModules.includes(moduleName);
     const isProductModule = productModules.includes(moduleName);
     const isSalesSupportModule = salesSupportModules.includes(moduleName);
     const isExpensesModule = expenseModules.includes(moduleName);
+    const isStockModule = stockModules.includes(moduleName);
 
     const isMasterModule =
       isCustomerModule ||
@@ -1447,6 +1482,7 @@
     setOpen(productsSub, productsBtn, isProductModule);
     setOpen(salesSupportSub, salesSupportBtn, isSalesSupportModule);
     setOpen(expensesSub, expensesBtn, isExpensesModule);
+    setOpen(stockSub, stockBtn, isStockModule);
 
     if (isMasterModule) {
       setOpen(salesSub, salesBtn, false);
@@ -1582,6 +1618,30 @@
               : 'navExpenseMonthlyReport';
 
       document.getElementById(expenseId)?.classList.add('active');
+
+    } else if (isStockModule) {
+      setOpen(salesSub, salesBtn, false);
+      setOpen(salesSupportSub, salesSupportBtn, false);
+      setOpen(purchaseSub, purchaseBtn, false);
+      setOpen(expensesSub, expensesBtn, false);
+      setOpen(stockSub, stockBtn, true);
+      setOpen(arSub, arBtn, false);
+      setOpen(adminSub, adminBtn, false);
+      setOpen(masterSub, masterBtn, false);
+      setOpen(customersSub, customersBtn, false);
+      setOpen(clientsSub, clientsBtn, false);
+      setOpen(productsSub, productsBtn, false);
+
+      const stockId =
+        moduleName === 'stock-keyin'
+          ? 'navStockKeyin'
+          : moduleName === 'stock-report'
+            ? 'navStockReport'
+            : moduleName === 'stock-damaged'
+              ? 'navStockDamaged'
+              : 'navStockTransactions';
+
+      document.getElementById(stockId)?.classList.add('active');
 
     } else if (
       moduleName === 'ar-all' ||
@@ -1758,6 +1818,20 @@
     if (arrow) arrow.textContent = open ? '▲' : '▼';
   }
 
+  function toggleStockMenu() {
+    const submenu = document.getElementById('stockSubmenu');
+    const button = document.getElementById('stockMenuButton');
+    if (!submenu || !button) return;
+
+    const open = !submenu.classList.contains('open');
+    submenu.classList.toggle('open', open);
+    button.classList.toggle('open', open);
+    button.setAttribute('aria-expanded', String(open));
+
+    const arrow = button.querySelector('.nav-arrow');
+    if (arrow) arrow.textContent = open ? '▲' : '▼';
+  }
+
   function toggleARMenu() {
     const submenu = document.getElementById('arSubmenu');
     const button = document.getElementById('arMenuButton');
@@ -1809,6 +1883,12 @@
     'expense-monthly-report'
   ]);
 
+  const FROZEN_STOCK_MODULES = new Set([
+    'stock-report',
+    'stock-damaged',
+    'stock-transactions'
+  ]);
+
   function expenseViewForModule(moduleName) {
     if (moduleName === 'expense-history') return 'expense-history';
     if (moduleName === 'expense-accrued') return 'accrued-expenses';
@@ -1823,6 +1903,9 @@
 
     if (FROZEN_EXPENSE_MODULES.has(moduleName)) {
       moduleName = 'expense-add';
+    }
+    if (FROZEN_STOCK_MODULES.has(moduleName)) {
+      moduleName = 'stock-keyin';
     }
     const url = MODULE_URLS[moduleName];
     if (!url) return;
@@ -1864,7 +1947,7 @@
   function openInitialWorkspace() {
     const params = new URLSearchParams(location.search);
     const moduleName = params.get('module');
-    if (['customers-editor','customers-add','customers-map','customers-details','clients-editor','clients-add','clients-details','products-editor','products-add','products-details','sales-support-calculator','sales-support-request-delivery','sales-support-your-customer','sales-support-successful-delivery','invoice','history','sale-return','payment-history','daily-sale-summary','daily-cash-collection','purchase-create','purchase-history','purchase-payable','purchase-payment-history','expense-add','expense-accrued','expense-history','expense-monthly-report','ar-all','ar-your','ar-payment-history','ar-daily-receivable-cash','admin-pending-receivable','admin-pending-daily-cash','admin-pending-deposit','admin-deposit-history','admin-staff-request','admin-request'].includes(moduleName)) loadWorkspace(moduleName, false);
+    if (['customers-editor','customers-add','customers-map','customers-details','clients-editor','clients-add','clients-details','products-editor','products-add','products-details','sales-support-calculator','sales-support-request-delivery','sales-support-your-customer','sales-support-successful-delivery','invoice','history','sale-return','payment-history','daily-sale-summary','daily-cash-collection','purchase-create','purchase-history','purchase-payable','purchase-payment-history','expense-add','expense-accrued','expense-history','expense-monthly-report','stock-keyin','stock-report','stock-damaged','stock-transactions','ar-all','ar-your','ar-payment-history','ar-daily-receivable-cash','admin-pending-receivable','admin-pending-daily-cash','admin-pending-deposit','admin-deposit-history','admin-staff-request','admin-request'].includes(moduleName)) loadWorkspace(moduleName, false);
     else showDashboardHome(false);
   }
 
