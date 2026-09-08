@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BIG BROTHER — Dashboard V3.28 Sales Support V1.10</title>
+  <title>BIG BROTHER — Dashboard V3.29 Expenses Menu</title>
 
   <style>
     * {
@@ -670,6 +670,27 @@
         </div>
       </div>
 
+      <div class="nav-group" id="expensesNavGroup">
+        <button
+          type="button"
+          id="expensesMenuButton"
+          class="nav-toggle"
+          aria-expanded="false"
+          aria-controls="expensesSubmenu"
+          onclick="toggleExpensesMenu()"
+        >
+          <span class="nav-toggle-main"><span>💸</span><span>Expenses</span></span>
+          <span class="nav-arrow">▼</span>
+        </button>
+
+        <div id="expensesSubmenu" class="nav-submenu">
+          <button type="button" id="navExpenseAdd" onclick="loadWorkspace('expense-add')">➕ Add Expense</button>
+          <button type="button" class="frozen-module" id="navExpenseAccrued" disabled aria-disabled="true" title="Coming later">⏳ Accrued Expenses</button>
+          <button type="button" class="frozen-module" id="navExpenseHistory" disabled aria-disabled="true" title="Coming later">📜 Expense History</button>
+          <button type="button" class="frozen-module" id="navExpenseMonthlyReport" disabled aria-disabled="true" title="Coming later">📊 Monthly Expense Report</button>
+        </div>
+      </div>
+
       <button type="button" class="shell-nav-link" onclick="showDashboardSection('stock')">📦 Stock</button>
 
       <div class="nav-group" id="arNavGroup">
@@ -1315,6 +1336,11 @@
     "purchase-history": "https://angsokhey11-cloud.github.io/big-brother-puchase-history/?embed=1&v=1",
     "purchase-payable": "https://angsokhey11-cloud.github.io/big-brother-purchase-payable-invoice/?embed=1&v=1",
     "purchase-payment-history": "https://angsokhey11-cloud.github.io/big-brother-purchase-payment-history/?embed=1&v=1",
+    // Expenses workspace
+    "expense-add": "https://angsokhey11-cloud.github.io/big-brother-expenses/?embed=1&view=add-expense&v=11",
+    "expense-accrued": "https://angsokhey11-cloud.github.io/big-brother-expenses/?embed=1&view=accrued-expenses&v=11",
+    "expense-history": "https://angsokhey11-cloud.github.io/big-brother-expenses/?embed=1&view=expense-history&v=11",
+    "expense-monthly-report": "https://angsokhey11-cloud.github.io/big-brother-expenses/?embed=1&view=monthly-report&v=11",
     "ar-all": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=all&v=2",
     "ar-your": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=your&v=3",
     "ar-payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=receivable&v=1",
@@ -1340,6 +1366,9 @@
 
     const purchaseSub = document.getElementById('purchaseSubmenu');
     const purchaseBtn = document.getElementById('purchaseMenuButton');
+
+    const expensesSub = document.getElementById('expensesSubmenu');
+    const expensesBtn = document.getElementById('expensesMenuButton');
 
     const arSub = document.getElementById('arSubmenu');
     const arBtn = document.getElementById('arMenuButton');
@@ -1385,10 +1414,18 @@
       'sales-support-successful-delivery'
     ];
 
+    const expenseModules = [
+      'expense-add',
+      'expense-accrued',
+      'expense-history',
+      'expense-monthly-report'
+    ];
+
     const isCustomerModule = customerModules.includes(moduleName);
     const isClientModule = clientModules.includes(moduleName);
     const isProductModule = productModules.includes(moduleName);
     const isSalesSupportModule = salesSupportModules.includes(moduleName);
+    const isExpensesModule = expenseModules.includes(moduleName);
 
     const isMasterModule =
       isCustomerModule ||
@@ -1409,11 +1446,13 @@
     setOpen(clientsSub, clientsBtn, isClientModule);
     setOpen(productsSub, productsBtn, isProductModule);
     setOpen(salesSupportSub, salesSupportBtn, isSalesSupportModule);
+    setOpen(expensesSub, expensesBtn, isExpensesModule);
 
     if (isMasterModule) {
       setOpen(salesSub, salesBtn, false);
       setOpen(salesSupportSub, salesSupportBtn, false);
       setOpen(purchaseSub, purchaseBtn, false);
+      setOpen(expensesSub, expensesBtn, false);
       setOpen(arSub, arBtn, false);
       setOpen(adminSub, adminBtn, false);
 
@@ -1457,6 +1496,7 @@
       setOpen(salesSub, salesBtn, true);
       setOpen(salesSupportSub, salesSupportBtn, false);
       setOpen(purchaseSub, purchaseBtn, false);
+      setOpen(expensesSub, expensesBtn, false);
       setOpen(arSub, arBtn, false);
       setOpen(adminSub, adminBtn, false);
 
@@ -1478,6 +1518,7 @@
       setOpen(salesSub, salesBtn, false);
       setOpen(salesSupportSub, salesSupportBtn, true);
       setOpen(purchaseSub, purchaseBtn, false);
+      setOpen(expensesSub, expensesBtn, false);
       setOpen(arSub, arBtn, false);
       setOpen(adminSub, adminBtn, false);
       setOpen(masterSub, masterBtn, false);
@@ -1505,6 +1546,7 @@
       setOpen(salesSub, salesBtn, false);
       setOpen(salesSupportSub, salesSupportBtn, false);
       setOpen(purchaseSub, purchaseBtn, true);
+      setOpen(expensesSub, expensesBtn, false);
       setOpen(arSub, arBtn, false);
       setOpen(adminSub, adminBtn, false);
 
@@ -1518,6 +1560,29 @@
 
       document.getElementById(purchaseId)?.classList.add('active');
 
+    } else if (isExpensesModule) {
+      setOpen(salesSub, salesBtn, false);
+      setOpen(salesSupportSub, salesSupportBtn, false);
+      setOpen(purchaseSub, purchaseBtn, false);
+      setOpen(expensesSub, expensesBtn, true);
+      setOpen(arSub, arBtn, false);
+      setOpen(adminSub, adminBtn, false);
+      setOpen(masterSub, masterBtn, false);
+      setOpen(customersSub, customersBtn, false);
+      setOpen(clientsSub, clientsBtn, false);
+      setOpen(productsSub, productsBtn, false);
+
+      const expenseId =
+        moduleName === 'expense-add'
+          ? 'navExpenseAdd'
+          : moduleName === 'expense-accrued'
+            ? 'navExpenseAccrued'
+            : moduleName === 'expense-history'
+              ? 'navExpenseHistory'
+              : 'navExpenseMonthlyReport';
+
+      document.getElementById(expenseId)?.classList.add('active');
+
     } else if (
       moduleName === 'ar-all' ||
       moduleName === 'ar-your' ||
@@ -1527,6 +1592,7 @@
       setOpen(salesSub, salesBtn, false);
       setOpen(salesSupportSub, salesSupportBtn, false);
       setOpen(purchaseSub, purchaseBtn, false);
+      setOpen(expensesSub, expensesBtn, false);
       setOpen(arSub, arBtn, true);
       setOpen(adminSub, adminBtn, false);
 
@@ -1552,6 +1618,7 @@
       setOpen(salesSub, salesBtn, false);
       setOpen(salesSupportSub, salesSupportBtn, false);
       setOpen(purchaseSub, purchaseBtn, false);
+      setOpen(expensesSub, expensesBtn, false);
       setOpen(arSub, arBtn, false);
       setOpen(adminSub, adminBtn, true);
 
@@ -1574,6 +1641,7 @@
       setOpen(salesSub, salesBtn, false);
       setOpen(salesSupportSub, salesSupportBtn, false);
       setOpen(purchaseSub, purchaseBtn, false);
+      setOpen(expensesSub, expensesBtn, false);
       setOpen(arSub, arBtn, false);
       setOpen(adminSub, adminBtn, false);
       setOpen(masterSub, masterBtn, false);
@@ -1678,6 +1746,18 @@
     if (arrow) arrow.textContent = open ? '▲' : '▼';
   }
 
+  function toggleExpensesMenu() {
+    const submenu = document.getElementById('expensesSubmenu');
+    const button = document.getElementById('expensesMenuButton');
+    if (!submenu || !button) return;
+    const open = !submenu.classList.contains('open');
+    submenu.classList.toggle('open', open);
+    button.classList.toggle('open', open);
+    button.setAttribute('aria-expanded', String(open));
+    const arrow = button.querySelector('.nav-arrow');
+    if (arrow) arrow.textContent = open ? '▲' : '▼';
+  }
+
   function toggleARMenu() {
     const submenu = document.getElementById('arSubmenu');
     const button = document.getElementById('arMenuButton');
@@ -1725,9 +1805,19 @@
     'sales-support-successful-delivery'
   ]);
 
+  const FROZEN_EXPENSE_MODULES = new Set([
+    'expense-accrued',
+    'expense-history',
+    'expense-monthly-report'
+  ]);
+
   function loadWorkspace(moduleName, updateUrl = true) {
     if (FROZEN_SALES_SUPPORT_MODULES.has(moduleName)) {
       moduleName = 'sales-support-calculator';
+    }
+
+    if (FROZEN_EXPENSE_MODULES.has(moduleName)) {
+      moduleName = 'expense-add';
     }
     const url = MODULE_URLS[moduleName];
     if (!url) return;
@@ -1748,7 +1838,7 @@
   function openInitialWorkspace() {
     const params = new URLSearchParams(location.search);
     const moduleName = params.get('module');
-    if (['customers-editor','customers-add','customers-map','customers-details','clients-editor','clients-add','clients-details','products-editor','products-add','products-details','sales-support-calculator','sales-support-request-delivery','sales-support-your-customer','sales-support-successful-delivery','invoice','history','sale-return','payment-history','daily-sale-summary','daily-cash-collection','purchase-create','purchase-history','purchase-payable','purchase-payment-history','ar-all','ar-your','ar-payment-history','ar-daily-receivable-cash','admin-pending-receivable','admin-pending-daily-cash','admin-pending-deposit','admin-deposit-history','admin-staff-request','admin-request'].includes(moduleName)) loadWorkspace(moduleName, false);
+    if (['customers-editor','customers-add','customers-map','customers-details','clients-editor','clients-add','clients-details','products-editor','products-add','products-details','sales-support-calculator','sales-support-request-delivery','sales-support-your-customer','sales-support-successful-delivery','invoice','history','sale-return','payment-history','daily-sale-summary','daily-cash-collection','purchase-create','purchase-history','purchase-payable','purchase-payment-history','expense-add','expense-accrued','expense-history','expense-monthly-report','ar-all','ar-your','ar-payment-history','ar-daily-receivable-cash','admin-pending-receivable','admin-pending-daily-cash','admin-pending-deposit','admin-deposit-history','admin-staff-request','admin-request'].includes(moduleName)) loadWorkspace(moduleName, false);
     else showDashboardHome(false);
   }
 
