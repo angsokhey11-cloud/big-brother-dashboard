@@ -706,9 +706,29 @@
 
         <div id="stockSubmenu" class="nav-submenu">
           <button type="button" id="navStockKeyin" onclick="loadWorkspace('stock-keyin')">⌨️ Stock In-Out (Keyin)</button>
-          <button type="button" id="navStockReport" onclick="loadWorkspace('stock-report')">📊 Stock Report</button>
-          <button type="button" class="frozen-module" id="navStockDamaged" disabled aria-disabled="true" title="Next Stock release">⚠️ Damaged Stock</button>
+
+          <div class="nested-nav-group" id="stockReportNavGroup">
+            <button
+              type="button"
+              id="stockReportMenuButton"
+              class="nested-nav-toggle"
+              aria-expanded="false"
+              aria-controls="stockReportSubmenu"
+              onclick="toggleStockReportMenu()"
+            >
+              <span class="nested-nav-main"><span>📊</span><span>Stock Report</span></span>
+              <span class="nav-arrow">▼</span>
+            </button>
+
+            <div id="stockReportSubmenu" class="nav-submenu nav-submenu-level2">
+              <button type="button" id="navStockReport" onclick="loadWorkspace('stock-report')">📦 Live Stock</button>
+              <button type="button" id="navBatchReport" onclick="loadWorkspace('batch-report')">🧾 Batch Report</button>
+              <button type="button" id="navClosedBatch" onclick="loadWorkspace('closed-batch')">✅ Closed Batch</button>
+            </div>
+          </div>
+
           <button type="button" id="navStockTransactions" onclick="loadWorkspace('stock-transactions')">📜 Stock In-Out Transaction</button>
+          <button type="button" class="frozen-module" id="navStockDamaged" disabled aria-disabled="true" title="Next Stock release">⚠️ Damaged Stock</button>
         </div>
       </div>
 
@@ -1282,7 +1302,7 @@
         id="moduleFrame"
         class="module-frame"
         title="BIG BROTHER Workspace"
-        loading="eager"
+        loading="lazy"
         referrerpolicy="strict-origin-when-cross-origin"
       ></iframe>
     </div>
@@ -1362,9 +1382,11 @@
     "expense-monthly-report": "https://angsokhey11-cloud.github.io/big-brother-expenses/?embed=1&view=monthly-report&v=17",
     // Stock frontends: Keyin + dedicated live Stock Report.
     "stock-keyin": "https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=keyin&v=20",
-    "stock-report": "https://angsokhey11-cloud.github.io/big-brother-stock-report/?embed=1&v=14",
+    "stock-report": "https://angsokhey11-cloud.github.io/big-brother-stock-report/?embed=1&v=30",
+    "batch-report": "https://angsokhey11-cloud.github.io/big-brother-stock-report/batch-report.html?embed=1&v=10",
+    "closed-batch": "https://angsokhey11-cloud.github.io/big-brother-stock-report/closed-batch.html?embed=1&v=10",
     "stock-damaged": "https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=damaged&v=20",
-    "stock-transactions": "https://angsokhey11-cloud.github.io/big-brother-stock-report/?embed=1&view=transactions",
+    "stock-transactions": "https://angsokhey11-cloud.github.io/big-brother-stock-report/transactions.html?embed=1&v=10",
     "ar-all": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=all&v=2",
     "ar-your": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=your&v=3",
     "ar-payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=receivable&v=1",
@@ -1396,6 +1418,8 @@
 
     const stockSub = document.getElementById('stockSubmenu');
     const stockBtn = document.getElementById('stockMenuButton');
+    const stockReportSub = document.getElementById('stockReportSubmenu');
+    const stockReportBtn = document.getElementById('stockReportMenuButton');
 
     const arSub = document.getElementById('arSubmenu');
     const arBtn = document.getElementById('arMenuButton');
@@ -1451,6 +1475,8 @@
     const stockModules = [
       'stock-keyin',
       'stock-report',
+      'batch-report',
+      'closed-batch',
       'stock-damaged',
       'stock-transactions'
     ];
@@ -1632,14 +1658,27 @@
       setOpen(clientsSub, clientsBtn, false);
       setOpen(productsSub, productsBtn, false);
 
+      const isStockReportModule =
+        moduleName === 'stock-report' ||
+        moduleName === 'batch-report' ||
+        moduleName === 'closed-batch';
+
+      if (stockReportSub && stockReportBtn) {
+        setOpen(stockReportSub, stockReportBtn, isStockReportModule);
+      }
+
       const stockId =
         moduleName === 'stock-keyin'
           ? 'navStockKeyin'
           : moduleName === 'stock-report'
             ? 'navStockReport'
-            : moduleName === 'stock-damaged'
-              ? 'navStockDamaged'
-              : 'navStockTransactions';
+            : moduleName === 'batch-report'
+              ? 'navBatchReport'
+              : moduleName === 'closed-batch'
+                ? 'navClosedBatch'
+                : moduleName === 'stock-damaged'
+                  ? 'navStockDamaged'
+                  : 'navStockTransactions';
 
       document.getElementById(stockId)?.classList.add('active');
 
@@ -1818,6 +1857,20 @@
     if (arrow) arrow.textContent = open ? '▲' : '▼';
   }
 
+  function toggleStockReportMenu() {
+    const submenu = document.getElementById('stockReportSubmenu');
+    const button = document.getElementById('stockReportMenuButton');
+    if (!submenu || !button) return;
+
+    const open = !submenu.classList.contains('open');
+    submenu.classList.toggle('open', open);
+    button.classList.toggle('open', open);
+    button.setAttribute('aria-expanded', String(open));
+
+    const arrow = button.querySelector('.nav-arrow');
+    if (arrow) arrow.textContent = open ? '▲' : '▼';
+  }
+
   function toggleStockMenu() {
     const submenu = document.getElementById('stockSubmenu');
     const button = document.getElementById('stockMenuButton');
@@ -1845,10 +1898,28 @@
   }
 
   function showDashboardHome(updateUrl = true) {
-    document.getElementById('dashboardHome').hidden = false;
-    document.getElementById('moduleWorkspace').hidden = true;
+    const home = document.getElementById('dashboardHome');
+    const workspace = document.getElementById('moduleWorkspace');
+    const frame = document.getElementById('moduleFrame');
+
+    home.hidden = false;
+    workspace.hidden = true;
+
+    /*
+     * V3.40 LIGHT SHELL:
+     * returning Home releases the active module completely.
+     * This stops its timers/API calls instead of leaving a hidden app running.
+     */
+    if (frame) {
+      frame.src = 'about:blank';
+      delete frame.dataset.module;
+    }
+
     setShellActive('dashboard');
-    if (updateUrl) history.replaceState(null, '', location.pathname);
+
+    if (updateUrl) {
+      history.replaceState(null, '', location.pathname);
+    }
   }
 
   function showDashboardSection(sectionId) {
@@ -1884,8 +1955,7 @@
   ]);
 
   const FROZEN_STOCK_MODULES = new Set([
-    'stock-damaged',
-    'stock-transactions'
+    'stock-damaged'
   ]);
 
   function expenseViewForModule(moduleName) {
@@ -1934,20 +2004,61 @@
 
     home.hidden = true;
     workspace.hidden = false;
-    // Always force the requested module/view into the iframe.
-    // This prevents the A/R iframe from keeping the previous All/Your mode.
-    frame.dataset.module = moduleName;
-    const separator = url.includes('?') ? '&' : '?';
-    frame.src = url + separator + 'shellModule=' + encodeURIComponent(moduleName) + '&t=' + Date.now();
+
+    /*
+     * V3.40 LIGHT SHELL:
+     * - no Date.now() cache-buster on every menu click
+     * - browser/GitHub Pages cache can work normally
+     * - clicking the already-open module does not reload its whole app
+     */
+    const sameModule =
+      frame.dataset.module === moduleName &&
+      frame.src &&
+      frame.src !== 'about:blank';
+
+    if (!sameModule) {
+      frame.dataset.module = moduleName;
+      const separator = url.includes('?') ? '&' : '?';
+      frame.src =
+        url +
+        separator +
+        'shellModule=' +
+        encodeURIComponent(moduleName);
+    }
+
     setShellActive(moduleName);
-    if (updateUrl) history.replaceState(null, '', '?module=' + encodeURIComponent(moduleName));
+
+    if (updateUrl) {
+      history.replaceState(
+        null,
+        '',
+        '?module=' + encodeURIComponent(moduleName)
+      );
+    }
   }
 
   function openInitialWorkspace() {
     const params = new URLSearchParams(location.search);
     const moduleName = params.get('module');
-    if (['customers-editor','customers-add','customers-map','customers-details','clients-editor','clients-add','clients-details','products-editor','products-add','products-details','sales-support-calculator','sales-support-request-delivery','sales-support-your-customer','sales-support-successful-delivery','invoice','history','sale-return','payment-history','daily-sale-summary','daily-cash-collection','purchase-create','purchase-history','purchase-payable','purchase-payment-history','expense-add','expense-accrued','expense-history','expense-monthly-report','stock-keyin','stock-report','stock-damaged','stock-transactions','ar-all','ar-your','ar-payment-history','ar-daily-receivable-cash','admin-pending-receivable','admin-pending-daily-cash','admin-pending-deposit','admin-deposit-history','admin-staff-request','admin-request'].includes(moduleName)) loadWorkspace(moduleName, false);
-    else showDashboardHome(false);
+    const allowAutoload = params.get('autoload') === '1';
+
+    /*
+     * V3.40:
+     * Dashboard opens as a lightweight shell by default.
+     * No accounting module/API is started until the user clicks it.
+     *
+     * A deliberate direct link can still use:
+     *   ?module=invoice&autoload=1
+     */
+    if (
+      allowAutoload &&
+      ['customers-editor','customers-add','customers-map','customers-details','clients-editor','clients-add','clients-details','products-editor','products-add','products-details','sales-support-calculator','sales-support-request-delivery','sales-support-your-customer','sales-support-successful-delivery','invoice','history','sale-return','payment-history','daily-sale-summary','daily-cash-collection','purchase-create','purchase-history','purchase-payable','purchase-payment-history','expense-add','expense-accrued','expense-history','expense-monthly-report','stock-keyin','stock-report','batch-report','closed-batch','stock-damaged','stock-transactions','ar-all','ar-your','ar-payment-history','ar-daily-receivable-cash','admin-pending-receivable','admin-pending-daily-cash','admin-pending-deposit','admin-deposit-history','admin-staff-request','admin-request']
+        .includes(moduleName)
+    ) {
+      loadWorkspace(moduleName, false);
+    } else {
+      showDashboardHome(false);
+    }
   }
 
   window.addEventListener('DOMContentLoaded', openInitialWorkspace);
