@@ -16,11 +16,11 @@ html,body{margin:0;min-height:100%;background:#eef3f8;font-family:Arial,sans-ser
 <script>
 (async function(){
   try{
-    const response=await fetch('legacy-dashboard-v3.40.html?v=20260910-1',{cache:'no-store'});
+    const response=await fetch('legacy-dashboard-v3.40.html?v=20260910-2',{cache:'no-store'});
     if(!response.ok)throw new Error('Could not load Dashboard source.');
     let html=await response.text();
 
-    const adapter='<scr'+'ipt src="supabase-dashboard-adapter.js?v=20260910-1"></scr'+'ipt>';
+    const adapter='<scr'+'ipt src="supabase-dashboard-adapter.js?v=20260910-2"></scr'+'ipt>';
     const headClose=html.toLowerCase().indexOf('</head>');
     if(headClose<0)throw new Error('Dashboard source is missing </head>.');
     html=html.slice(0,headClose)+adapter+'\n'+html.slice(headClose);
@@ -29,6 +29,22 @@ html,body{margin:0;min-height:100%;background:#eef3f8;font-family:Arial,sans-ser
       '<a href="https://angsokhey11-cloud.github.io/big-brother-invoice-reversal/">',
       '<a href="#" onclick="loadWorkspace(\'sale-return\'); return false;">'
     );
+
+    const adminMenuMarker='<button type="button" id="navAdminRequest" onclick="loadWorkspace(\'admin-request\')">🛠️ Admin Request</button>';
+    if(!html.includes(adminMenuMarker))throw new Error('Admin Work menu marker was not found.');
+    html=html.replace(adminMenuMarker,adminMenuMarker+'\n          <button type="button" id="navAdminUserPermissions" onclick="loadWorkspace(\'admin-user-permissions\')">🔐 User & Permission Manager</button>');
+
+    const adminUrlMarker='"admin-request": "https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=admin-request"';
+    if(!html.includes(adminUrlMarker))throw new Error('Admin Work route marker was not found.');
+    html=html.replace(adminUrlMarker,adminUrlMarker+',\n    "admin-user-permissions": "https://angsokhey11-cloud.github.io/big-brother-admin-work/user-permissions.html?embed=1&v=1"');
+
+    const adminCondition="moduleName === 'admin-staff-request' ||\n      moduleName === 'admin-request'\n    ) {";
+    if(!html.includes(adminCondition))throw new Error('Admin active-route condition was not found.');
+    html=html.replace(adminCondition,"moduleName === 'admin-staff-request' ||\n      moduleName === 'admin-request' ||\n      moduleName === 'admin-user-permissions'\n    ) {");
+
+    const adminActiveMarker=": moduleName === 'admin-staff-request'\n                  ? 'navAdminStaffRequest'\n                  : 'navAdminRequest';";
+    if(!html.includes(adminActiveMarker))throw new Error('Admin active-menu marker was not found.');
+    html=html.replace(adminActiveMarker,": moduleName === 'admin-staff-request'\n                  ? 'navAdminStaffRequest'\n                  : moduleName === 'admin-user-permissions'\n                    ? 'navAdminUserPermissions'\n                    : 'navAdminRequest';");
 
     const marker="  window.addEventListener('DOMContentLoaded', openInitialWorkspace);";
     const replacement="  window.addEventListener('DOMContentLoaded', () => window.BBDashboardAdapter.start());";
