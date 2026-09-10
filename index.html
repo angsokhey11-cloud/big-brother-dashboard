@@ -16,11 +16,25 @@ html,body{margin:0;min-height:100%;background:#eef3f8;font-family:Arial,sans-ser
 <script>
 (async function(){
   try{
-    const response=await fetch('legacy-dashboard-v3.40.html?v=20260910-7',{cache:'no-store'});
+    const [response,adapterResponse]=await Promise.all([
+      fetch('legacy-dashboard-v3.40.html?v=20260910-8',{cache:'no-store'}),
+      fetch('supabase-dashboard-adapter.js?v=20260910-8',{cache:'no-store'})
+    ]);
     if(!response.ok)throw new Error('Could not load Dashboard source.');
+    if(!adapterResponse.ok)throw new Error('Could not load Dashboard security adapter.');
     let html=await response.text();
+    let adapterSource=await adapterResponse.text();
 
-    const adapter='<scr'+'ipt src="supabase-dashboard-adapter.js?v=20260910-7"></scr'+'ipt>';
+    /* Extend the existing Stock Management permission to all Damaged Stock child routes. */
+    const adapterDamagedMarker="    'stock-damaged':                {module:'Stock Management',action:'view'},";
+    if(!adapterSource.includes(adapterDamagedMarker))throw new Error('Damaged Stock permission marker was not found.');
+    adapterSource=adapterSource.replace(
+      adapterDamagedMarker,
+      adapterDamagedMarker+'\n'+
+      "    'stock-damaged-report':         {module:'Stock Management',action:'view'},\n"+
+      "    'stock-damaged-cleared':        {module:'Stock Management',action:'view'},"
+    );
+    const adapter='<scr'+'ipt>'+adapterSource+'</scr'+'ipt>';
     const headClose=html.toLowerCase().indexOf('</head>');
     if(headClose<0)throw new Error('Dashboard source is missing </head>.');
     html=html.slice(0,headClose)+adapter+'\n'+html.slice(headClose);
@@ -61,13 +75,95 @@ html,body{margin:0;min-height:100%;background:#eef3f8;font-family:Arial,sans-ser
       'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=successful-delivery&v=111'
     );
 
+    /* Activate Damaged Stock and convert it into a three-item nested module. */
+    const damagedMenuMarker='<button type="button" class="frozen-module" id="navStockDamaged" disabled aria-disabled="true" title="Next Stock release">⚠️ Damaged Stock</button>';
+    const damagedMenu=`<div class="nested-nav-group" id="damagedStockNavGroup">
+            <button
+              type="button"
+              id="damagedStockMenuButton"
+              class="nested-nav-toggle"
+              aria-expanded="false"
+              aria-controls="damagedStockSubmenu"
+              onclick="toggleDamagedStockMenu()"
+            >
+              <span class="nested-nav-main"><span>⚠️</span><span>Damaged Stock</span></span>
+              <span class="nav-arrow">▼</span>
+            </button>
+
+            <div id="damagedStockSubmenu" class="nav-submenu nav-submenu-level2">
+              <button type="button" id="navStockDamaged" onclick="loadWorkspace('stock-damaged')">⚠️ Damaged Stock</button>
+              <button type="button" id="navStockDamagedReport" onclick="loadWorkspace('stock-damaged-report')">📊 Damage Stock Report</button>
+              <button type="button" id="navStockDamagedCleared" onclick="loadWorkspace('stock-damaged-cleared')">✅ Damaged Stock Cleared</button>
+            </div>
+          </div>`;
+    if(!html.includes(damagedMenuMarker))throw new Error('Frozen Damaged Stock menu marker was not found.');
+    html=html.replace(damagedMenuMarker,damagedMenu);
+
+    const damagedUrlMarker='"stock-damaged": "https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=damaged&v=20",';
+    if(!html.includes(damagedUrlMarker))throw new Error('Damaged Stock route marker was not found.');
+    html=html.replace(
+      damagedUrlMarker,
+      '"stock-damaged": "https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=damaged&v=21",\n'+
+      '    "stock-damaged-report": "https://angsokhey11-cloud.github.io/big-brother-stock-report/damage-stock-report.html?embed=1&v=1",\n'+
+      '    "stock-damaged-cleared": "https://angsokhey11-cloud.github.io/big-brother-stock-report/damaged-stock-cleared.html?embed=1&v=1",'
+    );
+
+    const damagedRefsMarker="    const stockReportSub = document.getElementById('stockReportSubmenu');\n    const stockReportBtn = document.getElementById('stockReportMenuButton');";
+    if(!html.includes(damagedRefsMarker))throw new Error('Stock Report navigation reference marker was not found.');
+    html=html.replace(
+      damagedRefsMarker,
+      damagedRefsMarker+"\n    const damagedStockSub = document.getElementById('damagedStockSubmenu');\n    const damagedStockBtn = document.getElementById('damagedStockMenuButton');"
+    );
+
+    const stockModulesMarker="      'closed-batch',\n      'stock-damaged',\n      'stock-transactions'";
+    if(!html.includes(stockModulesMarker))throw new Error('Stock module list marker was not found.');
+    html=html.replace(
+      stockModulesMarker,
+      "      'closed-batch',\n      'stock-damaged',\n      'stock-damaged-report',\n      'stock-damaged-cleared',\n      'stock-transactions'"
+    );
+
+    const isStockMarker="    const isStockModule = stockModules.includes(moduleName);";
+    if(!html.includes(isStockMarker))throw new Error('Stock module state marker was not found.');
+    html=html.replace(
+      isStockMarker,
+      isStockMarker+"\n    const isDamagedStockModule = ['stock-damaged','stock-damaged-report','stock-damaged-cleared'].includes(moduleName);"
+    );
+
+    const damagedOpenMarker="      if (stockReportSub && stockReportBtn) {\n        setOpen(stockReportSub, stockReportBtn, isStockReportModule);\n      }\n\n      const stockId =";
+    if(!html.includes(damagedOpenMarker))throw new Error('Stock nested menu state marker was not found.');
+    html=html.replace(
+      damagedOpenMarker,
+      "      if (stockReportSub && stockReportBtn) {\n        setOpen(stockReportSub, stockReportBtn, isStockReportModule);\n      }\n\n      if (damagedStockSub && damagedStockBtn) {\n        setOpen(damagedStockSub, damagedStockBtn, isDamagedStockModule);\n      }\n\n      const stockId ="
+    );
+
+    const stockIdMarker="        moduleName === 'stock-keyin'\n          ? 'navStockKeyin'\n          : moduleName === 'stock-report'\n            ? 'navStockReport'\n            : moduleName === 'batch-report'\n              ? 'navBatchReport'\n              : moduleName === 'closed-batch'\n                ? 'navClosedBatch'\n                : moduleName === 'stock-damaged'\n                  ? 'navStockDamaged'\n                  : 'navStockTransactions';";
+    if(!html.includes(stockIdMarker))throw new Error('Stock active-route marker was not found.');
+    html=html.replace(
+      stockIdMarker,
+      "        moduleName === 'stock-keyin'\n          ? 'navStockKeyin'\n          : moduleName === 'stock-report'\n            ? 'navStockReport'\n            : moduleName === 'batch-report'\n              ? 'navBatchReport'\n              : moduleName === 'closed-batch'\n                ? 'navClosedBatch'\n                : moduleName === 'stock-damaged'\n                  ? 'navStockDamaged'\n                  : moduleName === 'stock-damaged-report'\n                    ? 'navStockDamagedReport'\n                    : moduleName === 'stock-damaged-cleared'\n                      ? 'navStockDamagedCleared'\n                      : 'navStockTransactions';"
+    );
+
+    const damagedToggleMarker="  function toggleStockMenu() {";
+    if(!html.includes(damagedToggleMarker))throw new Error('Stock menu toggle marker was not found.');
+    html=html.replace(
+      damagedToggleMarker,
+      "  function toggleDamagedStockMenu() {\n    const submenu = document.getElementById('damagedStockSubmenu');\n    const button = document.getElementById('damagedStockMenuButton');\n    if (!submenu || !button) return;\n\n    const open = !submenu.classList.contains('open');\n    submenu.classList.toggle('open', open);\n    button.classList.toggle('open', open);\n    button.setAttribute('aria-expanded', String(open));\n\n    const arrow = button.querySelector('.nav-arrow');\n    if (arrow) arrow.textContent = open ? '▲' : '▼';\n  }\n\n"+damagedToggleMarker
+    );
+
+    const frozenStockMarker="  const FROZEN_STOCK_MODULES = new Set([\n    'stock-damaged'\n  ]);";
+    if(!html.includes(frozenStockMarker))throw new Error('Frozen Stock module marker was not found.');
+    html=html.replace(frozenStockMarker,"  const FROZEN_STOCK_MODULES = new Set([]);");
+
+    const autoloadDamageMarker="'closed-batch','stock-damaged','stock-transactions'";
+    if(!html.includes(autoloadDamageMarker))throw new Error('Damaged Stock autoload marker was not found.');
+    html=html.replace(
+      autoloadDamageMarker,
+      "'closed-batch','stock-damaged','stock-damaged-report','stock-damaged-cleared','stock-transactions'"
+    );
+
     html=html.replace(
       '"stock-keyin": "https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=keyin&v=20"',
       '"stock-keyin": "https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=keyin&v=21"'
-    );
-    html=html.replace(
-      '"stock-damaged": "https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=damaged&v=20"',
-      '"stock-damaged": "https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=damaged&v=21"'
     );
     html=html.replace(
       '"batch-report": "https://angsokhey11-cloud.github.io/big-brother-stock-report/batch-report.html?embed=1&v=10"',
