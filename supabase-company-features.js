@@ -1,4 +1,4 @@
-/* BIG BROTHER — Supabase Company Features Dashboard Integration V1.3 */
+/* BIG BROTHER — Supabase Company Features Dashboard Integration V1.4 */
 (function(){
 'use strict';
 const EXTRA={
@@ -13,31 +13,25 @@ const EXTRA={
   'stock-damaged-report':{module:'Stock Management',url:'https://angsokhey11-cloud.github.io/big-brother-stock-report/damage-stock-report.html?embed=1&v=20260910-4',button:'navStockDamagedReport'},
   'stock-damaged-cleared':{module:'Stock Management',url:'https://angsokhey11-cloud.github.io/big-brother-stock-report/damaged-stock-cleared.html?embed=1&v=20260910-4',button:'navStockDamagedCleared'}
 };
-let baseLoad=window.loadWorkspace,baseInitial=window.openInitialWorkspace,badgeTimer=null,guardedLoad=null,damagedObserver=null;
+let baseLoad=window.loadWorkspace,baseInitial=window.openInitialWorkspace,badgeTimer=null,guardedLoad=null;
 const key=v=>String(v||'').trim().toLowerCase();
 function profile(){return window.BBDashboardAdapter?.getProfile?.()||null}
 function can(route){const r=EXTRA[route],p=profile();if(!r||!p)return false;if(r.adminOnly&&!p.user?.isAdmin)return false;if(p.user?.isAdmin)return true;const mods=Array.isArray(p.modules)?p.modules:[],g=mods.find(x=>key(x.moduleKey)===key(r.module))||mods.find(x=>key(x.moduleKey)==='*');return !!g?.canView}
 function addAfter(id,html){const el=document.getElementById(id);if(el&&!document.getElementById((html.match(/id="([^"]+)/)||[])[1]||''))el.insertAdjacentHTML('afterend',html)}
 function installDamagedStockMenuFix(){
-  /* Remove the old child even if the legacy dashboard rebuilds it later. */
   const duplicate=document.getElementById('navStockDamaged');
   if(duplicate)duplicate.remove();
   const report=document.getElementById('navStockDamagedReport');
   const cleared=document.getElementById('navStockDamagedCleared');
-  if(report)report.textContent='📊 Damage Stock Report';
-  if(cleared)cleared.textContent='✅ Damaged Stock Cleared';
-}
-function watchDamagedStockMenu(){
-  if(damagedObserver)return;
-  damagedObserver=new MutationObserver(()=>installDamagedStockMenuFix());
-  damagedObserver.observe(document.documentElement,{childList:true,subtree:true});
+  if(report&&report.textContent!=='📊 Damage Stock Report')report.textContent='📊 Damage Stock Report';
+  if(cleared&&cleared.textContent!=='✅ Damaged Stock Cleared')cleared.textContent='✅ Damaged Stock Cleared';
 }
 function install(){
   try{Object.entries(EXTRA).forEach(([k,v])=>MODULE_URLS[k]=v.url)}catch(e){console.error('Company routes:',e)}
   addAfter('navCustomerDetails','<button type="button" hidden class="bb-company-route" id="navCustomerCredit" onclick="BBCompanyFeatures.open(\'customer-credit-control\')">💳 Customer Credit Control</button>');
   addAfter('navStockTransactions','<button type="button" hidden class="bb-company-route" id="navStockAlerts" onclick="BBCompanyFeatures.open(\'stock-alerts\')">🚨 Smart Stock Alerts</button>');
   addAfter('navAdminRequest','<button type="button" hidden class="bb-company-route" id="navManagementControl" onclick="BBCompanyFeatures.open(\'management-control-center\')">📊 Management Control Center</button><button type="button" hidden class="bb-company-route" id="navSystemActivity" onclick="BBCompanyFeatures.open(\'system-activity\')">🕘 System Activity</button><button type="button" hidden class="bb-company-route" id="navNotificationCenter" onclick="BBCompanyFeatures.open(\'notification-center\')">🔔 Notification Center</button>');
-  installDamagedStockMenuFix();watchDamagedStockMenu();
+  installDamagedStockMenuFix();
   const style=document.createElement('style');style.textContent='#navStockDamaged{display:none!important}.bb-notify-quick{border:0;border-radius:999px;background:#17457a;color:#fff;padding:8px 11px;font-size:11px;font-weight:900;cursor:pointer}.bb-notify-quick[data-count="0"]{background:#e5effc;color:#17457a}';document.head.appendChild(style);
 }
 function setOpen(subId,btnId){const sub=document.getElementById(subId),btn=document.getElementById(btnId);if(sub)sub.classList.add('open');if(btn){btn.classList.add('open');btn.setAttribute('aria-expanded','true');const a=btn.querySelector('.nav-arrow');if(a)a.textContent='▲'}}
