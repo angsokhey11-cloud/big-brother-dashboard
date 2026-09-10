@@ -16,11 +16,11 @@ html,body{margin:0;min-height:100%;background:#eef3f8;font-family:Arial,sans-ser
 <script>
 (async function(){
   try{
-    const response=await fetch('legacy-dashboard-v3.40.html?v=20260910-4',{cache:'no-store'});
+    const response=await fetch('legacy-dashboard-v3.40.html?v=20260910-5',{cache:'no-store'});
     if(!response.ok)throw new Error('Could not load Dashboard source.');
     let html=await response.text();
 
-    const adapter='<scr'+'ipt src="supabase-dashboard-adapter.js?v=20260910-4"></scr'+'ipt>';
+    const adapter='<scr'+'ipt src="supabase-dashboard-adapter.js?v=20260910-5"></scr'+'ipt>';
     const headClose=html.toLowerCase().indexOf('</head>');
     if(headClose<0)throw new Error('Dashboard source is missing </head>.');
     html=html.slice(0,headClose)+adapter+'\n'+html.slice(headClose);
@@ -64,6 +64,11 @@ html,body{margin:0;min-height:100%;background:#eef3f8;font-family:Arial,sans-ser
       '<title>BIG BROTHER — Dashboard V3.38 Stock Transactions Active</title>',
       '<title>BIG BROTHER — Secure Supabase Dashboard</title>'
     );
+
+    const bodyClose=html.toLowerCase().lastIndexOf('</body>');
+    if(bodyClose<0)throw new Error('Dashboard source is missing </body>.');
+    const company='<scr'+'ipt src="supabase-company-features.js?v=20260910-1"></scr'+'ipt>\n';
+    html=html.slice(0,bodyClose)+company+html.slice(bodyClose);
 
     document.open();
     document.write(html);
