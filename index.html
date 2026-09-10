@@ -17,8 +17,8 @@ html,body{margin:0;min-height:100%;background:#eef3f8;font-family:Arial,sans-ser
 (async function(){
   try{
     const [response,adapterResponse]=await Promise.all([
-      fetch('legacy-dashboard-v3.40.html?v=20260910-8',{cache:'no-store'}),
-      fetch('supabase-dashboard-adapter.js?v=20260910-8',{cache:'no-store'})
+      fetch('legacy-dashboard-v3.40.html?v=20260910-9',{cache:'no-store'}),
+      fetch('supabase-dashboard-adapter.js?v=20260910-9',{cache:'no-store'})
     ]);
     if(!response.ok)throw new Error('Could not load Dashboard source.');
     if(!adapterResponse.ok)throw new Error('Could not load Dashboard security adapter.');
@@ -103,9 +103,9 @@ html,body{margin:0;min-height:100%;background:#eef3f8;font-family:Arial,sans-ser
     if(!html.includes(damagedUrlMarker))throw new Error('Damaged Stock route marker was not found.');
     html=html.replace(
       damagedUrlMarker,
-      '"stock-damaged": "https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=damaged&v=21",\n'+
-      '    "stock-damaged-report": "https://angsokhey11-cloud.github.io/big-brother-stock-report/damage-stock-report.html?embed=1&v=1",\n'+
-      '    "stock-damaged-cleared": "https://angsokhey11-cloud.github.io/big-brother-stock-report/damaged-stock-cleared.html?embed=1&v=1",'
+      '"stock-damaged": "https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=damaged&v=22",\n'+
+      '    "stock-damaged-report": "https://angsokhey11-cloud.github.io/big-brother-stock-report/damage-stock-report.html?embed=1&v=2",\n'+
+      '    "stock-damaged-cleared": "https://angsokhey11-cloud.github.io/big-brother-stock-report/damaged-stock-cleared.html?embed=1&v=2",'
     );
 
     const damagedRefsMarker="    const stockReportSub = document.getElementById('stockReportSubmenu');\n    const stockReportBtn = document.getElementById('stockReportMenuButton');";
