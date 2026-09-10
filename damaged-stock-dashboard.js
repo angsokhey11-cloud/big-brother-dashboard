@@ -23,9 +23,9 @@
     ) {
 
       MODULE_URLS[
-        "stock-damaged-report"
-      ] =
-        "https://angsokhey11-cloud.github.io/big-brother-damaged-stock/?embed=1&v=1";
+  "stock-damaged-report"
+] =
+  "https://angsokhey11-cloud.github.io/big-brother-damaged-stock/?embed=1&v=2";
 
       MODULE_URLS[
         "stock-damaged-cleared"
