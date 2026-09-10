@@ -16,11 +16,11 @@ html,body{margin:0;min-height:100%;background:#eef3f8;font-family:Arial,sans-ser
 <script>
 (async function(){
   try{
-    const response=await fetch('legacy-dashboard-v3.40.html?v=20260910-3',{cache:'no-store'});
+    const response=await fetch('legacy-dashboard-v3.40.html?v=20260910-4',{cache:'no-store'});
     if(!response.ok)throw new Error('Could not load Dashboard source.');
     let html=await response.text();
 
-    const adapter='<scr'+'ipt src="supabase-dashboard-adapter.js?v=20260910-3"></scr'+'ipt>';
+    const adapter='<scr'+'ipt src="supabase-dashboard-adapter.js?v=20260910-4"></scr'+'ipt>';
     const headClose=html.toLowerCase().indexOf('</head>');
     if(headClose<0)throw new Error('Dashboard source is missing </head>.');
     html=html.slice(0,headClose)+adapter+'\n'+html.slice(headClose);
@@ -40,11 +40,11 @@ html,body{margin:0;min-height:100%;background:#eef3f8;font-family:Arial,sans-ser
 
     html=html.replace(
       '"payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=invoice&v=1"',
-      '"payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=invoice&v=2"'
+      '"payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=invoice&v=3"'
     );
     html=html.replace(
       '"ar-payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=receivable&v=1"',
-      '"ar-payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=receivable&v=2"'
+      '"ar-payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=receivable&v=3"'
     );
 
     const adminCondition="moduleName === 'admin-staff-request' ||\n      moduleName === 'admin-request'\n    ) {";
