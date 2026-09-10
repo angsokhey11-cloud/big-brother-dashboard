@@ -41,8 +41,12 @@
     'expense-monthly-report':       {module:'expenses',action:'view'},
 
     'stock-keyin':                  {module:'Stock Management',action:'view'},
-    'stock-damaged':                {module:'Stock Management',action:'view'},
-    'stock-report':                 {module:'Stock Report',action:'view'},
+'stock-damaged':                {module:'Stock Management',action:'view'},
+
+'stock-damaged-report':         {module:'Stock Management',action:'view'},
+'stock-damaged-cleared':        {module:'Stock Management',action:'view'},
+
+'stock-report':                 {module:'Stock Report',action:'view'},
     'batch-report':                 {module:'Stock Report',action:'view'},
     'closed-batch':                 {module:'Stock Report',action:'view'},
     'stock-transactions':           {module:'Stock Report',action:'view'},
