@@ -1,4 +1,4 @@
-/* BIG BROTHER — Dashboard Supabase Auth & Permission Adapter V1 */
+/* BIG BROTHER — Dashboard Supabase Auth & Permission Adapter V1.1 */
 (function(){
   'use strict';
 
@@ -57,7 +57,8 @@
     'admin-pending-deposit':        {module:'admin_work',action:'view'},
     'admin-deposit-history':        {module:'admin_work',action:'view'},
     'admin-staff-request':          {module:'admin_work',action:'view'},
-    'admin-request':                {module:'admin_work',action:'view'}
+    'admin-request':                {module:'admin_work',action:'view'},
+    'admin-user-permissions':       {module:'admin_work',action:'view',adminOnly:true}
   };
 
   let session=null;
@@ -176,6 +177,7 @@
   function canRoute(route){
     const rule=ROUTE_ACCESS[route];
     if(!rule)return false;
+    if(rule.adminOnly)return profile?.user?.isAdmin===true;
     const grant=grantFor(rule.module);
     if(!grant)return false;
     const field={view:'canView',create:'canCreate',edit:'canEdit',approve:'canApprove'}[rule.action]||'canView';
