@@ -63,7 +63,7 @@ body{
     Loading BIG BROTHER Dashboard…
 
     <div class="bb-sub">
-      Secure Supabase access · Purchase Promotion + Zero-Cost Stock V1
+      Secure Supabase · Expenses + COGS Reports V1
     </div>
 
   </div>
@@ -88,7 +88,7 @@ body{
 
     const response =
       await fetch(
-        "legacy-dashboard-v3.40.html?v=20260912-14",
+        "legacy-dashboard-v3.40.html?v=20260912-15",
         {
           cache:"no-store"
         }
@@ -150,7 +150,7 @@ body{
     const adapter =
       '<scr'
       +
-      'ipt src="supabase-dashboard-adapter.js?v=20260912-12"></scr'
+      'ipt src="supabase-dashboard-adapter.js?v=20260912-cogs-1"></scr'
       +
       'ipt>';
 
@@ -255,8 +255,7 @@ body{
 
 
     /* =====================================================
-       MASTER DATA
-       ACTIVE MODULE FLAG
+       MASTER DATA ACTIVE FLAGS
        ===================================================== */
 
     const oldFlags =
@@ -300,8 +299,7 @@ body{
 
 
     /* =====================================================
-       MASTER DATA
-       ACTIVE MENU BUTTON
+       MASTER DATA ACTIVE MENU
        ===================================================== */
 
     const oldProductActive =
@@ -342,6 +340,324 @@ body{
       oldProductActive,
       newProductActive
     );
+
+
+
+    /* =====================================================
+       COGS MENU UNDER EXPENSES
+       ===================================================== */
+
+    const oldExpenseEnd =
+`          <button type="button" id="navExpenseAccrued" onclick="loadWorkspace('expense-accrued')">⏳ Accrued Expenses</button>
+          <button type="button" id="navExpenseHistory" onclick="loadWorkspace('expense-history')">📜 Expense History</button>
+          <button
+  type="button"
+  id="navExpenseMonthlyReport"
+  onclick="loadWorkspace('expense-monthly-report')"
+>
+  📊 Monthly Expense Report
+</button>
+        </div>
+      </div>`;
+
+
+    const newExpenseEnd =
+`          <button type="button" id="navExpenseAccrued" onclick="loadWorkspace('expense-accrued')">⏳ Accrued Expenses</button>
+          <button type="button" id="navExpenseHistory" onclick="loadWorkspace('expense-history')">📜 Expense History</button>
+
+          <button
+            type="button"
+            id="navExpenseMonthlyReport"
+            onclick="loadWorkspace('expense-monthly-report')"
+          >
+            📊 Monthly Expense Report
+          </button>
+
+
+          <div
+            class="nested-nav-group"
+            id="cogsNavGroup"
+          >
+
+            <button
+              type="button"
+              id="cogsMenuButton"
+              class="nested-nav-toggle"
+              aria-expanded="false"
+              aria-controls="cogsSubmenu"
+              onclick="toggleCogsMenu()"
+            >
+
+              <span class="nested-nav-main">
+
+                <span>📦</span>
+
+                <span>
+                  COGS
+                </span>
+
+              </span>
+
+              <span class="nav-arrow">
+                ▼
+              </span>
+
+            </button>
+
+
+            <div
+              id="cogsSubmenu"
+              class="nav-submenu nav-submenu-level2"
+            >
+
+              <button
+                type="button"
+                id="navCogsDaily"
+                onclick="loadWorkspace('cogs-daily')"
+              >
+                📅 Daily COGS Report
+              </button>
+
+
+              <button
+                type="button"
+                id="navCogsMonthly"
+                onclick="loadWorkspace('cogs-monthly')"
+              >
+                📊 Monthly COGS Report
+              </button>
+
+            </div>
+
+          </div>
+
+
+        </div>
+
+      </div>`;
+
+
+    mustReplace(
+      "COGS menu under Expenses",
+      oldExpenseEnd,
+      newExpenseEnd
+    );
+
+
+
+    /* =====================================================
+       COGS ROUTES
+       ===================================================== */
+
+    const expenseRoute =
+      '"expense-monthly-report": "https://angsokhey11-cloud.github.io/big-brother-expenses/monthly-report.html?embed=1&v=1",';
+
+
+    const expenseRoutesWithCogs =
+      expenseRoute
+      +
+      '\n    "cogs-daily": "https://angsokhey11-cloud.github.io/big-brother-cogs/daily.html?embed=1&v=20260912-2",'
+      +
+      '\n    "cogs-monthly": "https://angsokhey11-cloud.github.io/big-brother-cogs/monthly.html?embed=1&v=20260912-2",';
+
+
+    mustReplace(
+      "COGS Dashboard routes",
+      expenseRoute,
+      expenseRoutesWithCogs
+    );
+
+
+
+    /* =====================================================
+       EXPENSE MODULE LIST
+       ===================================================== */
+
+    const oldExpenseModules =
+`    const expenseModules = [
+      'expense-add',
+      'expense-accrued',
+      'expense-history',
+      'expense-monthly-report'
+    ];`;
+
+
+    const newExpenseModules =
+`    const expenseModules = [
+      'expense-add',
+      'expense-accrued',
+      'expense-history',
+      'expense-monthly-report',
+      'cogs-daily',
+      'cogs-monthly'
+    ];`;
+
+
+    mustReplace(
+      "COGS Expense module list",
+      oldExpenseModules,
+      newExpenseModules
+    );
+
+
+
+    /* =====================================================
+       COGS NESTED MENU TOGGLE
+       ===================================================== */
+
+    const productToggleMarker =
+`  function toggleProductsEditorMenu() {`;
+
+
+    const cogsToggle =
+`  function toggleCogsMenu() {
+
+    const submenu =
+      document.getElementById('cogsSubmenu');
+
+    const button =
+      document.getElementById('cogsMenuButton');
+
+    if (!submenu || !button) return;
+
+    const open =
+      !submenu.classList.contains('open');
+
+    submenu.classList.toggle('open', open);
+
+    button.classList.toggle('open', open);
+
+    button.setAttribute(
+      'aria-expanded',
+      String(open)
+    );
+
+    const arrow =
+      button.querySelector('.nav-arrow');
+
+    if (arrow) {
+      arrow.textContent =
+        open ? '▲' : '▼';
+    }
+
+  }
+
+
+  function toggleProductsEditorMenu() {`;
+
+
+    mustReplace(
+      "COGS toggle function",
+      productToggleMarker,
+      cogsToggle
+    );
+
+
+
+    /* =====================================================
+       COGS ACTIVE MENU STATE
+       ===================================================== */
+
+    const oldExpenseActive =
+`      const expenseId =
+        moduleName === 'expense-add'
+          ? 'navExpenseAdd'
+          : moduleName === 'expense-accrued'
+            ? 'navExpenseAccrued'
+            : moduleName === 'expense-history'
+              ? 'navExpenseHistory'
+              : 'navExpenseMonthlyReport';
+
+      document.getElementById(expenseId)?.classList.add('active');
+
+    } else if (isStockModule) {`;
+
+
+    const newExpenseActive =
+`      const expenseId =
+        moduleName === 'expense-add'
+          ? 'navExpenseAdd'
+          : moduleName === 'expense-accrued'
+            ? 'navExpenseAccrued'
+            : moduleName === 'expense-history'
+              ? 'navExpenseHistory'
+              : moduleName === 'expense-monthly-report'
+                ? 'navExpenseMonthlyReport'
+                : moduleName === 'cogs-daily'
+                  ? 'navCogsDaily'
+                  : 'navCogsMonthly';
+
+      document.getElementById(expenseId)?.classList.add('active');
+
+
+      const isCogsModule =
+        moduleName === 'cogs-daily'
+        ||
+        moduleName === 'cogs-monthly';
+
+
+      const cogsSub =
+        document.getElementById('cogsSubmenu');
+
+      const cogsBtn =
+        document.getElementById('cogsMenuButton');
+
+
+      if (cogsSub && cogsBtn) {
+
+        cogsSub.classList.toggle(
+          'open',
+          isCogsModule
+        );
+
+        cogsBtn.classList.toggle(
+          'open',
+          isCogsModule
+        );
+
+        cogsBtn.setAttribute(
+          'aria-expanded',
+          String(isCogsModule)
+        );
+
+        const cogsArrow =
+          cogsBtn.querySelector(
+            '.nav-arrow'
+          );
+
+        if (cogsArrow) {
+          cogsArrow.textContent =
+            isCogsModule
+              ? '▲'
+              : '▼';
+        }
+
+      }
+
+
+    } else if (isStockModule) {`;
+
+
+    mustReplace(
+      "COGS active Expense menu",
+      oldExpenseActive,
+      newExpenseActive
+    );
+
+
+
+    /* =====================================================
+       COGS DIRECT URL AUTOLOAD
+       ===================================================== */
+
+    html =
+      html.replace(
+
+        "'expense-history','expense-monthly-report','stock-keyin'",
+
+        "'expense-history','expense-monthly-report','cogs-daily','cogs-monthly','stock-keyin'"
+
+      );
 
 
 
