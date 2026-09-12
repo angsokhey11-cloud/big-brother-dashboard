@@ -1,12 +1,21 @@
 /* =========================================================
    BIG BROTHER
-   DAMAGED STOCK DASHBOARD MENU V2
+   DAMAGED STOCK DASHBOARD MENU V3
+
+   MENU:
+   - Damaged Stock Report
+   - Cleared Damaged Stock
+   - Damage Accounting & Recovery
    ========================================================= */
 
 (function () {
 
   "use strict";
 
+
+  /* =========================================================
+     INSTALL MENU
+     ========================================================= */
 
   function installDamagedStockMenu() {
 
@@ -24,6 +33,7 @@
       return;
 
     }
+
 
 
     /* =====================================================
@@ -48,12 +58,18 @@
         "https://angsokhey11-cloud.github.io/big-brother-damaged-stock/cleared.html?embed=1&v=3";
 
 
+      MODULE_URLS[
+        "stock-damaged-accounting"
+      ] =
+        "https://angsokhey11-cloud.github.io/big-brother-damaged-stock/accounting.html?embed=1&v=4";
+
+
     }
 
 
 
     /* =====================================================
-       MENU HTML
+       MENU GROUP
        ===================================================== */
 
     const group =
@@ -142,6 +158,20 @@
         </button>
 
 
+        <button
+
+          type="button"
+
+          id="navStockDamagedAccounting"
+
+        >
+
+          💰 Damage Accounting
+          &amp; Recovery
+
+        </button>
+
+
       </div>
 
     `;
@@ -154,7 +184,7 @@
 
 
     /* =====================================================
-       TOGGLE
+       TOGGLE DAMAGED STOCK GROUP
        ===================================================== */
 
     const toggle =
@@ -229,7 +259,7 @@
 
 
     /* =====================================================
-       DAMAGE REPORT
+       DAMAGED STOCK REPORT
        ===================================================== */
 
     document
@@ -259,7 +289,7 @@
 
 
     /* =====================================================
-       CLEARED REPORT
+       CLEARED DAMAGED STOCK
        ===================================================== */
 
     document
@@ -278,6 +308,36 @@
             "stock-damaged-cleared",
 
             "navStockDamagedCleared"
+
+          );
+
+
+        }
+
+      );
+
+
+
+    /* =====================================================
+       DAMAGE ACCOUNTING & RECOVERY
+       ===================================================== */
+
+    document
+      .getElementById(
+        "navStockDamagedAccounting"
+      )
+      .addEventListener(
+
+        "click",
+
+        function () {
+
+
+          openModule(
+
+            "stock-damaged-accounting",
+
+            "navStockDamagedAccounting"
 
           );
 
@@ -443,7 +503,9 @@
 
       "navStockDamagedReport",
 
-      "navStockDamagedCleared"
+      "navStockDamagedCleared",
+
+      "navStockDamagedAccounting"
 
     ].forEach(
 
