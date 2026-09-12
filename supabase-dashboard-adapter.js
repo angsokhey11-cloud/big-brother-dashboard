@@ -45,6 +45,7 @@
 
 'stock-damaged-report':         {module:'Stock Management',action:'view'},
 'stock-damaged-cleared':        {module:'Stock Management',action:'view'},
+'stock-damaged-accounting':     {module:'Stock Management',action:'view'},
 
 'stock-report':                 {module:'Stock Report',action:'view'},
     'batch-report':                 {module:'Stock Report',action:'view'},
