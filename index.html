@@ -63,7 +63,7 @@ body{
     Loading BIG BROTHER Dashboard…
 
     <div class="bb-sub">
-      Secure Supabase access
+      Secure Supabase access · Purchase Promotion + Zero-Cost Stock V1
     </div>
 
   </div>
@@ -88,7 +88,7 @@ body{
 
     const response =
       await fetch(
-        "legacy-dashboard-v3.40.html?v=20260912-13",
+        "legacy-dashboard-v3.40.html?v=20260912-14",
         {
           cache:"no-store"
         }
@@ -150,7 +150,7 @@ body{
     const adapter =
       '<scr'
       +
-      'ipt src="supabase-dashboard-adapter.js?v=20260912-11"></scr'
+      'ipt src="supabase-dashboard-adapter.js?v=20260912-12"></scr'
       +
       'ipt>';
 
@@ -241,9 +241,9 @@ body{
 
 
     const productRouteWithExpenseCategory =
-  productRoute
-  +
-  '\n    "master-expense-categories": "https://angsokhey11-cloud.github.io/big-brother-master-data/expense-categories.html?embed=1&v=20260912-3",';
+      productRoute
+      +
+      '\n    "master-expense-categories": "https://angsokhey11-cloud.github.io/big-brother-master-data/expense-categories.html?embed=1&v=20260912-3",';
 
 
     mustReplace(
@@ -508,7 +508,32 @@ body{
 
 
     /* =====================================================
-       STOCK
+       PURCHASE — PROMOTION QTY V1
+       ===================================================== */
+
+    html =
+      html.replace(
+
+        '"purchase-create": "https://angsokhey11-cloud.github.io/big-brother-purchase-recorder/?embed=1&v=1"',
+
+        '"purchase-create": "https://angsokhey11-cloud.github.io/big-brother-purchase-recorder/?embed=1&v=20260912-promo-3"'
+
+      );
+
+
+    html =
+      html.replace(
+
+        '"purchase-history": "https://angsokhey11-cloud.github.io/big-brother-puchase-history/?embed=1&v=1"',
+
+        '"purchase-history": "https://angsokhey11-cloud.github.io/big-brother-puchase-history/?embed=1&v=20260912-promo-3"'
+
+      );
+
+
+
+    /* =====================================================
+       STOCK — ZERO-COST STOCK V1
        ===================================================== */
 
     html =
@@ -516,7 +541,17 @@ body{
 
         '"stock-keyin": "https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=keyin&v=20"',
 
-        '"stock-keyin": "https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=keyin&v=21"'
+        '"stock-keyin": "https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=keyin&v=20260912-zero-cost-6"'
+
+      );
+
+
+    html =
+      html.replace(
+
+        '"stock-report": "https://angsokhey11-cloud.github.io/big-brother-stock-report/?embed=1&v=30"',
+
+        '"stock-report": "https://angsokhey11-cloud.github.io/big-brother-stock-report/?embed=1&v=20260912-zero-cost-3"'
 
       );
 
@@ -526,7 +561,7 @@ body{
 
         '"stock-damaged": "https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=damaged&v=20"',
 
-        '"stock-damaged": "https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=damaged&v=21"'
+        '"stock-damaged": "https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=damaged&v=20260912-zero-cost-6"'
 
       );
 
@@ -536,7 +571,7 @@ body{
 
         '"batch-report": "https://angsokhey11-cloud.github.io/big-brother-stock-report/batch-report.html?embed=1&v=10"',
 
-        '"batch-report": "https://angsokhey11-cloud.github.io/big-brother-stock-report/batch-report.html?embed=1&v=11"'
+        '"batch-report": "https://angsokhey11-cloud.github.io/big-brother-stock-report/batch-report.html?embed=1&v=20260912-zero-cost-3"'
 
       );
 
@@ -546,7 +581,17 @@ body{
 
         '"closed-batch": "https://angsokhey11-cloud.github.io/big-brother-stock-report/closed-batch.html?embed=1&v=10"',
 
-        '"closed-batch": "https://angsokhey11-cloud.github.io/big-brother-stock-report/closed-batch.html?embed=1&v=11"'
+        '"closed-batch": "https://angsokhey11-cloud.github.io/big-brother-stock-report/closed-batch.html?embed=1&v=20260912-zero-cost-3"'
+
+      );
+
+
+    html =
+      html.replace(
+
+        '"stock-transactions": "https://angsokhey11-cloud.github.io/big-brother-stock-report/transactions.html?embed=1&v=10"',
+
+        '"stock-transactions": "https://angsokhey11-cloud.github.io/big-brother-stock-report/transactions.html?embed=1&v=20260912-zero-cost-3"'
 
       );
 
