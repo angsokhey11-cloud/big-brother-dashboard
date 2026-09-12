@@ -1,137 +1,967 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>BIG BROTHER — Secure Dashboard</title>
+
+<meta
+  name="viewport"
+  content="width=device-width,initial-scale=1"
+>
+
+<title>
+  BIG BROTHER — Secure Dashboard
+</title>
+
 <style>
-html,body{margin:0;min-height:100%;background:#eef3f8;font-family:Arial,sans-serif}
-.bb-loader{min-height:100vh;display:flex;align-items:center;justify-content:center}
-.bb-card{background:#fff;border:1px solid #d9e2ef;border-radius:14px;padding:22px 28px;box-shadow:0 8px 30px #173a6615;color:#17457a;font-weight:800}
-.bb-sub{margin-top:6px;color:#6b7280;font-size:12px;font-weight:600}
+
+html,
+body{
+  margin:0;
+  min-height:100%;
+  background:#eef3f8;
+  font-family:Arial,sans-serif;
+}
+
+.bb-loader{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.bb-card{
+  background:#fff;
+  border:1px solid #d9e2ef;
+  border-radius:14px;
+  padding:22px 28px;
+  box-shadow:0 8px 30px #173a6615;
+  color:#17457a;
+  font-weight:800;
+}
+
+.bb-sub{
+  margin-top:6px;
+  color:#6b7280;
+  font-size:12px;
+  font-weight:600;
+}
+
 </style>
+
 </head>
+
+
 <body>
-<div class="bb-loader"><div class="bb-card">Loading BIG BROTHER Dashboard…<div class="bb-sub">Secure Supabase access</div></div></div>
+
+
+<div class="bb-loader">
+
+  <div class="bb-card">
+
+    Loading BIG BROTHER Dashboard…
+
+    <div class="bb-sub">
+      Secure Supabase access
+    </div>
+
+  </div>
+
+</div>
+
+
+
 <script>
+
 (async function(){
+
   try{
-    const response=await fetch('legacy-dashboard-v3.40.html?v=20260912-11',{cache:'no-store'});
-    if(!response.ok)throw new Error('Could not load Dashboard source.');
-    let html=await response.text();
 
-    const adapter='<scr'+'ipt src="supabase-dashboard-adapter.js?v=20260912-9"></scr'+'ipt>';
-    const headClose=html.toLowerCase().indexOf('</head>');
-    if(headClose<0)throw new Error('Dashboard source is missing </head>.');
-    html=html.slice(0,headClose)+adapter+'\n'+html.slice(headClose);
 
-    html=html.replace(
-      '<a href="https://angsokhey11-cloud.github.io/big-brother-invoice-reversal/">',
-      '<a href="#" onclick="loadWorkspace(\'sale-return\'); return false;">'
+    /* =====================================================
+       LOAD DASHBOARD
+       ===================================================== */
+
+    const response =
+      await fetch(
+        'legacy-dashboard-v3.40.html?v=20260912-12',
+        {
+          cache:'no-store'
+        }
+      );
+
+
+    if(
+      !response.ok
+    ){
+      throw new Error(
+        'Could not load Dashboard source.'
+      );
+    }
+
+
+    let html =
+      await response.text();
+
+
+
+    /* =====================================================
+       SUPABASE AUTH / PERMISSION ADAPTER
+       ===================================================== */
+
+    const adapter =
+      '<scr'
+      +
+      'ipt src="supabase-dashboard-adapter.js?v=20260912-10"></scr'
+      +
+      'ipt>';
+
+
+    const headClose =
+      html
+        .toLowerCase()
+        .indexOf(
+          '</head>'
+        );
+
+
+    if(
+      headClose < 0
+    ){
+      throw new Error(
+        'Dashboard source is missing </head>.'
+      );
+    }
+
+
+    html =
+      html.slice(
+        0,
+        headClose
+      )
+      +
+      adapter
+      +
+      '\n'
+      +
+      html.slice(
+        headClose
+      );
+
+
+
+    /* =====================================================
+       INVOICE REVERSAL SHELL ROUTE
+       ===================================================== */
+
+    html =
+      html.replace(
+
+        '<a href="https://angsokhey11-cloud.github.io/big-brother-invoice-reversal/">',
+
+        '<a href="#" onclick="loadWorkspace(\'sale-return\'); return false;">'
+
+      );
+
+
+
+    /* =====================================================
+       ADMIN — USER & PERMISSION MANAGER
+       ===================================================== */
+
+    const adminMenuMarker =
+      '<button type="button" id="navAdminRequest" onclick="loadWorkspace(\'admin-request\')">🛠️ Admin Request</button>';
+
+
+    if(
+      !html.includes(
+        adminMenuMarker
+      )
+    ){
+      throw new Error(
+        'Admin Work menu marker was not found.'
+      );
+    }
+
+
+    html =
+      html.replace(
+
+        adminMenuMarker,
+
+        adminMenuMarker
+        +
+        '\n          <button type="button" id="navAdminUserPermissions" onclick="loadWorkspace(\'admin-user-permissions\')">🔐 User & Permission Manager</button>'
+
+      );
+
+
+
+    const adminUrlMarker =
+      '"admin-request": "https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=admin-request"';
+
+
+    if(
+      !html.includes(
+        adminUrlMarker
+      )
+    ){
+      throw new Error(
+        'Admin Work route marker was not found.'
+      );
+    }
+
+
+    html =
+      html.replace(
+
+        adminUrlMarker,
+
+        adminUrlMarker
+        +
+        ',\n    "admin-user-permissions": "https://angsokhey11-cloud.github.io/big-brother-admin-work/user-permissions.html?embed=1&v=1"'
+
+      );
+
+
+
+    /* =====================================================
+       INVOICE GENERATOR EMBED
+       ===================================================== */
+
+    html =
+      html.replace(
+
+        'invoice: "https://angsokhey11-cloud.github.io/big-brother-invoice-generator/"',
+
+        'invoice: "https://angsokhey11-cloud.github.io/big-brother-invoice-generator/?embed=1&v=33"'
+
+      );
+
+
+
+    /* =====================================================
+       SALES SUPPORT BUILD
+       ===================================================== */
+
+    html =
+      html.replaceAll(
+
+        'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=calculator&v=110',
+
+        'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=calculator&v=111'
+
+      );
+
+
+    html =
+      html.replaceAll(
+
+        'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=request-delivery&v=110',
+
+        'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=request-delivery&v=111'
+
+      );
+
+
+    html =
+      html.replaceAll(
+
+        'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=your-customer&v=110',
+
+        'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=your-customer&v=111'
+
+      );
+
+
+    html =
+      html.replaceAll(
+
+        'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=successful-delivery&v=110',
+
+        'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=successful-delivery&v=111'
+
+      );
+
+
+
+    /* =====================================================
+       STOCK BUILDS
+       ===================================================== */
+
+    html =
+      html.replace(
+
+        '"stock-keyin": "https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=keyin&v=20"',
+
+        '"stock-keyin": "https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=keyin&v=21"'
+
+      );
+
+
+    html =
+      html.replace(
+
+        '"stock-damaged": "https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=damaged&v=20"',
+
+        '"stock-damaged": "https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=damaged&v=21"'
+
+      );
+
+
+    html =
+      html.replace(
+
+        '"batch-report": "https://angsokhey11-cloud.github.io/big-brother-stock-report/batch-report.html?embed=1&v=10"',
+
+        '"batch-report": "https://angsokhey11-cloud.github.io/big-brother-stock-report/batch-report.html?embed=1&v=11"'
+
+      );
+
+
+    html =
+      html.replace(
+
+        '"closed-batch": "https://angsokhey11-cloud.github.io/big-brother-stock-report/closed-batch.html?embed=1&v=10"',
+
+        '"closed-batch": "https://angsokhey11-cloud.github.io/big-brother-stock-report/closed-batch.html?embed=1&v=11"'
+
+      );
+
+
+
+    /* =====================================================
+       ACCOUNTS RECEIVABLE BUILDS
+       ===================================================== */
+
+    html =
+      html.replace(
+
+        '"ar-all": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=all&v=2"',
+
+        '"ar-all": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=all&v=5"'
+
+      );
+
+
+    html =
+      html.replace(
+
+        '"ar-your": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=your&v=3"',
+
+        '"ar-your": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=your&v=5"'
+
+      );
+
+
+
+    /* =====================================================
+       PAYMENT HISTORY BUILDS
+       ===================================================== */
+
+    html =
+      html.replace(
+
+        '"payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=invoice&v=1"',
+
+        '"payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=invoice&v=3"'
+
+      );
+
+
+    html =
+      html.replace(
+
+        '"ar-payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=receivable&v=1"',
+
+        '"ar-payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=receivable&v=3"'
+
+      );
+
+
+
+    /* =====================================================
+       USER & PERMISSION ACTIVE MENU
+       ===================================================== */
+
+    const adminCondition =
+      "moduleName === 'admin-staff-request' ||\n      moduleName === 'admin-request'\n    ) {";
+
+
+    if(
+      !html.includes(
+        adminCondition
+      )
+    ){
+      throw new Error(
+        'Admin active-route condition was not found.'
+      );
+    }
+
+
+    html =
+      html.replace(
+
+        adminCondition,
+
+        "moduleName === 'admin-staff-request' ||\n      moduleName === 'admin-request' ||\n      moduleName === 'admin-user-permissions'\n    ) {"
+
+      );
+
+
+
+    const adminActiveMarker =
+      ": moduleName === 'admin-staff-request'\n                  ? 'navAdminStaffRequest'\n                  : 'navAdminRequest';";
+
+
+    if(
+      !html.includes(
+        adminActiveMarker
+      )
+    ){
+      throw new Error(
+        'Admin active-menu marker was not found.'
+      );
+    }
+
+
+    html =
+      html.replace(
+
+        adminActiveMarker,
+
+        ": moduleName === 'admin-staff-request'\n                  ? 'navAdminStaffRequest'\n                  : moduleName === 'admin-user-permissions'\n                    ? 'navAdminUserPermissions'\n                    : 'navAdminRequest';"
+
+      );
+
+
+
+    /* =====================================================
+       SUPABASE DASHBOARD STARTUP
+       ===================================================== */
+
+    const marker =
+      "  window.addEventListener('DOMContentLoaded', openInitialWorkspace);";
+
+
+    const replacement =
+      "  window.addEventListener('DOMContentLoaded', () => window.BBDashboardAdapter.start());";
+
+
+    if(
+      !html.includes(
+        marker
+      )
+    ){
+      throw new Error(
+        'Dashboard startup marker was not found.'
+      );
+    }
+
+
+    html =
+      html.replace(
+        marker,
+        replacement
+      );
+
+
+
+    /* =====================================================
+       PAGE TITLE
+       ===================================================== */
+
+    html =
+      html.replace(
+
+        '<title>BIG BROTHER — Dashboard V3.38 Stock Transactions Active</title>',
+
+        '<title>BIG BROTHER — Secure Supabase Dashboard</title>'
+
+      );
+
+
+
+    /* =====================================================
+       MASTER DATA — EXPENSE CATEGORY MANAGER
+       ===================================================== */
+
+    const masterDataScript =
+`
+<scr` + `ipt>
+
+(function(){
+
+  "use strict";
+
+
+  function installExpenseCategoryMaster(){
+
+
+    /* -----------------------------------------------------
+       ROUTE
+       ----------------------------------------------------- */
+
+    if(
+      typeof MODULE_URLS !== "undefined"
+    ){
+
+      MODULE_URLS[
+        "master-expense-categories"
+      ] =
+        "https://angsokhey11-cloud.github.io/big-brother-master-data/expense-categories.html?embed=1&v=1";
+
+    }
+
+
+
+    /* -----------------------------------------------------
+       MENU
+       ----------------------------------------------------- */
+
+    const masterSubmenu =
+      document.getElementById(
+        "masterSubmenu"
+      );
+
+
+    if(
+      masterSubmenu
+      &&
+      !document.getElementById(
+        "navMasterExpenseCategories"
+      )
+    ){
+
+      const button =
+        document.createElement(
+          "button"
+        );
+
+
+      button.type =
+        "button";
+
+
+      button.id =
+        "navMasterExpenseCategories";
+
+
+      button.textContent =
+        "💸 Expense Categories";
+
+
+      button.setAttribute(
+        "onclick",
+        "loadWorkspace('master-expense-categories')"
+      );
+
+
+      masterSubmenu.appendChild(
+        button
+      );
+
+    }
+
+
+
+    /* -----------------------------------------------------
+       ACTIVE MENU HANDLING
+       ----------------------------------------------------- */
+
+    if(
+      typeof window.setShellActive === "function"
+      &&
+      !window.__bbExpenseCategoryMasterActiveInstalled
+    ){
+
+      const originalSetShellActive =
+        window.setShellActive;
+
+
+      window.setShellActive =
+        function(moduleName){
+
+
+          originalSetShellActive(
+            moduleName
+          );
+
+
+          if(
+            moduleName !==
+            "master-expense-categories"
+          ){
+            return;
+          }
+
+
+          document
+            .querySelectorAll(
+              ".shell-nav-link, .nav-submenu button"
+            )
+            .forEach(
+              function(element){
+
+                element.classList.remove(
+                  "active"
+                );
+
+              }
+            );
+
+
+          function setOpen(
+            submenu,
+            button,
+            open
+          ){
+
+            submenu
+              ?.classList
+              .toggle(
+                "open",
+                open
+              );
+
+
+            button
+              ?.classList
+              .toggle(
+                "open",
+                open
+              );
+
+
+            button
+              ?.setAttribute(
+                "aria-expanded",
+                String(open)
+              );
+
+
+            const arrow =
+              button
+                ?.querySelector(
+                  ".nav-arrow"
+                );
+
+
+            if(
+              arrow
+            ){
+
+              arrow.textContent =
+                open
+                  ? "▲"
+                  : "▼";
+
+            }
+
+          }
+
+
+          /* Close other Main Menu groups */
+
+          setOpen(
+            document.getElementById(
+              "salesSubmenu"
+            ),
+            document.getElementById(
+              "salesMenuButton"
+            ),
+            false
+          );
+
+
+          setOpen(
+            document.getElementById(
+              "salesSupportSubmenu"
+            ),
+            document.getElementById(
+              "salesSupportMenuButton"
+            ),
+            false
+          );
+
+
+          setOpen(
+            document.getElementById(
+              "purchaseSubmenu"
+            ),
+            document.getElementById(
+              "purchaseMenuButton"
+            ),
+            false
+          );
+
+
+          setOpen(
+            document.getElementById(
+              "expensesSubmenu"
+            ),
+            document.getElementById(
+              "expensesMenuButton"
+            ),
+            false
+          );
+
+
+          setOpen(
+            document.getElementById(
+              "stockSubmenu"
+            ),
+            document.getElementById(
+              "stockMenuButton"
+            ),
+            false
+          );
+
+
+          setOpen(
+            document.getElementById(
+              "arSubmenu"
+            ),
+            document.getElementById(
+              "arMenuButton"
+            ),
+            false
+          );
+
+
+          setOpen(
+            document.getElementById(
+              "adminWorkSubmenu"
+            ),
+            document.getElementById(
+              "adminWorkMenuButton"
+            ),
+            false
+          );
+
+
+          /* Open Master Data */
+
+          setOpen(
+            document.getElementById(
+              "masterSubmenu"
+            ),
+            document.getElementById(
+              "masterMenuButton"
+            ),
+            true
+          );
+
+
+          /* Close nested Master editors */
+
+          setOpen(
+            document.getElementById(
+              "customersEditorSubmenu"
+            ),
+            document.getElementById(
+              "customersEditorMenuButton"
+            ),
+            false
+          );
+
+
+          setOpen(
+            document.getElementById(
+              "clientsEditorSubmenu"
+            ),
+            document.getElementById(
+              "clientsEditorMenuButton"
+            ),
+            false
+          );
+
+
+          setOpen(
+            document.getElementById(
+              "productsEditorSubmenu"
+            ),
+            document.getElementById(
+              "productsEditorMenuButton"
+            ),
+            false
+          );
+
+
+          document
+            .getElementById(
+              "navMasterExpenseCategories"
+            )
+            ?.classList
+            .add(
+              "active"
+            );
+
+        };
+
+
+      window.__bbExpenseCategoryMasterActiveInstalled =
+        true;
+
+    }
+
+  }
+
+
+
+  if(
+    document.readyState ===
+    "loading"
+  ){
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      installExpenseCategoryMaster
     );
 
-    const adminMenuMarker='<button type="button" id="navAdminRequest" onclick="loadWorkspace(\'admin-request\')">🛠️ Admin Request</button>';
-    if(!html.includes(adminMenuMarker))throw new Error('Admin Work menu marker was not found.');
-    html=html.replace(adminMenuMarker,adminMenuMarker+'\n          <button type="button" id="navAdminUserPermissions" onclick="loadWorkspace(\'admin-user-permissions\')">🔐 User & Permission Manager</button>');
+  }else{
 
-    const adminUrlMarker='"admin-request": "https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=admin-request"';
-    if(!html.includes(adminUrlMarker))throw new Error('Admin Work route marker was not found.');
-    html=html.replace(adminUrlMarker,adminUrlMarker+',\n    "admin-user-permissions": "https://angsokhey11-cloud.github.io/big-brother-admin-work/user-permissions.html?embed=1&v=1"');
+    installExpenseCategoryMaster();
 
-    html=html.replace(
-      'invoice: "https://angsokhey11-cloud.github.io/big-brother-invoice-generator/"',
-      'invoice: "https://angsokhey11-cloud.github.io/big-brother-invoice-generator/?embed=1&v=33"'
-    );
+  }
 
-    /* Force the newly wired customer-price calculator build. */
-    html=html.replaceAll(
-      'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=calculator&v=110',
-      'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=calculator&v=111'
-    );
-    html=html.replaceAll(
-      'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=request-delivery&v=110',
-      'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=request-delivery&v=111'
-    );
-    html=html.replaceAll(
-      'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=your-customer&v=110',
-      'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=your-customer&v=111'
-    );
-    html=html.replaceAll(
-      'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=successful-delivery&v=110',
-      'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=successful-delivery&v=111'
-    );
 
-    html=html.replace(
-      '"stock-keyin": "https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=keyin&v=20"',
-      '"stock-keyin": "https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=keyin&v=21"'
-    );
-    html=html.replace(
-      '"stock-damaged": "https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=damaged&v=20"',
-      '"stock-damaged": "https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=damaged&v=21"'
-    );
-    html=html.replace(
-      '"batch-report": "https://angsokhey11-cloud.github.io/big-brother-stock-report/batch-report.html?embed=1&v=10"',
-      '"batch-report": "https://angsokhey11-cloud.github.io/big-brother-stock-report/batch-report.html?embed=1&v=11"'
-    );
-    html=html.replace(
-      '"closed-batch": "https://angsokhey11-cloud.github.io/big-brother-stock-report/closed-batch.html?embed=1&v=10"',
-      '"closed-batch": "https://angsokhey11-cloud.github.io/big-brother-stock-report/closed-batch.html?embed=1&v=11"'
-    );
-    html=html.replace(
-      '"ar-all": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=all&v=2"',
-      '"ar-all": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=all&v=5"'
-    );
-    html=html.replace(
-      '"ar-your": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=your&v=3"',
-      '"ar-your": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=your&v=5"'
-    );
+})();
 
-    html=html.replace(
-      '"payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=invoice&v=1"',
-      '"payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=invoice&v=3"'
-    );
-    html=html.replace(
-      '"ar-payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=receivable&v=1"',
-      '"ar-payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=receivable&v=3"'
-    );
+</scr` + `ipt>
+`;
 
-    const adminCondition="moduleName === 'admin-staff-request' ||\n      moduleName === 'admin-request'\n    ) {";
-    if(!html.includes(adminCondition))throw new Error('Admin active-route condition was not found.');
-    html=html.replace(adminCondition,"moduleName === 'admin-staff-request' ||\n      moduleName === 'admin-request' ||\n      moduleName === 'admin-user-permissions'\n    ) {");
 
-    const adminActiveMarker=": moduleName === 'admin-staff-request'\n                  ? 'navAdminStaffRequest'\n                  : 'navAdminRequest';";
-    if(!html.includes(adminActiveMarker))throw new Error('Admin active-menu marker was not found.');
-    html=html.replace(adminActiveMarker,": moduleName === 'admin-staff-request'\n                  ? 'navAdminStaffRequest'\n                  : moduleName === 'admin-user-permissions'\n                    ? 'navAdminUserPermissions'\n                    : 'navAdminRequest';");
 
-    const marker="  window.addEventListener('DOMContentLoaded', openInitialWorkspace);";
-    const replacement="  window.addEventListener('DOMContentLoaded', () => window.BBDashboardAdapter.start());";
-    if(!html.includes(marker))throw new Error('Dashboard startup marker was not found.');
-    html=html.replace(marker,replacement);
+    /* =====================================================
+       EXISTING DASHBOARD FEATURE SCRIPTS
+       ===================================================== */
 
-    html=html.replace(
-      '<title>BIG BROTHER — Dashboard V3.38 Stock Transactions Active</title>',
-      '<title>BIG BROTHER — Secure Supabase Dashboard</title>'
-    );
+    const bodyClose =
+      html
+        .toLowerCase()
+        .lastIndexOf(
+          '</body>'
+        );
 
-    const bodyClose=html.toLowerCase().lastIndexOf('</body>');
-    if(bodyClose<0)throw new Error('Dashboard source is missing </body>.');
+
+    if(
+      bodyClose < 0
+    ){
+      throw new Error(
+        'Dashboard source is missing </body>.'
+      );
+    }
+
+
     const company =
-  '<scr'+'ipt src="supabase-company-features.js?v=20260910-3"></scr'+'ipt>\n' +
-  '<scr'+'ipt src="damaged-stock-dashboard.js?v=5"></scr'+'ipt>\n';
 
-html =
-  html.slice(0,bodyClose) +
-  company +
-  html.slice(bodyClose);
+      masterDataScript
+      +
+
+      '<scr'
+      +
+      'ipt src="supabase-company-features.js?v=20260910-3"></scr'
+      +
+      'ipt>\n'
+
+      +
+
+      '<scr'
+      +
+      'ipt src="damaged-stock-dashboard.js?v=5"></scr'
+      +
+      'ipt>\n';
+
+
+
+    html =
+
+      html.slice(
+        0,
+        bodyClose
+      )
+
+      +
+
+      company
+
+      +
+
+      html.slice(
+        bodyClose
+      );
+
+
+
+    /* =====================================================
+       OPEN DASHBOARD
+       ===================================================== */
 
     document.open();
-    document.write(html);
+
+    document.write(
+      html
+    );
+
     document.close();
+
+
   }catch(error){
-    console.error(error);
-    document.body.innerHTML='<div class="bb-loader"><div class="bb-card">Could not open Dashboard<div class="bb-sub">'+String(error?.message||error)+'</div></div></div>';
+
+
+    console.error(
+      error
+    );
+
+
+    document.body.innerHTML =
+
+      '<div class="bb-loader">'
+
+      +
+
+      '<div class="bb-card">'
+
+      +
+
+      'Could not open Dashboard'
+
+      +
+
+      '<div class="bb-sub">'
+
+      +
+
+      String(
+        error
+        &&
+        error.message
+          ? error.message
+          : error
+      )
+
+      +
+
+      '</div>'
+
+      +
+
+      '</div>'
+
+      +
+
+      '</div>';
+
   }
+
+
 })();
+
 </script>
+
+
 </body>
+
 </html>
