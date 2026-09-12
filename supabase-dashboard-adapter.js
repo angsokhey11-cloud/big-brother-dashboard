@@ -39,6 +39,7 @@
     'expense-accrued':              {module:'expenses',action:'view'},
     'expense-history':              {module:'expenses',action:'view'},
     'expense-monthly-report':       {module:'expenses',action:'view'},
+    
     'master-expense-categories':    {module:'master_data',action:'edit',adminOnly:true},
 
     'stock-keyin':                  {module:'Stock Management',action:'view'},
