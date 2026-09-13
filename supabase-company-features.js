@@ -1,4 +1,4 @@
-/* BIG BROTHER — Supabase Company Features Dashboard Integration V1.6.1 */
+/* BIG BROTHER — Supabase Company Features Dashboard Integration V1.6.2 */
 (function(){
 'use strict';
 const EXTRA={
@@ -8,7 +8,7 @@ const EXTRA={
   'staff-management':{adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-master-data/staff-management.html?embed=1&v=20260913-1',button:'navStaffManagement'},
   'staff-payment-settings':{adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-master-data/staff-payment-settings.html?embed=1&v=20260913-1',button:'navStaffPaymentSettings'},
   'company-setup-master':{adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-master-data/company-setup.html?embed=1&v=20260913-1',button:'navCompanySetupMaster'},
-  'monthly-sales-report':{adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-report/monthly-sales.html?embed=1&v=20260913-3',button:'navMonthlySalesReport'},
+  'monthly-sales-report':{adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-report/monthly-sales.html?embed=1&v=20260913-4',button:'navMonthlySalesReport'},
   'management-control-center':{module:'management_control_center',adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-admin-work/company-control.html?embed=1&view=management&v=1',button:'navManagementControl'},
   'system-activity':{module:'system_activity',adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-admin-work/company-control.html?embed=1&view=activity&v=1',button:'navSystemActivity'},
   'notification-center':{module:'notification_center',url:'https://angsokhey11-cloud.github.io/big-brother-admin-work/company-control.html?embed=1&view=notifications&v=1',button:'navNotificationCenter'}
@@ -41,7 +41,27 @@ function install(){
 }
 function setOpen(subId,btnId){const sub=document.getElementById(subId),btn=document.getElementById(btnId);if(sub)sub.classList.add('open');if(btn){btn.classList.add('open');btn.setAttribute('aria-expanded','true');const a=btn.querySelector('.nav-arrow');if(a)a.textContent='▲'}}
 function highlight(route){document.querySelectorAll('.nav-submenu button.active,.shell-nav-link.active').forEach(x=>x.classList.remove('active'));const id=EXTRA[route]?.button;document.getElementById(id)?.classList.add('active');if(route==='staff-relation'||route==='monthly-sales-report')return;if(route==='customer-credit-control'){setOpen('masterSubmenu','masterMenuButton');setOpen('customersEditorSubmenu','customersEditorMenuButton')}else if(route==='staff-management'||route==='staff-payment-settings'||route==='company-setup-master'){setOpen('masterSubmenu','masterMenuButton')}else if(route==='stock-alerts'){setOpen('stockSubmenu','stockMenuButton')}else{setOpen('adminWorkSubmenu','adminWorkMenuButton')}}
-function open(route,updateUrl=true){if(!can(route)){alert('Access denied for this function.');return false}baseLoad(route,updateUrl);highlight(route);return true}
+function openReportDirect(route,updateUrl=true){
+  const r=EXTRA[route];
+  const home=document.getElementById('dashboardHome');
+  const workspace=document.getElementById('moduleWorkspace');
+  const frame=document.getElementById('moduleFrame');
+  if(!r?.url||!workspace||!frame){alert('Report workspace is not ready. Please refresh once.');return false}
+  if(home)home.hidden=true;
+  workspace.hidden=false;
+  frame.src=r.url;
+  if(updateUrl){
+    try{
+      const u=new URL(location.href);
+      u.searchParams.set('module',route);
+      u.searchParams.set('autoload','1');
+      history.pushState({},'',u.pathname+u.search+u.hash);
+    }catch(_){}
+  }
+  highlight(route);
+  return true;
+}
+function open(route,updateUrl=true){if(!can(route)){alert('Access denied for this function.');return false}if(route==='monthly-sales-report')return openReportDirect(route,updateUrl);baseLoad(route,updateUrl);highlight(route);return true}
 function routeAwareLoad(route,updateUrl=true){if(EXTRA[route])return open(route,updateUrl);return guardedLoad?guardedLoad.call(window,route,updateUrl):baseLoad(route,updateUrl)}
 function installRouteBridge(){if(window.loadWorkspace===routeAwareLoad)return;guardedLoad=window.loadWorkspace;window.loadWorkspace=routeAwareLoad}
 function refreshVisibility(){Object.keys(EXTRA).forEach(r=>{const b=document.getElementById(EXTRA[r].button);if(b)b.hidden=!can(r)});installBell()}
