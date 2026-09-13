@@ -1,4 +1,4 @@
-/* BIG BROTHER — Supabase Company Features Dashboard Integration V1.1 */
+/* BIG BROTHER — Supabase Company Features Dashboard Integration V1.2 */
 (function(){
 'use strict';
 const EXTRA={
@@ -14,7 +14,10 @@ function profile(){return window.BBDashboardAdapter?.getProfile?.()||null}
 function can(route){const r=EXTRA[route],p=profile();if(!r||!p)return false;if(r.adminOnly&&!p.user?.isAdmin)return false;if(p.user?.isAdmin)return true;const mods=Array.isArray(p.modules)?p.modules:[],g=mods.find(x=>key(x.moduleKey)===key(r.module))||mods.find(x=>key(x.moduleKey)==='*');return !!g?.canView}
 function addAfter(id,html){const el=document.getElementById(id);if(el&&!document.getElementById((html.match(/id="([^"]+)/)||[])[1]||''))el.insertAdjacentHTML('afterend',html)}
 function install(){
-  try{Object.entries(EXTRA).forEach(([k,v])=>MODULE_URLS[k]=v.url)}catch(e){console.error('Company routes:',e)}
+  try{
+    Object.entries(EXTRA).forEach(([k,v])=>MODULE_URLS[k]=v.url);
+    MODULE_URLS['admin-staff-request']='https://angsokhey11-cloud.github.io/big-brother-admin-work/staff-request.html?embed=1&v=20260913-3';
+  }catch(e){console.error('Company routes:',e)}
   addAfter('navCustomerDetails','<button type="button" hidden class="bb-company-route" id="navCustomerCredit" onclick="BBCompanyFeatures.open(\'customer-credit-control\')">💳 Customer Credit Control</button>');
   addAfter('navStockTransactions','<button type="button" hidden class="bb-company-route" id="navStockAlerts" onclick="BBCompanyFeatures.open(\'stock-alerts\')">🚨 Smart Stock Alerts</button>');
   addAfter('navAdminRequest','<button type="button" hidden class="bb-company-route" id="navManagementControl" onclick="BBCompanyFeatures.open(\'management-control-center\')">📊 Management Control Center</button><button type="button" hidden class="bb-company-route" id="navSystemActivity" onclick="BBCompanyFeatures.open(\'system-activity\')">🕘 System Activity</button><button type="button" hidden class="bb-company-route" id="navNotificationCenter" onclick="BBCompanyFeatures.open(\'notification-center\')">🔔 Notification Center</button>');
