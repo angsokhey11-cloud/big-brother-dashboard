@@ -1,4 +1,4 @@
-/* BIG BROTHER — Monthly Overview shortcut mapping V4.1 */
+/* BIG BROTHER — Monthly Overview shortcut mapping V4.2 */
 (function(){
 'use strict';
 
@@ -8,7 +8,7 @@ function installSubmenuPermissions(){
   if(document.getElementById('bbSubmenuPermissionScript'))return;
   const s=document.createElement('script');
   s.id='bbSubmenuPermissionScript';
-  s.src='supabase-submenu-permissions.js?v=20260914-1';
+  s.src='supabase-submenu-permissions.js?v=20260914-2';
   s.async=false;
   document.body.appendChild(s);
 }
