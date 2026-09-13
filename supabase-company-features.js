@@ -1,4 +1,4 @@
-/* BIG BROTHER — Supabase Company Features Dashboard Integration V1.6.9 */
+/* BIG BROTHER — Supabase Company Features Dashboard Integration V1.6.10 */
 (function(){
 'use strict';
 const EXTRA={
@@ -40,7 +40,7 @@ function installOverview(){
   if(!document.getElementById('bbMonthlyOverviewEnhancer')){
     const e=document.createElement('script');
     e.id='bbMonthlyOverviewEnhancer';
-    e.src='supabase-dashboard-overview-enhancer.js?v=20260913-1';
+    e.src='supabase-dashboard-overview-enhancer.js?v=20260913-2';
     document.body.appendChild(e);
   }
 }
