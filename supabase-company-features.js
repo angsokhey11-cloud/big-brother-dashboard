@@ -1,4 +1,4 @@
-/* BIG BROTHER — Supabase Company Features Dashboard Integration V1.8 */
+/* BIG BROTHER — Supabase Company Features Dashboard Integration V1.9 */
 (function(){
 'use strict';
 const EXTRA={
@@ -16,7 +16,9 @@ const EXTRA={
   'notification-center':{module:'notification_center',url:'https://angsokhey11-cloud.github.io/big-brother-admin-work/company-control.html?embed=1&view=notifications&v=1',button:'navNotificationCenter'}
 };
 const REPORT_ROUTES=['monthly-sales-report','income-statement-report','purchase-order-report'];
-let baseLoad=window.loadWorkspace,baseInitial=window.openInitialWorkspace,badgeTimer=null,guardedLoad=null,retryTimer=null;
+const baseLoad=window.loadWorkspace;
+const baseInitial=window.openInitialWorkspace;
+let badgeTimer=null,retryTimer=null;
 const key=v=>String(v||'').trim().toLowerCase();
 function profile(){return window.BBDashboardAdapter?.getProfile?.()||null}
 function can(route){const r=EXTRA[route],p=profile();if(!r||!p)return false;if(r.adminOnly&&!p.user?.isAdmin)return false;if(r.personal)return true;if(p.user?.isAdmin)return true;const mods=Array.isArray(p.modules)?p.modules:[],g=mods.find(x=>key(x.moduleKey)===key(r.module))||mods.find(x=>key(x.moduleKey)==='*');return !!g?.canView}
@@ -49,17 +51,15 @@ function install(){
 function setOpen(subId,btnId){const sub=document.getElementById(subId),btn=document.getElementById(btnId);if(sub)sub.classList.add('open');if(btn){btn.classList.add('open');btn.setAttribute('aria-expanded','true');const a=btn.querySelector('.nav-arrow');if(a)a.textContent='▲'}}
 function toggleReports(){const sub=document.getElementById('mainReportsSubmenu'),btn=document.getElementById('mainReportsMenuButton');if(!sub||!btn)return;const open=!sub.classList.contains('open');sub.classList.toggle('open',open);btn.classList.toggle('open',open);btn.setAttribute('aria-expanded',String(open));const a=btn.querySelector('.nav-arrow');if(a)a.textContent=open?'▲':'▼'}
 function highlight(route){document.querySelectorAll('.nav-submenu button.active,.shell-nav-link.active').forEach(x=>x.classList.remove('active'));const id=EXTRA[route]?.button;document.getElementById(id)?.classList.add('active');if(route==='staff-relation')return;if(REPORT_ROUTES.includes(route)){setOpen('mainReportsSubmenu','mainReportsMenuButton')}else if(route==='customer-credit-control'){setOpen('masterSubmenu','masterMenuButton');setOpen('customersEditorSubmenu','customersEditorMenuButton')}else if(route==='staff-management'||route==='staff-payment-settings'||route==='company-setup-master'){setOpen('masterSubmenu','masterMenuButton')}else if(route==='stock-alerts'){setOpen('stockSubmenu','stockMenuButton')}else{setOpen('adminWorkSubmenu','adminWorkMenuButton')}}
-function open(route,updateUrl=true){if(!can(route)){alert('Access denied for this function.');return false}baseLoad(route,updateUrl);highlight(route);return true}
-function routeAwareLoad(route,updateUrl=true){if(EXTRA[route])return open(route,updateUrl);return guardedLoad?guardedLoad.call(window,route,updateUrl):baseLoad(route,updateUrl)}
-function installRouteBridge(){if(window.loadWorkspace===routeAwareLoad)return;guardedLoad=window.loadWorkspace;window.loadWorkspace=routeAwareLoad}
+function open(route,updateUrl=true){if(!can(route)){alert('Access denied for this function.');return false}if(typeof baseLoad!=='function'){alert('Dashboard workspace is not ready. Please refresh once.');return false}baseLoad(route,updateUrl);highlight(route);return true}
 function refreshVisibility(){installReportsMenu();Object.keys(EXTRA).forEach(r=>{const b=document.getElementById(EXTRA[r].button);if(b)b.hidden=!can(r)});const rg=document.getElementById('mainReportsNavGroup');if(rg)rg.hidden=!REPORT_ROUTES.some(can);installBell()}
 async function unread(){try{const s=JSON.parse(localStorage.getItem('BB_SUPABASE_DEV_SESSION_V1')||'null');if(!s?.access_token||!can('notification-center'))return 0;const r=await fetch('https://sjfhlaclgmkwwofzstok.supabase.co/rest/v1/rpc/bb_notification_unread_count',{method:'POST',headers:{apikey:'sb_publishable_w762jR65CWwlO30fKQsYOw_6L9grx8S',Authorization:'Bearer '+s.access_token,'Content-Type':'application/json'},body:'{}',cache:'no-store'});if(!r.ok)return 0;return Number(await r.json()||0)}catch(_){return 0}}
 async function refreshBell(){const b=document.getElementById('bbNotificationQuick');if(!b)return;const n=await unread();b.dataset.count=String(n);b.textContent=n>0?'🔔 '+n:'🔔 Notifications'}
 function installBell(){const top=document.querySelector('#dashboardHome .topbar'),tools=document.getElementById('bbUserTools');if(!top||!can('notification-center'))return;let b=document.getElementById('bbNotificationQuick');if(!b){b=document.createElement('button');b.id='bbNotificationQuick';b.className='bb-notify-quick';b.type='button';b.onclick=()=>open('notification-center');(tools||top).prepend(b)}refreshBell();if(!badgeTimer)badgeTimer=setInterval(refreshBell,60000)}
-function startRetries(){let tries=0;if(retryTimer)clearInterval(retryTimer);retryTimer=setInterval(()=>{tries++;installReportsMenu();installRouteBridge();refreshVisibility();if((document.getElementById('mainReportsNavGroup')&&profile())||tries>=30){clearInterval(retryTimer);retryTimer=null}},400)}
-window.openInitialWorkspace=function(){refreshVisibility();const q=new URLSearchParams(location.search),m=q.get('module')||'';if(EXTRA[m]&&q.get('autoload')==='1'&&can(m)){open(m,false);return}return baseInitial.apply(window,arguments)};
-window.BBCompanyFeatures={open,can,refreshVisibility,refreshBell,installRouteBridge,toggleReports,installReportsMenu};
+function startRetries(){let tries=0;if(retryTimer)clearInterval(retryTimer);retryTimer=setInterval(()=>{tries++;installReportsMenu();refreshVisibility();if((document.getElementById('mainReportsNavGroup')&&profile())||tries>=30){clearInterval(retryTimer);retryTimer=null}},400)}
+window.openInitialWorkspace=function(){refreshVisibility();const q=new URLSearchParams(location.search),m=q.get('module')||'';if(EXTRA[m]&&q.get('autoload')==='1'&&can(m)){open(m,false);return}return typeof baseInitial==='function'?baseInitial.apply(window,arguments):undefined};
+window.BBCompanyFeatures={open,can,refreshVisibility,refreshBell,toggleReports,installReportsMenu};
 install();
 startRetries();
-window.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{install();installRouteBridge();refreshVisibility();startRetries()},0));
+window.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{install();refreshVisibility();startRetries()},0));
 })();
