@@ -1,4 +1,4 @@
-/* BIG BROTHER — Supabase Company Features Dashboard Integration V1.5 */
+/* BIG BROTHER — Supabase Company Features Dashboard Integration V1.6 */
 (function(){
 'use strict';
 const EXTRA={
@@ -20,7 +20,7 @@ function addAfter(id,html){const el=document.getElementById(id);if(el&&!document
 function install(){
   try{
     Object.entries(EXTRA).forEach(([k,v])=>MODULE_URLS[k]=v.url);
-    MODULE_URLS['admin-staff-request']='https://angsokhey11-cloud.github.io/big-brother-admin-work/staff-request.html?embed=1&v=20260913-3';
+    MODULE_URLS['admin-staff-request']='https://angsokhey11-cloud.github.io/big-brother-admin-work/staff-request-v2.html?embed=1&v=20260913-4';
   }catch(e){console.error('Company routes:',e)}
   addAfter('navCustomerDetails','<button type="button" hidden class="bb-company-route" id="navCustomerCredit" onclick="BBCompanyFeatures.open(\'customer-credit-control\')">💳 Customer Credit Control</button>');
   addAfter('navStockTransactions','<button type="button" hidden class="bb-company-route" id="navStockAlerts" onclick="BBCompanyFeatures.open(\'stock-alerts\')">🚨 Smart Stock Alerts</button>');
