@@ -1,4 +1,4 @@
-/* BIG BROTHER — Granular Submenu Permission Guard V2 */
+/* BIG BROTHER — Granular Submenu Permission Guard V2.1 */
 (function(){
 'use strict';
 
@@ -33,6 +33,7 @@ const REQUIRED_ACTION={
 let wrappedLoad=null;
 let wrappedCompanyOpen=null;
 let observer=null;
+let initialRouteRestored=false;
 
 const key=v=>String(v||'').trim().toLowerCase();
 function profile(){return window.BBDashboardAdapter?.getProfile?.()||null}
@@ -60,6 +61,16 @@ function deny(){
     el.style.cssText='position:fixed;right:18px;bottom:18px;z-index:1000000;background:#7a271a;color:#fff;padding:11px 14px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.18);font:800 12px Arial';
     document.body.appendChild(el);
     setTimeout(()=>el.remove(),2600);
+  }catch(_){}
+}
+function persistRoute(route,updateUrl=true){
+  route=String(route||'').trim();
+  if(updateUrl===false||!KNOWN_ROUTES.has(route))return;
+  try{
+    const u=new URL(location.href);
+    u.searchParams.set('module',route);
+    u.searchParams.set('autoload','1');
+    history.replaceState({},'',u.pathname+u.search+u.hash);
   }catch(_){}
 }
 function routeFromElement(el){
@@ -101,7 +112,9 @@ function wrapLoad(){
       deny();
       return false;
     }
-    return base.call(window,route,updateUrl);
+    const result=base.call(window,route,updateUrl);
+    if(result!==false)persistRoute(route,updateUrl);
+    return result;
   };
   wrappedLoad.__bbSubPermission=true;
   window.loadWorkspace=wrappedLoad;
@@ -115,7 +128,9 @@ function wrapCompany(){
       deny();
       return false;
     }
-    return base(route,updateUrl);
+    const result=base(route,updateUrl);
+    if(result!==false)persistRoute(route,updateUrl);
+    return result;
   };
   wrappedCompanyOpen.__bbSubPermission=true;
   api.open=wrappedCompanyOpen;
@@ -136,6 +151,33 @@ function protectInitialRoute(){
     deny();
   }catch(_){}
 }
+function restoreInitialRoute(){
+  if(initialRouteRestored)return;
+  try{
+    const q=new URLSearchParams(location.search);
+    const route=q.get('module')||'';
+    if(!route||!KNOWN_ROUTES.has(route)||!canRoute(route))return;
+
+    const workspace=document.getElementById('moduleWorkspace');
+    const frame=document.getElementById('moduleFrame');
+    if(!workspace||!frame||typeof window.loadWorkspace!=='function'){
+      setTimeout(restoreInitialRoute,120);
+      return;
+    }
+
+    const u=new URL(location.href);
+    u.searchParams.set('autoload','1');
+    history.replaceState({},'',u.pathname+u.search+u.hash);
+
+    if(workspace.hidden===false&&frame.getAttribute('src')&&frame.getAttribute('src')!=='about:blank'){
+      initialRouteRestored=true;
+      return;
+    }
+
+    initialRouteRestored=true;
+    window.loadWorkspace(route,false);
+  }catch(_){}
+}
 function install(){
   installStyle();
   if(!profile()){
@@ -146,16 +188,17 @@ function install(){
   wrapCompany();
   applyVisibility();
   protectInitialRoute();
+  restoreInitialRoute();
   if(!observer){
     observer=new MutationObserver(()=>{
       wrapLoad();wrapCompany();applyVisibility();
     });
     observer.observe(document.documentElement,{childList:true,subtree:true});
   }
-  setTimeout(()=>{wrapLoad();wrapCompany();applyVisibility();protectInitialRoute()},500);
+  setTimeout(()=>{wrapLoad();wrapCompany();applyVisibility();protectInitialRoute();restoreInitialRoute()},500);
 }
 
-window.BBSubmenuPermissions={canRoute,applyVisibility,install};
+window.BBSubmenuPermissions={canRoute,applyVisibility,install,restoreInitialRoute};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(install,40),{once:true});
 else setTimeout(install,40);
 })();
