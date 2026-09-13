@@ -1,20 +1,126 @@
-/* BIG BROTHER — Monthly Overview V2 class stabilizer */
+/* BIG BROTHER — Monthly Overview shortcut mapping V3 */
 (function(){
 'use strict';
+
 let observer=null;
-function apply(){
-  document.querySelectorAll('.bb-ov-kpis > [data-route]').forEach(el=>{
-    el.classList.add('bb-ov-kpi','bb-ov-clickable');
-  });
-  document.querySelectorAll('.bb-ov-activity > [data-route]').forEach(el=>{
-    el.classList.add('bb-ov-act','bb-ov-clickable');
-  });
+
+function openRoute(route){
+  if(!route)return false;
+  if(['monthly-sales-report','income-statement-report','purchase-order-report'].includes(route)){
+    return window.BBCompanyFeatures?.open?.(route) ?? false;
+  }
+  if(typeof window.loadWorkspace==='function'){
+    return window.loadWorkspace(route,true);
+  }
+  return false;
 }
+
+function filterOperatingExpenseInFrame(){
+  const frame=document.getElementById('moduleFrame');
+  if(!frame)return false;
+
+  let attempts=0;
+  const applyFilter=()=>{
+    attempts+=1;
+    try{
+      const doc=frame.contentDocument;
+      const select=doc?.getElementById('historyType');
+      if(select){
+        if(select.value!=='OPERATING EXPENSE'){
+          select.value='OPERATING EXPENSE';
+        }
+        select.dispatchEvent(new Event('change',{bubbles:true}));
+        return true;
+      }
+    }catch(_){ }
+
+    if(attempts<50){
+      setTimeout(applyFilter,150);
+    }
+    return false;
+  };
+
+  frame.addEventListener('load',()=>setTimeout(applyFilter,120),{once:true});
+  setTimeout(applyFilter,300);
+  return true;
+}
+
+function openOperatingExpenseHistory(){
+  const frame=document.getElementById('moduleFrame');
+  if(!frame||typeof window.loadWorkspace!=='function')return false;
+  filterOperatingExpenseInFrame();
+  const result=window.loadWorkspace('expense-history',true);
+  setTimeout(filterOperatingExpenseInFrame,250);
+  return result;
+}
+
+function bindCard(el,handler,title,route){
+  if(!el)return;
+  el.classList.add('bb-ov-clickable');
+  el.setAttribute('role','button');
+  el.setAttribute('tabindex','0');
+  el.setAttribute('title',title);
+  el.setAttribute('aria-label',title);
+  if(route)el.dataset.route=route;
+  else delete el.dataset.route;
+  el.removeAttribute('onclick');
+  el.removeAttribute('onkeydown');
+  el.onclick=handler;
+  el.onkeydown=function(event){
+    if(event.key==='Enter'||event.key===' '){
+      event.preventDefault();
+      handler(event);
+    }
+  };
+}
+
+function apply(){
+  const body=document.getElementById('bbOverviewBody');
+  if(!body)return;
+
+  const kpis=body.querySelectorAll('.bb-ov-kpis .bb-ov-kpi');
+  if(kpis.length>=9){
+    // 1. Net Sales card is replaced with Sales Support Calculator.
+    const calculator=kpis[1];
+    calculator.style.setProperty('--a','#245fae');
+    if(calculator.dataset.bbGuideCard!=='calculator'){
+      calculator.innerHTML='<div class="i">🧮</div><small>Calculator</small><strong>Sale Support</strong><em>Open Sales Support Calculator</em>';
+      calculator.dataset.bbGuideCard='calculator';
+    }
+    bindCard(calculator,()=>openRoute('sales-support-calculator'),'Open Sale Support Calculator','sales-support-calculator');
+
+    // 2. Monthly Expense -> Monthly Expense Report.
+    bindCard(kpis[2],()=>openRoute('expense-monthly-report'),'Open Monthly Expense Report','expense-monthly-report');
+
+    // 3. COGS -> Monthly COGS Report.
+    bindCard(kpis[3],()=>openRoute('cogs-monthly'),'Open Monthly COGS Report','cogs-monthly');
+
+    // 4. Operating Expense -> Expense History filtered to Operating Expense.
+    bindCard(kpis[4],openOperatingExpenseHistory,'Open Expense History — Operating Expense',null);
+  }
+
+  const activity=body.querySelectorAll('.bb-ov-activity .bb-ov-act');
+  if(activity.length>=5){
+    // 5. Invoices -> Invoice History.
+    bindCard(activity[0],()=>openRoute('history'),'Open Invoice History','history');
+
+    // 6. Customers with Sales -> Your Customer.
+    bindCard(activity[2],()=>openRoute('sales-support-your-customer'),'Open Your Customer','sales-support-your-customer');
+  }
+}
+
 function start(){
   apply();
   if(observer)return;
-  observer=new MutationObserver(apply);
+  observer=new MutationObserver(()=>apply());
   observer.observe(document.documentElement,{childList:true,subtree:true});
 }
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+
+window.BBOverviewGuide={apply,openRoute,openOperatingExpenseHistory};
+
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',start,{once:true});
+}else{
+  start();
+}
 })();
