@@ -1,4 +1,4 @@
-/* BIG BROTHER — Supabase Company Features Dashboard Integration V1.6.8 */
+/* BIG BROTHER — Supabase Company Features Dashboard Integration V1.6.9 */
 (function(){
 'use strict';
 const EXTRA={
@@ -31,11 +31,18 @@ function installReportsMenu(){
   old.replaceWith(wrap);
 }
 function installOverview(){
-  if(document.getElementById('bbMonthlyOverviewScript'))return;
-  const s=document.createElement('script');
-  s.id='bbMonthlyOverviewScript';
-  s.src='supabase-dashboard-overview.js?v=20260913-1';
-  document.body.appendChild(s);
+  if(!document.getElementById('bbMonthlyOverviewScript')){
+    const s=document.createElement('script');
+    s.id='bbMonthlyOverviewScript';
+    s.src='supabase-dashboard-overview.js?v=20260913-2';
+    document.body.appendChild(s);
+  }
+  if(!document.getElementById('bbMonthlyOverviewEnhancer')){
+    const e=document.createElement('script');
+    e.id='bbMonthlyOverviewEnhancer';
+    e.src='supabase-dashboard-overview-enhancer.js?v=20260913-1';
+    document.body.appendChild(e);
+  }
 }
 function install(){
   try{
