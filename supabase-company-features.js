@@ -1,4 +1,4 @@
-/* BIG BROTHER — Supabase Company Features Dashboard Integration V1.6.7 */
+/* BIG BROTHER — Supabase Company Features Dashboard Integration V1.6.8 */
 (function(){
 'use strict';
 const EXTRA={
@@ -30,6 +30,13 @@ function installReportsMenu(){
   wrap.innerHTML='<button type="button" id="mainReportsMenuButton" class="nav-toggle" aria-expanded="false" aria-controls="mainReportsSubmenu" onclick="BBCompanyFeatures.toggleReports()"><span class="nav-toggle-main"><span>📊</span><span>Reports</span></span><span class="nav-arrow">▼</span></button><div id="mainReportsSubmenu" class="nav-submenu"><button type="button" hidden class="bb-company-route" id="navMonthlySalesReport" onclick="BBCompanyFeatures.open(\'monthly-sales-report\')">📊 Monthly Sales Report</button><button type="button" hidden class="bb-company-route" id="navIncomeStatementReport" onclick="BBCompanyFeatures.open(\'income-statement-report\')">📈 Income Statement (Monthly)</button><button type="button" hidden class="bb-company-route" id="navPurchaseOrderReport" onclick="BBCompanyFeatures.open(\'purchase-order-report\')">🧾 Purchase Order Report</button></div>';
   old.replaceWith(wrap);
 }
+function installOverview(){
+  if(document.getElementById('bbMonthlyOverviewScript'))return;
+  const s=document.createElement('script');
+  s.id='bbMonthlyOverviewScript';
+  s.src='supabase-dashboard-overview.js?v=20260913-1';
+  document.body.appendChild(s);
+}
 function install(){
   try{
     Object.entries(EXTRA).forEach(([k,v])=>MODULE_URLS[k]=v.url);
@@ -42,6 +49,7 @@ function install(){
   addAfter('navMasterExpenseCategories','<button type="button" hidden class="bb-company-route" id="navStaffManagement" onclick="BBCompanyFeatures.open(\'staff-management\')">👥 Staff Management</button><button type="button" hidden class="bb-company-route" id="navStaffPaymentSettings" onclick="BBCompanyFeatures.open(\'staff-payment-settings\')">💵 Staff Payment Settings</button><button type="button" hidden class="bb-company-route" id="navCompanySetupMaster" onclick="BBCompanyFeatures.open(\'company-setup-master\')">⚙️ Company Setup</button>');
   addAfter('navAdminRequest','<button type="button" hidden class="bb-company-route" id="navManagementControl" onclick="BBCompanyFeatures.open(\'management-control-center\')">📊 Management Control Center</button><button type="button" hidden class="bb-company-route" id="navSystemActivity" onclick="BBCompanyFeatures.open(\'system-activity\')">🕘 System Activity</button><button type="button" hidden class="bb-company-route" id="navNotificationCenter" onclick="BBCompanyFeatures.open(\'notification-center\')">🔔 Notification Center</button>');
   const style=document.createElement('style');style.textContent='.bb-notify-quick{border:0;border-radius:999px;background:#17457a;color:#fff;padding:8px 11px;font-size:11px;font-weight:900;cursor:pointer}.bb-notify-quick[data-count="0"]{background:#e5effc;color:#17457a}';document.head.appendChild(style);
+  installOverview();
 }
 function setOpen(subId,btnId){const sub=document.getElementById(subId),btn=document.getElementById(btnId);if(sub)sub.classList.add('open');if(btn){btn.classList.add('open');btn.setAttribute('aria-expanded','true');const a=btn.querySelector('.nav-arrow');if(a)a.textContent='▲'}}
 function toggleReports(){const sub=document.getElementById('mainReportsSubmenu'),btn=document.getElementById('mainReportsMenuButton');if(!sub||!btn)return;const open=!sub.classList.contains('open');sub.classList.toggle('open',open);btn.classList.toggle('open',open);btn.setAttribute('aria-expanded',String(open));const a=btn.querySelector('.nav-arrow');if(a)a.textContent=open?'▲':'▼'}
