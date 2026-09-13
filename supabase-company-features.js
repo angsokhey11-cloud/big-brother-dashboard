@@ -1,4 +1,4 @@
-/* BIG BROTHER — Supabase Company Features Dashboard Integration V1.7 */
+/* BIG BROTHER — Supabase Company Features Dashboard Integration V1.8 */
 (function(){
 'use strict';
 const EXTRA={
@@ -8,29 +8,30 @@ const EXTRA={
   'staff-management':{adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-master-data/staff-management.html?embed=1&v=20260913-1',button:'navStaffManagement'},
   'staff-payment-settings':{adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-master-data/staff-payment-settings.html?embed=1&v=20260913-1',button:'navStaffPaymentSettings'},
   'company-setup-master':{adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-master-data/company-setup.html?embed=1&v=20260913-1',button:'navCompanySetupMaster'},
-  'monthly-sales-report':{adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-report/monthly-sales.html?embed=1&v=20260913-1',button:'navMonthlySalesReport'},
-  'income-statement-report':{adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-report/income-statement.html?embed=1&v=20260913-1',button:'navIncomeStatementReport'},
-  'purchase-order-report':{adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-report/purchase-order-report.html?embed=1&v=20260913-1',button:'navPurchaseOrderReport'},
+  'monthly-sales-report':{adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-report/monthly-sales.html?embed=1&v=20260913-2',button:'navMonthlySalesReport'},
+  'income-statement-report':{adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-report/income-statement.html?embed=1&v=20260913-2',button:'navIncomeStatementReport'},
+  'purchase-order-report':{adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-report/purchase-order-report.html?embed=1&v=20260913-2',button:'navPurchaseOrderReport'},
   'management-control-center':{module:'management_control_center',adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-admin-work/company-control.html?embed=1&view=management&v=1',button:'navManagementControl'},
   'system-activity':{module:'system_activity',adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-admin-work/company-control.html?embed=1&view=activity&v=1',button:'navSystemActivity'},
   'notification-center':{module:'notification_center',url:'https://angsokhey11-cloud.github.io/big-brother-admin-work/company-control.html?embed=1&view=notifications&v=1',button:'navNotificationCenter'}
 };
 const REPORT_ROUTES=['monthly-sales-report','income-statement-report','purchase-order-report'];
-let baseLoad=window.loadWorkspace,baseInitial=window.openInitialWorkspace,badgeTimer=null,guardedLoad=null;
+let baseLoad=window.loadWorkspace,baseInitial=window.openInitialWorkspace,badgeTimer=null,guardedLoad=null,retryTimer=null;
 const key=v=>String(v||'').trim().toLowerCase();
 function profile(){return window.BBDashboardAdapter?.getProfile?.()||null}
 function can(route){const r=EXTRA[route],p=profile();if(!r||!p)return false;if(r.adminOnly&&!p.user?.isAdmin)return false;if(r.personal)return true;if(p.user?.isAdmin)return true;const mods=Array.isArray(p.modules)?p.modules:[],g=mods.find(x=>key(x.moduleKey)===key(r.module))||mods.find(x=>key(x.moduleKey)==='*');return !!g?.canView}
 function addAfter(id,html){const el=document.getElementById(id);if(el&&!document.getElementById((html.match(/id="([^"]+)/)||[])[1]||''))el.insertAdjacentHTML('afterend',html)}
 function installReportsMenu(){
-  if(document.getElementById('mainReportsNavGroup'))return;
-  const buttons=Array.from(document.querySelectorAll('button.shell-nav-link'));
-  const old=buttons.find(b=>String(b.textContent||'').trim().includes('Reports'));
-  if(!old)return;
+  if(document.getElementById('mainReportsNavGroup'))return true;
+  const buttons=Array.from(document.querySelectorAll('button'));
+  const old=buttons.find(b=>String(b.textContent||'').replace(/\s+/g,' ').trim()==='📊 Reports')||buttons.find(b=>String(b.textContent||'').trim().endsWith('Reports')&&String(b.getAttribute('onclick')||'').includes("showDashboardSection('reports')"));
+  if(!old)return false;
   const wrap=document.createElement('div');
   wrap.className='nav-group';
   wrap.id='mainReportsNavGroup';
-  wrap.innerHTML='<button type="button" id="mainReportsMenuButton" class="nav-toggle" aria-expanded="false" aria-controls="mainReportsSubmenu" onclick="BBCompanyFeatures.toggleReports()"><span class="nav-toggle-main"><span>📊</span><span>Reports</span></span><span class="nav-arrow">▼</span></button><div id="mainReportsSubmenu" class="nav-submenu"><button type="button" hidden class="bb-company-route" id="navMonthlySalesReport" onclick="BBCompanyFeatures.open(\'monthly-sales-report\')">📍 Monthly Sales Report</button><button type="button" hidden class="bb-company-route" id="navIncomeStatementReport" onclick="BBCompanyFeatures.open(\'income-statement-report\')">📈 Income Statement (Monthly)</button><button type="button" hidden class="bb-company-route" id="navPurchaseOrderReport" onclick="BBCompanyFeatures.open(\'purchase-order-report\')">🧾 Purchase Order Report</button></div>';
+  wrap.innerHTML='<button type="button" id="mainReportsMenuButton" class="nav-toggle" aria-expanded="false" aria-controls="mainReportsSubmenu" onclick="BBCompanyFeatures.toggleReports()"><span class="nav-toggle-main"><span>📊</span><span>Reports</span></span><span class="nav-arrow">▼</span></button><div id="mainReportsSubmenu" class="nav-submenu"><button type="button" class="bb-company-route" id="navMonthlySalesReport" onclick="BBCompanyFeatures.open(\'monthly-sales-report\')">📍 Monthly Sales Report</button><button type="button" class="bb-company-route" id="navIncomeStatementReport" onclick="BBCompanyFeatures.open(\'income-statement-report\')">📈 Income Statement (Monthly)</button><button type="button" class="bb-company-route" id="navPurchaseOrderReport" onclick="BBCompanyFeatures.open(\'purchase-order-report\')">🧾 Purchase Order Report</button></div>';
   old.replaceWith(wrap);
+  return true;
 }
 function install(){
   try{
@@ -43,7 +44,7 @@ function install(){
   addAfter('adminWorkNavGroup','<button type="button" hidden class="shell-nav-link bb-company-route" id="navStaffRelation" onclick="BBCompanyFeatures.open(\'staff-relation\')">👥 Staff Relation</button>');
   addAfter('navMasterExpenseCategories','<button type="button" hidden class="bb-company-route" id="navStaffManagement" onclick="BBCompanyFeatures.open(\'staff-management\')">👥 Staff Management</button><button type="button" hidden class="bb-company-route" id="navStaffPaymentSettings" onclick="BBCompanyFeatures.open(\'staff-payment-settings\')">💵 Staff Payment Settings</button><button type="button" hidden class="bb-company-route" id="navCompanySetupMaster" onclick="BBCompanyFeatures.open(\'company-setup-master\')">⚙️ Company Setup</button>');
   addAfter('navAdminRequest','<button type="button" hidden class="bb-company-route" id="navManagementControl" onclick="BBCompanyFeatures.open(\'management-control-center\')">📊 Management Control Center</button><button type="button" hidden class="bb-company-route" id="navSystemActivity" onclick="BBCompanyFeatures.open(\'system-activity\')">🕘 System Activity</button><button type="button" hidden class="bb-company-route" id="navNotificationCenter" onclick="BBCompanyFeatures.open(\'notification-center\')">🔔 Notification Center</button>');
-  const style=document.createElement('style');style.textContent='.bb-notify-quick{border:0;border-radius:999px;background:#17457a;color:#fff;padding:8px 11px;font-size:11px;font-weight:900;cursor:pointer}.bb-notify-quick[data-count="0"]{background:#e5effc;color:#17457a}';document.head.appendChild(style);
+  if(!document.getElementById('bbCompanyFeatureStyle')){const style=document.createElement('style');style.id='bbCompanyFeatureStyle';style.textContent='.bb-notify-quick{border:0;border-radius:999px;background:#17457a;color:#fff;padding:8px 11px;font-size:11px;font-weight:900;cursor:pointer}.bb-notify-quick[data-count="0"]{background:#e5effc;color:#17457a}';document.head.appendChild(style)}
 }
 function setOpen(subId,btnId){const sub=document.getElementById(subId),btn=document.getElementById(btnId);if(sub)sub.classList.add('open');if(btn){btn.classList.add('open');btn.setAttribute('aria-expanded','true');const a=btn.querySelector('.nav-arrow');if(a)a.textContent='▲'}}
 function toggleReports(){const sub=document.getElementById('mainReportsSubmenu'),btn=document.getElementById('mainReportsMenuButton');if(!sub||!btn)return;const open=!sub.classList.contains('open');sub.classList.toggle('open',open);btn.classList.toggle('open',open);btn.setAttribute('aria-expanded',String(open));const a=btn.querySelector('.nav-arrow');if(a)a.textContent=open?'▲':'▼'}
@@ -51,12 +52,14 @@ function highlight(route){document.querySelectorAll('.nav-submenu button.active,
 function open(route,updateUrl=true){if(!can(route)){alert('Access denied for this function.');return false}baseLoad(route,updateUrl);highlight(route);return true}
 function routeAwareLoad(route,updateUrl=true){if(EXTRA[route])return open(route,updateUrl);return guardedLoad?guardedLoad.call(window,route,updateUrl):baseLoad(route,updateUrl)}
 function installRouteBridge(){if(window.loadWorkspace===routeAwareLoad)return;guardedLoad=window.loadWorkspace;window.loadWorkspace=routeAwareLoad}
-function refreshVisibility(){Object.keys(EXTRA).forEach(r=>{const b=document.getElementById(EXTRA[r].button);if(b)b.hidden=!can(r)});const rg=document.getElementById('mainReportsNavGroup');if(rg)rg.hidden=!REPORT_ROUTES.some(can);installBell()}
+function refreshVisibility(){installReportsMenu();Object.keys(EXTRA).forEach(r=>{const b=document.getElementById(EXTRA[r].button);if(b)b.hidden=!can(r)});const rg=document.getElementById('mainReportsNavGroup');if(rg)rg.hidden=!REPORT_ROUTES.some(can);installBell()}
 async function unread(){try{const s=JSON.parse(localStorage.getItem('BB_SUPABASE_DEV_SESSION_V1')||'null');if(!s?.access_token||!can('notification-center'))return 0;const r=await fetch('https://sjfhlaclgmkwwofzstok.supabase.co/rest/v1/rpc/bb_notification_unread_count',{method:'POST',headers:{apikey:'sb_publishable_w762jR65CWwlO30fKQsYOw_6L9grx8S',Authorization:'Bearer '+s.access_token,'Content-Type':'application/json'},body:'{}',cache:'no-store'});if(!r.ok)return 0;return Number(await r.json()||0)}catch(_){return 0}}
 async function refreshBell(){const b=document.getElementById('bbNotificationQuick');if(!b)return;const n=await unread();b.dataset.count=String(n);b.textContent=n>0?'🔔 '+n:'🔔 Notifications'}
 function installBell(){const top=document.querySelector('#dashboardHome .topbar'),tools=document.getElementById('bbUserTools');if(!top||!can('notification-center'))return;let b=document.getElementById('bbNotificationQuick');if(!b){b=document.createElement('button');b.id='bbNotificationQuick';b.className='bb-notify-quick';b.type='button';b.onclick=()=>open('notification-center');(tools||top).prepend(b)}refreshBell();if(!badgeTimer)badgeTimer=setInterval(refreshBell,60000)}
+function startRetries(){let tries=0;if(retryTimer)clearInterval(retryTimer);retryTimer=setInterval(()=>{tries++;installReportsMenu();installRouteBridge();refreshVisibility();if((document.getElementById('mainReportsNavGroup')&&profile())||tries>=30){clearInterval(retryTimer);retryTimer=null}},400)}
 window.openInitialWorkspace=function(){refreshVisibility();const q=new URLSearchParams(location.search),m=q.get('module')||'';if(EXTRA[m]&&q.get('autoload')==='1'&&can(m)){open(m,false);return}return baseInitial.apply(window,arguments)};
-window.BBCompanyFeatures={open,can,refreshVisibility,refreshBell,installRouteBridge,toggleReports};
+window.BBCompanyFeatures={open,can,refreshVisibility,refreshBell,installRouteBridge,toggleReports,installReportsMenu};
 install();
-window.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{installRouteBridge();refreshVisibility()},0));
+startRetries();
+window.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{install();installRouteBridge();refreshVisibility();startRetries()},0));
 })();
