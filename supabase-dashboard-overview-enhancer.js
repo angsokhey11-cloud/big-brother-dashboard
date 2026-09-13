@@ -1,8 +1,17 @@
-/* BIG BROTHER — Monthly Overview shortcut mapping V4 */
+/* BIG BROTHER — Monthly Overview shortcut mapping V4.1 */
 (function(){
 'use strict';
 
 let observer=null;
+
+function installSubmenuPermissions(){
+  if(document.getElementById('bbSubmenuPermissionScript'))return;
+  const s=document.createElement('script');
+  s.id='bbSubmenuPermissionScript';
+  s.src='supabase-submenu-permissions.js?v=20260914-1';
+  s.async=false;
+  document.body.appendChild(s);
+}
 
 function openRoute(route){
   if(!route)return false;
@@ -144,6 +153,7 @@ function apply(){
 }
 
 function start(){
+  installSubmenuPermissions();
   apply();
   if(observer)return;
   observer=new MutationObserver(()=>apply());
