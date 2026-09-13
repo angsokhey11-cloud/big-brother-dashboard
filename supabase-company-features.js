@@ -1,4 +1,4 @@
-/* BIG BROTHER — Supabase Company Features Dashboard Integration V1.6.4 */
+/* BIG BROTHER — Supabase Company Features Dashboard Integration V1.6.5 */
 (function(){
 'use strict';
 const EXTRA={
@@ -10,6 +10,7 @@ const EXTRA={
   'company-setup-master':{adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-master-data/company-setup.html?embed=1&v=20260913-1',button:'navCompanySetupMaster'},
   'monthly-sales-report':{adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-report/monthly-sales.html?embed=1&v=20260913-4',button:'navMonthlySalesReport'},
   'income-statement-report':{adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-report/income-statement.html?embed=1&v=20260913-2',button:'navIncomeStatementReport'},
+  'purchase-order-report':{adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-report/purchase-order-report.html?embed=1&v=20260913-2',button:'navPurchaseOrderReport'},
   'management-control-center':{module:'management_control_center',adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-admin-work/company-control.html?embed=1&view=management&v=1',button:'navManagementControl'},
   'system-activity':{module:'system_activity',adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-admin-work/company-control.html?embed=1&view=activity&v=1',button:'navSystemActivity'},
   'notification-center':{module:'notification_center',url:'https://angsokhey11-cloud.github.io/big-brother-admin-work/company-control.html?embed=1&view=notifications&v=1',button:'navNotificationCenter'}
@@ -26,7 +27,7 @@ function installReportsMenu(){
   const wrap=document.createElement('div');
   wrap.className='nav-group';
   wrap.id='mainReportsNavGroup';
-  wrap.innerHTML='<button type="button" id="mainReportsMenuButton" class="nav-toggle" aria-expanded="false" aria-controls="mainReportsSubmenu" onclick="BBCompanyFeatures.toggleReports()"><span class="nav-toggle-main"><span>📊</span><span>Reports</span></span><span class="nav-arrow">▼</span></button><div id="mainReportsSubmenu" class="nav-submenu"><button type="button" hidden class="bb-company-route" id="navMonthlySalesReport" onclick="BBCompanyFeatures.open(\'monthly-sales-report\')">📊 Monthly Sales Report</button><button type="button" hidden class="bb-company-route" id="navIncomeStatementReport" onclick="BBCompanyFeatures.open(\'income-statement-report\')">📈 Income Statement (Monthly)</button></div>';
+  wrap.innerHTML='<button type="button" id="mainReportsMenuButton" class="nav-toggle" aria-expanded="false" aria-controls="mainReportsSubmenu" onclick="BBCompanyFeatures.toggleReports()"><span class="nav-toggle-main"><span>📊</span><span>Reports</span></span><span class="nav-arrow">▼</span></button><div id="mainReportsSubmenu" class="nav-submenu"><button type="button" hidden class="bb-company-route" id="navMonthlySalesReport" onclick="BBCompanyFeatures.open(\'monthly-sales-report\')">📊 Monthly Sales Report</button><button type="button" hidden class="bb-company-route" id="navIncomeStatementReport" onclick="BBCompanyFeatures.open(\'income-statement-report\')">📈 Income Statement (Monthly)</button><button type="button" hidden class="bb-company-route" id="navPurchaseOrderReport" onclick="BBCompanyFeatures.open(\'purchase-order-report\')">🧾 Purchase Order Report</button></div>';
   old.replaceWith(wrap);
 }
 function install(){
@@ -44,7 +45,7 @@ function install(){
 }
 function setOpen(subId,btnId){const sub=document.getElementById(subId),btn=document.getElementById(btnId);if(sub)sub.classList.add('open');if(btn){btn.classList.add('open');btn.setAttribute('aria-expanded','true');const a=btn.querySelector('.nav-arrow');if(a)a.textContent='▲'}}
 function toggleReports(){const sub=document.getElementById('mainReportsSubmenu'),btn=document.getElementById('mainReportsMenuButton');if(!sub||!btn)return;const open=!sub.classList.contains('open');sub.classList.toggle('open',open);btn.classList.toggle('open',open);btn.setAttribute('aria-expanded',String(open));const a=btn.querySelector('.nav-arrow');if(a)a.textContent=open?'▲':'▼'}
-function highlight(route){document.querySelectorAll('.nav-submenu button.active,.shell-nav-link.active').forEach(x=>x.classList.remove('active'));const id=EXTRA[route]?.button;document.getElementById(id)?.classList.add('active');if(route==='staff-relation')return;if(route==='monthly-sales-report'||route==='income-statement-report'){setOpen('mainReportsSubmenu','mainReportsMenuButton');return}if(route==='customer-credit-control'){setOpen('masterSubmenu','masterMenuButton');setOpen('customersEditorSubmenu','customersEditorMenuButton')}else if(route==='staff-management'||route==='staff-payment-settings'||route==='company-setup-master'){setOpen('masterSubmenu','masterMenuButton')}else if(route==='stock-alerts'){setOpen('stockSubmenu','stockMenuButton')}else{setOpen('adminWorkSubmenu','adminWorkMenuButton')}}
+function highlight(route){document.querySelectorAll('.nav-submenu button.active,.shell-nav-link.active').forEach(x=>x.classList.remove('active'));const id=EXTRA[route]?.button;document.getElementById(id)?.classList.add('active');if(route==='staff-relation')return;if(route==='monthly-sales-report'||route==='income-statement-report'||route==='purchase-order-report'){setOpen('mainReportsSubmenu','mainReportsMenuButton');return}if(route==='customer-credit-control'){setOpen('masterSubmenu','masterMenuButton');setOpen('customersEditorSubmenu','customersEditorMenuButton')}else if(route==='staff-management'||route==='staff-payment-settings'||route==='company-setup-master'){setOpen('masterSubmenu','masterMenuButton')}else if(route==='stock-alerts'){setOpen('stockSubmenu','stockMenuButton')}else{setOpen('adminWorkSubmenu','adminWorkMenuButton')}}
 function openReportDirect(route,updateUrl=true){
   const r=EXTRA[route];
   const home=document.getElementById('dashboardHome');
@@ -65,10 +66,10 @@ function openReportDirect(route,updateUrl=true){
   highlight(route);
   return true;
 }
-function open(route,updateUrl=true){if(!can(route)){alert('Access denied for this function.');return false}if(route==='monthly-sales-report'||route==='income-statement-report')return openReportDirect(route,updateUrl);baseLoad(route,updateUrl);highlight(route);return true}
+function open(route,updateUrl=true){if(!can(route)){alert('Access denied for this function.');return false}if(route==='monthly-sales-report'||route==='income-statement-report'||route==='purchase-order-report')return openReportDirect(route,updateUrl);baseLoad(route,updateUrl);highlight(route);return true}
 function routeAwareLoad(route,updateUrl=true){if(EXTRA[route])return open(route,updateUrl);return guardedLoad?guardedLoad.call(window,route,updateUrl):baseLoad(route,updateUrl)}
 function installRouteBridge(){if(window.loadWorkspace===routeAwareLoad)return;guardedLoad=window.loadWorkspace;window.loadWorkspace=routeAwareLoad}
-function refreshVisibility(){Object.keys(EXTRA).forEach(r=>{const b=document.getElementById(EXTRA[r].button);if(b)b.hidden=!can(r)});const g=document.getElementById('mainReportsNavGroup');if(g)g.hidden=!(can('monthly-sales-report')||can('income-statement-report'));installBell()}
+function refreshVisibility(){Object.keys(EXTRA).forEach(r=>{const b=document.getElementById(EXTRA[r].button);if(b)b.hidden=!can(r)});const g=document.getElementById('mainReportsNavGroup');if(g)g.hidden=!(can('monthly-sales-report')||can('income-statement-report')||can('purchase-order-report'));installBell()}
 async function unread(){try{const s=JSON.parse(localStorage.getItem('BB_SUPABASE_DEV_SESSION_V1')||'null');if(!s?.access_token||!can('notification-center'))return 0;const r=await fetch('https://sjfhlaclgmkwwofzstok.supabase.co/rest/v1/rpc/bb_notification_unread_count',{method:'POST',headers:{apikey:'sb_publishable_w762jR65CWwlO30fKQsYOw_6L9grx8S',Authorization:'Bearer '+s.access_token,'Content-Type':'application/json'},body:'{}',cache:'no-store'});if(!r.ok)return 0;return Number(await r.json()||0)}catch(_){return 0}}
 async function refreshBell(){const b=document.getElementById('bbNotificationQuick');if(!b)return;const n=await unread();b.dataset.count=String(n);b.textContent=n>0?'🔔 '+n:'🔔 Notifications'}
 function installBell(){const top=document.querySelector('#dashboardHome .topbar'),tools=document.getElementById('bbUserTools');if(!top||!can('notification-center'))return;let b=document.getElementById('bbNotificationQuick');if(!b){b=document.createElement('button');b.id='bbNotificationQuick';b.className='bb-notify-quick';b.type='button';b.onclick=()=>open('notification-center');(tools||top).prepend(b)}refreshBell();if(!badgeTimer)badgeTimer=setInterval(refreshBell,60000)}
