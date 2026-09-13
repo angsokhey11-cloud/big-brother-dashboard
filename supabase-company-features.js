@@ -1,4 +1,4 @@
-/* BIG BROTHER — Supabase Company Features Dashboard Integration V1.6.2 */
+/* BIG BROTHER — Supabase Company Features Dashboard Integration V1.6.3 */
 (function(){
 'use strict';
 const EXTRA={
@@ -9,6 +9,7 @@ const EXTRA={
   'staff-payment-settings':{adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-master-data/staff-payment-settings.html?embed=1&v=20260913-1',button:'navStaffPaymentSettings'},
   'company-setup-master':{adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-master-data/company-setup.html?embed=1&v=20260913-1',button:'navCompanySetupMaster'},
   'monthly-sales-report':{adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-report/monthly-sales.html?embed=1&v=20260913-4',button:'navMonthlySalesReport'},
+  'income-statement-report':{adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-report/income-statement.html?embed=1&v=20260913-2',button:'navIncomeStatementReport'},
   'management-control-center':{module:'management_control_center',adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-admin-work/company-control.html?embed=1&view=management&v=1',button:'navManagementControl'},
   'system-activity':{module:'system_activity',adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-admin-work/company-control.html?embed=1&view=activity&v=1',button:'navSystemActivity'},
   'notification-center':{module:'notification_center',url:'https://angsokhey11-cloud.github.io/big-brother-admin-work/company-control.html?embed=1&view=notifications&v=1',button:'navNotificationCenter'}
@@ -32,6 +33,7 @@ function install(){
     MODULE_URLS['admin-staff-request']='https://angsokhey11-cloud.github.io/big-brother-admin-work/staff-request-v2.html?embed=1&v=20260913-4';
   }catch(e){console.error('Company routes:',e)}
   installMonthlySalesReport();
+  addAfter('navMonthlySalesReport','<button type="button" hidden class="shell-nav-link bb-company-route" id="navIncomeStatementReport" onclick="BBCompanyFeatures.open(\'income-statement-report\')">📈 Income Statement (Monthly)</button>');
   addAfter('navCustomerDetails','<button type="button" hidden class="bb-company-route" id="navCustomerCredit" onclick="BBCompanyFeatures.open(\'customer-credit-control\')">💳 Customer Credit Control</button>');
   addAfter('navStockTransactions','<button type="button" hidden class="bb-company-route" id="navStockAlerts" onclick="BBCompanyFeatures.open(\'stock-alerts\')">🚨 Smart Stock Alerts</button>');
   addAfter('adminWorkNavGroup','<button type="button" hidden class="shell-nav-link bb-company-route" id="navStaffRelation" onclick="BBCompanyFeatures.open(\'staff-relation\')">👥 Staff Relation</button>');
@@ -40,7 +42,7 @@ function install(){
   const style=document.createElement('style');style.textContent='.bb-notify-quick{border:0;border-radius:999px;background:#17457a;color:#fff;padding:8px 11px;font-size:11px;font-weight:900;cursor:pointer}.bb-notify-quick[data-count="0"]{background:#e5effc;color:#17457a}';document.head.appendChild(style);
 }
 function setOpen(subId,btnId){const sub=document.getElementById(subId),btn=document.getElementById(btnId);if(sub)sub.classList.add('open');if(btn){btn.classList.add('open');btn.setAttribute('aria-expanded','true');const a=btn.querySelector('.nav-arrow');if(a)a.textContent='▲'}}
-function highlight(route){document.querySelectorAll('.nav-submenu button.active,.shell-nav-link.active').forEach(x=>x.classList.remove('active'));const id=EXTRA[route]?.button;document.getElementById(id)?.classList.add('active');if(route==='staff-relation'||route==='monthly-sales-report')return;if(route==='customer-credit-control'){setOpen('masterSubmenu','masterMenuButton');setOpen('customersEditorSubmenu','customersEditorMenuButton')}else if(route==='staff-management'||route==='staff-payment-settings'||route==='company-setup-master'){setOpen('masterSubmenu','masterMenuButton')}else if(route==='stock-alerts'){setOpen('stockSubmenu','stockMenuButton')}else{setOpen('adminWorkSubmenu','adminWorkMenuButton')}}
+function highlight(route){document.querySelectorAll('.nav-submenu button.active,.shell-nav-link.active').forEach(x=>x.classList.remove('active'));const id=EXTRA[route]?.button;document.getElementById(id)?.classList.add('active');if(route==='staff-relation'||route==='monthly-sales-report'||route==='income-statement-report')return;if(route==='customer-credit-control'){setOpen('masterSubmenu','masterMenuButton');setOpen('customersEditorSubmenu','customersEditorMenuButton')}else if(route==='staff-management'||route==='staff-payment-settings'||route==='company-setup-master'){setOpen('masterSubmenu','masterMenuButton')}else if(route==='stock-alerts'){setOpen('stockSubmenu','stockMenuButton')}else{setOpen('adminWorkSubmenu','adminWorkMenuButton')}}
 function openReportDirect(route,updateUrl=true){
   const r=EXTRA[route];
   const home=document.getElementById('dashboardHome');
@@ -61,7 +63,7 @@ function openReportDirect(route,updateUrl=true){
   highlight(route);
   return true;
 }
-function open(route,updateUrl=true){if(!can(route)){alert('Access denied for this function.');return false}if(route==='monthly-sales-report')return openReportDirect(route,updateUrl);baseLoad(route,updateUrl);highlight(route);return true}
+function open(route,updateUrl=true){if(!can(route)){alert('Access denied for this function.');return false}if(route==='monthly-sales-report'||route==='income-statement-report')return openReportDirect(route,updateUrl);baseLoad(route,updateUrl);highlight(route);return true}
 function routeAwareLoad(route,updateUrl=true){if(EXTRA[route])return open(route,updateUrl);return guardedLoad?guardedLoad.call(window,route,updateUrl):baseLoad(route,updateUrl)}
 function installRouteBridge(){if(window.loadWorkspace===routeAwareLoad)return;guardedLoad=window.loadWorkspace;window.loadWorkspace=routeAwareLoad}
 function refreshVisibility(){Object.keys(EXTRA).forEach(r=>{const b=document.getElementById(EXTRA[r].button);if(b)b.hidden=!can(r)});installBell()}
