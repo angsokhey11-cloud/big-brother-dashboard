@@ -1,1 +1,1 @@
-/* restoration in progress */
+/* temporary safety stub; restoring exact previous version next */
