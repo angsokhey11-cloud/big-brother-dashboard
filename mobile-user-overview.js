@@ -1,4 +1,4 @@
-/* BIG BROTHER — Mobile Normal User Overview V2 */
+/* BIG BROTHER — Mobile Normal User Overview V3 */
 (function(){
 'use strict';
 
@@ -14,8 +14,7 @@ const $=id=>document.getElementById(id);
 const num=v=>Number(v||0)||0;
 const money=v=>'$'+num(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 const khr=v=>'៛'+Math.round(num(v)).toLocaleString('en-US');
-const qty=v=>num(v).toLocaleString('en-US',{maximumFractionDigits:2});
-const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#039;'}[c]));
 
 function readSession(){
   try{return JSON.parse(localStorage.getItem(SESSION_KEY)||'null')}catch(_){return null}
@@ -67,7 +66,14 @@ function homeVisible(){
   return !!home&&!home.hidden;
 }
 
-function applyOverview(data){
+function paymentSummary(payment){
+  const list=Array.isArray(payment?.available)?payment.available:[];
+  const usd=list.filter(x=>String(x.currency||'USD').trim().toUpperCase()==='USD').reduce((a,x)=>a+num(x.amount),0);
+  const kh=list.filter(x=>String(x.currency||'USD').trim().toUpperCase()==='KHR').reduce((a,x)=>a+num(x.amount),0);
+  return {count:list.length,usd,khr:kh};
+}
+
+function applyOverview(data,payment){
   if(!data||!homeVisible())return;
   const grid=$('kpiGrid');
   if(!grid)return;
@@ -85,20 +91,18 @@ function applyOverview(data){
   const ar=data.receivable||{};
   const stock=data.stock||{};
   const openBatches=Math.max(0,Math.round(num(stock.openBatchCount)));
-  const physicalQty=num(stock.physicalQty);
-  const actionCount=(()=>{
-    const text=$('quickCount')?.textContent||'';
-    const m=text.match(/\d+/);
-    return m?Number(m[0]):0;
-  })();
+  const earning=paymentSummary(payment);
 
-  const salesSub=locationSummary+' · '+Math.max(0,Math.round(num(sales.invoiceCount)))+' invoice'+(Math.round(num(sales.invoiceCount))===1?'':'s');
+  const invoiceCount=Math.max(0,Math.round(num(sales.invoiceCount)));
+  const salesSub=locationSummary+' · '+invoiceCount+' invoice'+(invoiceCount===1?'':'s');
+  let earningSub=earning.count+' earning'+(earning.count===1?'':'s')+' available in Your Payment';
+  if(earning.khr>0)earningSub+=' · KHR '+khr(earning.khr);
 
   const cards=[
     ['Monthly Sales',money(sales.netUSD),salesSub],
     ['Receivable',money(ar.equivalentUSD),'USD '+money(ar.USD)+' · KHR '+khr(ar.KHR)],
     ['Stock Value',money(stock.valueUSD),openBatches+' assigned open batch'+(openBatches===1?'':'es')],
-    ['Assigned Batch',String(openBatches),qty(physicalQty)+' remaining qty · '+actionCount+' quick actions']
+    ['Your Earning',money(earning.usd),earningSub]
   ];
 
   grid.innerHTML=cards.map(x=>'<div class="kpi"><small>'+esc(x[0])+'</small><strong>'+esc(x[1])+'</strong><em>'+esc(x[2])+'</em></div>').join('');
@@ -108,15 +112,21 @@ function applyOverview(data){
 
 async function refresh(force=false){
   if(loading||!homeVisible()||!readSession()?.access_token)return;
-  if(!force&&cached&&Date.now()-lastLoad<15000){applyOverview(cached);return}
+  if(!force&&cached&&Date.now()-lastLoad<15000){applyOverview(cached.overview,cached.payment);return}
   loading=true;
   try{
     const profile=await rpc('bb_current_access_profile');
     if(profile?.user?.isAdmin===true)return;
-    const data=await rpc('bb_mobile_user_overview');
-    cached=data;
+    const overview=await rpc('bb_mobile_user_overview');
+    let payment=null;
+    try{
+      payment=await rpc('bb_staff_relation_my_payments',{p_from:null,p_to:null,p_salary_month:null});
+    }catch(error){
+      console.warn('Mobile Your Earning:',error?.message||error);
+    }
+    cached={overview,payment};
     lastLoad=Date.now();
-    applyOverview(data);
+    applyOverview(overview,payment);
   }catch(error){
     console.warn('Mobile user overview:',error?.message||error);
   }finally{
