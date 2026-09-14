@@ -146,8 +146,20 @@
   (function(){
     const title=document.getElementById('moduleTitle');
     const desktop=document.getElementById('moduleDesktopLink');
-    if(!title||!desktop)return;
-    const sync=()=>{desktop.hidden=String(title.textContent||'').trim().toLowerCase()==='calculator';};
+    const frame=document.getElementById('moduleFrame');
+    if(!title||!desktop||!frame)return;
+
+    const collectionMobileUrl='https://angsokhey11-cloud.github.io/big-brother-daily-cash-collection/your-collection-mobile.html?embed=1&v=20260914-2';
+
+    const sync=()=>{
+      const key=String(title.textContent||'').trim().toLowerCase();
+      desktop.hidden=key==='calculator'||key==='your collection';
+
+      if(key==='your collection'&&!String(frame.src||'').includes('/your-collection-mobile.html')){
+        frame.src=collectionMobileUrl;
+      }
+    };
+
     sync();
     new MutationObserver(sync).observe(title,{childList:true,subtree:true,characterData:true});
   })();
