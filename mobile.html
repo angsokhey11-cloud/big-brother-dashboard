@@ -150,13 +150,17 @@
     if(!title||!desktop||!frame)return;
 
     const collectionMobileUrl='https://angsokhey11-cloud.github.io/big-brother-daily-cash-collection/your-collection-mobile.html?embed=1&v=20260914-3';
+    const stockMobileUrl='https://angsokhey11-cloud.github.io/big-brother-sales-support/your-stock-mobile.html?embed=1&v=20260914-5';
 
     const sync=()=>{
       const key=String(title.textContent||'').trim().toLowerCase();
-      desktop.hidden=key==='calculator'||key==='your collection';
+      desktop.hidden=key==='calculator'||key==='your collection'||key==='your stock';
 
       if(key==='your collection'&&!String(frame.src||'').includes('/your-collection-mobile.html')){
         frame.src=collectionMobileUrl;
+      }
+      if(key==='your stock'&&!String(frame.src||'').includes('/your-stock-mobile.html')){
+        frame.src=stockMobileUrl;
       }
     };
 
