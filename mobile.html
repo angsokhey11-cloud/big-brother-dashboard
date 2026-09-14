@@ -142,5 +142,15 @@
   <script src="mobile.js?v=20260914-1"></script>
   <script src="mobile-sales-support-home.js?v=20260914-2"></script>
   <script src="pwa-install.js?v=20260914-1"></script>
+  <script>
+  (function(){
+    const title=document.getElementById('moduleTitle');
+    const desktop=document.getElementById('moduleDesktopLink');
+    if(!title||!desktop)return;
+    const sync=()=>{desktop.hidden=String(title.textContent||'').trim().toLowerCase()==='calculator';};
+    sync();
+    new MutationObserver(sync).observe(title,{childList:true,subtree:true,characterData:true});
+  })();
+  </script>
 </body>
 </html>
