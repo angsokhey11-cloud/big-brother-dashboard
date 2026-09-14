@@ -14,7 +14,7 @@ const $=id=>document.getElementById(id);
 const num=v=>Number(v||0)||0;
 const money=v=>'$'+num(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 const khr=v=>'៛'+Math.round(num(v)).toLocaleString('en-US');
-const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#039;'}[c]));
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
 
 function readSession(){
   try{return JSON.parse(localStorage.getItem(SESSION_KEY)||'null')}catch(_){return null}
