@@ -1,0 +1,249 @@
+/* BIG BROTHER — Sales Support Mobile Dashboard V2 */
+(function(){
+'use strict';
+
+const SUPABASE_URL='https://sjfhlaclgmkwwofzstok.supabase.co';
+const SUPABASE_KEY='sb_publishable_w762jR65CWwlO30fKQsYOw_6L9grx8S';
+const SESSION_KEY='BB_SUPABASE_DEV_SESSION_V1';
+
+const ROUTES={
+  'sales-support-calculator':{icon:'🧮',label:'Calculator',group:'more',url:'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=calculator&v=110'},
+  'sales-support-your-customer':{icon:'👥',label:'Your Customer',group:'customers',url:'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=your-customer&v=110'},
+  'sales-support-add-customer':{icon:'👤+',label:'Add Customer',group:'customers',action:'create',url:'https://angsokhey11-cloud.github.io/big-brother-sales-support/add-customer.html?embed=1&v=20260914-1'},
+  'sales-support-your-stock':{icon:'📦',label:'Your Stock',group:'more',url:'https://angsokhey11-cloud.github.io/big-brother-sales-support/your-stock.html?embed=1&v=20260914-4'},
+  'sales-support-your-collection':{icon:'💵',label:'Your Collection',group:'money',url:'https://angsokhey11-cloud.github.io/big-brother-daily-cash-collection/your-collection.html?embed=1&v=20260914-1'},
+  'sales-support-your-invoices':{icon:'🧾',label:'Your Invoices',group:'money',url:'https://angsokhey11-cloud.github.io/invoice-history/your-invoices.html?embed=1&v=20260914-1'},
+  'sales-support-your-receivable':{icon:'💳',label:'Your Receivable',group:'money',url:'https://angsokhey11-cloud.github.io/big-brother-ar/sales-support-your-receivable.html?embed=1&v=20260914-1'},
+  'staff-relation':{icon:'👛',label:'Your Earning',group:'money',url:'https://angsokhey11-cloud.github.io/big-brother-staff-relation/?embed=1&v=20260913-1'}
+};
+
+const QUICK=[
+  'sales-support-calculator',
+  'sales-support-your-customer',
+  'sales-support-add-customer',
+  'sales-support-your-stock',
+  'sales-support-your-collection',
+  'sales-support-your-invoices',
+  'sales-support-your-receivable'
+];
+
+const GROUPS={
+  customers:{title:'Customers',subtitle:'Customer tools assigned to you',routes:['sales-support-your-customer','sales-support-add-customer']},
+  money:{title:'Money',subtitle:'Collection, invoices and receivables',routes:['sales-support-your-collection','sales-support-your-invoices','sales-support-your-receivable','staff-relation']},
+  more:{title:'More',subtitle:'More tools for your daily work',routes:['sales-support-calculator','sales-support-your-stock']}
+};
+
+const $=id=>document.getElementById(id);
+const key=v=>String(v||'').trim().toLowerCase();
+const clean=v=>String(v==null?'':v).trim();
+const num=v=>Number(v||0)||0;
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+const money=v=>'$'+num(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const qty=v=>num(v).toLocaleString('en-US',{maximumFractionDigits:2});
+const khr=v=>'៛'+Math.round(num(v)).toLocaleString('en-US');
+
+let profile=null;
+let data=null;
+let loading=false;
+let initialized=false;
+let activeGroup='home';
+let customRouteOpen='';
+
+function readSession(){try{return JSON.parse(localStorage.getItem(SESSION_KEY)||'null')}catch(_){return null}}
+function saveSession(v){try{if(!v){localStorage.removeItem(SESSION_KEY);return}if(!v.expires_at&&v.expires_in)v.expires_at=Math.floor(Date.now()/1000)+Number(v.expires_in);localStorage.setItem(SESSION_KEY,JSON.stringify(v))}catch(_){}}
+async function parse(r){const t=await r.text();let b={};try{b=t?JSON.parse(t):{}}catch(_){b={message:t}}if(!r.ok)throw new Error(b.message||b.error_description||b.error||('Request failed ('+r.status+')'));return b}
+async function refreshSession(){const c=readSession();if(!c?.refresh_token)throw new Error('Please sign in to BIG BROTHER.');const r=await fetch(SUPABASE_URL+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{apikey:SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:c.refresh_token}),cache:'no-store'});const n=await parse(r);saveSession(n);return n}
+async function rpc(fn,args={}){let s=readSession();if(!s?.access_token)throw new Error('Please sign in to BIG BROTHER.');if(s.expires_at&&Number(s.expires_at)<Math.floor(Date.now()/1000)+45)s=await refreshSession();const call=token=>fetch(SUPABASE_URL+'/rest/v1/rpc/'+fn,{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(args||{}),cache:'no-store'});let r=await call(s.access_token);if(r.status===401){s=await refreshSession();r=await call(s.access_token)}return parse(r)}
+async function safeRpc(fn,args={}){try{return await rpc(fn,args)}catch(e){console.warn('Sales mobile '+fn+':',e?.message||e);return null}}
+
+function isStaffMode(){return profile&&profile?.user?.isAdmin!==true}
+function grantFor(route){
+  if(!profile)return null;
+  if(profile?.user?.isAdmin===true)return {canView:true,canCreate:true,canEdit:true,canApprove:true};
+  const mods=Array.isArray(profile?.modules)?profile.modules:[];
+  return mods.find(x=>key(x.moduleKey)==='*')||mods.find(x=>key(x.moduleKey)==='route.'+key(route))||null;
+}
+function canRoute(route){
+  const meta=ROUTES[route];if(!meta)return false;
+  const g=grantFor(route);if(!g)return false;
+  if(meta.action==='create')return g.canView===true&&g.canCreate===true;
+  return g.canView===true;
+}
+
+function greeting(){const h=new Date().getHours();return h<12?'Good Morning':h<18?'Good Afternoon':'Good Evening'}
+function staffName(){return clean(profile?.staff?.staffName||profile?.user?.staffName||profile?.user?.email?.split('@')[0]||'BIG BROTHER User')}
+function staffId(){return clean(profile?.staff?.staffId||profile?.user?.staffId||'')}
+function locationText(){
+  const a=Array.isArray(profile?.locations)?profile.locations:[];
+  if(!a.length)return 'No assigned location';
+  if(a.length===1)return clean(a[0].locationName||a[0].locationCode);
+  const first=clean(a[0].locationName||a[0].locationCode);
+  return first+' +'+(a.length-1);
+}
+function periodText(){return clean(data?.overview?.periodLabel)||new Date().toLocaleDateString('en-US',{month:'long',year:'numeric'})}
+function dateShort(v){if(!v)return'';const d=new Date(String(v).length===10?v+'T00:00:00':v);return Number.isNaN(d.getTime())?clean(v):d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})}
+function paymentSummary(payment){
+  const list=Array.isArray(payment?.available)?payment.available:[];
+  const usd=list.filter(x=>key(x.currency||'USD')==='usd').reduce((a,x)=>a+num(x.amount),0);
+  const kh=list.filter(x=>key(x.currency||'USD')==='khr').reduce((a,x)=>a+num(x.amount),0);
+  return {count:list.length,usd,khr:kh};
+}
+
+function setUrl(route){
+  try{const u=new URL(location.href);if(route){u.searchParams.set('module',route);u.searchParams.set('autoload','1')}else{u.searchParams.delete('module');u.searchParams.delete('autoload')}history.replaceState({},'',u.pathname+u.search+u.hash)}catch(_){}
+}
+function hideScreens(){['mobileHome','menuScreen','moduleScreen'].forEach(id=>{const el=$(id);if(el)el.hidden=true})}
+function showToast(text){const el=$('toast');if(!el)return;el.textContent=text;el.hidden=false;clearTimeout(showToast.t);showToast.t=setTimeout(()=>{el.hidden=true},2200)}
+
+function navHtml(active){
+  const nav=[['home','⌂','Home'],['customers','👥','Customers'],['money','💰','Money'],['more','•••','More']];
+  return nav.map(x=>`<button class="nav-btn ${active===x[0]?'active':''}" type="button" data-sales-nav="${x[0]}"><b>${x[1]}</b>${x[2]}</button>`).join('');
+}
+function renderNav(active){
+  ['bottomNav','menuBottomNav','moduleBottomNav'].forEach(id=>{
+    const host=$(id);if(!host)return;host.innerHTML=navHtml(active);
+    host.querySelectorAll('[data-sales-nav]').forEach(btn=>btn.onclick=()=>navigate(btn.dataset.salesNav));
+  });
+}
+function navigate(tab){if(tab==='home')showHome(true);else showGroup(tab,true)}
+
+function renderIntro(){
+  const content=document.querySelector('#mobileHome .content');if(!content)return;
+  let intro=$('salesmanIntro');
+  if(!intro){intro=document.createElement('section');intro.id='salesmanIntro';intro.className='salesman-intro';content.insertBefore(intro,content.firstChild)}
+  intro.innerHTML=`<div class="salesman-intro-top"><div><div class="salesman-greeting">${esc(greeting())},</div><div class="salesman-name">${esc(staffName())}</div><div class="salesman-meta">${esc(staffId()||'Staff')} · ${esc(locationText())}</div></div><div class="salesman-month">🗓 ${esc(periodText())}</div></div><div class="salesman-motto"><span>Great people build great customers!</span><em>Sell · Support · Grow</em></div>`;
+  if($('settingsBtn')){$('settingsBtn').textContent='👤';$('settingsBtn').setAttribute('aria-label','Account & settings')}
+  if(document.querySelector('.brand-sub'))document.querySelector('.brand-sub').textContent='Accounting System';
+}
+
+function kpiCard(cls,icon,label,value,sub,route){
+  const allowed=route&&canRoute(route);
+  const tag=allowed?'button':'div';
+  return `<${tag} class="sales-kpi ${cls} ${allowed?'clickable':'locked'}" ${allowed?`type="button" data-sales-route="${route}"`:''}><span class="kpi-icon">${icon}</span><small>${esc(label)}</small><strong>${esc(value)}</strong><em>${esc(sub)}</em>${allowed?'<span class="kpi-arrow">›</span><span class="tap-line">Tap to open ›</span>':''}</${tag}>`;
+}
+function renderKpis(){
+  const grid=$('kpiGrid');if(!grid||!data)return;
+  const o=data.overview||{},sales=o.monthlySales||{},ar=o.receivable||{},stock=o.stock||{},earn=paymentSummary(data.payment);
+  grid.innerHTML=
+    kpiCard('sales','📊','Monthly Sales',money(sales.netUSD),Math.round(num(sales.invoiceCount))+' invoice'+(Math.round(num(sales.invoiceCount))===1?'':'s')+' this month','')+
+    kpiCard('receivable','💰','Receivable',money(ar.equivalentUSD),Math.round(num(ar.count))+' open invoice'+(Math.round(num(ar.count))===1?'':'s'),'sales-support-your-receivable')+
+    kpiCard('stock','📦','Stock Qty',qty(stock.physicalQty),Math.round(num(stock.openBatchCount))+' open batch'+(Math.round(num(stock.openBatchCount))===1?'':'es'),'sales-support-your-stock')+
+    kpiCard('earning','👛','Your Earning',money(earn.usd),earn.count+' available earning'+(earn.count===1?'':'s')+(earn.khr>0?' · '+khr(earn.khr):''),'staff-relation');
+  grid.querySelectorAll('[data-sales-route]').forEach(btn=>btn.onclick=()=>openModule(btn.dataset.salesRoute,true));
+  if($('overviewTitle'))$('overviewTitle').textContent='Overview';
+  if($('periodLabel'))$('periodLabel').textContent=periodText();
+}
+
+function renderQuick(){
+  const host=$('quickActions');if(!host)return;
+  const routes=QUICK.filter(canRoute);
+  host.innerHTML=routes.map(route=>{const x=ROUTES[route];return `<button type="button" class="quick-btn" data-sales-route="${route}"><div class="quick-icon">${x.icon}</div><span>${esc(x.label)}</span></button>`}).join('')||'<div class="menu-empty">No Sales Support actions assigned.</div>';
+  host.querySelectorAll('[data-sales-route]').forEach(btn=>btn.onclick=()=>openModule(btn.dataset.salesRoute,true));
+  if($('quickCount')){$('quickCount').textContent=routes.length?'See all ›':'0 available';$('quickCount').classList.add('see-all')}
+}
+
+function renderAttention(){
+  const panel=$('attentionPanel'),host=$('attentionGrid');if(!panel||!host)return;
+  const arRows=Array.isArray(data?.ar?.receivables)?data.ar.receivables:[];
+  const overdue=arRows.filter(x=>clean(x.arStatus).toLowerCase()==='overdue').length;
+  const owing=new Set(arRows.map(x=>clean(x.customer).toLowerCase()).filter(Boolean)).size;
+  const cashRows=Array.isArray(data?.collection?.invoices)?data.collection.invoices:[];
+  const states=data?.collectionState?.invoiceStates||{};
+  const unclosed=cashRows.filter(x=>!states?.[x.invoiceId]).length;
+  const items=[];
+  if(canRoute('sales-support-your-receivable')){
+    items.push({icon:'❗',title:overdue+' overdue invoice'+(overdue===1?'':'s'),sub:'Open Your Receivable',route:'sales-support-your-receivable'});
+    items.push({icon:'👥',title:owing+' customer'+(owing===1?'':'s')+' owing',sub:'Review outstanding customers',route:'sales-support-your-receivable'});
+  }
+  if(canRoute('sales-support-your-collection')){
+    items.push({icon:unclosed?'⚠️':'✓',title:unclosed?unclosed+' collection invoice'+(unclosed===1?'':'s')+' not closed':'Collection is up to date',sub:'Open Your Collection',route:'sales-support-your-collection'});
+  }
+  if(!items.length){panel.hidden=true;return}
+  panel.hidden=false;
+  host.innerHTML=items.map(x=>`<button class="attention-item" type="button" data-sales-route="${x.route}"><span class="attention-icon">${x.icon}</span><span class="attention-copy"><strong>${esc(x.title)}</strong><small>${esc(x.sub)}</small></span><span class="attention-next">›</span></button>`).join('');
+  host.querySelectorAll('[data-sales-route]').forEach(btn=>btn.onclick=()=>openModule(btn.dataset.salesRoute,true));
+  const head=panel.querySelector('.section-head span');if(head)head.textContent='Live snapshot';
+}
+
+function renderRecent(){
+  const host=$('recentList');if(!host)return;
+  const rows=Array.isArray(data?.invoices?.invoices)?data.invoices.invoices.slice(0,4):[];
+  if(!rows.length){host.innerHTML='<div class="menu-empty">No recent invoice activity available.</div>';return}
+  host.innerHTML=rows.map(r=>{
+    const c=clean(r.currency||'USD').toUpperCase();
+    const value=c==='KHR'?khr(r.grandTotal):money(r.grandTotal);
+    return `<button type="button" class="recent-row" data-sales-route="sales-support-your-invoices" style="border-left:0;border-right:0;border-top:0;background:transparent;width:100%;text-align:left"><span class="recent-icon">🧾</span><span class="recent-main"><strong>${esc(r.invoiceNo||'Invoice')} · ${esc(r.customer||'-')}</strong><span>${esc(r.paymentMethod||r.invoiceType||r.status||'Invoice')}</span></span><span class="recent-side"><strong>${esc(value)}</strong><span>${esc(dateShort(r.invoiceDate))}</span></span></button>`;
+  }).join('');
+  host.querySelectorAll('[data-sales-route]').forEach(btn=>btn.onclick=()=>openModule(btn.dataset.salesRoute,true));
+  if($('activityLabel'))$('activityLabel').textContent='Latest invoices';
+}
+
+function renderDashboard(){if(!isStaffMode()||!data)return;renderIntro();renderKpis();renderQuick();renderAttention();renderRecent();renderNav(activeGroup==='home'?'home':activeGroup)}
+
+function showHome(clear=true){
+  if(!isStaffMode())return;
+  activeGroup='home';customRouteOpen='';hideScreens();$('mobileHome').hidden=false;if(clear)setUrl('');renderDashboard();renderNav('home');if($('mobileScroll'))$('mobileScroll').scrollTop=0;
+}
+function showGroup(group,clear=true){
+  if(!isStaffMode())return;const g=GROUPS[group];if(!g){showHome(clear);return}
+  activeGroup=group;customRouteOpen='';hideScreens();$('menuScreen').hidden=false;if(clear)setUrl('');
+  const routes=g.routes.filter(canRoute);$('menuTitle').textContent=g.title;$('menuSubtitle').textContent=routes.length+' available function'+(routes.length===1?'':'s');
+  $('menuGrid').innerHTML=routes.length?routes.map(route=>{const x=ROUTES[route];return `<button type="button" class="menu-card" data-sales-route="${route}"><b>${x.icon}</b><strong>${esc(x.label)}</strong><small>Open your ${esc(x.label.toLowerCase())}</small></button>`}).join(''):'<div class="menu-empty">No functions assigned in this section.</div>';
+  $('menuGrid').querySelectorAll('[data-sales-route]').forEach(btn=>btn.onclick=()=>openModule(btn.dataset.salesRoute,true));
+  renderNav(group);$('menuGrid').scrollTop=0;
+}
+function openModule(route,updateUrl=true){
+  const x=ROUTES[route];if(!x){showToast('This mobile route is not ready yet.');return false}if(!canRoute(route)){showToast('Access denied for this function.');return false}
+  activeGroup=x.group||'more';customRouteOpen=route;hideScreens();$('moduleScreen').hidden=false;$('moduleTitle').textContent=x.label;$('moduleFrame').src=x.url;
+  if($('moduleDesktopLink'))$('moduleDesktopLink').href='index.html?module='+encodeURIComponent(route)+'&autoload=1';if(updateUrl)setUrl(route);renderNav(activeGroup);return true;
+}
+
+async function refresh(force=false){
+  if(loading||!readSession()?.access_token)return;
+  loading=true;
+  try{
+    profile=await rpc('bb_current_access_profile');
+    if(profile?.user?.isAdmin===true)return;
+    const promises=[safeRpc('bb_mobile_user_overview'),safeRpc('bb_staff_relation_my_payments',{p_from:null,p_to:null,p_salary_month:null})];
+    promises.push(canRoute('sales-support-your-receivable')?safeRpc('bb_ar_list'):Promise.resolve(null));
+    promises.push(canRoute('sales-support-your-invoices')?safeRpc('bb_sales_support_your_invoices_list',{p_invoice_no:'',p_customer:'',p_date_from:null,p_date_to:null,p_invoice_type:''}):Promise.resolve(null));
+    promises.push(canRoute('sales-support-your-collection')?safeRpc('bb_sales_support_your_collection_invoice_list'):Promise.resolve(null));
+    promises.push(canRoute('sales-support-your-collection')?safeRpc('bb_sales_support_your_collection_my_state'):Promise.resolve(null));
+    const [overview,payment,ar,invoices,collection,collectionState]=await Promise.all(promises);
+    data={overview,payment,ar,invoices,collection,collectionState};
+    if(!$('mobileHome').hidden)renderDashboard();
+    if(!initialized){
+      initialized=true;
+      const requested=new URLSearchParams(location.search).get('module')||'';
+      if(requested&&ROUTES[requested]&&canRoute(requested))openModule(requested,false);
+    }
+  }catch(e){console.warn('Sales Support Mobile Dashboard:',e?.message||e)}finally{loading=false}
+}
+
+function wireShell(){
+  if($('menuBack'))$('menuBack').onclick=()=>showHome(true);
+  if($('moduleBack'))$('moduleBack').onclick=()=>customRouteOpen?showGroup(ROUTES[customRouteOpen]?.group||'more',true):showHome(true);
+  const home=$('mobileHome'),menu=$('menuScreen'),module=$('moduleScreen');
+  if(home){new MutationObserver(()=>{if(!home.hidden){activeGroup='home';setTimeout(()=>{refresh(false);if(data)renderDashboard()},40)}}).observe(home,{attributes:true,attributeFilter:['hidden']})}
+  if(menu){new MutationObserver(()=>{if(!menu.hidden&&isStaffMode())setTimeout(()=>renderNav(activeGroup==='home'?'more':activeGroup),20)}).observe(menu,{attributes:true,attributeFilter:['hidden']})}
+  if(module){new MutationObserver(()=>{if(!module.hidden&&isStaffMode())setTimeout(()=>renderNav(activeGroup),20)}).observe(module,{attributes:true,attributeFilter:['hidden']})}
+  window.addEventListener('focus',()=>refresh(false));
+  window.addEventListener('popstate',()=>{
+    if(!isStaffMode())return;const route=new URLSearchParams(location.search).get('module')||'';
+    if(route&&ROUTES[route]&&canRoute(route))setTimeout(()=>openModule(route,false),0);else setTimeout(()=>showHome(false),0);
+  });
+}
+
+function start(){
+  const home=$('mobileHome');if(!home){setTimeout(start,100);return}
+  wireShell();
+  const wait=()=>{
+    if(readSession()?.access_token){refresh(true);return}
+    setTimeout(wait,500);
+  };
+  wait();
+  window.BBMobileSalesSupport={refresh:()=>refresh(true),open:openModule,showHome,showGroup};
+}
+
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+})();
