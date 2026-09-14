@@ -6,179 +6,2219 @@
   <meta name="theme-color" content="#1267b0">
   <meta name="application-name" content="BIG BROTHER">
   <meta name="mobile-web-app-capable" content="yes">
+
   <title>BIG BROTHER — Mobile</title>
+
   <link rel="manifest" href="manifest.webmanifest?v=20260914-1">
   <link rel="icon" href="pwa-icon.svg" type="image/svg+xml">
+
   <link rel="stylesheet" href="mobile.css?v=20260914-1">
   <link rel="stylesheet" href="mobile-sales-support.css?v=20260914-2">
   <link rel="stylesheet" href="pwa-install.css?v=20260914-1">
+
+  <style id="bb-mobile-dashboard-compact">
+
+    /* =====================================================
+       BIG BROTHER MOBILE DASHBOARD
+       COMPACT OVERVIEW + USER ARRANGEABLE QUICK ACTIONS
+       ===================================================== */
+
+    /* ---------- PAGE SPACING ---------- */
+
+    #mobileHome .content{
+      padding-left:10px !important;
+      padding-right:10px !important;
+      padding-bottom:14px !important;
+    }
+
+    #mobileHome .panel{
+      margin-bottom:8px !important;
+    }
+
+    #mobileHome .overview-panel,
+    #mobileHome .quick-panel{
+      padding:9px !important;
+      border-radius:15px !important;
+    }
+
+    #mobileHome .overview-panel .section-head,
+    #mobileHome .quick-panel .section-head{
+      min-height:27px !important;
+      margin-bottom:6px !important;
+    }
+
+    #mobileHome .overview-panel .section-head strong,
+    #mobileHome .quick-panel .section-head strong{
+      font-size:14px !important;
+    }
+
+    #mobileHome .overview-panel .section-head span,
+    #mobileHome .quick-panel .section-head span{
+      font-size:9px !important;
+    }
+
+
+    /* =====================================================
+       COMPACT KPI CARDS
+       ===================================================== */
+
+    #kpiGrid{
+      display:grid !important;
+      grid-template-columns:
+        repeat(2,minmax(0,1fr)) !important;
+
+      gap:6px !important;
+    }
+
+    #kpiGrid .sales-kpi{
+      display:grid !important;
+
+      grid-template-columns:
+        30px
+        minmax(0,1fr)
+        21px !important;
+
+      grid-template-rows:
+        auto
+        auto
+        auto !important;
+
+      grid-template-areas:
+        "icon label arrow"
+        "icon value arrow"
+        "sub  sub   sub" !important;
+
+      align-items:center !important;
+
+      column-gap:6px !important;
+
+      width:100% !important;
+
+      min-width:0 !important;
+
+      min-height:72px !important;
+
+      padding:7px 7px 6px !important;
+
+      border-radius:12px !important;
+
+      text-align:left !important;
+
+      box-shadow:
+        inset 0 0 0 1px rgba(20,55,90,.045)
+        !important;
+    }
+
+
+    /* KPI ICON */
+
+    #kpiGrid .sales-kpi .kpi-icon{
+      grid-area:icon !important;
+
+      width:30px !important;
+      height:30px !important;
+
+      margin:0 !important;
+
+      border-radius:9px !important;
+
+      font-size:15px !important;
+
+      align-self:center !important;
+    }
+
+
+    /* KPI TITLE */
+
+    #kpiGrid .sales-kpi small{
+      grid-area:label !important;
+
+      min-width:0 !important;
+
+      margin:0 !important;
+
+      color:#53677f !important;
+
+      font-size:8px !important;
+
+      line-height:1.05 !important;
+
+      font-weight:900 !important;
+
+      white-space:nowrap !important;
+
+      overflow:hidden !important;
+
+      text-overflow:ellipsis !important;
+    }
+
+
+    /* KPI VALUE */
+
+    #kpiGrid .sales-kpi strong{
+      grid-area:value !important;
+
+      min-width:0 !important;
+
+      margin:1px 0 0 !important;
+
+      color:#112650 !important;
+
+      font-size:15px !important;
+
+      line-height:1.05 !important;
+
+      font-weight:900 !important;
+
+      white-space:nowrap !important;
+
+      overflow:hidden !important;
+
+      text-overflow:ellipsis !important;
+    }
+
+
+    /* KPI SUBTEXT */
+
+    #kpiGrid .sales-kpi em{
+      grid-area:sub !important;
+
+      min-width:0 !important;
+
+      margin:4px 0 0 !important;
+
+      color:#74859a !important;
+
+      font-size:7px !important;
+
+      line-height:1.1 !important;
+
+      font-style:normal !important;
+
+      white-space:nowrap !important;
+
+      overflow:hidden !important;
+
+      text-overflow:ellipsis !important;
+    }
+
+
+    /* KPI SMALL ARROW */
+
+    #kpiGrid .sales-kpi .kpi-arrow{
+      grid-area:arrow !important;
+
+      position:static !important;
+
+      width:21px !important;
+      height:21px !important;
+
+      margin:0 !important;
+
+      border-radius:50% !important;
+
+      font-size:13px !important;
+    }
+
+
+    /* REMOVE BIG TAP BAR */
+
+    #kpiGrid .sales-kpi .tap-line{
+      display:none !important;
+    }
+
+
+    /* LOCKED CARD */
+
+    #kpiGrid .sales-kpi.locked{
+      padding:7px 7px 6px !important;
+    }
+
+
+    /* =====================================================
+       COMPACT QUICK ACTIONS
+       ===================================================== */
+
+    #quickActions{
+      display:grid !important;
+
+      grid-template-columns:
+        repeat(4,minmax(0,1fr)) !important;
+
+      gap:7px 4px !important;
+
+      position:relative !important;
+    }
+
+    #quickActions .quick-btn{
+      position:relative !important;
+
+      min-width:0 !important;
+
+      min-height:61px !important;
+
+      padding:4px 2px !important;
+
+      border-radius:11px !important;
+
+      touch-action:manipulation;
+
+      transition:
+        transform .15s ease,
+        box-shadow .15s ease,
+        opacity .15s ease !important;
+    }
+
+    #quickActions .quick-icon{
+      width:40px !important;
+      height:40px !important;
+
+      margin:0 auto 4px !important;
+
+      border-radius:12px !important;
+
+      font-size:19px !important;
+
+      box-shadow:
+        0 2px 7px rgba(33,74,112,.055)
+        !important;
+    }
+
+    #quickActions .quick-btn > span{
+      display:block !important;
+
+      min-width:0 !important;
+
+      color:#10234a !important;
+
+      font-size:8.5px !important;
+
+      line-height:1.08 !important;
+
+      font-weight:700 !important;
+
+      text-align:center !important;
+
+      white-space:normal !important;
+
+      overflow-wrap:anywhere !important;
+    }
+
+
+    /* =====================================================
+       QUICK ACTION ARRANGE BUTTONS
+       ===================================================== */
+
+    .bb-quick-tools{
+      display:flex !important;
+
+      align-items:center !important;
+
+      justify-content:flex-end !important;
+
+      gap:5px !important;
+
+      margin-left:auto !important;
+    }
+
+    #bbQuickArrangeBtn,
+    #bbQuickResetBtn{
+      height:27px !important;
+
+      min-width:0 !important;
+
+      padding:0 8px !important;
+
+      border-radius:999px !important;
+
+      font-family:inherit !important;
+
+      font-size:8px !important;
+
+      font-weight:900 !important;
+
+      cursor:pointer !important;
+    }
+
+    #bbQuickArrangeBtn{
+      border:1px solid #cdddec !important;
+
+      background:#eef6ff !important;
+
+      color:#1267b0 !important;
+    }
+
+    #bbQuickArrangeBtn.active{
+      border-color:#1267b0 !important;
+
+      background:#1267b0 !important;
+
+      color:#fff !important;
+    }
+
+    #bbQuickResetBtn{
+      border:1px solid #e0e7ef !important;
+
+      background:#fff !important;
+
+      color:#718197 !important;
+    }
+
+    #bbQuickResetBtn[hidden]{
+      display:none !important;
+    }
+
+
+    /* =====================================================
+       ARRANGE MODE
+       ===================================================== */
+
+    #quickActions.bb-arrange-mode .quick-btn{
+      cursor:grab !important;
+
+      animation:
+        bbQuickWiggle
+        .18s
+        ease-in-out
+        infinite
+        alternate;
+    }
+
+    #quickActions.bb-arrange-mode .quick-btn:active{
+      cursor:grabbing !important;
+    }
+
+    #quickActions.bb-arrange-mode::before{
+      content:"Hold and drag icons · tap Done when finished";
+
+      position:absolute;
+
+      left:0;
+      right:0;
+
+      top:-21px;
+
+      color:#73859a;
+
+      font-size:7px;
+
+      font-weight:800;
+
+      text-align:center;
+    }
+
+    #quickActions .bb-qa-ghost{
+      opacity:.28 !important;
+    }
+
+    #quickActions .bb-qa-chosen{
+      animation:none !important;
+
+      transform:scale(1.06) !important;
+
+      box-shadow:
+        0 9px 22px rgba(20,63,105,.18)
+        !important;
+
+      z-index:20 !important;
+    }
+
+    #quickActions .bb-qa-drag{
+      animation:none !important;
+
+      opacity:.94 !important;
+    }
+
+    @keyframes bbQuickWiggle{
+      from{
+        transform:rotate(-1deg);
+      }
+
+      to{
+        transform:rotate(1deg);
+      }
+    }
+
+
+    /* =====================================================
+       SLIGHTLY COMPACT INTRO
+       ===================================================== */
+
+    #mobileHome .salesman-intro{
+      margin-bottom:9px !important;
+
+      padding:
+        15px
+        14px
+        11px !important;
+    }
+
+    #mobileHome .salesman-name{
+      font-size:19px !important;
+    }
+
+    #mobileHome .salesman-meta{
+      margin-top:4px !important;
+
+      font-size:9.5px !important;
+    }
+
+    #mobileHome .salesman-month{
+      padding:6px 8px !important;
+
+      font-size:8.5px !important;
+    }
+
+    #mobileHome .salesman-motto{
+      margin-top:9px !important;
+    }
+
+
+    /* =====================================================
+       SMALL PHONES
+       ===================================================== */
+
+    @media(max-width:380px){
+
+      #kpiGrid{
+        gap:5px !important;
+      }
+
+      #kpiGrid .sales-kpi{
+        grid-template-columns:
+          27px
+          minmax(0,1fr)
+          18px !important;
+
+        min-height:67px !important;
+
+        padding:6px !important;
+
+        column-gap:5px !important;
+      }
+
+      #kpiGrid .sales-kpi .kpi-icon{
+        width:27px !important;
+        height:27px !important;
+
+        font-size:13px !important;
+      }
+
+      #kpiGrid .sales-kpi strong{
+        font-size:13.5px !important;
+      }
+
+      #kpiGrid .sales-kpi small{
+        font-size:7.2px !important;
+      }
+
+      #kpiGrid .sales-kpi em{
+        font-size:6.5px !important;
+      }
+
+      #kpiGrid .sales-kpi .kpi-arrow{
+        width:18px !important;
+        height:18px !important;
+
+        font-size:11px !important;
+      }
+
+      #quickActions{
+        gap:6px 3px !important;
+      }
+
+      #quickActions .quick-icon{
+        width:37px !important;
+        height:37px !important;
+
+        font-size:18px !important;
+      }
+
+      #quickActions .quick-btn > span{
+        font-size:8px !important;
+      }
+
+      #bbQuickArrangeBtn,
+      #bbQuickResetBtn{
+        padding:0 6px !important;
+
+        font-size:7.5px !important;
+      }
+    }
+
+
+    @media(max-width:335px){
+
+      #quickActions{
+        grid-template-columns:
+          repeat(3,minmax(0,1fr))
+          !important;
+      }
+    }
+
+  </style>
 </head>
+
+
 <body>
+
   <div id="app" class="mobile-app">
+
+
+    <!-- ===================================================
+         BOOT
+         =================================================== -->
+
     <div id="bootScreen" class="boot-screen">
+
       <div class="boot-card">
-        <div class="boot-logo">BB</div>
-        <strong>BIG BROTHER</strong>
-        <span>Loading Mobile Workspace…</span>
+
+        <div class="boot-logo">
+          BB
+        </div>
+
+        <strong>
+          BIG BROTHER
+        </strong>
+
+        <span>
+          Loading Mobile Workspace…
+        </span>
+
       </div>
+
     </div>
 
-    <section id="loginScreen" class="login-screen" hidden>
-      <form id="loginForm" class="login-card">
-        <div class="login-brand">BIG BROTHER</div>
-        <div class="login-sub">Accounting System · Mobile</div>
-        <label for="loginEmail">Email</label>
-        <input id="loginEmail" type="email" autocomplete="username" required>
-        <label for="loginPassword">Password</label>
-        <input id="loginPassword" type="password" autocomplete="current-password" required>
-        <button id="loginButton" type="submit">Sign In</button>
-        <div id="loginError" class="login-error"></div>
-        <a class="desktop-link" href="index.html">Open Desktop Version</a>
+
+    <!-- ===================================================
+         LOGIN
+         =================================================== -->
+
+    <section
+      id="loginScreen"
+      class="login-screen"
+      hidden>
+
+      <form
+        id="loginForm"
+        class="login-card">
+
+        <div class="login-brand">
+          BIG BROTHER
+        </div>
+
+        <div class="login-sub">
+          Accounting System · Mobile
+        </div>
+
+        <label for="loginEmail">
+          Email
+        </label>
+
+        <input
+          id="loginEmail"
+          type="email"
+          autocomplete="username"
+          required>
+
+        <label for="loginPassword">
+          Password
+        </label>
+
+        <input
+          id="loginPassword"
+          type="password"
+          autocomplete="current-password"
+          required>
+
+        <button
+          id="loginButton"
+          type="submit">
+          Sign In
+        </button>
+
+        <div
+          id="loginError"
+          class="login-error">
+        </div>
+
+        <a
+          class="desktop-link"
+          href="index.html">
+          Open Desktop Version
+        </a>
+
       </form>
+
     </section>
 
-    <section id="mobileHome" class="mobile-home" hidden>
-      <div class="mobile-scroll" id="mobileScroll">
+
+    <!-- ===================================================
+         MOBILE HOME
+         =================================================== -->
+
+    <section
+      id="mobileHome"
+      class="mobile-home"
+      hidden>
+
+      <div
+        class="mobile-scroll"
+        id="mobileScroll">
+
+
+        <!-- HERO -->
+
         <header class="hero">
+
           <div class="hero-top">
+
             <div>
-              <div class="brand">BIG BROTHER</div>
-              <div class="brand-sub">Accounting System</div>
+
+              <div class="brand">
+                BIG BROTHER
+              </div>
+
+              <div class="brand-sub">
+                Accounting System
+              </div>
+
             </div>
+
+
             <div class="hero-actions">
-              <button id="notificationBtn" class="icon-btn" type="button" aria-label="Notifications">🔔</button>
-              <button id="settingsBtn" class="icon-btn" type="button" aria-label="Account and settings">👤</button>
+
+              <button
+                id="notificationBtn"
+                class="icon-btn"
+                type="button"
+                aria-label="Notifications">
+                🔔
+              </button>
+
+              <button
+                id="settingsBtn"
+                class="icon-btn"
+                type="button"
+                aria-label="Account and settings">
+                👤
+              </button>
+
             </div>
+
           </div>
+
+
           <div class="greeting-wrap">
-            <div id="greeting" class="greeting-small">Good Morning,</div>
-            <div id="userName" class="greeting-name">BIG BROTHER User</div>
-            <div class="hero-meta">
-              <span id="locationChip" class="hero-chip">📍 —</span>
-              <span id="dateChip" class="hero-chip">—</span>
+
+            <div
+              id="greeting"
+              class="greeting-small">
+              Good Morning,
             </div>
+
+            <div
+              id="userName"
+              class="greeting-name">
+              BIG BROTHER User
+            </div>
+
+            <div class="hero-meta">
+
+              <span
+                id="locationChip"
+                class="hero-chip">
+                📍 —
+              </span>
+
+              <span
+                id="dateChip"
+                class="hero-chip">
+                —
+              </span>
+
+            </div>
+
           </div>
+
         </header>
 
+
+        <!-- CONTENT -->
+
         <main class="content">
-          <section class="panel">
+
+
+          <!-- OVERVIEW -->
+
+          <section
+            class="panel overview-panel">
+
             <div class="section-head">
-              <strong id="overviewTitle">Overview</strong>
-              <span id="periodLabel">—</span>
+
+              <strong id="overviewTitle">
+                Overview
+              </strong>
+
+              <span id="periodLabel">
+                —
+              </span>
+
             </div>
-            <div id="kpiGrid" class="kpi-grid"></div>
+
+            <div
+              id="kpiGrid"
+              class="kpi-grid">
+            </div>
+
           </section>
 
-          <section class="panel">
+
+          <!-- QUICK ACTIONS -->
+
+          <section
+            class="panel quick-panel">
+
             <div class="section-head">
-              <strong>Quick Actions</strong>
-              <span id="quickCount">0 available</span>
+
+              <strong>
+                Quick Actions
+              </strong>
+
+              <span id="quickCount">
+                0 available
+              </span>
+
             </div>
-            <div id="quickActions" class="quick-grid"></div>
+
+            <div
+              id="quickActions"
+              class="quick-grid">
+            </div>
+
           </section>
 
-          <section class="panel" id="attentionPanel">
+
+          <!-- ATTENTION -->
+
+          <section
+            class="panel"
+            id="attentionPanel">
+
             <div class="section-head">
-              <strong>Attention</strong>
-              <span>Live snapshot</span>
+
+              <strong>
+                Attention
+              </strong>
+
+              <span>
+                Live snapshot
+              </span>
+
             </div>
-            <div id="attentionGrid" class="attention-grid"></div>
+
+            <div
+              id="attentionGrid"
+              class="attention-grid">
+            </div>
+
           </section>
 
+
+          <!-- RECENT ACTIVITY -->
+
           <section class="panel">
+
             <div class="section-head">
-              <strong>Recent Activity</strong>
-              <span id="activityLabel">Latest invoices</span>
+
+              <strong>
+                Recent Activity
+              </strong>
+
+              <span id="activityLabel">
+                Latest invoices
+              </span>
+
             </div>
-            <div id="recentList" class="recent-list"></div>
+
+            <div
+              id="recentList"
+              class="recent-list">
+            </div>
+
           </section>
+
         </main>
+
       </div>
 
-      <nav id="bottomNav" class="bottom-nav" aria-label="Mobile navigation"></nav>
+
+      <nav
+        id="bottomNav"
+        class="bottom-nav"
+        aria-label="Mobile navigation">
+      </nav>
+
     </section>
 
-    <section id="menuScreen" class="menu-screen" hidden>
+
+    <!-- ===================================================
+         MENU SCREEN
+         =================================================== -->
+
+    <section
+      id="menuScreen"
+      class="menu-screen"
+      hidden>
+
       <header class="simple-header">
-        <button id="menuBack" type="button" class="header-btn">‹</button>
+
+        <button
+          id="menuBack"
+          type="button"
+          class="header-btn">
+          ‹
+        </button>
+
         <div>
-          <strong id="menuTitle">Workspace</strong>
-          <span id="menuSubtitle">Available functions</span>
-        </div>
-        <button id="menuSettings" type="button" class="header-btn">⚙️</button>
-      </header>
-      <div id="menuGrid" class="menu-grid"></div>
-      <nav id="menuBottomNav" class="bottom-nav" aria-label="Mobile navigation"></nav>
-    </section>
 
-    <section id="moduleScreen" class="module-screen" hidden>
-      <header class="module-header">
-        <button id="moduleBack" type="button" class="header-btn">‹</button>
-        <div class="module-title-wrap">
-          <strong id="moduleTitle">BIG BROTHER</strong>
-          <span>Mobile Workspace</span>
-        </div>
-        <a id="moduleDesktopLink" class="desktop-small" href="index.html">Desktop</a>
-      </header>
-      <iframe id="moduleFrame" class="module-frame" title="BIG BROTHER Module" src="about:blank"></iframe>
-      <nav id="moduleBottomNav" class="bottom-nav" aria-label="Mobile navigation"></nav>
-    </section>
+          <strong id="menuTitle">
+            Workspace
+          </strong>
 
-    <div id="settingsSheet" class="sheet" hidden>
-      <div class="sheet-card">
-        <div class="sheet-handle"></div>
-        <h3>Mobile Settings</h3>
-        <p>This page is completely separate from the Desktop Dashboard.</p>
-        <button id="installAppBtn" class="sheet-option install" type="button" hidden><span>📲</span><div><strong>Install BIG BROTHER App</strong><small id="installAppStatus">Install directly from Chrome</small></div></button>
-        <a class="sheet-option" href="index.html"><span>💻</span><div><strong>Switch to Desktop</strong><small>Open the original BIG BROTHER dashboard</small></div></a>
-        <button id="signOutBtn" class="sheet-option danger" type="button"><span>↪</span><div><strong>Sign Out</strong><small>End this BIG BROTHER session</small></div></button>
-        <button id="closeSettings" class="sheet-close" type="button">Close</button>
+          <span id="menuSubtitle">
+            Available functions
+          </span>
+
+        </div>
+
+        <button
+          id="menuSettings"
+          type="button"
+          class="header-btn">
+          ⚙️
+        </button>
+
+      </header>
+
+
+      <div
+        id="menuGrid"
+        class="menu-grid">
       </div>
+
+
+      <nav
+        id="menuBottomNav"
+        class="bottom-nav"
+        aria-label="Mobile navigation">
+      </nav>
+
+    </section>
+
+
+    <!-- ===================================================
+         MODULE SCREEN
+         =================================================== -->
+
+    <section
+      id="moduleScreen"
+      class="module-screen"
+      hidden>
+
+      <header class="module-header">
+
+        <button
+          id="moduleBack"
+          type="button"
+          class="header-btn">
+          ‹
+        </button>
+
+
+        <div class="module-title-wrap">
+
+          <strong id="moduleTitle">
+            BIG BROTHER
+          </strong>
+
+          <span>
+            Mobile Workspace
+          </span>
+
+        </div>
+
+
+        <a
+          id="moduleDesktopLink"
+          class="desktop-small"
+          href="index.html">
+          Desktop
+        </a>
+
+      </header>
+
+
+      <iframe
+        id="moduleFrame"
+        class="module-frame"
+        title="BIG BROTHER Module"
+        src="about:blank">
+      </iframe>
+
+
+      <nav
+        id="moduleBottomNav"
+        class="bottom-nav"
+        aria-label="Mobile navigation">
+      </nav>
+
+    </section>
+
+
+    <!-- ===================================================
+         SETTINGS
+         =================================================== -->
+
+    <div
+      id="settingsSheet"
+      class="sheet"
+      hidden>
+
+      <div class="sheet-card">
+
+        <div class="sheet-handle">
+        </div>
+
+        <h3>
+          Mobile Settings
+        </h3>
+
+        <p>
+          This page is completely separate
+          from the Desktop Dashboard.
+        </p>
+
+
+        <button
+          id="installAppBtn"
+          class="sheet-option install"
+          type="button"
+          hidden>
+
+          <span>
+            📲
+          </span>
+
+          <div>
+
+            <strong>
+              Install BIG BROTHER App
+            </strong>
+
+            <small id="installAppStatus">
+              Install directly from Chrome
+            </small>
+
+          </div>
+
+        </button>
+
+
+        <a
+          class="sheet-option"
+          href="index.html">
+
+          <span>
+            💻
+          </span>
+
+          <div>
+
+            <strong>
+              Switch to Desktop
+            </strong>
+
+            <small>
+              Open the original
+              BIG BROTHER dashboard
+            </small>
+
+          </div>
+
+        </a>
+
+
+        <button
+          id="signOutBtn"
+          class="sheet-option danger"
+          type="button">
+
+          <span>
+            ↪
+          </span>
+
+          <div>
+
+            <strong>
+              Sign Out
+            </strong>
+
+            <small>
+              End this BIG BROTHER session
+            </small>
+
+          </div>
+
+        </button>
+
+
+        <button
+          id="closeSettings"
+          class="sheet-close"
+          type="button">
+          Close
+        </button>
+
+      </div>
+
     </div>
 
-    <div id="toast" class="toast" hidden></div>
+
+    <div
+      id="toast"
+      class="toast"
+      hidden>
+    </div>
+
   </div>
 
+
+  <!-- =====================================================
+       MAIN MOBILE SCRIPTS
+       ===================================================== -->
+
   <script src="mobile.js?v=20260914-1"></script>
+
   <script src="mobile-sales-support-home.js?v=20260914-3"></script>
+
   <script src="pwa-install.js?v=20260914-1"></script>
+
+
+  <!-- =====================================================
+       MOBILE MODULE ROUTING
+       ===================================================== -->
+
   <script>
   (function(){
-    const title=document.getElementById('moduleTitle');
-    const desktop=document.getElementById('moduleDesktopLink');
-    const frame=document.getElementById('moduleFrame');
-    if(!title||!desktop||!frame)return;
 
-    const addCustomerMobileUrl='https://angsokhey11-cloud.github.io/big-brother-sales-support/add-customer-mobile.html?embed=1&v=20260914-2';
-    const customerMapMobileUrl='https://angsokhey11-cloud.github.io/big-brother-customers-editor/sales-support-customer-map-mobile.html?embed=1&v=20260914-2';
-    const collectionMobileUrl='https://angsokhey11-cloud.github.io/big-brother-daily-cash-collection/your-collection-mobile.html?embed=1&v=20260914-3';
-    const stockMobileUrl='https://angsokhey11-cloud.github.io/big-brother-sales-support/your-stock-mobile.html?embed=1&v=20260914-5';
-    const invoicesMobileUrl='https://angsokhey11-cloud.github.io/invoice-history/your-invoices-mobile.html?embed=1&v=20260914-2';
+    const title =
+      document.getElementById(
+        'moduleTitle'
+      );
 
-    const sync=()=>{
-      const key=String(title.textContent||'').trim().toLowerCase();
-      desktop.hidden=key==='calculator'||key==='add customer'||key==='customer map'||key==='your collection'||key==='your stock'||key==='your invoices';
+    const desktop =
+      document.getElementById(
+        'moduleDesktopLink'
+      );
 
-      if(key==='add customer'&&!String(frame.src||'').includes('/add-customer-mobile.html')){
-        frame.src=addCustomerMobileUrl;
+    const frame =
+      document.getElementById(
+        'moduleFrame'
+      );
+
+
+    if(
+      !title ||
+      !desktop ||
+      !frame
+    ){
+      return;
+    }
+
+
+    const addCustomerMobileUrl =
+      'https://angsokhey11-cloud.github.io/big-brother-sales-support/add-customer-mobile.html?embed=1&v=20260914-2';
+
+
+    const customerMapMobileUrl =
+      'https://angsokhey11-cloud.github.io/big-brother-customers-editor/sales-support-customer-map-mobile.html?embed=1&v=20260914-2';
+
+
+    const collectionMobileUrl =
+      'https://angsokhey11-cloud.github.io/big-brother-daily-cash-collection/your-collection-mobile.html?embed=1&v=20260914-3';
+
+
+    const stockMobileUrl =
+      'https://angsokhey11-cloud.github.io/big-brother-sales-support/your-stock-mobile.html?embed=1&v=20260914-5';
+
+
+    const invoicesMobileUrl =
+      'https://angsokhey11-cloud.github.io/invoice-history/your-invoices-mobile.html?embed=1&v=20260914-3';
+
+
+    const sync = () => {
+
+      const key =
+        String(
+          title.textContent || ''
+        )
+        .trim()
+        .toLowerCase();
+
+
+      desktop.hidden =
+        key === 'calculator' ||
+        key === 'add customer' ||
+        key === 'customer map' ||
+        key === 'your collection' ||
+        key === 'your stock' ||
+        key === 'your invoices';
+
+
+      if(
+        key === 'add customer' &&
+        !String(frame.src || '')
+          .includes(
+            '/add-customer-mobile.html'
+          )
+      ){
+
+        frame.src =
+          addCustomerMobileUrl;
       }
-      if(key==='customer map'&&!String(frame.src||'').includes('/sales-support-customer-map-mobile.html')){
-        frame.src=customerMapMobileUrl;
+
+
+      if(
+        key === 'customer map' &&
+        !String(frame.src || '')
+          .includes(
+            '/sales-support-customer-map-mobile.html'
+          )
+      ){
+
+        frame.src =
+          customerMapMobileUrl;
       }
-      if(key==='your collection'&&!String(frame.src||'').includes('/your-collection-mobile.html')){
-        frame.src=collectionMobileUrl;
+
+
+      if(
+        key === 'your collection' &&
+        !String(frame.src || '')
+          .includes(
+            '/your-collection-mobile.html'
+          )
+      ){
+
+        frame.src =
+          collectionMobileUrl;
       }
-      if(key==='your stock'&&!String(frame.src||'').includes('/your-stock-mobile.html')){
-        frame.src=stockMobileUrl;
+
+
+      if(
+        key === 'your stock' &&
+        !String(frame.src || '')
+          .includes(
+            '/your-stock-mobile.html'
+          )
+      ){
+
+        frame.src =
+          stockMobileUrl;
       }
-      if(key==='your invoices'&&!String(frame.src||'').includes('/your-invoices-mobile.html')){
-        frame.src=invoicesMobileUrl;
+
+
+      if(
+        key === 'your invoices' &&
+        !String(frame.src || '')
+          .includes(
+            '/your-invoices-mobile.html'
+          )
+      ){
+
+        frame.src =
+          invoicesMobileUrl;
       }
+
     };
 
+
     sync();
-    new MutationObserver(sync).observe(title,{childList:true,subtree:true,characterData:true});
+
+
+    new MutationObserver(
+      sync
+    )
+    .observe(
+      title,
+      {
+        childList:true,
+        subtree:true,
+        characterData:true
+      }
+    );
+
   })();
   </script>
+
+
+  <!-- =====================================================
+       SORTABLE LIBRARY
+       MOBILE TOUCH DRAG SUPPORT
+       ===================================================== -->
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js">
+  </script>
+
+
+  <!-- =====================================================
+       USER QUICK ACTION ORDER
+       ===================================================== -->
+
+  <script>
+  (function(){
+
+    'use strict';
+
+
+    let sortable = null;
+
+    let arranging = false;
+
+    let applyingOrder = false;
+
+    let longPressTimer = null;
+
+    let suppressClickUntil = 0;
+
+    let boundGrid = null;
+
+
+    /* -----------------------------------------------------
+       HELPERS
+       ----------------------------------------------------- */
+
+    const $ = id =>
+      document.getElementById(id);
+
+
+    function clean(value){
+
+      return String(
+        value == null
+          ? ''
+          : value
+      ).trim();
+    }
+
+
+    function quickGrid(){
+
+      return $('quickActions');
+    }
+
+
+    function quickItems(){
+
+      const grid =
+        quickGrid();
+
+      if(!grid){
+        return [];
+      }
+
+      return Array.from(
+        grid.querySelectorAll(
+          ':scope > [data-sales-route]'
+        )
+      );
+    }
+
+
+    /* -----------------------------------------------------
+       STAFF KEY
+
+       Use Staff ID where possible,
+       so different staff on one phone
+       keep different layouts.
+       ----------------------------------------------------- */
+
+    function staffKey(){
+
+      const meta =
+        document.querySelector(
+          '#salesmanIntro .salesman-meta'
+        );
+
+      if(meta){
+
+        const text =
+          clean(meta.textContent);
+
+        const first =
+          clean(
+            text.split('·')[0]
+          );
+
+        if(
+          first &&
+          first.toLowerCase()
+            !== 'staff'
+        ){
+          return first;
+        }
+      }
+
+
+      const name =
+        clean(
+          $('userName')
+            ?.textContent
+        );
+
+
+      return (
+        name ||
+        'default-staff'
+      );
+    }
+
+
+    function storageKey(){
+
+      return (
+        'bb_mobile_quick_order_v2::' +
+        staffKey()
+      );
+    }
+
+
+    /* -----------------------------------------------------
+       READ / SAVE ORDER
+       ----------------------------------------------------- */
+
+    function readOrder(){
+
+      try{
+
+        const raw =
+          localStorage.getItem(
+            storageKey()
+          );
+
+        const parsed =
+          JSON.parse(
+            raw || '[]'
+          );
+
+        return Array.isArray(parsed)
+          ? parsed
+          : [];
+
+      }catch(_){
+
+        return [];
+      }
+    }
+
+
+    function saveOrder(){
+
+      const order =
+        quickItems()
+          .map(
+            item =>
+              clean(
+                item.dataset.salesRoute
+              )
+          )
+          .filter(Boolean);
+
+
+      try{
+
+        localStorage.setItem(
+          storageKey(),
+          JSON.stringify(order)
+        );
+
+      }catch(_){}
+    }
+
+
+    /* -----------------------------------------------------
+       APPLY STAFF'S ORDER
+
+       Permission still controls which
+       icons exist.
+
+       If staff gains a new permission,
+       the new icon automatically appears
+       at the end.
+       ----------------------------------------------------- */
+
+    function applySavedOrder(){
+
+      const grid =
+        quickGrid();
+
+      if(
+        !grid ||
+        arranging
+      ){
+        return;
+      }
+
+
+      const saved =
+        readOrder();
+
+      if(!saved.length){
+        return;
+      }
+
+
+      const items =
+        quickItems();
+
+
+      if(!items.length){
+        return;
+      }
+
+
+      const byRoute =
+        new Map();
+
+
+      items.forEach(
+        item => {
+
+          const route =
+            clean(
+              item.dataset.salesRoute
+            );
+
+          if(route){
+            byRoute.set(
+              route,
+              item
+            );
+          }
+        }
+      );
+
+
+      const ordered =
+        [];
+
+
+      saved.forEach(
+        route => {
+
+          const item =
+            byRoute.get(route);
+
+          if(item){
+
+            ordered.push(item);
+
+            byRoute.delete(route);
+          }
+        }
+      );
+
+
+      byRoute.forEach(
+        item => {
+
+          ordered.push(item);
+        }
+      );
+
+
+      applyingOrder = true;
+
+
+      ordered.forEach(
+        item => {
+
+          grid.appendChild(item);
+        }
+      );
+
+
+      applyingOrder = false;
+    }
+
+
+    /* -----------------------------------------------------
+       QUICK ACTION HEADER CONTROLS
+       ----------------------------------------------------- */
+
+    function ensureTools(){
+
+      const grid =
+        quickGrid();
+
+      if(!grid){
+        return;
+      }
+
+
+      const panel =
+        grid.closest(
+          '.quick-panel'
+        ) ||
+        grid.closest(
+          '.panel'
+        );
+
+
+      if(!panel){
+        return;
+      }
+
+
+      const head =
+        panel.querySelector(
+          '.section-head'
+        );
+
+
+      if(!head){
+        return;
+      }
+
+
+      let tools =
+        head.querySelector(
+          '.bb-quick-tools'
+        );
+
+
+      if(!tools){
+
+        tools =
+          document.createElement(
+            'div'
+          );
+
+        tools.className =
+          'bb-quick-tools';
+
+
+        tools.innerHTML = `
+          <button
+            id="bbQuickResetBtn"
+            type="button"
+            hidden>
+            Reset
+          </button>
+
+          <button
+            id="bbQuickArrangeBtn"
+            type="button">
+            Arrange
+          </button>
+        `;
+
+
+        head.appendChild(
+          tools
+        );
+      }
+
+
+      const arrangeBtn =
+        $('bbQuickArrangeBtn');
+
+
+      const resetBtn =
+        $('bbQuickResetBtn');
+
+
+      if(
+        arrangeBtn &&
+        !arrangeBtn.dataset.bound
+      ){
+
+        arrangeBtn.dataset.bound =
+          '1';
+
+
+        arrangeBtn.addEventListener(
+          'click',
+          event => {
+
+            event.preventDefault();
+
+            event.stopPropagation();
+
+
+            if(arranging){
+
+              exitArrangeMode();
+
+            }else{
+
+              enterArrangeMode();
+            }
+          }
+        );
+      }
+
+
+      if(
+        resetBtn &&
+        !resetBtn.dataset.bound
+      ){
+
+        resetBtn.dataset.bound =
+          '1';
+
+
+        resetBtn.addEventListener(
+          'click',
+          event => {
+
+            event.preventDefault();
+
+            event.stopPropagation();
+
+
+            try{
+
+              localStorage.removeItem(
+                storageKey()
+              );
+
+            }catch(_){}
+
+
+            exitArrangeMode();
+
+
+            /*
+             * Quick Actions will be rebuilt
+             * in default permission order.
+             */
+
+            if(
+              window
+                .BBMobileSalesSupport
+                ?.refresh
+            ){
+
+              window
+                .BBMobileSalesSupport
+                .refresh();
+
+            }else{
+
+              location.reload();
+            }
+          }
+        );
+      }
+
+
+      updateTools();
+    }
+
+
+    function updateTools(){
+
+      const arrangeBtn =
+        $('bbQuickArrangeBtn');
+
+      const resetBtn =
+        $('bbQuickResetBtn');
+
+
+      if(arrangeBtn){
+
+        arrangeBtn.textContent =
+          arranging
+            ? 'Done'
+            : 'Arrange';
+
+
+        arrangeBtn.classList
+          .toggle(
+            'active',
+            arranging
+          );
+      }
+
+
+      if(resetBtn){
+
+        resetBtn.hidden =
+          !arranging;
+      }
+    }
+
+
+    /* -----------------------------------------------------
+       SORTABLE
+       ----------------------------------------------------- */
+
+    function createSortable(){
+
+      const grid =
+        quickGrid();
+
+
+      if(
+        !grid ||
+        !window.Sortable
+      ){
+        return;
+      }
+
+
+      if(sortable){
+
+        sortable.destroy();
+
+        sortable = null;
+      }
+
+
+      sortable =
+        window.Sortable.create(
+          grid,
+          {
+            animation:170,
+
+            ghostClass:
+              'bb-qa-ghost',
+
+            chosenClass:
+              'bb-qa-chosen',
+
+            dragClass:
+              'bb-qa-drag',
+
+            forceFallback:true,
+
+            fallbackTolerance:3,
+
+            touchStartThreshold:4,
+
+            disabled:
+              !arranging,
+
+
+            onEnd:function(){
+
+              saveOrder();
+            }
+          }
+        );
+    }
+
+
+    /* -----------------------------------------------------
+       ARRANGE MODE
+       ----------------------------------------------------- */
+
+    function enterArrangeMode(){
+
+      const grid =
+        quickGrid();
+
+
+      if(
+        !grid ||
+        arranging
+      ){
+        return;
+      }
+
+
+      arranging = true;
+
+
+      suppressClickUntil =
+        Date.now() + 900;
+
+
+      grid.classList.add(
+        'bb-arrange-mode'
+      );
+
+
+      if(
+        navigator.vibrate
+      ){
+
+        try{
+          navigator.vibrate(35);
+        }catch(_){}
+      }
+
+
+      createSortable();
+
+
+      if(sortable){
+
+        sortable.option(
+          'disabled',
+          false
+        );
+      }
+
+
+      updateTools();
+    }
+
+
+    function exitArrangeMode(){
+
+      const grid =
+        quickGrid();
+
+
+      arranging = false;
+
+
+      if(grid){
+
+        grid.classList.remove(
+          'bb-arrange-mode'
+        );
+      }
+
+
+      if(sortable){
+
+        sortable.option(
+          'disabled',
+          true
+        );
+      }
+
+
+      saveOrder();
+
+      updateTools();
+    }
+
+
+    /* -----------------------------------------------------
+       LONG PRESS
+
+       Staff can long-press any icon
+       to enter Arrange Mode.
+       ----------------------------------------------------- */
+
+    function cancelLongPress(){
+
+      if(longPressTimer){
+
+        clearTimeout(
+          longPressTimer
+        );
+
+        longPressTimer = null;
+      }
+    }
+
+
+    function bindLongPress(){
+
+      const grid =
+        quickGrid();
+
+
+      if(
+        !grid ||
+        grid === boundGrid
+      ){
+        return;
+      }
+
+
+      boundGrid =
+        grid;
+
+
+      let startX = 0;
+      let startY = 0;
+
+
+      grid.addEventListener(
+        'pointerdown',
+        event => {
+
+          const button =
+            event.target.closest(
+              '[data-sales-route]'
+            );
+
+
+          if(
+            !button ||
+            arranging
+          ){
+            return;
+          }
+
+
+          startX =
+            event.clientX;
+
+          startY =
+            event.clientY;
+
+
+          cancelLongPress();
+
+
+          longPressTimer =
+            setTimeout(
+              () => {
+
+                longPressTimer =
+                  null;
+
+
+                enterArrangeMode();
+              },
+              480
+            );
+        }
+      );
+
+
+      grid.addEventListener(
+        'pointermove',
+        event => {
+
+          if(
+            !longPressTimer
+          ){
+            return;
+          }
+
+
+          const dx =
+            Math.abs(
+              event.clientX -
+              startX
+            );
+
+
+          const dy =
+            Math.abs(
+              event.clientY -
+              startY
+            );
+
+
+          if(
+            dx > 10 ||
+            dy > 10
+          ){
+
+            cancelLongPress();
+          }
+        }
+      );
+
+
+      grid.addEventListener(
+        'pointerup',
+        cancelLongPress
+      );
+
+
+      grid.addEventListener(
+        'pointercancel',
+        cancelLongPress
+      );
+
+
+      grid.addEventListener(
+        'pointerleave',
+        cancelLongPress
+      );
+
+
+      /*
+       * Prevent opening a module
+       * while arranging.
+       */
+
+      grid.addEventListener(
+        'click',
+        event => {
+
+          if(
+            arranging ||
+            Date.now() <
+              suppressClickUntil
+          ){
+
+            event.preventDefault();
+
+            event.stopImmediatePropagation();
+
+            event.stopPropagation();
+          }
+
+        },
+        true
+      );
+    }
+
+
+    /* -----------------------------------------------------
+       WATCH QUICK ACTION RENDER
+
+       mobile-sales-support-home.js
+       can rebuild Quick Actions after
+       data refresh.
+
+       We automatically restore the
+       staff's preferred order.
+       ----------------------------------------------------- */
+
+    function observeQuickGrid(){
+
+      const grid =
+        quickGrid();
+
+
+      if(
+        !grid ||
+        grid.dataset.bbQuickObserved
+      ){
+        return;
+      }
+
+
+      grid.dataset.bbQuickObserved =
+        '1';
+
+
+      new MutationObserver(
+        () => {
+
+          if(applyingOrder){
+            return;
+          }
+
+
+          setTimeout(
+            () => {
+
+              ensureTools();
+
+
+              if(!arranging){
+
+                applySavedOrder();
+              }
+
+            },
+            25
+          );
+
+        }
+      )
+      .observe(
+        grid,
+        {
+          childList:true
+        }
+      );
+    }
+
+
+    /* -----------------------------------------------------
+       INITIALIZE
+       ----------------------------------------------------- */
+
+    function initialize(){
+
+      const grid =
+        quickGrid();
+
+
+      if(!grid){
+
+        setTimeout(
+          initialize,
+          150
+        );
+
+        return;
+      }
+
+
+      ensureTools();
+
+      bindLongPress();
+
+      observeQuickGrid();
+
+
+      setTimeout(
+        () => {
+
+          applySavedOrder();
+
+        },
+        100
+      );
+
+
+      setTimeout(
+        () => {
+
+          applySavedOrder();
+
+        },
+        500
+      );
+
+
+      setTimeout(
+        () => {
+
+          applySavedOrder();
+
+        },
+        1300
+      );
+    }
+
+
+    if(
+      document.readyState ===
+      'loading'
+    ){
+
+      document.addEventListener(
+        'DOMContentLoaded',
+        initialize,
+        {
+          once:true
+        }
+      );
+
+    }else{
+
+      initialize();
+    }
+
+  })();
+  </script>
+
 </body>
 </html>
