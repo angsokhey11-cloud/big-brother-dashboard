@@ -1,4 +1,4 @@
-/* BIG BROTHER — Sales Support Mobile Dashboard V2 */
+/* BIG BROTHER — Sales Support Mobile Dashboard V2.1 */
 (function(){
 'use strict';
 
@@ -10,10 +10,11 @@ const ROUTES={
   'sales-support-calculator':{icon:'🧮',label:'Calculator',group:'more',url:'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=calculator&v=110'},
   'sales-support-your-customer':{icon:'👥',label:'Your Customer',group:'customers',url:'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=your-customer&v=110'},
   'sales-support-add-customer':{icon:'👤+',label:'Add Customer',group:'customers',action:'create',url:'https://angsokhey11-cloud.github.io/big-brother-sales-support/add-customer.html?embed=1&v=20260914-1'},
+  'sales-support-customer-map':{icon:'📍',label:'Customer Map',group:'customers',url:'https://angsokhey11-cloud.github.io/big-brother-customers-editor/sales-support-customer-map.html?embed=1&v=20260914-1'},
   'sales-support-your-stock':{icon:'📦',label:'Your Stock',group:'more',url:'https://angsokhey11-cloud.github.io/big-brother-sales-support/your-stock.html?embed=1&v=20260914-4'},
   'sales-support-your-collection':{icon:'💵',label:'Your Collection',group:'money',url:'https://angsokhey11-cloud.github.io/big-brother-daily-cash-collection/your-collection.html?embed=1&v=20260914-1'},
   'sales-support-your-invoices':{icon:'🧾',label:'Your Invoices',group:'money',url:'https://angsokhey11-cloud.github.io/invoice-history/your-invoices.html?embed=1&v=20260914-1'},
-  'sales-support-your-receivable':{icon:'💳',label:'Your Receivable',group:'money',url:'https://angsokhey11-cloud.github.io/big-brother-ar/sales-support-your-receivable.html?embed=1&v=20260914-1'},
+  'sales-support-your-receivable':{icon:'💳',label:'Your Receivable',group:'money',url:'https://angsokhey11-cloud.github.io/big-brother-ar/your-receivable.html?embed=1&view=your&v=20260914-2'},
   'staff-relation':{icon:'👛',label:'Your Earning',group:'money',url:'https://angsokhey11-cloud.github.io/big-brother-staff-relation/?embed=1&v=20260913-1'}
 };
 
@@ -21,6 +22,7 @@ const QUICK=[
   'sales-support-calculator',
   'sales-support-your-customer',
   'sales-support-add-customer',
+  'sales-support-customer-map',
   'sales-support-your-stock',
   'sales-support-your-collection',
   'sales-support-your-invoices',
@@ -28,7 +30,7 @@ const QUICK=[
 ];
 
 const GROUPS={
-  customers:{title:'Customers',subtitle:'Customer tools assigned to you',routes:['sales-support-your-customer','sales-support-add-customer']},
+  customers:{title:'Customers',subtitle:'Customer tools assigned to you',routes:['sales-support-your-customer','sales-support-add-customer','sales-support-customer-map']},
   money:{title:'Money',subtitle:'Collection, invoices and receivables',routes:['sales-support-your-collection','sales-support-your-invoices','sales-support-your-receivable','staff-relation']},
   more:{title:'More',subtitle:'More tools for your daily work',routes:['sales-support-calculator','sales-support-your-stock']}
 };
