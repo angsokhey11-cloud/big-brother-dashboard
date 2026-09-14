@@ -1,4 +1,4 @@
-/* BIG BROTHER — Monthly Overview shortcut mapping V4.7 */
+/* BIG BROTHER — Monthly Overview shortcut mapping V4.8 */
 (function(){
 'use strict';
 
@@ -45,6 +45,15 @@ function installSalesSupportAddCustomer(){
   const s=document.createElement('script');
   s.id='bbSalesSupportAddCustomerScript';
   s.src='supabase-sales-support-add-customer.js?v=20260914-1';
+  s.async=false;
+  document.body.appendChild(s);
+}
+
+function installSalesSupportCustomerMap(){
+  if(document.getElementById('bbSalesSupportCustomerMapScript'))return;
+  const s=document.createElement('script');
+  s.id='bbSalesSupportCustomerMapScript';
+  s.src='supabase-sales-support-customer-map.js?v=20260914-1';
   s.async=false;
   document.body.appendChild(s);
 }
@@ -163,6 +172,7 @@ function start(){
   installSalesSupportYourCollection();
   installSalesSupportYourInvoices();
   installSalesSupportAddCustomer();
+  installSalesSupportCustomerMap();
   installSalesSupportYourReceivable();
   apply();
   if(observer)return;
