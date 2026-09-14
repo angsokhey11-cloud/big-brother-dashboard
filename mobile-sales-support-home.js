@@ -1,7 +1,7 @@
-/* BIG BROTHER — Unified Mobile Home V3.4
-   Home KPIs stay fixed. Quick Actions are user-selected.
+/* BIG BROTHER — Unified Mobile Home V3.5
+   Locked Home KPIs. User-selected Quick Actions.
    Bottom nav: Home | User Page 1 | User Page 2 | Menu.
-   Recent Activity follows the signed-in user's audited actions.
+   Home attention: Receivable Alert | Stock Alert | Pending Requests.
 */
 (()=>{
 'use strict';
@@ -111,8 +111,8 @@ let quick=[];
 let pages=[];
 let overview=null;
 let payment=null;
-let activityData=null;
-let lastActivityFetch=0;
+let attention=null;
+let lastAttentionFetch=0;
 let pickerMode='quick';
 let pickerSlot=0;
 let fallbackRoute='';
@@ -126,7 +126,6 @@ const num=v=>Number(v||0)||0;
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
 const money=v=>'$'+num(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 const qty=v=>num(v).toLocaleString('en-US',{maximumFractionDigits:2});
-const pretty=v=>clean(v).replace(/[_-]+/g,' ').replace(/\b\w/g,m=>m.toUpperCase());
 
 function readSession(){try{return JSON.parse(localStorage.getItem(SESSION_KEY)||'null')}catch(_){return null}}
 async function parseResponse(response){
@@ -197,7 +196,6 @@ function injectCss(){
     #bbQuickResetBtn{display:none!important}
     .bb-qa-add{height:29px;border:1px solid #cdddec;background:#eef6ff;color:#1267b0;border-radius:999px;padding:0 10px;font:900 8.5px inherit;cursor:pointer}
 
-    /* Slightly larger locked Monthly Overview */
     #kpiGrid{gap:7px!important}
     #kpiGrid .sales-kpi{grid-template-columns:34px minmax(0,1fr) 23px!important;min-height:78px!important;padding:8px!important;column-gap:7px!important;border-radius:13px!important}
     #kpiGrid .sales-kpi .kpi-icon{width:34px!important;height:34px!important;border-radius:10px!important;font-size:17px!important}
@@ -206,12 +204,17 @@ function injectCss(){
     #kpiGrid .sales-kpi em{font-size:7.4px!important;margin-top:4px!important}
     #kpiGrid .sales-kpi .kpi-arrow{width:23px!important;height:23px!important;font-size:14px!important}
 
-    /* Slightly larger user Quick Actions */
     #quickActions{gap:9px 5px!important}
     #quickActions .quick-btn{min-height:68px!important;padding:5px 2px!important;border-radius:12px!important}
     #quickActions .quick-icon{width:44px!important;height:44px!important;border-radius:13px!important;font-size:21px!important;margin-bottom:5px!important}
     #quickActions .quick-btn>span{font-size:9px!important;line-height:1.1!important}
     #quickActions .menu-empty{grid-column:1/-1;padding:12px 8px!important;text-align:center!important}
+
+    #recentList .bb-att-row{width:100%;font-family:inherit;border:0;text-align:left;cursor:default}
+    #recentList button.bb-att-row{cursor:pointer}
+    #recentList .bb-att-row+.bb-att-row{margin-top:6px}
+    #recentList .bb-att-row .recent-side strong{font-size:15px!important}
+    #recentList .bb-att-row.bb-clear .recent-icon{filter:grayscale(.15)}
 
     .bb-picker{position:fixed;inset:0;z-index:99999;background:#142b4166;display:flex;align-items:flex-end}
     .bb-picker[hidden]{display:none!important}
@@ -278,13 +281,11 @@ function installPicker(){
 }
 
 function openPicker(mode,slot=0){
-  pickerMode=mode;pickerSlot=slot;
-  installPicker();
+  pickerMode=mode;pickerSlot=slot;installPicker();
   $('bbPickerTitle').textContent=mode==='quick'?'Quick Actions':'Choose Bottom Page '+(slot+1);
   $('bbPickerSearch').value='';
   $('bbPickerRemove').hidden=!(mode==='page'&&pages[slot]);
-  $('bbFunctionPicker').hidden=false;
-  renderPicker();
+  $('bbFunctionPicker').hidden=false;renderPicker();
 }
 function closePicker(){if($('bbFunctionPicker'))$('bbFunctionPicker').hidden=true}
 function renderPicker(){
@@ -367,16 +368,20 @@ function showHome(){
   try{
     if(window.BBMobile?.home){
       window.BBMobile.home(true);
-      setTimeout(()=>{renderHome();renderNav('home');refreshRecentActivity(true)},0);
+      setTimeout(()=>{renderHome();renderNav('home');refreshAttention(true)},0);
       return;
     }
   }catch(_){ }
-  if($('mobileHome'))$('mobileHome').hidden=false;if($('menuScreen'))$('menuScreen').hidden=true;if($('moduleScreen'))$('moduleScreen').hidden=true;
-  renderHome();renderNav('home');refreshRecentActivity(true);
+  if($('mobileHome'))$('mobileHome').hidden=false;
+  if($('menuScreen'))$('menuScreen').hidden=true;
+  if($('moduleScreen'))$('moduleScreen').hidden=true;
+  renderHome();renderNav('home');refreshAttention(true);
 }
 function showMainMenu(){
   currentRoute='';fallbackRoute='';closePicker();
-  if($('mobileHome'))$('mobileHome').hidden=true;if($('moduleScreen'))$('moduleScreen').hidden=true;if($('menuScreen'))$('menuScreen').hidden=false;
+  if($('mobileHome'))$('mobileHome').hidden=true;
+  if($('moduleScreen'))$('moduleScreen').hidden=true;
+  if($('menuScreen'))$('menuScreen').hidden=false;
   try{const u=new URL(location.href);u.searchParams.delete('module');u.searchParams.delete('autoload');history.replaceState({},'',u.pathname+u.search+u.hash)}catch(_){ }
   renderMainMenu();renderNav('menu');
 }
@@ -406,8 +411,11 @@ function openRoute(route,navState=''){
   const item=ROUTES[route];
   if(!item?.url)return toast('Mobile route is not ready.');
   fallbackRoute=route;
-  if($('mobileHome'))$('mobileHome').hidden=true;if($('menuScreen'))$('menuScreen').hidden=true;if($('moduleScreen'))$('moduleScreen').hidden=false;
-  if($('moduleTitle'))$('moduleTitle').textContent=item.label;if($('moduleFrame'))$('moduleFrame').src=item.url;
+  if($('mobileHome'))$('mobileHome').hidden=true;
+  if($('menuScreen'))$('menuScreen').hidden=true;
+  if($('moduleScreen'))$('moduleScreen').hidden=false;
+  if($('moduleTitle'))$('moduleTitle').textContent=item.label;
+  if($('moduleFrame'))$('moduleFrame').src=item.url;
   try{const u=new URL(location.href);u.searchParams.set('module',route);u.searchParams.set('autoload','1');history.replaceState({},'',u.pathname+u.search+u.hash)}catch(_){ }
   renderNav(navState||currentNavState());
 }
@@ -431,65 +439,81 @@ function renderStaffKpis(){
   $('kpiGrid').querySelectorAll('[data-kpi-route]').forEach(button=>button.onclick=()=>openRoute(button.dataset.kpiRoute));
 }
 
-function activityIcon(action,module){
-  const a=key(action),m=key(module);
-  if(a.includes('delete'))return'🗑️';
-  if(a.includes('update')||a.includes('edit'))return'✏️';
-  if(a.includes('approve')||a.includes('close'))return'✅';
-  if(a.includes('reject'))return'⛔';
-  if(a.includes('payment')||m.includes('cash')||m.includes('payment'))return'💵';
-  if(a.includes('insert')||a.includes('create'))return'＋';
-  if(m.includes('stock'))return'📦';
-  if(m.includes('invoice'))return'🧾';
-  return'•';
-}
-function activityVerb(action){
-  const a=key(action);
-  if(a.includes('insert')||a.includes('create'))return'Created';
-  if(a.includes('update')||a.includes('edit'))return'Updated';
-  if(a.includes('delete'))return'Deleted';
-  if(a.includes('approve'))return'Approved';
-  if(a.includes('reject'))return'Rejected';
-  if(a.includes('close'))return'Closed';
-  return pretty(action||'Activity');
-}
-function activityTime(value){
-  if(!value)return'';
-  const d=new Date(value);if(Number.isNaN(d.getTime()))return clean(value);
-  const today=new Date();
-  const same=today.getFullYear()===d.getFullYear()&&today.getMonth()===d.getMonth()&&today.getDate()===d.getDate();
-  return same?d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}):d.toLocaleDateString([], {day:'2-digit',month:'short'});
-}
-function renderRecentActivity(){
-  const host=$('recentList');if(!host)return;
-  const label=$('activityLabel');
-  const rows=Array.isArray(activityData?.rows)?activityData.rows:[];
-  if(label){
-    const name=clean(activityData?.userName||profile?.staff?.staffName||profile?.user?.email||'');
-    label.textContent=name?'Your activity · '+name:'Your activity';
+function attentionRoute(type){
+  if(type==='receivable'){
+    if(canRoute('sales-support-your-receivable'))return'sales-support-your-receivable';
+    if(canRoute('ar-your'))return'ar-your';
+    if(canRoute('ar-all'))return'ar-all';
   }
-  if(!rows.length){host.innerHTML='<div class="menu-empty">No recent activity found for your account yet.</div>';return}
-  host.innerHTML=rows.slice(0,8).map(row=>{
-    const entity=pretty(row.entityType||row.moduleKey||'Activity');
-    const title=activityVerb(row.action)+' '+entity;
-    const detail=clean(row.entityId)||clean(row.summary)||'Activity recorded';
-    const module=pretty(row.moduleKey||'System');
-    return `<div class="recent-row"><div class="recent-icon">${activityIcon(row.action,row.moduleKey)}</div><div class="recent-main"><strong>${esc(title)}</strong><span>${esc(detail)}</span></div><div class="recent-side"><strong>${esc(activityTime(row.createdAt))}</strong><span>${esc(module)}</span></div></div>`;
-  }).join('');
+  if(type==='stock'){
+    if(canRoute('stock-alerts'))return'stock-alerts';
+    if(canRoute('sales-support-your-stock'))return'sales-support-your-stock';
+    if(canRoute('stock-report'))return'stock-report';
+  }
+  return'';
 }
-async function refreshRecentActivity(force=false){
+function renderAttention(){
+  const host=$('recentList');if(!host)return;
+  const panel=host.closest('.panel');
+  const title=panel?.querySelector('.section-head strong');
+  const label=$('activityLabel');
+  if(title)title.textContent='Needs Your Attention';
+  if(label)label.textContent='Receivable · Stock · Requests';
+
+  const ar=attention?.receivable||{};
+  const stock=attention?.stock||{};
+  const pending=attention?.pendingRequests||{};
+  const arRows=Array.isArray(ar.rows)?ar.rows:[];
+  const stockRows=Array.isArray(stock.rows)?stock.rows:[];
+  const pendingRows=Array.isArray(pending.rows)?pending.rows:[];
+
+  const arCount=Math.round(num(ar.count));
+  const stockCount=Math.round(num(stock.count));
+  const pendingCount=Math.round(num(pending.count));
+
+  const arFirst=arRows[0]||{};
+  const stockFirst=stockRows[0]||{};
+  const pendingFirst=pendingRows[0]||{};
+
+  const arSub=arCount
+    ? `${clean(arFirst.customerName)||'Customer'} · ${Math.round(num(arFirst.daysOverdue))}d overdue`
+    : 'No overdue receivables';
+  const stockSub=stockCount
+    ? `${clean(stockFirst.productName)||'Stock item'} · ${qty(stockFirst.currentQty)}/${qty(stockFirst.minimumQty)} ${clean(stockFirst.unit)}`
+    : 'Stock levels are healthy';
+  const pendingSub=pendingCount
+    ? `${clean(pendingFirst.type)||'Request'} · ${clean(pendingFirst.status)||'Pending'}`
+    : 'No requests waiting for action';
+
+  const row=(type,icon,name,sub,count,side,route='')=>{
+    const clickable=!!route;const tag=clickable?'button':'div';
+    return `<${tag} ${clickable?'type="button" data-att-route="'+route+'"':''} class="recent-row bb-att-row ${count?'':'bb-clear'}">
+      <div class="recent-icon">${icon}</div>
+      <div class="recent-main"><strong>${esc(name)}</strong><span>${esc(sub)}</span></div>
+      <div class="recent-side"><strong>${esc(String(count))}</strong><span>${esc(side)}</span></div>
+    </${tag}>`;
+  };
+
+  host.innerHTML=
+    row('receivable','💳','Receivable Alert',arSub,arCount,arCount?money(ar.equivalentUSD)+' overdue':'All clear',attentionRoute('receivable'))+
+    row('stock','🚨','Stock Alert',stockSub,stockCount,stockCount?(Math.round(num(stock.criticalCount))+' critical'):'All clear',attentionRoute('stock'))+
+    row('pending','⏳','Pending Requests',pendingSub,pendingCount,pendingCount?'waiting':'All clear','');
+
+  host.querySelectorAll('[data-att-route]').forEach(button=>button.onclick=()=>openRoute(button.dataset.attRoute));
+}
+async function refreshAttention(force=false){
   const now=Date.now();
-  if(!force&&now-lastActivityFetch<10000)return;
-  lastActivityFetch=now;
-  const next=await safeRpc('bb_mobile_my_activity',{p_limit:12});
-  if(next?.success)activityData=next;
-  renderRecentActivity();
+  if(!force&&now-lastAttentionFetch<10000)return;
+  lastAttentionFetch=now;
+  const next=await safeRpc('bb_mobile_my_attention');
+  if(next?.success)attention=next;
+  renderAttention();
 }
 
 function renderHome(){
   if($('mobileHome')?.hidden)return;
   injectCss();ensureHiddenStaffMeta();installQuickControls();installPicker();
-  renderStaffKpis();renderQuick();renderRecentActivity();renderNav('home');
+  renderStaffKpis();renderQuick();renderAttention();renderNav('home');
 }
 
 function watchNavReplacement(){
@@ -503,25 +527,36 @@ function watchNavReplacement(){
 
 async function load(){
   profile=await rpc('bb_current_access_profile');
-  const [prefs,staffOverview,staffPayment,myActivity]=await Promise.all([
+  const [prefs,staffOverview,staffPayment,myAttention]=await Promise.all([
     safeRpc('bb_mobile_get_preferences'),
     isAdmin()?null:safeRpc('bb_mobile_user_overview'),
     canRoute('staff-relation')?safeRpc('bb_staff_relation_my_payments',{p_from:null,p_to:null,p_salary_month:null}):null,
-    safeRpc('bb_mobile_my_activity',{p_limit:12})
+    safeRpc('bb_mobile_my_attention')
   ]);
-  overview=staffOverview;payment=staffPayment;activityData=myActivity?.success?myActivity:null;lastActivityFetch=Date.now();
+  overview=staffOverview;
+  payment=staffPayment;
+  attention=myAttention?.success?myAttention:null;
+  lastAttentionFetch=Date.now();
+
   if(prefs?.updatedAt){quick=normalizeQuick(prefs.quickActionOrder);pages=normalizePages(prefs.pinnedPages)}
   else{quick=normalizeQuick(readLocal(quickKey()));pages=normalizePages(readLocal(pageKey()))}
   writeLocal(quickKey(),quick);writeLocal(pageKey(),pages);
 
   renderHome();renderNav(currentNavState());watchNavReplacement();
 
-  new MutationObserver(()=>{if(!$('mobileHome')?.hidden){renderHome();refreshRecentActivity(false)}}).observe($('mobileHome'),{attributes:true,attributeFilter:['hidden']});
-  new MutationObserver(()=>{if(!$('menuScreen')?.hidden){renderMainMenu();renderNav('menu')}}).observe($('menuScreen'),{attributes:true,attributeFilter:['hidden']});
+  new MutationObserver(()=>{
+    if(!$('mobileHome')?.hidden){renderHome();refreshAttention(false)}
+  }).observe($('mobileHome'),{attributes:true,attributeFilter:['hidden']});
+  new MutationObserver(()=>{
+    if(!$('menuScreen')?.hidden){renderMainMenu();renderNav('menu')}
+  }).observe($('menuScreen'),{attributes:true,attributeFilter:['hidden']});
 
   document.addEventListener('click',event=>{
     if(event.target?.closest?.('#menuBack')){event.preventDefault();event.stopImmediatePropagation();showHome()}
-    if(event.target?.closest?.('#moduleBack')&&fallbackRoute){event.preventDefault();event.stopImmediatePropagation();if($('moduleFrame'))$('moduleFrame').src='about:blank';showHome()}
+    if(event.target?.closest?.('#moduleBack')&&fallbackRoute){
+      event.preventDefault();event.stopImmediatePropagation();
+      if($('moduleFrame'))$('moduleFrame').src='about:blank';showHome();
+    }
   },true);
 
   setInterval(()=>{
