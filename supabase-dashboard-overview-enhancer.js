@@ -1,4 +1,4 @@
-/* BIG BROTHER — Monthly Overview shortcut mapping V4.3 */
+/* BIG BROTHER — Monthly Overview shortcut mapping V4.4 */
 (function(){
 'use strict';
 
@@ -18,6 +18,15 @@ function installSalesSupportYourStock(){
   const s=document.createElement('script');
   s.id='bbSalesSupportYourStockScript';
   s.src='supabase-sales-support-your-stock.js?v=20260914-4';
+  s.async=false;
+  document.body.appendChild(s);
+}
+
+function installSalesSupportYourCollection(){
+  if(document.getElementById('bbSalesSupportYourCollectionScript'))return;
+  const s=document.createElement('script');
+  s.id='bbSalesSupportYourCollectionScript';
+  s.src='supabase-sales-support-your-collection.js?v=20260914-1';
   s.async=false;
   document.body.appendChild(s);
 }
@@ -124,6 +133,7 @@ function apply(){
 function start(){
   installSubmenuPermissions();
   installSalesSupportYourStock();
+  installSalesSupportYourCollection();
   apply();
   if(observer)return;
   observer=new MutationObserver(()=>apply());
