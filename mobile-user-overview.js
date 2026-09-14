@@ -1,4 +1,4 @@
-/* BIG BROTHER — Mobile Normal User Overview V1 */
+/* BIG BROTHER — Mobile Normal User Overview V2 */
 (function(){
 'use strict';
 
@@ -74,9 +74,14 @@ function applyOverview(data){
 
   const locations=Array.isArray(data.saleLocations)?data.saleLocations:[];
   const locationNames=locations.map(x=>x.locationName||x.locationCode).filter(Boolean);
-  const locationValue=locations.length===0?'No Location':locations.length===1?(locationNames[0]||'1 Location'):locations.length+' Locations';
-  const locationSub=locationNames.length?locationNames.join(' · '):'No assigned sale location';
+  const locationCount=locations.length;
+  const locationSummary=locationCount===0
+    ?'No assigned sale location'
+    :locationCount===1
+      ?(locationNames[0]||'1 assigned location')
+      :locationCount+' assigned locations';
 
+  const sales=data.monthlySales||{};
   const ar=data.receivable||{};
   const stock=data.stock||{};
   const openBatches=Math.max(0,Math.round(num(stock.openBatchCount)));
@@ -87,8 +92,10 @@ function applyOverview(data){
     return m?Number(m[0]):0;
   })();
 
+  const salesSub=locationSummary+' · '+Math.max(0,Math.round(num(sales.invoiceCount)))+' invoice'+(Math.round(num(sales.invoiceCount))===1?'':'s');
+
   const cards=[
-    ['Sale Location',locationValue,locationSub],
+    ['Monthly Sales',money(sales.netUSD),salesSub],
     ['Receivable',money(ar.equivalentUSD),'USD '+money(ar.USD)+' · KHR '+khr(ar.KHR)],
     ['Stock Value',money(stock.valueUSD),openBatches+' assigned open batch'+(openBatches===1?'':'es')],
     ['Assigned Batch',String(openBatches),qty(physicalQty)+' remaining qty · '+actionCount+' quick actions']
@@ -96,7 +103,7 @@ function applyOverview(data){
 
   grid.innerHTML=cards.map(x=>'<div class="kpi"><small>'+esc(x[0])+'</small><strong>'+esc(x[1])+'</strong><em>'+esc(x[2])+'</em></div>').join('');
   if($('overviewTitle'))$('overviewTitle').textContent='My Overview';
-  if($('periodLabel'))$('periodLabel').textContent='Live';
+  if($('periodLabel'))$('periodLabel').textContent=data.periodLabel||'This Month';
 }
 
 async function refresh(force=false){
