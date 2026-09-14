@@ -1,9 +1,9 @@
-/* BIG BROTHER — Sales Support Your Stock menu V1.1 */
+/* BIG BROTHER — Sales Support Your Stock menu V1.2 */
 (function(){
 'use strict';
 
 const ROUTE='sales-support-your-stock';
-const URL='https://angsokhey11-cloud.github.io/big-brother-sales-support/your-stock.html?embed=1&v=20260914-2';
+const URL='https://angsokhey11-cloud.github.io/big-brother-sales-support/your-stock.html?embed=1&v=20260914-3';
 const LIVE_REFRESH_MS=10000;
 let restoreDone=false;
 let liveTimer=null;
