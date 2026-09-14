@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b5f9e">
+  <title>BIG BROTHER — Mobile</title>
+  <link rel="stylesheet" href="mobile.css?v=20260914-1">
+</head>
+<body>
+  <div id="app" class="mobile-app">
+    <div id="bootScreen" class="boot-screen">
+      <div class="boot-card">
+        <div class="boot-logo">BB</div>
+        <strong>BIG BROTHER</strong>
+        <span>Loading Mobile Workspace…</span>
+      </div>
+    </div>
+
+    <section id="loginScreen" class="login-screen" hidden>
+      <form id="loginForm" class="login-card">
+        <div class="login-brand">BIG BROTHER</div>
+        <div class="login-sub">Accounting System · Mobile</div>
+        <label for="loginEmail">Email</label>
+        <input id="loginEmail" type="email" autocomplete="username" required>
+        <label for="loginPassword">Password</label>
+        <input id="loginPassword" type="password" autocomplete="current-password" required>
+        <button id="loginButton" type="submit">Sign In</button>
+        <div id="loginError" class="login-error"></div>
+        <a class="desktop-link" href="index.html">Open Desktop Version</a>
+      </form>
+    </section>
+
+    <section id="mobileHome" class="mobile-home" hidden>
+      <div class="mobile-scroll" id="mobileScroll">
+        <header class="hero">
+          <div class="hero-top">
+            <div>
+              <div class="brand">BIG BROTHER</div>
+              <div class="brand-sub">Accounting System · Mobile</div>
+            </div>
+            <div class="hero-actions">
+              <button id="notificationBtn" class="icon-btn" type="button" aria-label="Notifications">🔔</button>
+              <button id="settingsBtn" class="icon-btn" type="button" aria-label="Settings">⚙️</button>
+            </div>
+          </div>
+          <div class="greeting-wrap">
+            <div id="greeting" class="greeting-small">Good Morning,</div>
+            <div id="userName" class="greeting-name">BIG BROTHER User</div>
+            <div class="hero-meta">
+              <span id="locationChip" class="hero-chip">📍 —</span>
+              <span id="dateChip" class="hero-chip">—</span>
+            </div>
+          </div>
+        </header>
+
+        <main class="content">
+          <section class="panel">
+            <div class="section-head">
+              <strong id="overviewTitle">Monthly Overview</strong>
+              <span id="periodLabel">—</span>
+            </div>
+            <div id="kpiGrid" class="kpi-grid"></div>
+          </section>
+
+          <section class="panel">
+            <div class="section-head">
+              <strong>Quick Actions</strong>
+              <span id="quickCount">0 available</span>
+            </div>
+            <div id="quickActions" class="quick-grid"></div>
+          </section>
+
+          <section class="panel" id="attentionPanel">
+            <div class="section-head">
+              <strong>Attention Needed</strong>
+              <span>Live snapshot</span>
+            </div>
+            <div id="attentionGrid" class="attention-grid"></div>
+          </section>
+
+          <section class="panel">
+            <div class="section-head">
+              <strong>Recent Activity</strong>
+              <span id="activityLabel">This month</span>
+            </div>
+            <div id="recentList" class="recent-list"></div>
+          </section>
+        </main>
+      </div>
+
+      <nav id="bottomNav" class="bottom-nav" aria-label="Mobile navigation"></nav>
+    </section>
+
+    <section id="menuScreen" class="menu-screen" hidden>
+      <header class="simple-header">
+        <button id="menuBack" type="button" class="header-btn">‹</button>
+        <div>
+          <strong id="menuTitle">Workspace</strong>
+          <span id="menuSubtitle">Available functions</span>
+        </div>
+        <button id="menuSettings" type="button" class="header-btn">⚙️</button>
+      </header>
+      <div id="menuGrid" class="menu-grid"></div>
+      <nav id="menuBottomNav" class="bottom-nav" aria-label="Mobile navigation"></nav>
+    </section>
+
+    <section id="moduleScreen" class="module-screen" hidden>
+      <header class="module-header">
+        <button id="moduleBack" type="button" class="header-btn">‹</button>
+        <div class="module-title-wrap">
+          <strong id="moduleTitle">BIG BROTHER</strong>
+          <span>Mobile Workspace</span>
+        </div>
+        <a id="moduleDesktopLink" class="desktop-small" href="index.html">Desktop</a>
+      </header>
+      <iframe id="moduleFrame" class="module-frame" title="BIG BROTHER Module" src="about:blank"></iframe>
+      <nav id="moduleBottomNav" class="bottom-nav" aria-label="Mobile navigation"></nav>
+    </section>
+
+    <div id="settingsSheet" class="sheet" hidden>
+      <div class="sheet-card">
+        <div class="sheet-handle"></div>
+        <h3>Mobile Settings</h3>
+        <p>This page is completely separate from the Desktop Dashboard.</p>
+        <a class="sheet-option" href="index.html"><span>💻</span><div><strong>Switch to Desktop</strong><small>Open the original BIG BROTHER dashboard</small></div></a>
+        <button id="signOutBtn" class="sheet-option danger" type="button"><span>↪</span><div><strong>Sign Out</strong><small>End this BIG BROTHER session</small></div></button>
+        <button id="closeSettings" class="sheet-close" type="button">Close</button>
+      </div>
+    </div>
+
+    <div id="toast" class="toast" hidden></div>
+  </div>
+
+  <script src="mobile.js?v=20260914-1"></script>
+</body>
+</html>
