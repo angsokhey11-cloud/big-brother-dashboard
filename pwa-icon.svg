@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f4f8d"/>
+      <stop offset="0.6" stop-color="#1267b0"/>
+      <stop offset="1" stop-color="#1a82c9"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#g)"/>
+  <circle cx="397" cy="116" r="42" fill="#f5a623"/>
+  <text x="256" y="291" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="190" font-weight="900" fill="#ffffff" letter-spacing="-16">BB</text>
+  <text x="256" y="365" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="42" font-weight="800" fill="#dceeff" letter-spacing="4">BIG BROTHER</text>
+</svg>
