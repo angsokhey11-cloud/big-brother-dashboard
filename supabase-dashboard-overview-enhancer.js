@@ -17,7 +17,7 @@ function installSalesSupportYourStock(){
   if(document.getElementById('bbSalesSupportYourStockScript'))return;
   const s=document.createElement('script');
   s.id='bbSalesSupportYourStockScript';
-  s.src='supabase-sales-support-your-stock.js?v=20260914-2';
+  s.src='supabase-sales-support-your-stock.js?v=20260914-3';
   s.async=false;
   document.body.appendChild(s);
 }
@@ -103,61 +103,21 @@ function apply(){
   const {kpis,activity}=normalizeCards(body);
 
   if(kpis.length>=9){
-    /* 1. Replace Net Sales shortcut with Sales Support Calculator. */
     const calculator=kpis[1];
     calculator.style.setProperty('--a','#245fae');
     if(calculator.dataset.bbGuideCard!=='calculator'){
       calculator.innerHTML='<div class="i">🧮</div><small>Calculator</small><strong>Sale Support</strong><em>Open Sales Support Calculator</em>';
       calculator.dataset.bbGuideCard='calculator';
     }
-    bindCard(
-      calculator,
-      ()=>openRoute('sales-support-calculator'),
-      'Open Sale Support Calculator',
-      'sales-support-calculator'
-    );
-
-    /* 2. Monthly Expense -> Monthly Expense Report. */
-    bindCard(
-      kpis[2],
-      ()=>openRoute('expense-monthly-report'),
-      'Open Monthly Expense Report',
-      'expense-monthly-report'
-    );
-
-    /* 3. COGS -> Monthly COGS Report. */
-    bindCard(
-      kpis[3],
-      ()=>openRoute('cogs-monthly'),
-      'Open Monthly COGS Report',
-      'cogs-monthly'
-    );
-
-    /* 4. Operating Expense -> Expense History filtered to Operating Expense. */
-    bindCard(
-      kpis[4],
-      openOperatingExpenseHistory,
-      'Open Expense History — Operating Expense',
-      null
-    );
+    bindCard(calculator,()=>openRoute('sales-support-calculator'),'Open Sale Support Calculator','sales-support-calculator');
+    bindCard(kpis[2],()=>openRoute('expense-monthly-report'),'Open Monthly Expense Report','expense-monthly-report');
+    bindCard(kpis[3],()=>openRoute('cogs-monthly'),'Open Monthly COGS Report','cogs-monthly');
+    bindCard(kpis[4],openOperatingExpenseHistory,'Open Expense History — Operating Expense',null);
   }
 
   if(activity.length>=5){
-    /* 5. Invoices -> Invoice History. */
-    bindCard(
-      activity[0],
-      ()=>openRoute('history'),
-      'Open Invoice History',
-      'history'
-    );
-
-    /* 6. Customers with Sales -> Your Customer. */
-    bindCard(
-      activity[2],
-      ()=>openRoute('sales-support-your-customer'),
-      'Open Your Customer',
-      'sales-support-your-customer'
-    );
+    bindCard(activity[0],()=>openRoute('history'),'Open Invoice History','history');
+    bindCard(activity[2],()=>openRoute('sales-support-your-customer'),'Open Your Customer','sales-support-your-customer');
   }
 }
 
