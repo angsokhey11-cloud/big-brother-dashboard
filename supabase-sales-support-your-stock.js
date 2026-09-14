@@ -1,10 +1,12 @@
-/* BIG BROTHER — Sales Support Your Stock menu V1 */
+/* BIG BROTHER — Sales Support Your Stock menu V1.1 */
 (function(){
 'use strict';
 
 const ROUTE='sales-support-your-stock';
-const URL='https://angsokhey11-cloud.github.io/big-brother-sales-support/your-stock.html?embed=1&v=20260914-1';
+const URL='https://angsokhey11-cloud.github.io/big-brother-sales-support/your-stock.html?embed=1&v=20260914-2';
+const LIVE_REFRESH_MS=10000;
 let restoreDone=false;
+let liveTimer=null;
 
 const key=v=>String(v||'').trim().toLowerCase();
 function profile(){return window.BBDashboardAdapter?.getProfile?.()||null}
@@ -75,6 +77,26 @@ function deny(){
     setTimeout(()=>el.remove(),2600);
   }catch(_){}
 }
+function refreshFrame(frame){
+  try{
+    if(!frame||document.visibilityState==='hidden')return;
+    const src=String(frame.getAttribute('src')||'');
+    if(!src.includes('/big-brother-sales-support/your-stock.html'))return;
+    const btn=frame.contentDocument?.getElementById('refreshBtn');
+    if(btn&&!btn.disabled)btn.click();
+  }catch(_){}
+}
+function startLiveRefresh(frame){
+  if(liveTimer){clearInterval(liveTimer);liveTimer=null}
+  const arm=()=>{
+    refreshFrame(frame);
+    liveTimer=setInterval(()=>refreshFrame(frame),LIVE_REFRESH_MS);
+  };
+  try{
+    frame.addEventListener('load',()=>setTimeout(arm,500),{once:true});
+  }catch(_){}
+  setTimeout(()=>refreshFrame(frame),1200);
+}
 function open(updateUrl=true){
   ensureMenu();
   if(!canView()){deny();return false}
@@ -85,6 +107,7 @@ function open(updateUrl=true){
   if(home)home.hidden=true;
   workspace.hidden=false;
   frame.src=URL;
+  startLiveRefresh(frame);
   markActive();
   if(updateUrl!==false)persist();
   return true;
@@ -107,10 +130,16 @@ function start(){
     if(tries<25)setTimeout(tick,200);
   };
   tick();
-  window.addEventListener('focus',()=>ensureMenu());
+  window.addEventListener('focus',()=>{
+    ensureMenu();
+    refreshFrame(document.getElementById('moduleFrame'));
+  });
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='visible')refreshFrame(document.getElementById('moduleFrame'));
+  });
 }
 
-window.BBYourStock={open,ensureMenu,canView};
+window.BBYourStock={open,ensureMenu,canView,refresh:()=>refreshFrame(document.getElementById('moduleFrame'))};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});
 else start();
 })();
