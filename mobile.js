@@ -27,7 +27,7 @@ const ROUTES={
 
   'stock-keyin':{tab:'stock',icon:'📦',label:'Stock In / Out',url:'https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=keyin&v=20'},
   'stock-damaged':{tab:'stock',icon:'⚠️',label:'Damaged Stock',url:'https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=damaged&v=20'},
-  'stock-report':{tab:'stock',icon:'📋',label:'Stock Report',url:'https://angsokhey11-cloud.github.io/big-brother-stock-report/?embed=1&v=30'},
+  'stock-report':{tab:'stock',icon:'📋',label:'Live Stock',url:'https://angsokhey11-cloud.github.io/big-brother-stock-report/mobile.html?embed=1&v=20260915-1'},
   'batch-report':{tab:'stock',icon:'🗂️',label:'Batch Report',url:'https://angsokhey11-cloud.github.io/big-brother-stock-report/batch-report.html?embed=1&v=10'},
   'closed-batch':{tab:'stock',icon:'✅',label:'Closed Batch',url:'https://angsokhey11-cloud.github.io/big-brother-stock-report/closed-batch.html?embed=1&v=10'},
   'stock-transactions':{tab:'stock',icon:'🔄',label:'Stock Transactions',url:'https://angsokhey11-cloud.github.io/big-brother-stock-report/transactions.html?embed=1&v=10'},
@@ -73,7 +73,7 @@ const $=id=>document.getElementById(id);
 const key=v=>String(v||'').trim().toLowerCase();
 const num=v=>Number(v||0)||0;
 const money=v=>'$'+num(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#039;'}[c]));
+const esc=v=>String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot',"'":'&#039;'}[c]));
 
 function readSession(){try{return JSON.parse(localStorage.getItem(SESSION_KEY)||'null')}catch(_){return null}}
 function saveSession(value){
