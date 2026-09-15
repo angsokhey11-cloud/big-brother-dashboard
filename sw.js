@@ -1,21 +1,28 @@
-/* BIG BROTHER Mobile PWA service worker V1.4 */
-const CACHE='bb-mobile-shell-v5';
+/* BIG BROTHER Mobile PWA service worker V1.5 */
+const CACHE='bb-mobile-shell-v6';
 const MOBILE_FILES=new Set([
   'mobile.html','mobile.css','mobile-sales-support.css','pwa-install.css','mobile.js',
-  'mobile-sales-support-home.js','pwa-install.js','mobile-main-menu-v3.js','manifest.webmanifest',
+  'mobile-sales-support-home.js','pwa-install.js','mobile-main-menu-v3.js','mobile-ui-policy-v1.js','manifest.webmanifest',
   'pwa-icon.svg','pwa-icon-maskable.svg'
 ]);
 function fileName(url){const parts=url.pathname.split('/');return parts[parts.length-1]||'';}
 function isMobileAsset(url){return MOBILE_FILES.has(fileName(url));}
 function injectRouter(html){
-  if(html.includes('data-bb-router-v4'))return html;
-  const tag='<script data-bb-router-v4 src="mobile-main-menu-v3.js?v=20260915-4"></script>';
-  return html.includes('</body>')?html.replace('</body>',tag+'\n</body>'):html+tag;
+  let out=html;
+  if(!out.includes('data-bb-router-v4')){
+    const tag='<script data-bb-router-v4 src="mobile-main-menu-v3.js?v=20260915-4"></script>';
+    out=out.includes('</body>')?out.replace('</body>',tag+'\n</body>'):out+tag;
+  }
+  if(!out.includes('data-bb-mobile-policy-v1')){
+    const tag='<script data-bb-mobile-policy-v1 src="mobile-ui-policy-v1.js?v=20260915-1"></script>';
+    out=out.includes('</body>')?out.replace('</body>',tag+'\n</body>'):out+tag;
+  }
+  return out;
 }
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll([
     './mobile.html','./mobile.css','./mobile-sales-support.css','./pwa-install.css','./mobile.js',
-    './mobile-sales-support-home.js','./pwa-install.js','./mobile-main-menu-v3.js','./manifest.webmanifest',
+    './mobile-sales-support-home.js','./pwa-install.js','./mobile-main-menu-v3.js','./mobile-ui-policy-v1.js','./manifest.webmanifest',
     './pwa-icon.svg','./pwa-icon-maskable.svg'
   ]).catch(()=>{})).then(()=>self.skipWaiting()));
 });
