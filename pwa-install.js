@@ -129,7 +129,7 @@ function loadMainMenuV4(){
 function loadMobilePolicy(){
   if(document.querySelector('script[data-bb-mobile-policy-v1]')||window.BBMobileUIPolicyV1)return;
   const script=document.createElement('script');
-  script.src='mobile-ui-policy-v1.js?v=20260915-1';
+  script.src='mobile-ui-policy-v1.js?v=20260915-2';
   script.async=false;
   script.dataset.bbMobilePolicyV1='1';
   document.body.appendChild(script);
