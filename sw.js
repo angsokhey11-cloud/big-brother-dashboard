@@ -1,5 +1,5 @@
-/* BIG BROTHER Mobile PWA service worker V1.5 */
-const CACHE='bb-mobile-shell-v6';
+/* BIG BROTHER Mobile PWA service worker V1.6 */
+const CACHE='bb-mobile-shell-v7';
 const MOBILE_FILES=new Set([
   'mobile.html','mobile.css','mobile-sales-support.css','pwa-install.css','mobile.js',
   'mobile-sales-support-home.js','pwa-install.js','mobile-main-menu-v3.js','mobile-ui-policy-v1.js','manifest.webmanifest',
@@ -14,7 +14,7 @@ function injectRouter(html){
     out=out.includes('</body>')?out.replace('</body>',tag+'\n</body>'):out+tag;
   }
   if(!out.includes('data-bb-mobile-policy-v1')){
-    const tag='<script data-bb-mobile-policy-v1 src="mobile-ui-policy-v1.js?v=20260915-1"></script>';
+    const tag='<script data-bb-mobile-policy-v1 src="mobile-ui-policy-v1.js?v=20260915-2"></script>';
     out=out.includes('</body>')?out.replace('</body>',tag+'\n</body>'):out+tag;
   }
   return out;
