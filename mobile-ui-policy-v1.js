@@ -1,4 +1,4 @@
-/* BIG BROTHER — Mobile UI Policy V1
+/* BIG BROTHER — Mobile UI Policy V1.1
    Mobile dashboard only. Desktop dashboard untouched. */
 (function(){
 'use strict';
@@ -18,22 +18,22 @@ function removeHiddenRouteElements(root=document){
   });
 }
 
-function hideDesktopButtons(){
-  document.querySelectorAll('#moduleDesktopLink,.desktop-small,.desktop-link,[data-desktop-link]').forEach(el=>{
-    el.hidden=true;
-    el.style.setProperty('display','none','important');
-  });
+function hideDesktopHeaderButton(){
+  const el=document.getElementById('moduleDesktopLink');
+  if(!el)return;
+  if(!el.hidden)el.hidden=true;
+  if(el.style.display!=='none')el.style.display='none';
 }
 
 function cleanEmptyMenuGroups(){
   document.querySelectorAll('.bb-dd-group,.bb-menu-group').forEach(group=>{
-    const hasButton=group.querySelector('[data-menu-route],[data-bb-route],[data-route]');
+    const hasButton=group.querySelector('[data-menu-route],[data-bb-route],[data-route],[data-sales-route],[data-pick-route]');
     if(!hasButton)group.remove();
   });
 }
 
 function apply(){
-  hideDesktopButtons();
+  hideDesktopHeaderButton();
   removeHiddenRouteElements();
   cleanEmptyMenuGroups();
 }
@@ -50,14 +50,34 @@ function patchOpen(){
   mobile.open=wrapped;
 }
 
+let scheduled=false;
+function scheduleApply(){
+  if(scheduled)return;
+  scheduled=true;
+  requestAnimationFrame(()=>{
+    scheduled=false;
+    apply();
+    patchOpen();
+  });
+}
+
 function start(){
   apply();
   patchOpen();
-  new MutationObserver(()=>{
-    apply();
-    patchOpen();
-  }).observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden','class']});
-  setInterval(()=>{apply();patchOpen()},1200);
+
+  /* Child additions only. Do not watch attributes: changing hidden/style
+     inside the policy must never trigger a self-sustaining observer loop. */
+  new MutationObserver(scheduleApply).observe(document.body,{childList:true,subtree:true});
+
+  document.addEventListener('click',event=>{
+    const el=event.target?.closest?.('[data-sales-route],[data-menu-route],[data-bb-route],[data-pick-route],[data-route]');
+    if(el&&HIDDEN_ROUTES.has(routeOf(el))){
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    }
+  },true);
+
+  setInterval(()=>{apply();patchOpen()},1500);
 }
 
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});
