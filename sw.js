@@ -1,5 +1,5 @@
-/* BIG BROTHER Mobile PWA service worker V1.3 */
-const CACHE='bb-mobile-shell-v4';
+/* BIG BROTHER Mobile PWA service worker V1.4 */
+const CACHE='bb-mobile-shell-v5';
 const MOBILE_FILES=new Set([
   'mobile.html','mobile.css','mobile-sales-support.css','pwa-install.css','mobile.js',
   'mobile-sales-support-home.js','pwa-install.js','mobile-main-menu-v3.js','manifest.webmanifest',
@@ -8,8 +8,8 @@ const MOBILE_FILES=new Set([
 function fileName(url){const parts=url.pathname.split('/');return parts[parts.length-1]||'';}
 function isMobileAsset(url){return MOBILE_FILES.has(fileName(url));}
 function injectRouter(html){
-  if(html.includes('mobile-main-menu-v3.js'))return html;
-  const tag='<script src="mobile-main-menu-v3.js?v=20260915-3"></script>';
+  if(html.includes('data-bb-router-v4'))return html;
+  const tag='<script data-bb-router-v4 src="mobile-main-menu-v3.js?v=20260915-4"></script>';
   return html.includes('</body>')?html.replace('</body>',tag+'\n</body>'):html+tag;
 }
 self.addEventListener('install',event=>{
