@@ -1,13 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#0f4f8d"/>
-      <stop offset="0.62" stop-color="#1267b0"/>
-      <stop offset="1" stop-color="#1a82c9"/>
-    </linearGradient>
+    <radialGradient id="bg" cx="70%" cy="20%" r="95%"><stop offset="0" stop-color="#123b63"/><stop offset=".48" stop-color="#081624"/><stop offset="1" stop-color="#03070d"/></radialGradient>
+    <linearGradient id="silver" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".35" stop-color="#bfc9d4"/><stop offset=".68" stop-color="#6e7c8d"/><stop offset="1" stop-color="#eef4fa"/></linearGradient>
+    <linearGradient id="blue" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#075db6"/><stop offset=".55" stop-color="#18b8ff"/><stop offset="1" stop-color="#8ce8ff"/></linearGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
   </defs>
-  <rect width="512" height="512" fill="url(#g)"/>
-  <circle cx="390" cy="122" r="36" fill="#f5a623"/>
-  <text x="256" y="292" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="166" font-weight="900" fill="#ffffff" letter-spacing="-14">BB</text>
-  <text x="256" y="354" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="34" font-weight="800" fill="#dceeff" letter-spacing="3">BIG BROTHER</text>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <circle cx="256" cy="256" r="172" fill="none" stroke="#2ca9ff" stroke-opacity=".18" stroke-width="2"/>
+  <text x="250" y="318" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-size="222" font-weight="900" letter-spacing="-38" fill="url(#silver)">BB</text>
+  <g filter="url(#glow)">
+    <rect x="210" y="267" width="23" height="79" rx="4" fill="url(#blue)"/>
+    <rect x="242" y="238" width="23" height="108" rx="4" fill="url(#blue)"/>
+    <rect x="274" y="203" width="23" height="143" rx="4" fill="url(#blue)"/>
+    <rect x="306" y="162" width="23" height="184" rx="4" fill="url(#blue)"/>
+  </g>
+  <path d="M144 344c64-29 132-41 231-163" fill="none" stroke="url(#blue)" stroke-width="15" stroke-linecap="round" filter="url(#glow)"/>
+  <path d="M365 175l17 3-5 17" fill="none" stroke="#8ce8ff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
