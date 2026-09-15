@@ -1,9 +1,9 @@
-/* BIG BROTHER Mobile PWA service worker V1.6 */
-const CACHE='bb-mobile-shell-v7';
+/* BIG BROTHER Mobile PWA service worker V1.7 */
+const CACHE='bb-mobile-shell-v8';
 const MOBILE_FILES=new Set([
   'mobile.html','mobile.css','mobile-sales-support.css','pwa-install.css','mobile.js',
   'mobile-sales-support-home.js','pwa-install.js','mobile-main-menu-v3.js','mobile-ui-policy-v1.js',
-  'mobile-navigation-v5.js','manifest.webmanifest','pwa-icon.svg','pwa-icon-maskable.svg'
+  'mobile-navigation-v5.js','mobile-theme-v1.js','manifest.webmanifest','pwa-icon.svg','pwa-icon-maskable.svg'
 ]);
 function fileName(url){const parts=url.pathname.split('/');return parts[parts.length-1]||'';}
 function isMobileAsset(url){return MOBILE_FILES.has(fileName(url));}
@@ -21,13 +21,17 @@ function injectRouter(html){
     const tag='<script data-bb-navigation-v5 src="mobile-navigation-v5.js?v=20260916-1"></script>';
     out=out.includes('</body>')?out.replace('</body>',tag+'\n</body>'):out+tag;
   }
+  if(!out.includes('data-bb-theme-v1')){
+    const tag='<script data-bb-theme-v1 src="mobile-theme-v1.js?v=20260916-1"></script>';
+    out=out.includes('</body>')?out.replace('</body>',tag+'\n</body>'):out+tag;
+  }
   return out;
 }
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll([
     './mobile.html','./mobile.css','./mobile-sales-support.css','./pwa-install.css','./mobile.js',
     './mobile-sales-support-home.js','./pwa-install.js','./mobile-main-menu-v3.js','./mobile-ui-policy-v1.js',
-    './mobile-navigation-v5.js','./manifest.webmanifest','./pwa-icon.svg','./pwa-icon-maskable.svg'
+    './mobile-navigation-v5.js','./mobile-theme-v1.js','./manifest.webmanifest','./pwa-icon.svg','./pwa-icon-maskable.svg'
   ]).catch(()=>{})).then(()=>self.skipWaiting()));
 });
 self.addEventListener('activate',event=>{
