@@ -118,8 +118,17 @@ function registerWorker(){
   if(!('serviceWorker' in navigator))return;
   navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(error=>console.warn('BIG BROTHER service worker:',error));
 }
+function loadMainMenuV2(){
+  if(document.querySelector('script[data-bb-main-menu-v2]'))return;
+  const script=document.createElement('script');
+  script.src='mobile-main-menu-v2.js?v=20260915-1';
+  script.async=false;
+  script.dataset.bbMainMenuV2='1';
+  document.body.appendChild(script);
+}
 function start(){
   registerWorker();
+  loadMainMenuV2();
   const btn=$('installAppBtn');
   if(btn)btn.addEventListener('click',installApp);
   const home=$('mobileHome');
