@@ -126,16 +126,27 @@ function loadMainMenuV4(){
   script.dataset.bbMainMenuV4='1';
   document.body.appendChild(script);
 }
+function loadMobilePolicy(){
+  if(document.querySelector('script[data-bb-mobile-policy-v1]')||window.BBMobileUIPolicyV1)return;
+  const script=document.createElement('script');
+  script.src='mobile-ui-policy-v1.js?v=20260915-1';
+  script.async=false;
+  script.dataset.bbMobilePolicyV1='1';
+  document.body.appendChild(script);
+}
 function start(){
   registerWorker();
   loadMainMenuV4();
+  loadMobilePolicy();
   const btn=$('installAppBtn');
   if(btn)btn.addEventListener('click',installApp);
   const home=$('mobileHome');
   if(home)new MutationObserver(()=>render()).observe(home,{attributes:true,attributeFilter:['hidden']});
   window.matchMedia?.('(display-mode: standalone)')?.addEventListener?.('change',render);
   setTimeout(loadMainMenuV4,500);
+  setTimeout(loadMobilePolicy,650);
   setTimeout(loadMainMenuV4,1500);
+  setTimeout(loadMobilePolicy,1650);
   setTimeout(render,100);
   setTimeout(render,1200);
 }
