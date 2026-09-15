@@ -118,23 +118,24 @@ function registerWorker(){
   if(!('serviceWorker' in navigator))return;
   navigator.serviceWorker.register('./sw.js',{scope:'./',updateViaCache:'none'}).then(reg=>reg.update().catch(()=>{})).catch(error=>console.warn('BIG BROTHER service worker:',error));
 }
-function loadMainMenuV3(){
-  if(document.querySelector('script[data-bb-main-menu-v3]')||window.BBMobileMainMenuV3)return;
+function loadMainMenuV4(){
+  if(document.querySelector('script[data-bb-main-menu-v4]')||window.BBMobileRouteV4)return;
   const script=document.createElement('script');
-  script.src='mobile-main-menu-v3.js?v=20260915-3';
+  script.src='mobile-main-menu-v3.js?v=20260915-4';
   script.async=false;
-  script.dataset.bbMainMenuV3='1';
+  script.dataset.bbMainMenuV4='1';
   document.body.appendChild(script);
 }
 function start(){
   registerWorker();
-  loadMainMenuV3();
+  loadMainMenuV4();
   const btn=$('installAppBtn');
   if(btn)btn.addEventListener('click',installApp);
   const home=$('mobileHome');
   if(home)new MutationObserver(()=>render()).observe(home,{attributes:true,attributeFilter:['hidden']});
   window.matchMedia?.('(display-mode: standalone)')?.addEventListener?.('change',render);
-  setTimeout(loadMainMenuV3,500);
+  setTimeout(loadMainMenuV4,500);
+  setTimeout(loadMainMenuV4,1500);
   setTimeout(render,100);
   setTimeout(render,1200);
 }
