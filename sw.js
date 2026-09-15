@@ -1,5 +1,5 @@
-/* BIG BROTHER Mobile PWA service worker V1.1 */
-const CACHE='bb-mobile-shell-v2';
+/* BIG BROTHER Mobile PWA service worker V1.2 */
+const CACHE='bb-mobile-shell-v3';
 const MOBILE_FILES=new Set([
   'mobile.html',
   'mobile.css',
@@ -8,6 +8,7 @@ const MOBILE_FILES=new Set([
   'mobile.js',
   'mobile-sales-support-home.js',
   'pwa-install.js',
+  'mobile-main-menu-v2.js',
   'manifest.webmanifest',
   'pwa-icon.svg',
   'pwa-icon-maskable.svg'
@@ -30,6 +31,7 @@ self.addEventListener('install',event=>{
         './mobile.js',
         './mobile-sales-support-home.js',
         './pwa-install.js',
+        './mobile-main-menu-v2.js',
         './manifest.webmanifest',
         './pwa-icon.svg',
         './pwa-icon-maskable.svg'
