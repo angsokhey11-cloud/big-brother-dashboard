@@ -142,11 +142,20 @@ function loadNavigationV5(){
   script.dataset.bbNavigationV5='1';
   document.body.appendChild(script);
 }
+function loadThemeV1(){
+  if(document.querySelector('script[data-bb-theme-v1]')||window.BBMobileThemeV1)return;
+  const script=document.createElement('script');
+  script.src='mobile-theme-v1.js?v=20260916-1';
+  script.async=false;
+  script.dataset.bbThemeV1='1';
+  document.body.appendChild(script);
+}
 function start(){
   registerWorker();
   loadMainMenuV4();
   loadMobilePolicy();
   loadNavigationV5();
+  loadThemeV1();
   const btn=$('installAppBtn');
   if(btn)btn.addEventListener('click',installApp);
   const home=$('mobileHome');
@@ -155,9 +164,11 @@ function start(){
   setTimeout(loadMainMenuV4,500);
   setTimeout(loadMobilePolicy,650);
   setTimeout(loadNavigationV5,750);
+  setTimeout(loadThemeV1,850);
   setTimeout(loadMainMenuV4,1500);
   setTimeout(loadMobilePolicy,1650);
   setTimeout(loadNavigationV5,1750);
+  setTimeout(loadThemeV1,1850);
   setTimeout(render,100);
   setTimeout(render,1200);
 }
