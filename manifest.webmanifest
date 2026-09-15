@@ -2,13 +2,13 @@
   "id": "./mobile.html",
   "name": "BIG BROTHER Accounting",
   "short_name": "BIG BROTHER",
-  "description": "BIG BROTHER staff mobile workspace for sales support, customers, stock, collection, invoices and receivables.",
+  "description": "BIG BROTHER mobile sales and accounting workspace.",
   "start_url": "./mobile.html?source=pwa",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#f4f8fc",
-  "theme_color": "#1267b0",
+  "background_color": "#07111f",
+  "theme_color": "#07111f",
   "categories": ["business", "finance", "productivity"],
   "icons": [
     {
