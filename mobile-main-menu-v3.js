@@ -96,7 +96,7 @@ const MOBILE={
  'sales-support-your-invoices':'https://angsokhey11-cloud.github.io/invoice-history/your-invoices-mobile.html?embed=1&v=20260915-1',
  'sales-support-your-receivable':'https://angsokhey11-cloud.github.io/big-brother-ar/your-receivable-mobile.html?embed=1&v=20260915-1',
 
- 'ar-all':'https://angsokhey11-cloud.github.io/big-brother-ar/all-receivable-mobile.html?embed=1&v=20260915-1',
+ 'ar-all':'https://angsokhey11-cloud.github.io/big-brother-ar/all-receivable-mobile.html?embed=1&v=20260916-ar-backup-2',
  'ar-your':'https://angsokhey11-cloud.github.io/big-brother-ar/your-receivable-mobile.html?embed=1&v=20260915-1',
  'ar-payment-history':'https://angsokhey11-cloud.github.io/big-brother-payment-history/receivable-mobile.html?embed=1&v=20260915-clean2',
 
@@ -147,7 +147,7 @@ const PC={
  'clients-details':'https://angsokhey11-cloud.github.io/big-brother-clients-editor/?embed=1&view=details&v=10',
  'products-add':'https://angsokhey11-cloud.github.io/big-brother-products-editor/?embed=1&view=add&v=10',
  'products-details':'https://angsokhey11-cloud.github.io/big-brother-products-editor/?embed=1&view=details&v=10',
- 'master-expense-categories':'https://angsokhey11-cloud.github.io/big-brother-master-data/expense-categories.html?embed=1&v=20260912-3',
+ 'master-expense-categories':'https://angsokhey11-cloud.github.io/big-brother-master-data/expense-categories.html?embed=1&v=21',
  'admin-deposit-history':'https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=deposit-history',
  'admin-staff-request':'https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=staff-request',
  'admin-request':'https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=admin-request',
