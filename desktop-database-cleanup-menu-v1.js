@@ -1,4 +1,4 @@
-/* BIG BROTHER — PC Database Cleanup Menu Extension V1.2
+/* BIG BROTHER — PC Database Cleanup Menu Extension V1.3
    Desktop only. Adds Master Data > Database Cleanup after Supabase auth is ready.
    Also removes accidental duplicate cleanup buttons. Mobile navigation remains untouched. */
 (function(){
@@ -10,7 +10,7 @@
   const SB='https://sjfhlaclgmkwwofzstok.supabase.co';
   const KEY='sb_publishable_w762jR65CWwlO30fKQsYOw_6L9grx8S';
   const SESSION_KEY='BB_SUPABASE_DEV_SESSION_V1';
-  const CLEANUP_URL='https://angsokhey11-cloud.github.io/big-brother-master-data/database-cleanup.html?embed=1&v=20260916-2';
+  const CLEANUP_URL='https://angsokhey11-cloud.github.io/big-brother-master-data/database-cleanup.html?embed=1&v=20260916-3';
 
   function session(){try{return JSON.parse(localStorage.getItem(SESSION_KEY)||'null')}catch(_){return null}}
 
@@ -73,7 +73,7 @@
     const existing=cleanupButtons(submenu);
     if(existing){
       existing.id='navMasterDatabaseCleanup';
-      existing.title='Admin-only Supabase operational test-data cleanup';
+      existing.title='Admin-only Supabase accounting test-data cleanup';
       if(!existing.__bbCleanupBound){
         existing.__bbCleanupBound=true;
         existing.addEventListener('click',event=>{event.preventDefault();openCleanup(existing)});
@@ -89,7 +89,7 @@
     button.type='button';
     button.id='navMasterDatabaseCleanup';
     button.textContent='🧹 Database Cleanup';
-    button.title='Admin-only Supabase operational test-data cleanup';
+    button.title='Admin-only Supabase accounting test-data cleanup';
     button.__bbCleanupBound=true;
     button.addEventListener('click',()=>openCleanup(button));
     submenu.appendChild(button);
