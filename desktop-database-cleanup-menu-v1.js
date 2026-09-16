@@ -1,6 +1,6 @@
-/* BIG BROTHER — PC Database Cleanup Menu Extension V1.1
+/* BIG BROTHER — PC Database Cleanup Menu Extension V1.2
    Desktop only. Adds Master Data > Database Cleanup after Supabase auth is ready.
-   Mobile navigation remains untouched. */
+   Also removes accidental duplicate cleanup buttons. Mobile navigation remains untouched. */
 (function(){
   'use strict';
   if(/mobile\.html/i.test(location.pathname))return;
@@ -30,6 +30,18 @@
     }catch(_){return {ready:false,allowed:false}}
   }
 
+  function cleanupButtons(submenu){
+    const matches=[...submenu.querySelectorAll('button')].filter(btn=>{
+      const text=(btn.textContent||'').replace(/\s+/g,' ').trim().toLowerCase();
+      return btn.id==='navMasterDatabaseCleanup'||text.includes('database cleanup');
+    });
+    if(matches.length<=1)return matches[0]||null;
+    const keep=matches.find(x=>x.id==='navMasterDatabaseCleanup')||matches[0];
+    matches.forEach(x=>{if(x!==keep)x.remove()});
+    if(!keep.id)keep.id='navMasterDatabaseCleanup';
+    return keep;
+  }
+
   function setActive(button){
     document.querySelectorAll('.nav button.active,.nav a.active').forEach(el=>el.classList.remove('active'));
     button.classList.add('active');
@@ -55,21 +67,33 @@
   }
 
   async function install(){
-    if(document.getElementById('navMasterDatabaseCleanup'))return true;
     const submenu=document.getElementById('masterSubmenu');
     if(!submenu)return false;
 
+    const existing=cleanupButtons(submenu);
+    if(existing){
+      existing.id='navMasterDatabaseCleanup';
+      existing.title='Admin-only Supabase operational test-data cleanup';
+      if(!existing.__bbCleanupBound){
+        existing.__bbCleanupBound=true;
+        existing.addEventListener('click',event=>{event.preventDefault();openCleanup(existing)});
+      }
+      return true;
+    }
+
     const check=await access();
-    if(!check.ready)return false; // Supabase auth is still starting; keep retrying.
-    if(!check.allowed)return true; // Auth is ready and this user is not permitted.
+    if(!check.ready)return false;
+    if(!check.allowed)return true;
 
     const button=document.createElement('button');
     button.type='button';
     button.id='navMasterDatabaseCleanup';
     button.textContent='🧹 Database Cleanup';
     button.title='Admin-only Supabase operational test-data cleanup';
+    button.__bbCleanupBound=true;
     button.addEventListener('click',()=>openCleanup(button));
     submenu.appendChild(button);
+    cleanupButtons(submenu);
     return true;
   }
 
@@ -79,6 +103,12 @@
     const done=await install();
     if(done||tries>=200)clearInterval(timer);
   },150);
+
+  const observer=new MutationObserver(()=>{
+    const submenu=document.getElementById('masterSubmenu');
+    if(submenu)cleanupButtons(submenu);
+  });
+  observer.observe(document.documentElement,{childList:true,subtree:true});
 
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>install(),{once:true});
   else install();
