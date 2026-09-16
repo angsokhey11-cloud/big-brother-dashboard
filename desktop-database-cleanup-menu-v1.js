@@ -1,4 +1,4 @@
-/* BIG BROTHER — PC Database Cleanup Menu Extension V1.3
+/* BIG BROTHER — PC Database Cleanup Menu Extension V1.4
    Desktop only. Adds Master Data > Database Cleanup after Supabase auth is ready.
    Also removes accidental duplicate cleanup buttons. Mobile navigation remains untouched. */
 (function(){
@@ -10,7 +10,7 @@
   const SB='https://sjfhlaclgmkwwofzstok.supabase.co';
   const KEY='sb_publishable_w762jR65CWwlO30fKQsYOw_6L9grx8S';
   const SESSION_KEY='BB_SUPABASE_DEV_SESSION_V1';
-  const CLEANUP_URL='https://angsokhey11-cloud.github.io/big-brother-master-data/database-cleanup.html?embed=1&v=20260916-3';
+  const CLEANUP_URL='https://angsokhey11-cloud.github.io/big-brother-master-data/database-cleanup.html?embed=1&v=20260916-4';
 
   function session(){try{return JSON.parse(localStorage.getItem(SESSION_KEY)||'null')}catch(_){return null}}
 
@@ -69,7 +69,6 @@
   async function install(){
     const submenu=document.getElementById('masterSubmenu');
     if(!submenu)return false;
-
     const existing=cleanupButtons(submenu);
     if(existing){
       existing.id='navMasterDatabaseCleanup';
@@ -80,36 +79,17 @@
       }
       return true;
     }
-
     const check=await access();
     if(!check.ready)return false;
     if(!check.allowed)return true;
-
     const button=document.createElement('button');
-    button.type='button';
-    button.id='navMasterDatabaseCleanup';
-    button.textContent='🧹 Database Cleanup';
-    button.title='Admin-only Supabase accounting test-data cleanup';
-    button.__bbCleanupBound=true;
-    button.addEventListener('click',()=>openCleanup(button));
-    submenu.appendChild(button);
-    cleanupButtons(submenu);
-    return true;
+    button.type='button';button.id='navMasterDatabaseCleanup';button.textContent='🧹 Database Cleanup';
+    button.title='Admin-only Supabase accounting test-data cleanup';button.__bbCleanupBound=true;
+    button.addEventListener('click',()=>openCleanup(button));submenu.appendChild(button);cleanupButtons(submenu);return true;
   }
 
-  let tries=0;
-  const timer=setInterval(async()=>{
-    tries++;
-    const done=await install();
-    if(done||tries>=200)clearInterval(timer);
-  },150);
-
-  const observer=new MutationObserver(()=>{
-    const submenu=document.getElementById('masterSubmenu');
-    if(submenu)cleanupButtons(submenu);
-  });
+  let tries=0;const timer=setInterval(async()=>{tries++;const done=await install();if(done||tries>=200)clearInterval(timer)},150);
+  const observer=new MutationObserver(()=>{const submenu=document.getElementById('masterSubmenu');if(submenu)cleanupButtons(submenu)});
   observer.observe(document.documentElement,{childList:true,subtree:true});
-
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>install(),{once:true});
-  else install();
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>install(),{once:true});else install();
 })();
