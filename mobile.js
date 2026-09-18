@@ -12,7 +12,7 @@ const REQUIRED_ACTION={
 };
 
 const ROUTES={
-  'sales-support-calculator':{tab:'sales',icon:'🧮',label:'Calculator',url:'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=calculator&v=110'},
+  'sales-support-calculator':{tab:'sales',icon:'🧮',label:'Calculator',url:'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&mobile=1&view=calculator&v=20260918-6'},
   'sales-support-request-delivery':{tab:'sales',icon:'🚚',label:'Request Delivery',url:'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=request-delivery&v=110'},
   'sales-support-your-customer':{tab:'sales',icon:'👥',label:'My Customers',url:'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=your-customer&v=110'},
   'sales-support-successful-delivery':{tab:'sales',icon:'✅',label:'Successful Delivery',url:'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=successful-delivery&v=110'},
