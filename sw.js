@@ -1,5 +1,5 @@
 /* BIG BROTHER Mobile PWA service worker V1.8 */
-const CACHE='bb-mobile-shell-v12';
+const CACHE='bb-mobile-shell-v13';
 const MOBILE_FILES=new Set([
   'mobile.html','mobile.css','mobile-sales-support.css','pwa-install.css','mobile.js',
   'mobile-sales-support-home.js','pwa-install.js','mobile-main-menu-v3.js','mobile-ui-policy-v1.js',
@@ -12,7 +12,7 @@ function injectRouter(html){
   if(!out.includes('data-bb-router-v4')){const tag='<script data-bb-router-v4 src="mobile-main-menu-v3.js?v=20260915-4"></script>';out=out.includes('</body>')?out.replace('</body>',tag+'\n</body>'):out+tag}
   if(!out.includes('data-bb-mobile-policy-v1')){const tag='<script data-bb-mobile-policy-v1 src="mobile-ui-policy-v1.js?v=20260915-2"></script>';out=out.includes('</body>')?out.replace('</body>',tag+'\n</body>'):out+tag}
   if(!out.includes('data-bb-navigation-v5')){const tag='<script data-bb-navigation-v5 src="mobile-navigation-v5.js?v=20260916-1"></script>';out=out.includes('</body>')?out.replace('</body>',tag+'\n</body>'):out+tag}
-  if(!out.includes('data-bb-theme-v1')){const tag='<script data-bb-theme-v1 src="mobile-theme-v1.js?v=20260920-moderntech3"></script>';out=out.includes('</body>')?out.replace('</body>',tag+'\n</body>'):out+tag}
+  if(!out.includes('data-bb-theme-v1')){const tag='<script data-bb-theme-v1 src="mobile-theme-v1.js?v=20260920-premiumlight1"></script>';out=out.includes('</body>')?out.replace('</body>',tag+'\n</body>'):out+tag}
   return out;
 }
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll([
