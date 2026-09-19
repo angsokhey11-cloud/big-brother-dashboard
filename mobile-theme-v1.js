@@ -1,16 +1,16 @@
-/* BIG BROTHER — Premium Mobile Theme V1.1
+/* BIG BROTHER — Premium Mobile Theme V2.0 — Modern Tech
    Mobile app shell + same-origin embedded function dark theme.
    Desktop dashboard styling is not modified here. */
 (function(){
 'use strict';
 
-const STORAGE_KEY='BB_MOBILE_THEME_V1';
+const STORAGE_KEY='BB_MOBILE_THEME_V2';
 const ROOT=document.documentElement;
 const $=id=>document.getElementById(id);
-let theme='light';
+let theme='dark';
 
 function readTheme(){
-  try{const saved=localStorage.getItem(STORAGE_KEY);return saved==='dark'||saved==='light'?saved:'light'}catch(_){return'light'}
+  try{const saved=localStorage.getItem(STORAGE_KEY);return saved==='dark'||saved==='light'?saved:'dark'}catch(_){return'dark'}
 }
 function saveTheme(next){try{localStorage.setItem(STORAGE_KEY,next)}catch(_){}}
 
@@ -94,6 +94,158 @@ function injectShellCss(){
     html[data-bb-theme="dark"] .boot-card{background:#0d1928!important;border:1px solid #203650!important;box-shadow:0 24px 70px #0009!important}
     html[data-bb-theme="dark"] .boot-card strong{color:#edf7ff!important}
     html[data-bb-theme="dark"] .boot-card span{color:#9bb1c5!important}
+
+
+    /* MODERN TECH V2 — final mobile-only visual layer */
+    html[data-bb-theme="dark"] body{
+      background:
+        radial-gradient(circle at 12% -8%,rgba(11,99,189,.30) 0,transparent 30%),
+        radial-gradient(circle at 100% 0%,rgba(0,168,255,.14) 0,transparent 26%),
+        linear-gradient(160deg,#020d1d 0%,#041a35 50%,#07264b 100%)!important;
+      color:#eaf5ff!important
+    }
+    html[data-bb-theme="dark"] .mobile-home,
+    html[data-bb-theme="dark"] .menu-screen,
+    html[data-bb-theme="dark"] .module-screen{
+      background:
+        radial-gradient(circle at 12% -8%,rgba(11,99,189,.25) 0,transparent 28%),
+        radial-gradient(circle at 100% 0%,rgba(0,168,255,.11) 0,transparent 25%),
+        linear-gradient(165deg,#031327 0%,#061b36 46%,#082548 100%)!important
+    }
+    html[data-bb-theme="dark"] .mobile-scroll,
+    html[data-bb-theme="dark"] #menuGrid.bb-dropdown-menu{
+      background:transparent!important
+    }
+
+    html[data-bb-theme="dark"] .hero,
+    html[data-bb-theme="dark"] .simple-header,
+    html[data-bb-theme="dark"] .module-header{
+      background:
+        radial-gradient(circle at 92% 0%,rgba(26,167,255,.18) 0,transparent 30%),
+        linear-gradient(135deg,#051831 0%,#082c5a 58%,#075fb9 100%)!important;
+      border-color:#1a568f!important;
+      box-shadow:0 12px 30px rgba(0,17,38,.40),inset 0 -1px 0 rgba(86,184,255,.14)!important
+    }
+
+    html[data-bb-theme="dark"] .panel,
+    html[data-bb-theme="dark"] .menu-card,
+    html[data-bb-theme="dark"] .bb-dd-group,
+    html[data-bb-theme="dark"] .sheet-card,
+    html[data-bb-theme="dark"] .login-card{
+      background:linear-gradient(145deg,#0b2344 0%,#071a33 100%)!important;
+      border-color:#1d4f80!important;
+      box-shadow:0 10px 26px rgba(0,16,36,.35),inset 0 1px 0 rgba(92,188,255,.07)!important
+    }
+
+    html[data-bb-theme="dark"] .hero-chip{
+      background:rgba(11,55,104,.84)!important;
+      border-color:#3177b6!important;
+      color:#dff3ff!important
+    }
+    html[data-bb-theme="dark"] .icon-btn,
+    html[data-bb-theme="dark"] .header-btn,
+    html[data-bb-theme="dark"] .desktop-small{
+      background:#0d3d72!important;
+      border:1px solid #2a6da8!important;
+      color:#eef9ff!important
+    }
+
+    html[data-bb-theme="dark"] #kpiGrid .kpi,
+    html[data-bb-theme="dark"] #kpiGrid .sales-kpi{
+      background:linear-gradient(145deg,#0c2c56 0%,#071c37 100%)!important;
+      border:1px solid #1e578d!important;
+      box-shadow:0 8px 20px rgba(0,16,36,.30),inset 0 1px 0 rgba(101,196,255,.07)!important
+    }
+    html[data-bb-theme="dark"] #kpiGrid .kpi:nth-child(1),
+    html[data-bb-theme="dark"] #kpiGrid .sales-kpi:nth-child(1){box-shadow:0 8px 20px rgba(0,16,36,.30),inset 3px 0 0 #1da1ff!important}
+    html[data-bb-theme="dark"] #kpiGrid .kpi:nth-child(2),
+    html[data-bb-theme="dark"] #kpiGrid .sales-kpi:nth-child(2){box-shadow:0 8px 20px rgba(0,16,36,.30),inset 3px 0 0 #26c6ff!important}
+    html[data-bb-theme="dark"] #kpiGrid .kpi:nth-child(3),
+    html[data-bb-theme="dark"] #kpiGrid .sales-kpi:nth-child(3){box-shadow:0 8px 20px rgba(0,16,36,.30),inset 3px 0 0 #4f8cff!important}
+    html[data-bb-theme="dark"] #kpiGrid .kpi:nth-child(4),
+    html[data-bb-theme="dark"] #kpiGrid .sales-kpi:nth-child(4){box-shadow:0 8px 20px rgba(0,16,36,.30),inset 3px 0 0 #00b7d8!important}
+    html[data-bb-theme="dark"] #kpiGrid .kpi small,
+    html[data-bb-theme="dark"] #kpiGrid .sales-kpi small{color:#93b4d4!important}
+    html[data-bb-theme="dark"] #kpiGrid .kpi strong,
+    html[data-bb-theme="dark"] #kpiGrid .sales-kpi strong{color:#f4fbff!important}
+    html[data-bb-theme="dark"] #kpiGrid .kpi em,
+    html[data-bb-theme="dark"] #kpiGrid .sales-kpi em{color:#7fa6ca!important}
+
+    html[data-bb-theme="dark"] .quick-icon,
+    html[data-bb-theme="dark"] .recent-icon{
+      background:linear-gradient(145deg,#0d3c72,#08254a)!important;
+      border:1px solid #22629c!important;
+      box-shadow:0 7px 17px rgba(0,16,36,.34),inset 0 1px 0 rgba(121,204,255,.10)!important
+    }
+    html[data-bb-theme="dark"] .recent-row{border-bottom-color:#173d63!important}
+    html[data-bb-theme="dark"] .recent-side strong{color:#62c7ff!important}
+
+    html[data-bb-theme="dark"] .attention-card{
+      background:linear-gradient(145deg,#0b294f,#071d39)!important;
+      border:1px solid #1d4f80!important
+    }
+    html[data-bb-theme="dark"] .attention-card b{color:#f3faff!important}
+    html[data-bb-theme="dark"] .attention-card span{color:#8fb1d1!important}
+
+    html[data-bb-theme="dark"] .bottom-nav{
+      background:rgba(3,21,43,.97)!important;
+      border-top-color:#194978!important;
+      box-shadow:0 -10px 28px rgba(0,16,36,.50)!important
+    }
+    html[data-bb-theme="dark"] .nav-btn{color:#789cbc!important}
+    html[data-bb-theme="dark"] .nav-btn b{color:#89add0!important}
+    html[data-bb-theme="dark"] .nav-btn.active{
+      color:#7bd7ff!important;
+      background:linear-gradient(145deg,#0b4784,#082d58)!important;
+      box-shadow:inset 0 0 0 1px #2c75b4!important
+    }
+    html[data-bb-theme="dark"] .nav-btn.active b{color:#6fd4ff!important}
+
+    html[data-bb-theme="dark"] .bb-dd-group>summary,
+    html[data-bb-theme="dark"] .bb-dd-item{
+      background:linear-gradient(145deg,#0b274a,#071b35)!important;
+      border-color:#1d4f80!important
+    }
+    html[data-bb-theme="dark"] .bb-dd-group[open]>summary{
+      background:#0d355f!important;
+      border-color:#2771ac!important
+    }
+
+    html[data-bb-theme="dark"] .sheet-option{
+      background:#0a294f!important;
+      border-color:#1f5789!important
+    }
+    html[data-bb-theme="dark"] .sheet-close{
+      background:#102e50!important;
+      color:#dcefff!important;
+      border:1px solid #225783!important
+    }
+    html[data-bb-theme="dark"] .bb-theme-pill{
+      background:#075d9b!important;
+      color:#d9f4ff!important;
+      box-shadow:inset 0 0 0 1px rgba(45,168,239,.33)!important
+    }
+
+    html[data-bb-theme="dark"] .login-card input{
+      background:#051a32!important;
+      border-color:#245b8c!important;
+      color:#edf8ff!important
+    }
+    html[data-bb-theme="dark"] .login-card button{
+      background:linear-gradient(135deg,#0876ce,#0b55a8)!important;
+      box-shadow:0 8px 20px rgba(0,111,189,.23)!important
+    }
+    html[data-bb-theme="dark"] .boot-screen,
+    html[data-bb-theme="dark"] .login-screen{
+      background:
+        radial-gradient(circle at 75% 15%,rgba(12,104,189,.30) 0,transparent 30%),
+        linear-gradient(155deg,#020b18 0%,#04182f 52%,#08284b 100%)!important
+    }
+    html[data-bb-theme="dark"] .boot-card{
+      background:linear-gradient(145deg,#0b2344,#06182e)!important;
+      border-color:#1c5488!important
+    }
+    html[data-bb-theme="dark"] .module-frame{background:#04172e!important}
   `;
   document.head.appendChild(style);
 }
@@ -112,11 +264,11 @@ function ensureToggle(){
   if(!card||$('bbThemeToggle'))return;
   const signout=$('signOutBtn'),btn=document.createElement('button');
   btn.id='bbThemeToggle';btn.type='button';btn.className='sheet-option bb-theme-option';
-  btn.innerHTML='<span id="bbThemeIcon">🌙</span><div><strong>Dark Mode</strong><small>Premium navy interface</small></div><span id="bbThemeState" class="bb-theme-pill">OFF</span>';
+  btn.innerHTML='<span id="bbThemeIcon">⚡</span><div><strong>Modern Tech</strong><small>Deep blue premium mobile interface</small></div><span id="bbThemeState" class="bb-theme-pill">ON</span>';
   btn.addEventListener('click',()=>setTheme(theme==='dark'?'light':'dark',true));
   if(signout)card.insertBefore(btn,signout);else card.appendChild(btn);updateToggle();
 }
-function updateToggle(){const state=$('bbThemeState'),icon=$('bbThemeIcon');if(state)state.textContent=theme==='dark'?'ON':'OFF';if(icon)icon.textContent=theme==='dark'?'☀️':'🌙'}
+function updateToggle(){const state=$('bbThemeState'),icon=$('bbThemeIcon');if(state)state.textContent=theme==='dark'?'ON':'OFF';if(icon)icon.textContent=theme==='dark'?'⚡':'☀️'}
 
 function frameDarkCss(){return `
   :root{color-scheme:dark!important;--bb-bg:#07111f;--bb-card:#0d1928;--bb-card-2:#102033;--bb-border:#203650;--bb-text:#e7f1fb;--bb-muted:#9bb0c6;--bb-blue:#63cfff}
@@ -140,6 +292,57 @@ function frameDarkCss(){return `
   details,.collapse,.collapsible{border-color:#203650!important}summary{color:#e7f1fb!important}
   .empty,.empty-state,.loading,.status-text{color:#9bb0c6!important}
   .overlay,.modal-backdrop{background:#0009!important}
+
+
+  /* MODERN TECH V2 — embedded mobile module layer */
+  html,body{
+    background:
+      radial-gradient(circle at 8% -8%,rgba(11,99,189,.20) 0,transparent 28%),
+      linear-gradient(165deg,#031327 0%,#061b36 50%,#082548 100%)!important;
+    color:#eaf5ff!important
+  }
+  header,.header,.topbar,.toolbar,.app-header,.page-header,.mobile-header,.report-header{
+    background:linear-gradient(135deg,#061b37,#0a3768)!important;
+    border-color:#1d568a!important;
+    box-shadow:0 7px 20px rgba(0,16,36,.30)!important
+  }
+  .card,.panel,.box,.section,.sheet-card,.modal,.dialog,.filter-card,.filter-panel,.location-card,.product-card,.summary-card,.kpi,.kpi-card,.stat-card,.report-card,.history-card,.transaction-card,.request-card,.invoice-card,.item-card,.client-card,.customer-card,.batch-card,.stock-card,.expense-card,.payment-card,.statement-card,.accordion,.accordion-item,.table-wrap,.table-card,.form-card,.form-section,.detail-card,.result-card,.list-card{
+    background:linear-gradient(145deg,#0b2344,#071a33)!important;
+    color:#eaf5ff!important;
+    border-color:#1d4f80!important;
+    box-shadow:0 6px 18px rgba(0,16,36,.30),inset 0 1px 0 rgba(107,200,255,.05)!important
+  }
+  input,select,textarea,.input,.select,.search,.search-input{
+    background:#051a32!important;
+    color:#edf8ff!important;
+    border-color:#245b8c!important
+  }
+  input:focus,select:focus,textarea:focus{
+    border-color:#2a9ff0!important;
+    box-shadow:0 0 0 3px rgba(20,151,237,.13)!important
+  }
+  th{background:#0d315c!important;color:#eaf6ff!important}
+  td{background:#081d39!important;color:#dcecff!important}
+  tbody tr:nth-child(even) td{background:#0a2344!important}
+  .btn-primary,.primary,.primary-btn,.save-btn,.submit-btn,button[type="submit"]{
+    background:linear-gradient(135deg,#0b83da,#095ab1)!important;
+    color:#fff!important;
+    border-color:#2a94da!important;
+    box-shadow:0 6px 16px rgba(0,104,178,.20)!important
+  }
+  .btn-secondary,.secondary-btn,.ghost-btn,.filter-btn,.chip,.pill,.badge:not(.success):not(.danger):not(.warning){
+    background:#0e3159!important;
+    color:#d8efff!important;
+    border-color:#28689f!important
+  }
+  nav,.bottom-nav,.footer,.tabs,.tabbar{
+    background:rgba(4,23,45,.96)!important;
+    border-color:#1b4e7d!important
+  }
+  .tab.active,.nav-btn.active,.nav-item.active{
+    color:#6fd4ff!important;
+    background:#0b3e73!important
+  }
 `}
 
 function applyFrameTheme(){
@@ -160,7 +363,7 @@ function applyFrameTheme(){
 
 function setTheme(next,persist=false){
   theme=next==='dark'?'dark':'light';ROOT.setAttribute('data-bb-theme',theme);if(persist)saveTheme(theme);
-  const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.setAttribute('content',theme==='dark'?'#07111f':'#1267b0');
+  const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.setAttribute('content',theme==='dark'?'#041a35':'#1267b0');
   updateToggle();applyFrameTheme();
 }
 
