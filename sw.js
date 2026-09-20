@@ -1,5 +1,5 @@
 /* BIG BROTHER Mobile PWA service worker V1.8 */
-const CACHE='bb-mobile-shell-v16';
+const CACHE='bb-mobile-shell-v17';
 const MOBILE_FILES=new Set([
   'mobile.html','mobile.css','mobile-sales-support.css','pwa-install.css','mobile.js',
   'mobile-sales-support-home.js','pwa-install.js','mobile-main-menu-v3.js','mobile-ui-policy-v1.js',
@@ -20,7 +20,23 @@ self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(
   './mobile-sales-support-home.js','./pwa-install.js','./mobile-main-menu-v3.js','./mobile-ui-policy-v1.js',
   './mobile-navigation-v5.js','./mobile-theme-v1.js','./manifest.webmanifest','./pwa-icon.svg','./pwa-icon-maskable.svg'
 ]).catch(()=>{})).then(()=>self.skipWaiting()))});
-self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('bb-mobile-shell-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
+self.addEventListener('activate',event=>{
+  event.waitUntil(
+    caches.keys()
+      .then(keys=>Promise.all(keys.filter(k=>k.startsWith('bb-mobile-shell-')&&k!==CACHE).map(k=>caches.delete(k))))
+      .then(()=>self.clients.claim())
+      .then(()=>self.clients.matchAll({type:'window',includeUncontrolled:true}))
+      .then(clients=>Promise.all(clients.map(client=>{
+        try{
+          const url=new URL(client.url);
+          if(url.origin!==self.location.origin)return null;
+          const name=fileName(url);
+          if(name!=='mobile.html'&&!url.pathname.endsWith('/big-brother-dashboard/'))return null;
+          return client.navigate(client.url).catch(()=>null);
+        }catch(_){return null}
+      })))
+  );
+});
 self.addEventListener('fetch',event=>{
   const request=event.request;if(request.method!=='GET')return;
   const url=new URL(request.url);if(url.origin!==self.location.origin||!isMobileAsset(url))return;
