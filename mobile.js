@@ -45,7 +45,7 @@ const ROUTES={
   'purchase-history':{tab:'more',icon:'📚',label:'Purchase History',url:'https://angsokhey11-cloud.github.io/big-brother-puchase-history/?embed=1&v=1'},
   'purchase-payable':{tab:'more',icon:'💵',label:'Purchase Payable',url:'https://angsokhey11-cloud.github.io/big-brother-purchase-payable-invoice/?embed=1&v=1'},
   'purchase-payment-history':{tab:'more',icon:'💳',label:'Purchase Payments',url:'https://angsokhey11-cloud.github.io/big-brother-purchase-payment-history/?embed=1&v=1'},
-  'expense-add':{tab:'more',icon:'➕',label:'Add Expense',url:'https://angsokhey11-cloud.github.io/big-brother-expenses/?embed=1&view=add-expense&v=17'},
+  'expense-add':{tab:'more',icon:'➕',label:'Add Expense',url:'https://angsokhey11-cloud.github.io/big-brother-expenses/?embed=1&view=add-expense&v=20260920-iosdecimal1'},
   'expense-accrued':{tab:'more',icon:'⏳',label:'Accrued Expense',url:'https://angsokhey11-cloud.github.io/big-brother-expenses/?embed=1&view=accrued-expenses&v=17'},
   'expense-history':{tab:'more',icon:'🧾',label:'Expense History',url:'https://angsokhey11-cloud.github.io/big-brother-expenses/?embed=1&view=expense-history&v=17'},
   'ar-all':{tab:'more',icon:'📋',label:'All Receivables',url:'https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=all&v=2'},
