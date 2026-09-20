@@ -186,12 +186,19 @@ function normalizePages(value){
 }
 function replaceFrameUrl(frame,url){
  try{
-   if(frame?.contentWindow?.location){
-     frame.contentWindow.location.replace(url);
-     return;
-   }
+   if(!frame?.parentNode)return;
+   const fresh=frame.cloneNode(false);
+   fresh.removeAttribute('src');
+   fresh.removeAttribute('data-bb-theme-bound');
+   frame.replaceWith(fresh);
+   fresh.addEventListener('load',()=>{
+     try{window.BBMobileThemeV1?.applyFrameTheme?.()}catch(_){}
+   });
+   fresh.src=url;
+   return fresh;
  }catch(_){}
  try{frame.src=url}catch(_){}
+ return frame;
 }
 
 function toast(text){
@@ -761,7 +768,11 @@ function showMainMenu(){
   if($('mobileHome'))$('mobileHome').hidden=true;
   if($('moduleScreen'))$('moduleScreen').hidden=true;
   if($('menuScreen'))$('menuScreen').hidden=false;
-  try{const u=new URL(location.href);u.searchParams.delete('module');u.searchParams.delete('autoload');history.replaceState({},'',u.pathname+u.search+u.hash)}catch(_){ }
+  try{
+    const nav=window.BBMobileHistoryV7||window.BBMobileHistoryV6;
+    if(nav&&!nav.isRestoring?.())nav.recordMenu('',true);
+    else{const u=new URL(location.href);u.searchParams.delete('module');u.searchParams.delete('autoload');history.replaceState(history.state||{},'',u.pathname+u.search+u.hash)}
+  }catch(_){ }
   renderMainMenu();renderNav('menu');
 }
 function renderMainMenu(){
@@ -795,7 +806,11 @@ function openRoute(route,navState=''){
   if($('moduleScreen'))$('moduleScreen').hidden=false;
   if($('moduleTitle'))$('moduleTitle').textContent=item.label;
   if($('moduleFrame'))replaceFrameUrl($('moduleFrame'),item.url);
-  try{const u=new URL(location.href);u.searchParams.set('module',route);u.searchParams.set('autoload','1');history.replaceState({},'',u.pathname+u.search+u.hash)}catch(_){ }
+  try{
+    const nav=window.BBMobileHistoryV7||window.BBMobileHistoryV6;
+    if(nav&&!nav.isRestoring?.())nav.recordModule(route,true);
+    else{const u=new URL(location.href);u.searchParams.set('module',route);u.searchParams.set('autoload','1');history.replaceState(history.state||{},'',u.pathname+u.search+u.hash)}
+  }catch(_){ }
   renderNav(navState||currentNavState());
 }
 
