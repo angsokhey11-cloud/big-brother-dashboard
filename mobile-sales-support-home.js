@@ -436,6 +436,22 @@ function injectCss(){
       border-color:#d4c7ec!important;
     }
 
+
+    /* Needs Your Attention — Premium Blue section */
+    #mobileHome .bb-attention-panel{
+      background:linear-gradient(150deg,#dbeafb 0%,#c9e1f6 58%,#bed9f0 100%)!important;
+      border:1px solid #a9cce8!important;
+      box-shadow:0 7px 20px rgba(37,105,168,.09)!important;
+    }
+
+    #mobileHome .bb-attention-panel .section-head strong{
+      color:#173f77!important;
+    }
+
+    #mobileHome .bb-attention-panel .section-head span{
+      color:#587a98!important;
+    }
+
     /* Attention rows: color communicates status without making the page loud */
     #mobileHome #recentList .bb-att-row{
       border:1px solid transparent!important;
@@ -739,6 +755,7 @@ function attentionRoute(type){
 function renderAttention(){
   const host=$('recentList');if(!host)return;
   const panel=host.closest('.panel');
+  if(panel)panel.classList.add('bb-attention-panel');
   const title=panel?.querySelector('.section-head strong');
   const label=$('activityLabel');
   if(title)title.textContent='Needs Your Attention';
