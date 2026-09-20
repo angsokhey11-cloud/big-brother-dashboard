@@ -9,6 +9,8 @@ const SESSION_KEY='BB_SUPABASE_DEV_SESSION_V1';
 let cached=null;
 let loading=false;
 let lastLoad=0;
+let liveTimer=null;
+const LIVE_REFRESH_MS=20000;
 
 const $=id=>document.getElementById(id);
 const num=v=>Number(v||0)||0;
@@ -112,23 +114,39 @@ function applyOverview(data,payment){
 
 async function refresh(force=false){
   if(loading||!homeVisible()||!readSession()?.access_token)return;
-  if(!force&&cached&&Date.now()-lastLoad<15000){applyOverview(cached.overview,cached.payment);return}
+
+  /*
+   * Viewer Overview is always refreshed from Supabase when requested.
+   * cached is only the last good render fallback, never a freshness shortcut.
+   */
   loading=true;
+
   try{
     const profile=await rpc('bb_current_access_profile');
     if(profile?.user?.isAdmin===true)return;
+
     const overview=await rpc('bb_mobile_user_overview');
+
     let payment=null;
     try{
-      payment=await rpc('bb_staff_relation_my_payments',{p_from:null,p_to:null,p_salary_month:null});
+      payment=await rpc('bb_staff_relation_my_payments',{
+        p_from:null,
+        p_to:null,
+        p_salary_month:null
+      });
     }catch(error){
       console.warn('Mobile Your Earning:',error?.message||error);
+      payment=cached?.payment||null;
     }
+
     cached={overview,payment};
     lastLoad=Date.now();
     applyOverview(overview,payment);
   }catch(error){
     console.warn('Mobile user overview:',error?.message||error);
+
+    /* Keep last good data visible if a live refresh momentarily fails. */
+    if(cached)applyOverview(cached.overview,cached.payment);
   }finally{
     loading=false;
   }
@@ -137,13 +155,43 @@ async function refresh(force=false){
 function start(){
   const home=$('mobileHome');
   if(!home){setTimeout(start,100);return}
+
   const observer=new MutationObserver(()=>{
-    if(homeVisible())setTimeout(()=>refresh(false),40);
+    if(homeVisible()){
+      /* Returning from any module must immediately pull fresh viewer data. */
+      setTimeout(()=>refresh(true),40);
+    }
   });
-  observer.observe(home,{attributes:true,attributeFilter:['hidden']});
-  window.addEventListener('focus',()=>refresh(false));
+
+  observer.observe(home,{
+    attributes:true,
+    attributeFilter:['hidden']
+  });
+
+  window.addEventListener('focus',()=>refresh(true));
+
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='visible'&&homeVisible()){
+      refresh(true);
+    }
+  });
+
+  if(!liveTimer){
+    liveTimer=setInterval(()=>{
+      if(
+        homeVisible() &&
+        Date.now()-lastLoad>=LIVE_REFRESH_MS-1000
+      ){
+        refresh(true);
+      }
+    },LIVE_REFRESH_MS);
+  }
+
   if(homeVisible())refresh(true);
-  window.BBMobileUserOverview={refresh:()=>refresh(true)};
+
+  window.BBMobileUserOverview={
+    refresh:()=>refresh(true)
+  };
 }
 
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});
