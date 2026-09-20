@@ -108,14 +108,36 @@ function applyOverview(data,payment){
     ['👛','Your Earning',money(earning.usd),earningSub]
   ];
 
-  grid.innerHTML=cards.map(x=>
-    '<div class="sales-kpi locked">'+
-      '<span class="kpi-icon">'+esc(x[0])+'</span>'+
-      '<small>'+esc(x[1])+'</small>'+
-      '<strong>'+esc(x[2])+'</strong>'+
-      '<em>'+esc(x[3])+'</em>'+
-    '</div>'
-  ).join('');
+  const existing=[...grid.querySelectorAll('.sales-kpi')];
+
+  if(existing.length===cards.length){
+    /*
+     * Keep the premium card/button structure created by the mobile home
+     * renderer (including click routes and arrows) and update only live data.
+     */
+    existing.forEach((card,index)=>{
+      const values=cards[index];
+      const icon=card.querySelector('.kpi-icon');
+      const label=card.querySelector('small');
+      const value=card.querySelector('strong');
+      const sub=card.querySelector('em');
+
+      if(icon)icon.textContent=values[0];
+      if(label)label.textContent=values[1];
+      if(value)value.textContent=values[2];
+      if(sub)sub.textContent=values[3];
+    });
+  }else{
+    /* Fallback if the decorated home renderer has not run yet. */
+    grid.innerHTML=cards.map(x=>
+      '<div class="sales-kpi locked">'+
+        '<span class="kpi-icon">'+esc(x[0])+'</span>'+
+        '<small>'+esc(x[1])+'</small>'+
+        '<strong>'+esc(x[2])+'</strong>'+
+        '<em>'+esc(x[3])+'</em>'+
+      '</div>'
+    ).join('');
+  }
   if($('overviewTitle'))$('overviewTitle').textContent='My Overview';
   if($('periodLabel'))$('periodLabel').textContent=data.periodLabel||'This Month';
 }
