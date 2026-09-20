@@ -41,7 +41,7 @@ const ROUTES={
   'cogs-monthly':{tab:'reports',icon:'📦',label:'Monthly COGS',url:'https://angsokhey11-cloud.github.io/big-brother-cogs/monthly.html?embed=1&v=20260912-2'},
   'expense-monthly-report':{tab:'reports',icon:'💸',label:'Monthly Expense',url:'https://angsokhey11-cloud.github.io/big-brother-expenses/monthly-report.html?embed=1&v=1'},
 
-  'purchase-create':{tab:'more',icon:'🛒',label:'Create Purchase',url:'https://angsokhey11-cloud.github.io/big-brother-purchase-recorder/?embed=1&v=1'},
+  'purchase-create':{tab:'more',icon:'🛒',label:'Create Purchase',url:'https://angsokhey11-cloud.github.io/big-brother-purchase-recorder/?embed=1&v=20260920-iosdecimal1'},
   'purchase-history':{tab:'more',icon:'📚',label:'Purchase History',url:'https://angsokhey11-cloud.github.io/big-brother-puchase-history/?embed=1&v=1'},
   'purchase-payable':{tab:'more',icon:'💵',label:'Purchase Payable',url:'https://angsokhey11-cloud.github.io/big-brother-purchase-payable-invoice/?embed=1&v=1'},
   'purchase-payment-history':{tab:'more',icon:'💳',label:'Purchase Payments',url:'https://angsokhey11-cloud.github.io/big-brother-purchase-payment-history/?embed=1&v=1'},
