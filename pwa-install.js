@@ -55,7 +55,7 @@ function registerWorker(){
 }
 function loadMainMenuV4(){if(document.querySelector('script[data-bb-main-menu-v4]')||window.BBMobileRouteV4)return;const script=document.createElement('script');script.src='mobile-main-menu-v3.js?v=20260915-4';script.async=false;script.dataset.bbMainMenuV4='1';document.body.appendChild(script)}
 function loadMobilePolicy(){if(document.querySelector('script[data-bb-mobile-policy-v1]')||window.BBMobileUIPolicyV1)return;const script=document.createElement('script');script.src='mobile-ui-policy-v1.js?v=20260915-2';script.async=false;script.dataset.bbMobilePolicyV1='1';document.body.appendChild(script)}
-function loadNavigationV5(){if(document.querySelector('script[data-bb-navigation-v5]')||window.BBMobileNavigationV5)return;const script=document.createElement('script');script.src='mobile-navigation-v5.js?v=20260916-1';script.async=false;script.dataset.bbNavigationV5='1';document.body.appendChild(script)}
+function loadNavigationV5(){if(document.querySelector('script[data-bb-navigation-v5]')||window.BBMobileNavigationV5)return;const script=document.createElement('script');script.src='mobile-navigation-v5.js?v=20260920-history6';script.async=false;script.dataset.bbNavigationV5='1';document.body.appendChild(script)}
 function loadThemeV1(){if(document.querySelector('script[data-bb-theme-v1]')||window.BBMobileThemeV1)return;const script=document.createElement('script');script.src='mobile-theme-v1.js?v=20260916-2';script.async=false;script.dataset.bbThemeV1='1';document.body.appendChild(script)}
 function start(){
   registerWorker();loadMainMenuV4();loadMobilePolicy();loadNavigationV5();loadThemeV1();
