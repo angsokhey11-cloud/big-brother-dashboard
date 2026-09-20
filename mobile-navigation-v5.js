@@ -51,20 +51,30 @@ const GROUP={
 };
 
 
-const NAV_VERSION=6;
+const NAV_VERSION=7;
 const EXIT_WINDOW_MS=1900;
 const navSession=String(Date.now());
 let restoring=false;
 let exitArmedUntil=0;
+let stack=[];
 
 function currentRoute(){
   try{return new URL(location.href).searchParams.get('module')||''}catch(_){return''}
 }
 function routeGroup(route){return GROUP[String(route||'')]||''}
-function urlFor(view,route=''){
+function homeEntry(){return{view:'home'}}
+function menuEntry(group=''){return{view:'menu',group:String(group||'')}}
+function moduleEntry(route){return{view:'module',route:String(route||'')}}
+function entryKey(entry){
+  if(entry?.view==='module')return'module:'+String(entry.route||'');
+  if(entry?.view==='menu')return'menu:'+String(entry.group||'');
+  return'home';
+}
+function topEntry(){return stack[stack.length-1]||homeEntry()}
+function urlForEntry(entry){
   const u=new URL(location.href);
-  if(view==='module'&&route){
-    u.searchParams.set('module',route);
+  if(entry?.view==='module'&&entry.route){
+    u.searchParams.set('module',entry.route);
     u.searchParams.set('autoload','1');
   }else{
     u.searchParams.delete('module');
@@ -72,6 +82,8 @@ function urlFor(view,route=''){
   }
   return u.pathname+u.search+u.hash;
 }
+function rootState(){return{bbNavV:NAV_VERSION,bbNavSession:navSession,bbGuard:'root'}}
+function activeState(){return{bbNavV:NAV_VERSION,bbNavSession:navSession,bbGuard:'active'}}
 function hideAll(){
   ['mobileHome','menuScreen','moduleScreen'].forEach(id=>{const el=$(id);if(el)el.hidden=true});
 }
@@ -92,21 +104,16 @@ function applyOpenGroup(group=''){
     const name=(d.querySelector('.bb-dd-left span')?.textContent||'').trim();
     d.open=!!group&&name===group;
   });
-  if(group){
-    details.find(d=>d.open)?.scrollIntoView?.({block:'nearest'});
-  }else{
-    host.scrollTop=0;
-  }
+  if(group)details.find(d=>d.open)?.scrollIntoView?.({block:'nearest'});
+  else host.scrollTop=0;
 }
 function renderHome(){
   hideAll();
-  const home=$('mobileHome');
-  if(home)home.hidden=false;
+  if($('mobileHome'))$('mobileHome').hidden=false;
 }
 function renderMenu(group=''){
   hideAll();
-  const menu=$('menuScreen');
-  if(menu)menu.hidden=false;
+  if($('menuScreen'))$('menuScreen').hidden=false;
   setTimeout(()=>{
     try{window.BBMobileRouteV4?.rebuildMenu?.()}catch(_){}
     setTimeout(()=>applyOpenGroup(group),25);
@@ -124,67 +131,58 @@ function renderModule(route){
   restoring=false;
   return ok;
 }
-function currentDepth(){
-  const state=history.state||{};
-  return state.bbNavSession===navSession?Math.max(0,Number(state.bbDepth)||0):0;
+function renderEntry(entry){
+  if(entry?.view==='module')return renderModule(entry.route);
+  if(entry?.view==='menu'){renderMenu(entry.group||'');return true}
+  renderHome();return true;
 }
-function homeRootState(){
-  return {bbNavV:NAV_VERSION,bbNavSession:navSession,bbView:'home',bbDepth:0,bbHomeRoot:true};
+function syncActiveUrl(){
+  try{history.replaceState(activeState(),'',urlForEntry(topEntry()))}catch(_){}
 }
-function homeGuardState(){
-  return {bbNavV:NAV_VERSION,bbNavSession:navSession,bbView:'home',bbDepth:0,bbHomeGuard:true};
+function pushActiveGuard(){
+  try{history.pushState(activeState(),'',urlForEntry(topEntry()))}catch(_){}
 }
-function moduleState(route,depth){
-  return {bbNavV:NAV_VERSION,bbNavSession:navSession,bbView:'module',bbRoute:route,bbDepth:depth};
-}
-function menuState(group,depth){
-  return {bbNavV:NAV_VERSION,bbNavSession:navSession,bbView:'menu',bbGroup:group||'',bbDepth:depth};
+function resetStackToHome(){
+  stack=[homeEntry()];
+  exitArmedUntil=0;
+  renderHome();
+  syncActiveUrl();
 }
 function markInitialState(){
+  const requested=currentRoute();
+  stack=[homeEntry()];
+  if(requested)stack.push(moduleEntry(requested));
   try{
-    const route=currentRoute();
-    history.replaceState(homeRootState(),'',urlFor('home'));
-    history.pushState(homeGuardState(),'',urlFor('home'));
-    if(route){
-      history.pushState(moduleState(route,1),'',urlFor('module',route));
-    }
+    history.replaceState(rootState(),'',urlForEntry(homeEntry()));
+    history.pushState(activeState(),'',urlForEntry(topEntry()));
   }catch(_){}
 }
 function recordModule(route,push=true){
   route=String(route||'').trim();
   if(!route||restoring)return;
   exitArmedUntil=0;
-  try{
-    const state=history.state||{};
-    if(push){
-      if(state.bbNavSession===navSession&&state.bbView==='module'&&state.bbRoute===route){
-        history.replaceState({...state,bbRoute:route},'',urlFor('module',route));
-        return;
-      }
-      const depth=currentDepth()+1;
-      history.pushState(moduleState(route,depth),'',urlFor('module',route));
-    }else{
-      const depth=state.bbNavSession===navSession?Math.max(1,Number(state.bbDepth)||1):1;
-      history.replaceState(moduleState(route,depth),'',urlFor('module',route));
-    }
-  }catch(_){}
+  const next=moduleEntry(route);
+  if(push){
+    if(entryKey(topEntry())!==entryKey(next))stack.push(next);
+    else stack[stack.length-1]=next;
+  }else{
+    if(stack.length===1)stack.push(next);
+    else stack[stack.length-1]=next;
+  }
+  syncActiveUrl();
 }
 function recordMenu(group='',push=true){
   if(restoring)return;
   exitArmedUntil=0;
-  try{
-    const state=history.state||{};
-    if(push){
-      if(state.bbNavSession===navSession&&state.bbView==='menu'&&String(state.bbGroup||'')===String(group||'')){
-        history.replaceState({...state,bbGroup:group||''},'',urlFor('menu'));
-        return;
-      }
-      history.pushState(menuState(group,currentDepth()+1),'',urlFor('menu'));
-    }else{
-      const depth=state.bbNavSession===navSession?Math.max(1,Number(state.bbDepth)||1):1;
-      history.replaceState(menuState(group,depth),'',urlFor('menu'));
-    }
-  }catch(_){}
+  const next=menuEntry(group);
+  if(push){
+    if(entryKey(topEntry())!==entryKey(next))stack.push(next);
+    else stack[stack.length-1]=next;
+  }else{
+    if(stack.length===1)stack.push(next);
+    else stack[stack.length-1]=next;
+  }
+  syncActiveUrl();
 }
 function openModule(route,push=true){
   route=String(route||'').trim();
@@ -197,59 +195,38 @@ function openMenu(group='',push=true){
   renderMenu(group);
 }
 function goHome(){
-  exitArmedUntil=0;
-  const state=history.state||{};
-  if(state.bbNavSession===navSession&&state.bbView==='home'){
-    renderHome();
-    return;
-  }
-  const depth=currentDepth();
-  if(depth>0){
-    history.go(-depth);
-    return;
-  }
-  try{
-    history.replaceState(homeRootState(),'',urlFor('home'));
-    history.pushState(homeGuardState(),'',urlFor('home'));
-  }catch(_){}
-  renderHome();
+  resetStackToHome();
 }
-function tryExitFromHome(){
+function handleHomeExit(){
   const now=Date.now();
   if(now<exitArmedUntil){
     exitArmedUntil=0;
     try{window.close()}catch(_){}
-    setTimeout(()=>{try{history.back()}catch(_){}},0);
+    /* Never intentionally traverse stale BIG BROTHER entries from older builds. */
+    if(history.length<=2){
+      setTimeout(()=>{try{history.back()}catch(_){}},0);
+    }else{
+      setTimeout(()=>{
+        if(document.visibilityState==='visible')pushActiveGuard();
+      },220);
+    }
     return;
   }
   exitArmedUntil=now+EXIT_WINDOW_MS;
   renderHome();
   showToast('Press Back again to exit');
-  try{history.pushState(homeGuardState(),'',urlFor('home'))}catch(_){}
+  pushActiveGuard();
 }
-function restoreState(state){
-  state=state||{};
-  if(state.bbNavSession!==navSession){
+function handleBackTrigger(state){
+  if(state?.bbNavSession!==navSession||state?.bbGuard!=='root')return;
+  if(stack.length>1){
+    exitArmedUntil=0;
+    stack.pop();
+    renderEntry(topEntry());
+    pushActiveGuard();
     return;
   }
-  if(state.bbHomeRoot){
-    tryExitFromHome();
-    return;
-  }
-  exitArmedUntil=0;
-  if(state.bbView==='home'){
-    renderHome();
-    return;
-  }
-  if(state.bbView==='menu'){
-    renderMenu(state.bbGroup||'');
-    return;
-  }
-  if(state.bbView==='module'&&state.bbRoute){
-    renderModule(state.bbRoute);
-    return;
-  }
-  renderHome();
+  handleHomeExit();
 }
 function interceptNavigation(){
   document.addEventListener('click',event=>{
@@ -259,22 +236,20 @@ function interceptNavigation(){
       goHome();
       return;
     }
-
     const menuBtn=event.target.closest?.('[data-bb-nav="menu"],[data-nav="more"]');
     if(menuBtn){
-      const route=(!$('moduleScreen')?.hidden)?currentRoute():'';
+      const current=topEntry();
+      const group=current?.view==='module'?routeGroup(current.route):'';
       event.preventDefault();event.stopImmediatePropagation();event.stopPropagation();
-      openMenu(route?routeGroup(route):'',true);
+      openMenu(group,true);
       return;
     }
-
     const backBtn=event.target.closest?.('#moduleBack,#menuBack');
     if(backBtn){
       event.preventDefault();event.stopImmediatePropagation();event.stopPropagation();
       history.back();
       return;
     }
-
     const routeBtn=event.target.closest?.('[data-sales-route],[data-menu-route],[data-bb-route],[data-route],[data-kpi-route],[data-att-route]');
     if(!routeBtn)return;
     const route=routeBtn.dataset.salesRoute||routeBtn.dataset.menuRoute||routeBtn.dataset.bbRoute||routeBtn.dataset.route||routeBtn.dataset.kpiRoute||routeBtn.dataset.attRoute||'';
@@ -287,8 +262,8 @@ function watchMenu(){
   const menu=$('menuScreen');if(!menu)return;
   new MutationObserver(()=>{
     if(menu.hidden)return;
-    const state=history.state||{};
-    setTimeout(()=>applyOpenGroup(state.bbNavSession===navSession&&state.bbView==='menu'?(state.bbGroup||''):''),80);
+    const entry=topEntry();
+    setTimeout(()=>applyOpenGroup(entry?.view==='menu'?(entry.group||''):''),80);
   }).observe(menu,{attributes:true,attributeFilter:['hidden']});
 }
 function start(){
@@ -296,21 +271,24 @@ function start(){
   interceptNavigation();
   watchMenu();
   window.addEventListener('popstate',event=>{
-    setTimeout(()=>restoreState(event.state||{}),0);
+    setTimeout(()=>handleBackTrigger(event.state||{}),0);
   });
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});
 else start();
 
-window.BBMobileHistoryV6={
+const api={
   openModule,
   openMenu,
   goHome,
   recordModule,
   recordMenu,
-  restoreState,
+  renderEntry,
   isRestoring:()=>restoring,
-  currentDepth
+  stack:()=>stack.map(x=>({...x}))
 };
-window.BBMobileNavigationV5=window.BBMobileHistoryV6;
+window.BBMobileHistoryV7=api;
+/* Compatibility for existing mobile files while they migrate to V7. */
+window.BBMobileHistoryV6=api;
+window.BBMobileNavigationV5=api;
 })();
