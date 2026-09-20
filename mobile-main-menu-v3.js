@@ -158,7 +158,7 @@ const PC={
 function routeUrl(route){return MOBILE[route]||PC[route]||(DASH+'?module='+encodeURIComponent(route)+'&autoload=1')}
 function routeLabel(route){return META[route]?.[2]||route}
 
-function openDirect(route,push=true){
+function renderDirect(route){
  const frame=$('moduleFrame'),screen=$('moduleScreen');
  if(!frame||!screen)return false;
  const url=routeUrl(route);
@@ -168,6 +168,15 @@ function openDirect(route,push=true){
  if($('moduleTitle'))$('moduleTitle').textContent=routeLabel(route);
  if($('moduleDesktopLink'))$('moduleDesktopLink').href=DASH+'?module='+encodeURIComponent(route)+'&autoload=1';
  frame.src=url;
+ return true;
+}
+function openDirect(route,push=true){
+ if(!renderDirect(route))return false;
+ const nav=window.BBMobileHistoryV6;
+ if(nav&&!nav.isRestoring?.()){
+   nav.recordModule(route,push);
+   return true;
+ }
  try{
    const u=new URL(location.href);
    u.searchParams.set('module',route);
@@ -245,5 +254,5 @@ function start(){
 }
 
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
-window.BBMobileRouteV4={open:openDirect,rebuildMenu};
+window.BBMobileRouteV4={open:openDirect,render:renderDirect,rebuildMenu};
 })();
