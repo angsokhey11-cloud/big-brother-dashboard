@@ -107,6 +107,17 @@ function shellCss(){return `
     display:none!important;
   }
 
+  /* Function workspace uses full height; bottom navigation is the only persistent shell chrome. */
+  html[data-bb-theme="premium-light"] .module-header{
+    display:none!important;
+  }
+
+  html[data-bb-theme="premium-light"] .module-frame{
+    top:env(safe-area-inset-top)!important;
+    bottom:calc(70px + env(safe-area-inset-bottom))!important;
+    height:calc(100dvh - 70px - env(safe-area-inset-top) - env(safe-area-inset-bottom))!important;
+  }
+
 
   html[data-bb-theme="premium-light"] .panel,
   html[data-bb-theme="premium-light"] .menu-card,
