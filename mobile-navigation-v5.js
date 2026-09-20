@@ -219,6 +219,18 @@ function handleHomeExit(){
 }
 function handleBackTrigger(state){
   if(state?.bbNavSession!==navSession||state?.bbGuard!=='root')return;
+
+  /* Menu is a top-level workspace. Android Back from Menu always returns Home,
+     regardless of any stale/partial stack state that existed before Menu opened. */
+  const menuVisible=!!$('menuScreen')&&!$('menuScreen').hidden;
+  if(menuVisible||topEntry()?.view==='menu'){
+    stack=[homeEntry()];
+    exitArmedUntil=0;
+    renderHome();
+    pushActiveGuard();
+    return;
+  }
+
   if(stack.length>1){
     exitArmedUntil=0;
     stack.pop();
@@ -226,6 +238,7 @@ function handleBackTrigger(state){
     pushActiveGuard();
     return;
   }
+
   handleHomeExit();
 }
 function interceptNavigation(){
