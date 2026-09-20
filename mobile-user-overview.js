@@ -10,6 +10,7 @@ let cached=null;
 let loading=false;
 let lastLoad=0;
 let liveTimer=null;
+let disabledForAdmin=false;
 const LIVE_REFRESH_MS=20000;
 
 const $=id=>document.getElementById(id);
@@ -113,7 +114,7 @@ function applyOverview(data,payment){
 }
 
 async function refresh(force=false){
-  if(loading||!homeVisible()||!readSession()?.access_token)return;
+  if(disabledForAdmin||loading||!homeVisible()||!readSession()?.access_token)return;
 
   /*
    * Viewer Overview is always refreshed from Supabase when requested.
@@ -123,7 +124,14 @@ async function refresh(force=false){
 
   try{
     const profile=await rpc('bb_current_access_profile');
-    if(profile?.user?.isAdmin===true)return;
+    if(profile?.user?.isAdmin===true){
+      disabledForAdmin=true;
+      if(liveTimer){
+        clearInterval(liveTimer);
+        liveTimer=null;
+      }
+      return;
+    }
 
     const overview=await rpc('bb_mobile_user_overview');
 
