@@ -5,6 +5,7 @@
 const SUPABASE_URL='https://sjfhlaclgmkwwofzstok.supabase.co';
 const SUPABASE_KEY='sb_publishable_w762jR65CWwlO30fKQsYOw_6L9grx8S';
 const SESSION_KEY='BB_SUPABASE_DEV_SESSION_V1';
+const LOGIN_EMAIL_KEY='BB_MOBILE_LOGIN_EMAIL_V1';
 
 const REQUIRED_ACTION={
   'customers-add':'create','clients-add':'create','products-add':'create',
@@ -87,8 +88,35 @@ function saveSession(value){
 async function parse(response){
   const text=await response.text();let data={};
   try{data=text?JSON.parse(text):{}}catch(_){data={message:text}}
-  if(!response.ok)throw new Error(data.message||data.error_description||data.error||('Request failed ('+response.status+')'));
+  if(!response.ok){
+    const error=new Error(data.message||data.error_description||data.error||('Request failed ('+response.status+')'));
+    error.status=response.status;
+    error.code=data.code||data.error_code||data.error||'';
+    throw error;
+  }
   return data;
+}
+function isSessionAuthError(error){
+  const message=String(error?.message||'').toLowerCase();
+  const status=Number(error?.status||0);
+  if(message==='please sign in to big brother.')return true;
+  if(status===401)return true;
+  if(status===400&&(
+    message.includes('refresh token')||
+    message.includes('invalid token')||
+    message.includes('token has expired')||
+    message.includes('jwt expired')||
+    message.includes('session not found')
+  ))return true;
+  return false;
+}
+function readRememberedEmail(){
+  try{return String(localStorage.getItem(LOGIN_EMAIL_KEY)||'').trim()}catch(_){return ''}
+}
+function rememberEmail(value){
+  const email=String(value||'').trim();
+  if(!email)return;
+  try{localStorage.setItem(LOGIN_EMAIL_KEY,email)}catch(_){}
 }
 async function refreshSession(){
   const current=readSession();
@@ -154,6 +182,18 @@ function statusIcon(type){const t=String(type||'').toLowerCase();if(t.includes('
 function hideAll(){['bootScreen','loginScreen','mobileHome','menuScreen','moduleScreen'].forEach(id=>$(id).hidden=true)}
 function showLogin(message=''){
   hideAll();$('loginScreen').hidden=false;$('loginError').textContent=message||'';
+  const email=$('loginEmail');
+  const password=$('loginPassword');
+  if(email&&!email.value){
+    const remembered=readRememberedEmail();
+    if(remembered)email.value=remembered;
+  }
+  setTimeout(()=>{
+    try{
+      if(email?.value)password?.focus({preventScroll:true});
+      else email?.focus({preventScroll:true});
+    }catch(_){}
+  },120);
 }
 function toast(message){
   const t=$('toast');t.textContent=message;t.hidden=false;clearTimeout(toast._timer);toast._timer=setTimeout(()=>t.hidden=true,2600);
@@ -271,12 +311,66 @@ async function activate(){
 }
 async function boot(){
   hideAll();$('bootScreen').hidden=false;
-  try{await ensureSession();await activate()}catch(error){saveSession(null);showLogin(error?.message==='Please sign in to BIG BROTHER.'?'':(error?.message||''))}
+  try{
+    await ensureSession();
+    await activate();
+  }catch(error){
+    if(isSessionAuthError(error)){
+      saveSession(null);
+      showLogin(error?.message==='Please sign in to BIG BROTHER.'?'':(error?.message||''));
+      return;
+    }
+
+    /* iOS/PWA can briefly lose network while opening or resuming.
+       Keep the saved session and retry once instead of forcing a new login. */
+    try{
+      await new Promise(resolve=>setTimeout(resolve,650));
+      await ensureSession();
+      await activate();
+      return;
+    }catch(retryError){
+      if(isSessionAuthError(retryError))saveSession(null);
+      showLogin(
+        isSessionAuthError(retryError)
+          ? (retryError?.message==='Please sign in to BIG BROTHER.'?'':(retryError?.message||''))
+          : 'Could not reconnect yet. Your saved login is still kept. Check internet and try again.'
+      );
+    }
+  }
 }
 
 $('loginForm').addEventListener('submit',async event=>{
-  event.preventDefault();const btn=$('loginButton');$('loginError').textContent='';btn.disabled=true;btn.textContent='Signing in…';
-  try{await signIn($('loginEmail').value,$('loginPassword').value);await activate()}catch(error){$('loginError').textContent=error?.message||String(error)}finally{btn.disabled=false;btn.textContent='Sign In'}
+  event.preventDefault();
+  const btn=$('loginButton');
+  const email=String($('loginEmail').value||'').trim();
+  const password=$('loginPassword');
+  $('loginError').textContent='';
+  btn.disabled=true;
+  btn.textContent='Signing in…';
+  try{
+    await signIn(email,password.value);
+    rememberEmail(email);
+    password.value='';
+    await activate();
+  }catch(error){
+    $('loginError').textContent=error?.message||String(error);
+    setTimeout(()=>{try{password?.focus({preventScroll:true})}catch(_){}},60);
+  }finally{
+    btn.disabled=false;
+    btn.textContent='Sign In';
+  }
+});
+
+$('toggleLoginPassword')?.addEventListener('click',()=>{
+  const input=$('loginPassword');
+  const button=$('toggleLoginPassword');
+  if(!input||!button)return;
+  const showing=input.type==='text';
+  input.type=showing?'password':'text';
+  button.textContent=showing?'Show':'Hide';
+  button.setAttribute('aria-label',showing?'Show password':'Hide password');
+  button.setAttribute('aria-pressed',showing?'false':'true');
+  try{input.focus({preventScroll:true})}catch(_){}
 });
 $('settingsBtn').onclick=openSettings;$('menuSettings').onclick=openSettings;$('closeSettings').onclick=closeSettings;$('settingsSheet').onclick=e=>{if(e.target===$('settingsSheet'))closeSettings()};$('signOutBtn').onclick=async()=>{closeSettings();await signOut()};
 $('notificationBtn').onclick=()=>{if(canRoute('notification-center'))openModule('notification-center',true);else toast('Notifications are not assigned to this user.')};
