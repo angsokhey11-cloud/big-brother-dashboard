@@ -160,12 +160,19 @@ function routeLabel(route){return META[route]?.[2]||route}
 
 function replaceFrameUrl(frame,url){
  try{
-   if(frame?.contentWindow?.location){
-     frame.contentWindow.location.replace(url);
-     return;
-   }
+   if(!frame?.parentNode)return;
+   const fresh=frame.cloneNode(false);
+   fresh.removeAttribute('src');
+   fresh.removeAttribute('data-bb-theme-bound');
+   frame.replaceWith(fresh);
+   fresh.addEventListener('load',()=>{
+     try{window.BBMobileThemeV1?.applyFrameTheme?.()}catch(_){}
+   });
+   fresh.src=url;
+   return fresh;
  }catch(_){}
  try{frame.src=url}catch(_){}
+ return frame;
 }
 
 function renderDirect(route){
@@ -182,7 +189,7 @@ function renderDirect(route){
 }
 function openDirect(route,push=true){
  if(!renderDirect(route))return false;
- const nav=window.BBMobileHistoryV6;
+ const nav=window.BBMobileHistoryV7||window.BBMobileHistoryV6;
  if(nav&&!nav.isRestoring?.()){
    nav.recordModule(route,push);
    return true;
@@ -191,7 +198,7 @@ function openDirect(route,push=true){
    const u=new URL(location.href);
    u.searchParams.set('module',route);
    u.searchParams.set('autoload','1');
-   history[push?'pushState':'replaceState']({},'',u.pathname+u.search+u.hash);
+   history.replaceState(history.state||{},'',u.pathname+u.search+u.hash);
  }catch(_){}
  return true;
 }
