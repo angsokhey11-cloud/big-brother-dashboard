@@ -111,7 +111,7 @@ function layout(){
   Array.from(home.children).forEach(el=>{if(el!==top)el.remove()});
   const wrap=document.createElement('div');wrap.className='bb-ov';wrap.id='bbOverview';
   wrap.innerHTML=`
-    <div class="bb-ov-monthbar"><div><strong>📊 Management Overview</strong><span>Monthly performance with current A/R, A/P and stock snapshots.</span></div><div class="bb-ov-monthctl"><div class="bb-ov-field"><label>Select Month</label><input id="bbOverviewMonth" type="month"></div><button id="bbOverviewRefresh" class="bb-ov-btn" type="button">Refresh</button></div></div>
+    <div class="bb-ov-monthbar"><div><strong>📊 Management Overview</strong><span>Live management data · auto-updates every 20 seconds while this Dashboard is open.</span></div><div class="bb-ov-monthctl"><div class="bb-ov-field"><label>Select Month</label><input id="bbOverviewMonth" type="month"></div><button id="bbOverviewRefresh" class="bb-ov-btn" type="button">Refresh</button></div></div>
     <div id="bbOverviewError" class="bb-ov-error" hidden></div>
     <div id="bbOverviewBody"><div class="bb-ov-loading">Loading monthly overview…</div></div>`;
   home.appendChild(wrap);
