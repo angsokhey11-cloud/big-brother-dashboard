@@ -207,10 +207,19 @@ function renderHome(){
   $('notificationBtn').style.opacity=canRoute('notification-center')?'1':'.35';
 }
 function showHome(clearRoute=true){
-  activeTab='home';hideAll();$('mobileHome').hidden=false;if(clearRoute)setUrlRoute('');renderHome();refreshNav('home');$('mobileScroll').scrollTop=0;
+  activeTab='home';hideAll();$('mobileHome').hidden=false;
+  if(clearRoute){
+    if(window.BBMobileHistoryV6)window.BBMobileHistoryV6.goHome();
+    else setUrlRoute('');
+  }
+  renderHome();refreshNav('home');$('mobileScroll').scrollTop=0;
 }
 function showMenu(tab,clearRoute=true){
-  activeTab=tab;hideAll();$('menuScreen').hidden=false;if(clearRoute)setUrlRoute('');
+  activeTab=tab;hideAll();$('menuScreen').hidden=false;
+  if(clearRoute){
+    if(window.BBMobileHistoryV6)window.BBMobileHistoryV6.recordMenu(tab,true);
+    else setUrlRoute('');
+  }
   const names={sales:'Sales',stock:'Stock',reports:'Reports',more:'More'};const items=permittedRoutes(tab);
   $('menuTitle').textContent=names[tab]||'Workspace';$('menuSubtitle').textContent=items.length+' available functions';
   $('menuGrid').innerHTML=items.length?items.map(([route,x])=>`<button type="button" class="menu-card" data-route="${route}"><b>${x.icon}</b><strong>${esc(x.label)}</strong><small>Open function</small></button>`).join(''):'<div class="menu-empty">No functions assigned in this section.</div>';
@@ -219,7 +228,12 @@ function showMenu(tab,clearRoute=true){
 function openModule(route,updateUrl=true){
   const item=ROUTES[route];if(!item){toast('This mobile route is not ready yet.');return false}if(!canRoute(route)){toast('Access denied for this function.');return false}
   hideAll();$('moduleScreen').hidden=false;$('moduleTitle').textContent=item.label;$('moduleFrame').src=item.url;
-  $('moduleDesktopLink').href='index.html?module='+encodeURIComponent(route)+'&autoload=1';if(updateUrl)setUrlRoute(route);refreshNav('');return true;
+  $('moduleDesktopLink').href='index.html?module='+encodeURIComponent(route)+'&autoload=1';
+  if(updateUrl){
+    if(window.BBMobileHistoryV6)window.BBMobileHistoryV6.recordModule(route,true);
+    else setUrlRoute(route);
+  }
+  refreshNav('');return true;
 }
 function navigate(tab){
   if(tab==='home')showHome(true);else showMenu(tab,true);
@@ -250,7 +264,7 @@ $('loginForm').addEventListener('submit',async event=>{
 $('settingsBtn').onclick=openSettings;$('menuSettings').onclick=openSettings;$('closeSettings').onclick=closeSettings;$('settingsSheet').onclick=e=>{if(e.target===$('settingsSheet'))closeSettings()};$('signOutBtn').onclick=async()=>{closeSettings();await signOut()};
 $('notificationBtn').onclick=()=>{if(canRoute('notification-center'))openModule('notification-center',true);else toast('Notifications are not assigned to this user.')};
 $('menuBack').onclick=()=>showHome(true);$('moduleBack').onclick=()=>showMenu(ROUTES[new URLSearchParams(location.search).get('module')||'']?.tab||'home',true);
-window.addEventListener('popstate',()=>{const route=new URLSearchParams(location.search).get('module')||'';if(route&&ROUTES[route]&&canRoute(route))openModule(route,false);else showHome(false)});
+window.addEventListener('popstate',()=>{if(window.BBMobileHistoryV6)return;const route=new URLSearchParams(location.search).get('module')||'';if(route&&ROUTES[route]&&canRoute(route))openModule(route,false);else showHome(false)});
 
 boot();
 })();
