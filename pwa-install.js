@@ -7,6 +7,8 @@ let dismissed=false;
 const $=id=>document.getElementById(id);
 
 function isStandalone(){return window.matchMedia?.('(display-mode: standalone)')?.matches===true || window.navigator.standalone===true}
+function isIOS(){const ua=navigator.userAgent||'';return /iPhone|iPad|iPod/i.test(ua)||(navigator.platform==='MacIntel'&&Number(navigator.maxTouchPoints||0)>1)}
+function isIOSSafari(){const ua=navigator.userAgent||'';return isIOS()&&/Safari/i.test(ua)&&!/CriOS|FxiOS|EdgiOS|OPiOS/i.test(ua)}
 function isChromeLike(){const ua=navigator.userAgent||'';return /Chrome|CriOS|EdgA/i.test(ua) && !/Firefox|FxiOS/i.test(ua)}
 function homeVisible(){const home=$('mobileHome');return !!home && !home.hidden}
 function toast(text){const el=$('toast');if(!el)return;el.textContent=text;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>{el.hidden=true},3200)}
@@ -18,14 +20,70 @@ function ensureBanner(){
   const intro=$('salesmanIntro');if(intro&&intro.parentNode===content)intro.insertAdjacentElement('afterend',banner);else content.insertBefore(banner,content.firstChild);
   $('pwaBannerInstall').addEventListener('click',installApp);$('pwaBannerClose').addEventListener('click',()=>{dismissed=true;render()});return banner;
 }
+function ensureIOSGuide(){
+  let guide=$('bbIOSInstallGuide');if(guide)return guide;
+  guide=document.createElement('div');guide.id='bbIOSInstallGuide';guide.className='bb-ios-install-guide';guide.hidden=true;
+  guide.innerHTML=`
+    <div class="bb-ios-install-card" role="dialog" aria-modal="true" aria-labelledby="bbIOSInstallTitle">
+      <button id="bbIOSInstallClose" class="bb-ios-install-close" type="button" aria-label="Close">×</button>
+      <div class="bb-ios-install-icon">📲</div>
+      <h3 id="bbIOSInstallTitle">Install BIG BROTHER on iPhone / iPad</h3>
+      <p id="bbIOSInstallIntro"></p>
+      <ol>
+        <li>Open BIG BROTHER in <strong>Safari</strong>.</li>
+        <li>Tap the <strong>Share</strong> button <span aria-hidden="true">⬆</span>.</li>
+        <li>Choose <strong>Add to Home Screen</strong>.</li>
+        <li>Turn on <strong>Open as Web App</strong>, then tap <strong>Add</strong>.</li>
+      </ol>
+      <p class="bb-ios-install-note">If “Add to Home Screen” is missing, scroll to the bottom of the Share menu → <strong>Edit Actions</strong> → add “Add to Home Screen”.</p>
+      <button id="bbIOSInstallDone" class="bb-ios-install-done" type="button">Got it</button>
+    </div>`;
+  document.body.appendChild(guide);
+  const close=()=>{guide.hidden=true};
+  $('bbIOSInstallClose')?.addEventListener('click',close);
+  $('bbIOSInstallDone')?.addEventListener('click',close);
+  guide.addEventListener('click',event=>{if(event.target===guide)close()});
+  return guide;
+}
+function showIOSGuide(){
+  const guide=ensureIOSGuide();
+  const intro=$('bbIOSInstallIntro');
+  if(intro)intro.textContent=isIOSSafari()
+    ? 'Safari is ready. Follow these steps to place BIG BROTHER on your Home Screen.'
+    : 'This page is not open in Safari. Open the same BIG BROTHER page in Safari first, then follow these steps.';
+  guide.hidden=false;
+}
 function settingsState(){
   const btn=$('installAppBtn'),sub=$('installAppStatus');if(!btn)return;
   if(isStandalone()){btn.hidden=true;return}btn.hidden=false;
+  if(isIOS()){
+    if(sub)sub.textContent=isIOSSafari()?'Safari: Share → Add to Home Screen':'Open in Safari to install on iPhone / iPad';
+    return;
+  }
   if(sub)sub.textContent=deferredPrompt?'Install BIG BROTHER directly from Chrome':isChromeLike()?'Chrome install becomes available when the app is ready':'Open this page in Chrome to install the app';
 }
-function render(){const banner=ensureBanner(),installed=isStandalone();if(banner)banner.hidden=installed||!deferredPrompt||dismissed||!homeVisible();settingsState()}
+function render(){
+  const banner=ensureBanner(),installed=isStandalone();
+  if(banner){
+    const copy=banner.querySelector('.pwa-install-copy small');
+    const button=$('pwaBannerInstall');
+    if(isIOS()){
+      if(copy)copy.textContent=isIOSSafari()
+        ? 'Tap Install to see the Safari steps: Share → Add to Home Screen.'
+        : 'Open BIG BROTHER in Safari, then add it to your Home Screen.';
+      if(button)button.textContent='How to Install';
+      banner.hidden=installed||dismissed||!homeVisible();
+    }else{
+      if(copy)copy.textContent='Open faster from your phone home screen. Your existing BIG BROTHER login stays on this device.';
+      if(button)button.textContent='Install';
+      banner.hidden=installed||!deferredPrompt||dismissed||!homeVisible();
+    }
+  }
+  settingsState();
+}
 async function installApp(){
   if(isStandalone()){toast('BIG BROTHER is already installed on this device.');render();return}
+  if(isIOS()){showIOSGuide();return}
   if(!deferredPrompt){if(isChromeLike())toast('Chrome is preparing the install option. You can also use Chrome ⋮ → Add to Home screen / Install app.');else toast('Open BIG BROTHER in Chrome, then choose Install App.');return}
   const prompt=deferredPrompt;deferredPrompt=null;
   try{await prompt.prompt();const choice=await prompt.userChoice;if(choice?.outcome==='accepted'){dismissed=true;toast('Installing BIG BROTHER…')}else toast('Installation cancelled. You can install later from Mobile Settings.')}catch(error){console.warn('BIG BROTHER PWA install:',error);toast('Could not open the install prompt. Try Chrome ⋮ → Install app.')}render();
@@ -66,6 +124,6 @@ function start(){
   setTimeout(loadMainMenuV4,1500);setTimeout(loadMobilePolicy,1650);setTimeout(loadNavigationV5,1750);setTimeout(loadThemeV1,1850);
   setTimeout(render,100);setTimeout(render,1200);
 }
-window.BBPWAInstall={install:installApp,render,isStandalone};
+window.BBPWAInstall={install:installApp,render,isStandalone,isIOS,isIOSSafari};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();
