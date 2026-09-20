@@ -241,6 +241,259 @@ function injectCss(){
       #quickActions .quick-icon{width:41px!important;height:41px!important;font-size:20px!important}
       #quickActions .quick-btn>span{font-size:8.5px!important}
     }
+
+
+    /* =====================================================
+       PREMIUM LIGHT HOME — COLOR POLISH V1
+       Layout stays unchanged. Color follows meaning/function.
+       ===================================================== */
+
+    /* Slightly richer Home header / panels */
+    #mobileHome .hero{
+      background:
+        radial-gradient(circle at 92% 0%,rgba(45,142,235,.13) 0,transparent 30%),
+        linear-gradient(145deg,#fbfdff 0%,#edf6ff 68%,#e5f1fc 100%)!important;
+      border-bottom:1px solid #cbdfee!important;
+    }
+
+    #mobileHome .overview-panel{
+      background:linear-gradient(150deg,#fbfdff,#f5faff)!important;
+      border-color:#cddfed!important;
+    }
+
+    #mobileHome .quick-panel{
+      background:linear-gradient(150deg,#fbfdff,#f7fbff)!important;
+      border-color:#d1e1ed!important;
+    }
+
+    #mobileHome .section-head strong{
+      color:#163a60!important;
+    }
+
+    /* KPI cards: Sales blue · Receivable amber · Stock green · Earning rose */
+    #mobileHome #kpiGrid .sales-kpi{
+      border:1px solid transparent!important;
+      box-shadow:0 6px 16px rgba(31,72,110,.055)!important;
+      overflow:hidden!important;
+    }
+
+    #mobileHome #kpiGrid .sales-kpi:nth-child(1){
+      background:linear-gradient(145deg,#f3f9ff,#e7f3ff)!important;
+      border-color:#c5dff6!important;
+      box-shadow:inset 3px 0 0 #2f80ed,0 6px 16px rgba(47,128,237,.07)!important;
+    }
+    #mobileHome #kpiGrid .sales-kpi:nth-child(1) .kpi-icon{
+      background:#dceeff!important;
+      color:#166dca!important;
+    }
+    #mobileHome #kpiGrid .sales-kpi:nth-child(1) .kpi-arrow{
+      background:#e5f2ff!important;
+      color:#2478cb!important;
+    }
+
+    #mobileHome #kpiGrid .sales-kpi:nth-child(2){
+      background:linear-gradient(145deg,#fffaf0,#fff2d9)!important;
+      border-color:#f0d8a4!important;
+      box-shadow:inset 3px 0 0 #e4a326,0 6px 16px rgba(216,154,23,.07)!important;
+    }
+    #mobileHome #kpiGrid .sales-kpi:nth-child(2) .kpi-icon{
+      background:#ffebbd!important;
+      color:#a96e00!important;
+    }
+    #mobileHome #kpiGrid .sales-kpi:nth-child(2) .kpi-arrow{
+      background:#fff0cf!important;
+      color:#b0780c!important;
+    }
+
+    #mobileHome #kpiGrid .sales-kpi:nth-child(3){
+      background:linear-gradient(145deg,#f2fbf7,#e3f6ed)!important;
+      border-color:#bee4d2!important;
+      box-shadow:inset 3px 0 0 #27ae60,0 6px 16px rgba(39,174,96,.065)!important;
+    }
+    #mobileHome #kpiGrid .sales-kpi:nth-child(3) .kpi-icon{
+      background:#d9f3e6!important;
+      color:#16834b!important;
+    }
+    #mobileHome #kpiGrid .sales-kpi:nth-child(3) .kpi-arrow{
+      background:#e0f6eb!important;
+      color:#208d53!important;
+    }
+
+    #mobileHome #kpiGrid .sales-kpi:nth-child(4){
+      background:linear-gradient(145deg,#fff6f7,#fde9ec)!important;
+      border-color:#f0cbd1!important;
+      box-shadow:inset 3px 0 0 #e45f70,0 6px 16px rgba(228,95,112,.065)!important;
+    }
+    #mobileHome #kpiGrid .sales-kpi:nth-child(4) .kpi-icon{
+      background:#f9dfe4!important;
+      color:#c84558!important;
+    }
+    #mobileHome #kpiGrid .sales-kpi:nth-child(4) .kpi-arrow{
+      background:#fbe7ea!important;
+      color:#cf5262!important;
+    }
+
+    #mobileHome #kpiGrid .sales-kpi strong{
+      color:#173d63!important;
+    }
+
+    /* Quick Actions: route colors stay with the function after rearranging */
+    #mobileHome #quickActions .quick-btn{
+      background:transparent!important;
+    }
+
+    #mobileHome #quickActions .quick-icon{
+      border:1px solid transparent!important;
+      box-shadow:0 4px 12px rgba(29,68,105,.07)!important;
+    }
+
+    #mobileHome #quickActions [data-sales-route="sales-support-calculator"] .quick-icon{
+      background:linear-gradient(145deg,#e8f3ff,#d5eaff)!important;
+      border-color:#bddaf4!important;
+    }
+
+    #mobileHome #quickActions [data-sales-route="sales-support-add-customer"] .quick-icon,
+    #mobileHome #quickActions [data-sales-route="customers-add"] .quick-icon{
+      background:linear-gradient(145deg,#e9f9f1,#d7f2e5)!important;
+      border-color:#bfe3d1!important;
+    }
+
+    #mobileHome #quickActions [data-sales-route="sales-support-customer-map"] .quick-icon,
+    #mobileHome #quickActions [data-sales-route="customers-map"] .quick-icon{
+      background:linear-gradient(145deg,#fff1ed,#ffe1da)!important;
+      border-color:#f1c9bf!important;
+    }
+
+    #mobileHome #quickActions [data-sales-route="sales-support-your-collection"] .quick-icon,
+    #mobileHome #quickActions [data-sales-route="daily-cash-collection"] .quick-icon{
+      background:linear-gradient(145deg,#fff8e8,#ffedc5)!important;
+      border-color:#ecd59d!important;
+    }
+
+    #mobileHome #quickActions [data-sales-route="sales-support-your-customer"] .quick-icon,
+    #mobileHome #quickActions [data-sales-route="customers-details"] .quick-icon{
+      background:linear-gradient(145deg,#e8fbfb,#d7f1f2)!important;
+      border-color:#b9dddf!important;
+    }
+
+    #mobileHome #quickActions [data-sales-route="sales-support-your-invoices"] .quick-icon,
+    #mobileHome #quickActions [data-sales-route="invoice"] .quick-icon,
+    #mobileHome #quickActions [data-sales-route="history"] .quick-icon{
+      background:linear-gradient(145deg,#f2edff,#e5dcff)!important;
+      border-color:#d4c7f1!important;
+    }
+
+    #mobileHome #quickActions [data-sales-route="sales-support-your-stock"] .quick-icon,
+    #mobileHome #quickActions [data-sales-route="stock-report"] .quick-icon{
+      background:linear-gradient(145deg,#ecf9ef,#dcf2e3)!important;
+      border-color:#c1dfca!important;
+    }
+
+    #mobileHome #quickActions [data-sales-route="sales-support-your-receivable"] .quick-icon,
+    #mobileHome #quickActions [data-sales-route="ar-your"] .quick-icon{
+      background:linear-gradient(145deg,#fff7e7,#ffe9bd)!important;
+      border-color:#edd39b!important;
+    }
+
+    #mobileHome #quickActions [data-sales-route*="delivery"] .quick-icon{
+      background:linear-gradient(145deg,#e9f6ff,#d8ecfb)!important;
+      border-color:#bfdbea!important;
+    }
+
+    #mobileHome #quickActions [data-sales-route="staff-relation"] .quick-icon{
+      background:linear-gradient(145deg,#f3efff,#e6defa)!important;
+      border-color:#d4c7ec!important;
+    }
+
+    /* Attention rows: color communicates status without making the page loud */
+    #mobileHome #recentList .bb-att-row{
+      border:1px solid transparent!important;
+      border-radius:12px!important;
+      padding:9px 8px!important;
+      transition:none!important;
+    }
+
+    #mobileHome #recentList .bb-att-row[data-att-type="receivable"]{
+      background:#fff9ec!important;
+      border-color:#f0dfb6!important;
+      box-shadow:inset 3px 0 0 #e4a326!important;
+    }
+    #mobileHome #recentList .bb-att-row[data-att-type="receivable"] .recent-icon{
+      background:#ffedc3!important;
+    }
+    #mobileHome #recentList .bb-att-row[data-att-type="receivable"] .recent-side strong{
+      color:#b67a0d!important;
+    }
+
+    #mobileHome #recentList .bb-att-row[data-att-type="stock"]:not(.bb-clear){
+      background:#fff1f2!important;
+      border-color:#efccd1!important;
+      box-shadow:inset 3px 0 0 #dc5b6b!important;
+    }
+    #mobileHome #recentList .bb-att-row[data-att-type="stock"]:not(.bb-clear) .recent-icon{
+      background:#f9dfe3!important;
+    }
+    #mobileHome #recentList .bb-att-row[data-att-type="stock"]:not(.bb-clear) .recent-side strong{
+      color:#c74859!important;
+    }
+
+    #mobileHome #recentList .bb-att-row[data-att-type="stock"].bb-clear{
+      background:#effaf5!important;
+      border-color:#cbe7d9!important;
+      box-shadow:inset 3px 0 0 #27ae60!important;
+    }
+    #mobileHome #recentList .bb-att-row[data-att-type="stock"].bb-clear .recent-icon{
+      background:#dbf3e7!important;
+    }
+    #mobileHome #recentList .bb-att-row[data-att-type="stock"].bb-clear .recent-side strong{
+      color:#19864d!important;
+    }
+
+    #mobileHome #recentList .bb-att-row[data-att-type="pending"]:not(.bb-clear){
+      background:#fff5e9!important;
+      border-color:#f0d4ad!important;
+      box-shadow:inset 3px 0 0 #e6912d!important;
+    }
+    #mobileHome #recentList .bb-att-row[data-att-type="pending"]:not(.bb-clear) .recent-icon{
+      background:#ffe8c8!important;
+    }
+    #mobileHome #recentList .bb-att-row[data-att-type="pending"]:not(.bb-clear) .recent-side strong{
+      color:#b96b10!important;
+    }
+
+    #mobileHome #recentList .bb-att-row[data-att-type="pending"].bb-clear{
+      background:#f1f7fd!important;
+      border-color:#d4e4f1!important;
+      box-shadow:inset 3px 0 0 #67a5d8!important;
+    }
+    #mobileHome #recentList .bb-att-row[data-att-type="pending"].bb-clear .recent-icon{
+      background:#e4f0fa!important;
+    }
+
+    /* Stronger but still soft active bottom nav */
+    .bottom-nav .nav-btn.active{
+      background:linear-gradient(145deg,#e3f0ff,#d7eaff)!important;
+      color:#126fd0!important;
+      box-shadow:inset 0 0 0 1px #c4dcf2,0 3px 10px rgba(22,119,255,.07)!important;
+    }
+    .bottom-nav .nav-btn.active b{
+      color:#126fd0!important;
+    }
+
+    /* Add / Arrange controls join the blue identity */
+    #bbQuickAddButton,
+    #bbQuickArrangeBtn{
+      background:#edf6ff!important;
+      color:#176db8!important;
+      border-color:#c5daec!important;
+    }
+
+    #bbQuickArrangeBtn.active{
+      background:#1677ff!important;
+      color:#fff!important;
+      border-color:#1677ff!important;
+    }
+
   `;
   document.head.appendChild(style);
 }
@@ -487,7 +740,7 @@ function renderAttention(){
 
   const row=(type,icon,name,sub,count,side,route='')=>{
     const clickable=!!route;const tag=clickable?'button':'div';
-    return `<${tag} ${clickable?'type="button" data-att-route="'+route+'"':''} class="recent-row bb-att-row ${count?'':'bb-clear'}">
+    return `<${tag} ${clickable?'type="button" data-att-route="'+route+'"':''} data-att-type="${type}" class="recent-row bb-att-row ${count?'':'bb-clear'}">
       <div class="recent-icon">${icon}</div>
       <div class="recent-main"><strong>${esc(name)}</strong><span>${esc(sub)}</span></div>
       <div class="recent-side"><strong>${esc(String(count))}</strong><span>${esc(side)}</span></div>
