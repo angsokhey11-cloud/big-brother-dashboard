@@ -158,6 +158,16 @@ function showLogin(message=''){
 function toast(message){
   const t=$('toast');t.textContent=message;t.hidden=false;clearTimeout(toast._timer);toast._timer=setTimeout(()=>t.hidden=true,2600);
 }
+function replaceFrameUrl(frame,url){
+ try{
+   if(frame?.contentWindow?.location){
+     frame.contentWindow.location.replace(url);
+     return;
+   }
+ }catch(_){}
+ try{frame.src=url}catch(_){}
+}
+
 function setUrlRoute(route=''){
   try{const u=new URL(location.href);if(route){u.searchParams.set('module',route)}else{u.searchParams.delete('module')}history.replaceState({},'',u.pathname+u.search+u.hash)}catch(_){}
 }
@@ -227,7 +237,7 @@ function showMenu(tab,clearRoute=true){
 }
 function openModule(route,updateUrl=true){
   const item=ROUTES[route];if(!item){toast('This mobile route is not ready yet.');return false}if(!canRoute(route)){toast('Access denied for this function.');return false}
-  hideAll();$('moduleScreen').hidden=false;$('moduleTitle').textContent=item.label;$('moduleFrame').src=item.url;
+  hideAll();$('moduleScreen').hidden=false;$('moduleTitle').textContent=item.label;replaceFrameUrl($('moduleFrame'),item.url);
   $('moduleDesktopLink').href='index.html?module='+encodeURIComponent(route)+'&autoload=1';
   if(updateUrl){
     if(window.BBMobileHistoryV6)window.BBMobileHistoryV6.recordModule(route,true);
