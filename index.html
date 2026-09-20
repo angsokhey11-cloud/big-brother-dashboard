@@ -363,6 +363,7 @@ body{
 
     const newExpenseEnd =
 `          <button type="button" id="navExpenseAccrued" onclick="loadWorkspace('expense-accrued')">⏳ Accrued Expenses</button>
+          <button type="button" id="navDailyCash" onclick="loadWorkspace('daily-cash')">💵 Daily Cash</button>
           <button type="button" id="navExpenseHistory" onclick="loadWorkspace('expense-history')">📜 Expense History</button>
 
           <button
@@ -456,6 +457,8 @@ body{
     const expenseRoutesWithCogs =
       expenseRoute
       +
+      '\n    "daily-cash": "https://angsokhey11-cloud.github.io/big-brother-expenses/daily-cash.html?embed=1&v=20260920-dailycash1",'
+      +
       '\n    "cogs-daily": "https://angsokhey11-cloud.github.io/big-brother-cogs/daily.html?embed=1&v=20260912-2",'
       +
       '\n    "cogs-monthly": "https://angsokhey11-cloud.github.io/big-brother-cogs/monthly.html?embed=1&v=20260912-2",';
@@ -486,6 +489,7 @@ body{
 `    const expenseModules = [
       'expense-add',
       'expense-accrued',
+      'daily-cash',
       'expense-history',
       'expense-monthly-report',
       'cogs-daily',
@@ -564,8 +568,10 @@ body{
           ? 'navExpenseAdd'
           : moduleName === 'expense-accrued'
             ? 'navExpenseAccrued'
-            : moduleName === 'expense-history'
-              ? 'navExpenseHistory'
+            : moduleName === 'daily-cash'
+              ? 'navDailyCash'
+              : moduleName === 'expense-history'
+                ? 'navExpenseHistory'
               : 'navExpenseMonthlyReport';
 
       document.getElementById(expenseId)?.classList.add('active');
@@ -655,7 +661,7 @@ body{
 
         "'expense-history','expense-monthly-report','stock-keyin'",
 
-        "'expense-history','expense-monthly-report','cogs-daily','cogs-monthly','stock-keyin'"
+        "'expense-history','daily-cash','expense-monthly-report','cogs-daily','cogs-monthly','stock-keyin'"
 
       );
 
