@@ -53,6 +53,7 @@ const GROUP={
 
 const NAV_VERSION=7;
 const EXIT_WINDOW_MS=1900;
+const ACTIVE_VIEW_KEY='BB_MOBILE_ACTIVE_VIEW_V1';
 const navSession=String(Date.now());
 let restoring=false;
 let exitArmedUntil=0;
@@ -71,6 +72,26 @@ function entryKey(entry){
   return'home';
 }
 function topEntry(){return stack[stack.length-1]||homeEntry()}
+function saveActiveEntry(entry=topEntry()){
+  try{
+    sessionStorage.setItem(ACTIVE_VIEW_KEY,JSON.stringify({
+      view:entry?.view||'home',
+      route:entry?.route||'',
+      group:entry?.group||'',
+      savedAt:Date.now()
+    }));
+  }catch(_){}
+}
+function readActiveEntry(){
+  try{
+    const value=JSON.parse(sessionStorage.getItem(ACTIVE_VIEW_KEY)||'null');
+    if(!value||typeof value!=='object')return null;
+    if(value.view==='module'&&value.route&&GROUP[value.route])return moduleEntry(value.route);
+    if(value.view==='menu')return menuEntry(value.group||'');
+    if(value.view==='home')return homeEntry();
+  }catch(_){}
+  return null;
+}
 function urlForEntry(entry){
   const u=new URL(location.href);
   if(entry?.view==='module'&&entry.route){
@@ -137,9 +158,11 @@ function renderEntry(entry){
   renderHome();return true;
 }
 function syncActiveUrl(){
+  saveActiveEntry(topEntry());
   try{history.replaceState(activeState(),'',urlForEntry(topEntry()))}catch(_){}
 }
 function pushActiveGuard(){
+  saveActiveEntry(topEntry());
   try{history.pushState(activeState(),'',urlForEntry(topEntry()))}catch(_){}
 }
 function resetStackToHome(){
@@ -150,8 +173,19 @@ function resetStackToHome(){
 }
 function markInitialState(){
   const requested=currentRoute();
+  const saved=readActiveEntry();
   stack=[homeEntry()];
-  if(requested)stack.push(moduleEntry(requested));
+
+  if(requested&&GROUP[requested]){
+    stack.push(moduleEntry(requested));
+  }else if(saved?.view==='module'&&saved.route&&GROUP[saved.route]){
+    stack.push(moduleEntry(saved.route));
+  }else if(saved?.view==='menu'){
+    stack.push(menuEntry(saved.group||''));
+  }
+
+  saveActiveEntry(topEntry());
+
   try{
     history.replaceState(rootState(),'',urlForEntry(homeEntry()));
     history.pushState(activeState(),'',urlForEntry(topEntry()));
@@ -220,10 +254,21 @@ function handleHomeExit(){
 function handleBackTrigger(state){
   if(state?.bbNavSession!==navSession||state?.bbGuard!=='root')return;
 
-  /* Menu is a top-level workspace. Android Back from Menu always returns Home,
-     regardless of any stale/partial stack state that existed before Menu opened. */
+  /* Menu is a top-level workspace. Back from Menu always returns Home. */
   const menuVisible=!!$('menuScreen')&&!$('menuScreen').hidden;
   if(menuVisible||topEntry()?.view==='menu'){
+    stack=[homeEntry()];
+    exitArmedUntil=0;
+    renderHome();
+    pushActiveGuard();
+    return;
+  }
+
+  /* A function may have been restored after refresh before its in-memory stack
+     finished rebuilding. If a module is visibly open, Back must never exit.
+     Rebuild Home as its parent and return there. */
+  const moduleVisible=!!$('moduleScreen')&&!$('moduleScreen').hidden;
+  if(moduleVisible&&stack.length<=1){
     stack=[homeEntry()];
     exitArmedUntil=0;
     renderHome();
@@ -286,6 +331,12 @@ function start(){
   window.addEventListener('popstate',event=>{
     setTimeout(()=>handleBackTrigger(event.state||{}),0);
   });
+
+  const initial=topEntry();
+  if(initial?.view!=='home'){
+    setTimeout(()=>renderEntry(initial),40);
+    setTimeout(()=>renderEntry(initial),350);
+  }
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});
 else start();
