@@ -237,8 +237,20 @@ function renderKpis(){
   const grid=$('kpiGrid');
   if(isAdmin()&&overview){
     const m=overview.monthly||{},s=overview.currentSnapshot||{};
-    const data=[['Monthly Sales',money(m.grossSalesUSD),overview.periodLabel||currentPeriod()],['Receivable',money(s.receivableUSD),'Current outstanding'],['Stock Value',money(s.stockValueUSD),'Current inventory'],['Pending Tasks',String(num(s.pendingStaffRequests)),'Staff requests']];
-    grid.innerHTML=data.map(x=>`<div class="kpi"><small>${esc(x[0])}</small><strong>${esc(x[1])}</strong><em>${esc(x[2])}</em></div>`).join('');
+    const data=[
+      ['📊','Monthly Sales',money(m.grossSalesUSD),overview.periodLabel||currentPeriod()],
+      ['💰','Receivable',money(s.receivableUSD),'Current outstanding'],
+      ['📦','Stock Value',money(s.stockValueUSD),'Current inventory'],
+      ['⏳','Pending Tasks',String(num(s.pendingStaffRequests)),'Staff requests']
+    ];
+    grid.innerHTML=data.map(x=>`
+      <div class="sales-kpi locked">
+        <span class="kpi-icon">${esc(x[0])}</span>
+        <small>${esc(x[1])}</small>
+        <strong>${esc(x[2])}</strong>
+        <em>${esc(x[3])}</em>
+      </div>
+    `).join('');
     $('overviewTitle').textContent='Monthly Overview';$('periodLabel').textContent=overview.periodLabel||currentPeriod();
   }else{
     const locs=Array.isArray(profile?.locations)?profile.locations.length:0;
