@@ -44,7 +44,7 @@ function decimalCandidate(input){
     input.parentElement?.previousElementSibling?.textContent
   ].filter(Boolean).join(' ').toLowerCase();
 
-  return /(price|amount|rate|discount|cost|cash|paid|payment|credit|balance|total|exchange|qty|quantity|allowance|salary|expense|receiv|payable|purchase|unit price|unit cost|value)/.test(semantic);
+  return /(price|amount|amt|rate|discount|cost|cash|paid|payment|credit|balance|total|exchange|qty|quantity|allowance|salary|expense|receiv|payable|purchase|unit price|unit cost|value)/.test(semantic);
 }
 
 function patchInput(input){
