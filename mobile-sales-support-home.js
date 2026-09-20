@@ -250,6 +250,8 @@ function injectCss(){
 
     /* Slightly richer Home header / panels */
     #mobileHome .hero{
+      position:relative!important;
+      padding-bottom:42px!important;
       background:
         radial-gradient(circle at 92% 0%,rgba(255,255,255,.20) 0,transparent 31%),
         linear-gradient(150deg,#dbeafb 0%,#c9e1f6 58%,#bed9f0 100%)!important;
@@ -283,6 +285,24 @@ function injectCss(){
       border:1px solid rgba(137,181,220,.68)!important;
       box-shadow:0 2px 8px rgba(37,105,168,.045)!important;
     }
+
+    #mobileHome .bb-header-quote{
+      position:absolute!important;
+      right:16px!important;
+      bottom:11px!important;
+      max-width:72%!important;
+      color:#2a6596!important;
+      font-size:9px!important;
+      line-height:1.2!important;
+      font-style:italic!important;
+      font-weight:700!important;
+      letter-spacing:.15px!important;
+      text-align:right!important;
+      white-space:nowrap!important;
+      opacity:.88!important;
+      pointer-events:none!important;
+    }
+
 
     /* =====================================================
        HOME SPACING + ROUNDED DIVIDER POLISH
@@ -860,9 +880,21 @@ async function refreshAttention(force=false){
   renderAttention();
 }
 
+function ensureHeaderQuote(){
+  const hero=document.querySelector('#mobileHome .hero');
+  if(!hero)return;
+  let quote=hero.querySelector('.bb-header-quote');
+  if(!quote){
+    quote=document.createElement('div');
+    quote.className='bb-header-quote';
+    quote.textContent='“Consistency is the only key”';
+    hero.appendChild(quote);
+  }
+}
+
 function renderHome(){
   if($('mobileHome')?.hidden)return;
-  injectCss();ensureHiddenStaffMeta();installQuickControls();installPicker();
+  injectCss();ensureHiddenStaffMeta();installQuickControls();installPicker();ensureHeaderQuote();
   renderStaffKpis();renderQuick();renderAttention();renderNav('home');
 }
 
