@@ -53,6 +53,7 @@
     'ar-your':{module:'accounts_receivable',action:'view'},
     'ar-payment-history':{module:'ar_payment_history',action:'view'},
     'ar-daily-receivable-cash':{module:'daily_receivable_cash_summary',action:'view'},
+    'daily-cash':{module:'daily_cash',action:'view'},
     'admin-pending-receivable':{module:'admin_work',action:'view'},
     'admin-pending-daily-cash':{module:'admin_work',action:'view'},
     'admin-pending-deposit':{module:'admin_work',action:'view'},
