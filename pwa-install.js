@@ -33,7 +33,7 @@ function ensureIOSGuide(){
         <li>Open BIG BROTHER in <strong>Safari</strong>.</li>
         <li>Tap the <strong>Share</strong> button <span aria-hidden="true">⬆</span>.</li>
         <li>Choose <strong>Add to Home Screen</strong>.</li>
-        <li>Turn on <strong>Open as Web App</strong>, then tap <strong>Add</strong>.</li>
+        <li>If <strong>Open as Web App</strong> is shown, keep it enabled, then tap <strong>Add</strong>.</li>
       </ol>
       <p class="bb-ios-install-note">If “Add to Home Screen” is missing, scroll to the bottom of the Share menu → <strong>Edit Actions</strong> → add “Add to Home Screen”.</p>
       <button id="bbIOSInstallDone" class="bb-ios-install-done" type="button">Got it</button>
