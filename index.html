@@ -568,10 +568,8 @@ body{
           ? 'navExpenseAdd'
           : moduleName === 'expense-accrued'
             ? 'navExpenseAccrued'
-            : moduleName === 'daily-cash'
-              ? 'navDailyCash'
-              : moduleName === 'expense-history'
-                ? 'navExpenseHistory'
+            : moduleName === 'expense-history'
+              ? 'navExpenseHistory'
               : 'navExpenseMonthlyReport';
 
       document.getElementById(expenseId)?.classList.add('active');
@@ -585,13 +583,15 @@ body{
           ? 'navExpenseAdd'
           : moduleName === 'expense-accrued'
             ? 'navExpenseAccrued'
-            : moduleName === 'expense-history'
-              ? 'navExpenseHistory'
-              : moduleName === 'expense-monthly-report'
-                ? 'navExpenseMonthlyReport'
-                : moduleName === 'cogs-daily'
-                  ? 'navCogsDaily'
-                  : 'navCogsMonthly';
+            : moduleName === 'daily-cash'
+              ? 'navDailyCash'
+              : moduleName === 'expense-history'
+                ? 'navExpenseHistory'
+                : moduleName === 'expense-monthly-report'
+                  ? 'navExpenseMonthlyReport'
+                  : moduleName === 'cogs-daily'
+                    ? 'navCogsDaily'
+                    : 'navCogsMonthly';
 
       document.getElementById(expenseId)?.classList.add('active');
 
