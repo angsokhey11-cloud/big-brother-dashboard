@@ -1,5 +1,5 @@
 /* BIG BROTHER Mobile PWA service worker V1.8 */
-const CACHE='bb-mobile-shell-v15';
+const CACHE='bb-mobile-shell-v16';
 const MOBILE_FILES=new Set([
   'mobile.html','mobile.css','mobile-sales-support.css','pwa-install.css','mobile.js',
   'mobile-sales-support-home.js','pwa-install.js','mobile-main-menu-v3.js','mobile-ui-policy-v1.js',
