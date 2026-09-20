@@ -57,6 +57,7 @@ const META={
 
  'expense-add':['Expenses','➕','Add Expense'],
  'expense-accrued':['Expenses','⏳','Accrued Expense'],
+ 'daily-cash':['Expenses','💵','Daily Cash'],
  'expense-history':['Expenses','🧾','Expense History'],
 
  'customers-add':['Master Data','👤','Add Customer'],
@@ -124,6 +125,7 @@ const MOBILE={
 
  'expense-add':'https://angsokhey11-cloud.github.io/big-brother-expenses/mobile.html?embed=1&v=20260915-1',
  'expense-accrued':'https://angsokhey11-cloud.github.io/big-brother-expenses/mobile-accrued.html?embed=1&v=20260915-1',
+ 'daily-cash':'https://angsokhey11-cloud.github.io/big-brother-expenses/daily-cash.html?embed=1&v=20260920-dailycash1',
  'expense-history':'https://angsokhey11-cloud.github.io/big-brother-expenses/mobile-history.html?embed=1&v=20260915-1',
 
  'staff-relation':'https://angsokhey11-cloud.github.io/big-brother-staff-relation/mobile.html?embed=1&v=20260915-1',
@@ -138,6 +140,7 @@ const PC={
  'sales-support-request-delivery':'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=request-delivery&v=110',
  'sales-support-your-customer':'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=your-customer&v=110',
  'sales-support-successful-delivery':'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=successful-delivery&v=110',
+ 'daily-cash':'https://angsokhey11-cloud.github.io/big-brother-expenses/daily-cash.html?embed=1&v=20260920-dailycash1',
  'stock-damaged':'https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=damaged&v=20',
  'ar-daily-receivable-cash':'https://angsokhey11-cloud.github.io/big-brother-daily-receivable-cash-summary/?embed=1',
  'customers-add':'https://angsokhey11-cloud.github.io/big-brother-customers-editor/?embed=1&view=add&v=21',
