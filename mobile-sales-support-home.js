@@ -287,8 +287,17 @@ function injectCss(){
     }
 
     #mobileHome .overview-panel{
-      background:linear-gradient(150deg,#fbfdff,#f5faff)!important;
-      border-color:#cddfed!important;
+      background:linear-gradient(150deg,#dbeafb 0%,#c9e1f6 58%,#bed9f0 100%)!important;
+      border-color:#a9cce8!important;
+      box-shadow:0 7px 20px rgba(37,105,168,.09)!important;
+    }
+
+    #mobileHome .overview-panel .section-head strong{
+      color:#173f77!important;
+    }
+
+    #mobileHome .overview-panel .section-head span{
+      color:#587a98!important;
     }
 
     #mobileHome .quick-panel{
