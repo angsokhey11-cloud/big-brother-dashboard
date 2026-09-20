@@ -70,6 +70,10 @@ let session=null;
 let profile=null;
 let overview=null;
 let activeTab='home';
+let adminOverviewLoading=false;
+let adminOverviewLastLoad=0;
+let adminOverviewTimer=null;
+const LIVE_OVERVIEW_MS=20000;
 
 const $=id=>document.getElementById(id);
 const key=v=>String(v||'').trim().toLowerCase();
@@ -264,6 +268,15 @@ function renderHome(){
   renderKpis();$('quickActions').innerHTML=quickHtml();bindRouteButtons($('quickActions'));renderAttention();renderRecent();
   $('notificationBtn').style.opacity=canRoute('notification-center')?'1':'.35';
 }
+function mobileHomeVisible(){
+  const home=$('mobileHome');
+  return Boolean(
+    home &&
+    !home.hidden &&
+    document.visibilityState!=='hidden'
+  );
+}
+
 function showHome(clearRoute=true){
   activeTab='home';hideAll();$('mobileHome').hidden=false;
   if(clearRoute){
@@ -271,6 +284,9 @@ function showHome(clearRoute=true){
     else setUrlRoute('');
   }
   renderHome();refreshNav('home');$('mobileScroll').scrollTop=0;
+
+  /* Returning Home must immediately refresh Admin management data. */
+  if(isAdmin())setTimeout(()=>loadOverview(true),40);
 }
 function showMenu(tab,clearRoute=true){
   activeTab=tab;hideAll();$('menuScreen').hidden=false;
@@ -300,12 +316,65 @@ function navigate(tab){
 function openSettings(){$('settingsSheet').hidden=false}
 function closeSettings(){$('settingsSheet').hidden=true}
 
-async function loadOverview(){
-  overview=null;if(!isAdmin())return;
-  try{const d=new Date();overview=await rpc('bb_dashboard_monthly_overview',{p_year:d.getFullYear(),p_month:d.getMonth()+1})}catch(_){overview=null}
+async function loadOverview(force=false){
+  if(!isAdmin())return;
+  if(adminOverviewLoading)return;
+  if(!force&&Date.now()-adminOverviewLastLoad<LIVE_OVERVIEW_MS-1000)return;
+  if(!force&&!mobileHomeVisible())return;
+
+  adminOverviewLoading=true;
+
+  try{
+    const d=new Date();
+    const fresh=await rpc('bb_dashboard_monthly_overview',{
+      p_year:d.getFullYear(),
+      p_month:d.getMonth()+1
+    });
+
+    overview=fresh;
+    adminOverviewLastLoad=Date.now();
+
+    if(mobileHomeVisible())renderHome();
+  }catch(error){
+    /* Keep the last good admin snapshot visible during a temporary network error. */
+    console.warn('Mobile Admin Overview:',error?.message||error);
+  }finally{
+    adminOverviewLoading=false;
+  }
 }
+
+function installAdminOverviewLive(){
+  if(adminOverviewTimer)return;
+
+  window.addEventListener('focus',()=>{
+    if(isAdmin()&&mobileHomeVisible())loadOverview(true);
+  });
+
+  document.addEventListener('visibilitychange',()=>{
+    if(
+      document.visibilityState==='visible' &&
+      isAdmin() &&
+      mobileHomeVisible()
+    ){
+      loadOverview(true);
+    }
+  });
+
+  adminOverviewTimer=setInterval(()=>{
+    if(
+      isAdmin() &&
+      mobileHomeVisible() &&
+      Date.now()-adminOverviewLastLoad>=LIVE_OVERVIEW_MS-1000
+    ){
+      loadOverview(true);
+    }
+  },LIVE_OVERVIEW_MS);
+}
+
 async function activate(){
-  profile=await rpc('bb_current_access_profile');await loadOverview();
+  profile=await rpc('bb_current_access_profile');
+  await loadOverview(true);
+  installAdminOverviewLive();
   const requested=new URLSearchParams(location.search).get('module')||'';
   if(requested&&ROUTES[requested]&&canRoute(requested)){openModule(requested,false);return}
   showHome(!requested);
