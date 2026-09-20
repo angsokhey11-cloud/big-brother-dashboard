@@ -7,6 +7,11 @@ const SUPABASE_KEY='sb_publishable_w762jR65CWwlO30fKQsYOw_6L9grx8S';
 const SESSION_KEY='BB_SUPABASE_DEV_SESSION_V1';
 const COLORS=['#2f6fed','#22a06b','#ff9f1c','#ef5350','#7c4dce','#27a9c7','#f4c20d','#7f8c8d'];
 let installed=false;
+let loading=false;
+let liveTimer=null;
+let homeObserver=null;
+let lastRefreshAt=0;
+const LIVE_REFRESH_MS=20000;
 
 const $=id=>document.getElementById(id);
 const num=v=>Number(v||0)||0;
@@ -161,10 +166,97 @@ function render(d){
     </section>`;
 }
 
-async function load(){
-  const e=$('bbOverviewError'),b=$('bbOverviewBody'),btn=$('bbOverviewRefresh');if(!e||!b)return;
-  e.hidden=true;e.textContent='';btn.disabled=true;btn.textContent='Loading…';b.innerHTML='<div class="bb-ov-loading">Loading monthly overview…</div>';
-  try{const [y,m]=String($('bbOverviewMonth').value||'').split('-').map(Number);if(!y||!m)throw new Error('Please choose a month.');const d=await rpc('bb_dashboard_monthly_overview',{p_year:y,p_month:m});render(d)}catch(err){e.textContent=err?.message||String(err);e.hidden=false;b.innerHTML=''}finally{btn.disabled=false;btn.textContent='Refresh'}
+function homeVisible(){
+  const home=$('dashboardHome');
+  return Boolean(
+    home &&
+    !home.hidden &&
+    document.visibilityState!=='hidden'
+  );
+}
+
+async function load(options={}){
+  const silent=options?.silent===true;
+  const e=$('bbOverviewError'),b=$('bbOverviewBody'),btn=$('bbOverviewRefresh');
+  if(!e||!b||loading)return;
+  if(silent&&!homeVisible())return;
+
+  loading=true;
+
+  if(!silent){
+    e.hidden=true;
+    e.textContent='';
+    btn.disabled=true;
+    btn.textContent='Loading…';
+    b.innerHTML='<div class="bb-ov-loading">Loading monthly overview…</div>';
+  }
+
+  try{
+    const [y,m]=String($('bbOverviewMonth').value||'').split('-').map(Number);
+    if(!y||!m)throw new Error('Please choose a month.');
+
+    const d=await rpc('bb_dashboard_monthly_overview',{
+      p_year:y,
+      p_month:m
+    });
+
+    render(d);
+    lastRefreshAt=Date.now();
+    e.hidden=true;
+    e.textContent='';
+  }catch(err){
+    e.textContent=err?.message||String(err);
+    e.hidden=false;
+
+    /* Keep the last good overview visible during silent live refresh errors. */
+    if(!silent)b.innerHTML='';
+  }finally{
+    loading=false;
+    if(btn){
+      btn.disabled=false;
+      btn.textContent='Refresh';
+    }
+  }
+}
+
+function refreshLive(){
+  if(!homeVisible())return;
+  load({silent:true}).catch(()=>{});
+}
+
+function installLiveRefresh(){
+  if(liveTimer)return;
+
+  const home=$('dashboardHome');
+
+  if(home&&!homeObserver){
+    homeObserver=new MutationObserver(()=>{
+      if(!home.hidden){
+        /* Refresh immediately whenever the user returns from a module. */
+        setTimeout(refreshLive,60);
+      }
+    });
+
+    homeObserver.observe(home,{
+      attributes:true,
+      attributeFilter:['hidden']
+    });
+  }
+
+  window.addEventListener('focus',refreshLive);
+
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='visible')refreshLive();
+  });
+
+  liveTimer=setInterval(()=>{
+    if(
+      homeVisible() &&
+      Date.now()-lastRefreshAt>=LIVE_REFRESH_MS-1000
+    ){
+      refreshLive();
+    }
+  },LIVE_REFRESH_MS);
 }
 
 function ready(){
@@ -172,9 +264,18 @@ function ready(){
   const p=window.BBDashboardAdapter?.getProfile?.();
   if(!p){setTimeout(ready,120);return}
   if(!p.user?.isAdmin)return;
-  installed=true;styles();if(layout())load();
+  installed=true;
+  styles();
+  if(layout()){
+    load();
+    installLiveRefresh();
+  }
 }
 
-window.BBMonthlyOverview={openShortcut,load};
+window.BBMonthlyOverview={
+  openShortcut,
+  load,
+  refreshLive
+};
 if(document.readyState==='loading')window.addEventListener('DOMContentLoaded',()=>setTimeout(ready,80));else setTimeout(ready,80);
 })();
