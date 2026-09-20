@@ -102,13 +102,20 @@ function applyOverview(data,payment){
   if(earning.khr>0)earningSub+=' · KHR '+khr(earning.khr);
 
   const cards=[
-    ['Monthly Sales',money(sales.netUSD),salesSub],
-    ['Receivable',money(ar.equivalentUSD),'USD '+money(ar.USD)+' · KHR '+khr(ar.KHR)],
-    ['Stock Value',money(stock.valueUSD),openBatches+' assigned open batch'+(openBatches===1?'':'es')],
-    ['Your Earning',money(earning.usd),earningSub]
+    ['📊','Monthly Sales',money(sales.netUSD),salesSub],
+    ['💰','Receivable',money(ar.equivalentUSD),'USD '+money(ar.USD)+' · KHR '+khr(ar.KHR)],
+    ['📦','Stock Qty',String(Math.round(num(stock.physicalQty)*100)/100),openBatches+' assigned open batch'+(openBatches===1?'':'es')],
+    ['👛','Your Earning',money(earning.usd),earningSub]
   ];
 
-  grid.innerHTML=cards.map(x=>'<div class="kpi"><small>'+esc(x[0])+'</small><strong>'+esc(x[1])+'</strong><em>'+esc(x[2])+'</em></div>').join('');
+  grid.innerHTML=cards.map(x=>
+    '<div class="sales-kpi locked">'+
+      '<span class="kpi-icon">'+esc(x[0])+'</span>'+
+      '<small>'+esc(x[1])+'</small>'+
+      '<strong>'+esc(x[2])+'</strong>'+
+      '<em>'+esc(x[3])+'</em>'+
+    '</div>'
+  ).join('');
   if($('overviewTitle'))$('overviewTitle').textContent='My Overview';
   if($('periodLabel'))$('periodLabel').textContent=data.periodLabel||'This Month';
 }
