@@ -251,11 +251,11 @@ function injectCss(){
     /* Slightly richer Home header / panels */
     #mobileHome .hero{
       background:
-        radial-gradient(circle at 92% 0%,rgba(82,171,236,.20) 0,transparent 31%),
-        linear-gradient(135deg,#173f77 0%,#164f87 58%,#12669f 100%)!important;
+        radial-gradient(circle at 92% 0%,rgba(255,255,255,.16) 0,transparent 31%),
+        linear-gradient(135deg,#1677ff 0%,#2587f4 58%,#2f8cff 100%)!important;
       color:#fff!important;
-      border-bottom:1px solid #123965!important;
-      box-shadow:0 8px 24px rgba(16,54,92,.18)!important;
+      border-bottom:1px solid #126fd0!important;
+      box-shadow:0 8px 24px rgba(22,119,255,.18)!important;
     }
 
     #mobileHome .hero .brand,
