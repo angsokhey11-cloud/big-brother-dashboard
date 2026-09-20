@@ -2,3 +2,17 @@
 .pwa-install-banner{position:relative;display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:10px;align-items:center;margin:0 0 12px;padding:12px 38px 12px 12px;border:1px solid #cfe2f6;border-radius:16px;background:linear-gradient(135deg,#eef7ff,#f8fbff);box-shadow:0 5px 16px rgba(20,64,104,.05)}
 .pwa-install-banner[hidden]{display:none!important}.pwa-install-logo{width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,#0f4f8d,#1a82c9);color:#fff;display:grid;place-items:center;font-size:17px;font-weight:900;box-shadow:0 5px 12px rgba(18,103,176,.18)}.pwa-install-copy{min-width:0}.pwa-install-copy strong{display:block;color:#123f70;font-size:12px;font-weight:900}.pwa-install-copy small{display:block;margin-top:3px;color:#708197;font-size:9px;line-height:1.35}.pwa-install-main{border:0;border-radius:10px;background:#1267b0;color:#fff;padding:9px 12px;font-size:10px;font-weight:900;white-space:nowrap}.pwa-install-main:active{transform:scale(.97)}.pwa-install-close{position:absolute;right:7px;top:6px;width:24px;height:24px;border:0;background:transparent;color:#7890a7;font-size:19px;line-height:1;border-radius:50%}.pwa-install-close:active{background:#e4eef8}.sheet-option.install{background:#eef7ff;border-color:#cfe2f6;color:#174f84}.sheet-option.install>span{font-size:23px}.sheet-option.install[hidden]{display:none!important}
 @media(max-width:380px){.pwa-install-banner{grid-template-columns:43px minmax(0,1fr);padding-right:34px}.pwa-install-logo{width:41px;height:41px}.pwa-install-main{grid-column:1/-1;width:100%;padding:9px}.pwa-install-copy strong{font-size:11px}}
+
+.bb-ios-install-guide{position:fixed;inset:0;z-index:10000;display:grid;place-items:end center;padding:16px;background:rgba(4,15,27,.48);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+.bb-ios-install-guide[hidden]{display:none!important}
+.bb-ios-install-card{position:relative;width:min(100%,460px);padding:20px 18px 18px;border-radius:22px 22px 16px 16px;background:#fff;box-shadow:0 18px 46px rgba(0,0,0,.24);color:#18344f}
+.bb-ios-install-icon{width:48px;height:48px;margin:0 auto 9px;border-radius:14px;display:grid;place-items:center;background:#eef7ff;font-size:25px}
+.bb-ios-install-card h3{margin:0;text-align:center;color:#123f70;font-size:16px;font-weight:900}
+.bb-ios-install-card>p{margin:8px 0 0;color:#667d93;font-size:11px;line-height:1.45;text-align:center}
+.bb-ios-install-card ol{margin:14px 0 0;padding:0;list-style:none;counter-reset:bbios;display:grid;gap:9px}
+.bb-ios-install-card li{counter-increment:bbios;position:relative;padding:10px 10px 10px 42px;border:1px solid #dce8f3;border-radius:13px;background:#f8fbfe;font-size:11px;line-height:1.4}
+.bb-ios-install-card li::before{content:counter(bbios);position:absolute;left:10px;top:50%;transform:translateY(-50%);width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#1267b0;color:#fff;font-size:10px;font-weight:900}
+.bb-ios-install-card .bb-ios-install-note{margin-top:11px;padding:9px 10px;border-radius:11px;background:#fff8e8;color:#76591a;text-align:left;font-size:9.5px}
+.bb-ios-install-close{position:absolute;right:10px;top:9px;width:30px;height:30px;border:0;border-radius:50%;background:#eef3f7;color:#5f7388;font-size:22px;line-height:1}
+.bb-ios-install-done{width:100%;margin-top:14px;border:0;border-radius:12px;padding:11px 14px;background:#1267b0;color:#fff;font-size:12px;font-weight:900}
+@supports(padding:max(0px)){.bb-ios-install-guide{padding-bottom:max(16px,env(safe-area-inset-bottom))}}
