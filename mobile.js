@@ -35,7 +35,7 @@ const ROUTES={
   'stock-alerts':{tab:'stock',icon:'🚨',label:'Smart Stock Alerts',url:'https://angsokhey11-cloud.github.io/big-brother-admin-work/company-control.html?embed=1&view=stock-alerts&v=1'},
 
   'monthly-sales-report':{tab:'reports',icon:'📈',label:'Monthly Sales',url:'https://angsokhey11-cloud.github.io/big-brother-report/monthly-sales.html?embed=1&v=20260913-4'},
-  'income-statement-report':{tab:'reports',icon:'📊',label:'Income Statement',url:'https://angsokhey11-cloud.github.io/big-brother-report/income-statement.html?embed=1&v=20260914-2'},
+  'income-statement-report':{tab:'reports',icon:'📊',label:'Income Statement',url:'https://angsokhey11-cloud.github.io/big-brother-report/income-statement.html?embed=1&v=20260920-vaultfx1'},
   'purchase-order-report':{tab:'reports',icon:'🧾',label:'Purchase Order Report',url:'https://angsokhey11-cloud.github.io/big-brother-report/purchase-order-report.html?embed=1&v=20260913-4'},
   'cogs-daily':{tab:'reports',icon:'🏷️',label:'Daily COGS',url:'https://angsokhey11-cloud.github.io/big-brother-cogs/daily.html?embed=1&v=20260912-2'},
   'cogs-monthly':{tab:'reports',icon:'📦',label:'Monthly COGS',url:'https://angsokhey11-cloud.github.io/big-brother-cogs/monthly.html?embed=1&v=20260912-2'},
@@ -47,7 +47,7 @@ const ROUTES={
   'purchase-payment-history':{tab:'more',icon:'💳',label:'Purchase Payments',url:'https://angsokhey11-cloud.github.io/big-brother-purchase-payment-history/?embed=1&v=1'},
   'expense-add':{tab:'more',icon:'➕',label:'Add Expense',url:'https://angsokhey11-cloud.github.io/big-brother-expenses/?embed=1&view=add-expense&v=20260920-iosdecimal1'},
   'expense-accrued':{tab:'more',icon:'⏳',label:'Accrued Expense',url:'https://angsokhey11-cloud.github.io/big-brother-expenses/?embed=1&view=accrued-expenses&v=17'},
-  'daily-cash':{tab:'more',icon:'💵',label:'Daily Cash',url:'https://angsokhey11-cloud.github.io/big-brother-expenses/daily-cash.html?embed=1&v=20260920-dailycash1'},
+  'daily-cash':{tab:'more',icon:'💵',label:'Daily Cash',url:'https://angsokhey11-cloud.github.io/big-brother-expenses/daily-cash.html?embed=1&v=20260920-vaultfx1'},
   'expense-history':{tab:'more',icon:'🧾',label:'Expense History',url:'https://angsokhey11-cloud.github.io/big-brother-expenses/?embed=1&view=expense-history&v=17'},
   'ar-all':{tab:'more',icon:'📋',label:'All Receivables',url:'https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=all&v=20260920-artelegram1'},
   'ar-payment-history':{tab:'more',icon:'🧾',label:'Receivable Payments',url:'https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=receivable&v=1'},
