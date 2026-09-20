@@ -251,9 +251,39 @@ function injectCss(){
     /* Slightly richer Home header / panels */
     #mobileHome .hero{
       background:
-        radial-gradient(circle at 92% 0%,rgba(45,142,235,.13) 0,transparent 30%),
-        linear-gradient(145deg,#fbfdff 0%,#edf6ff 68%,#e5f1fc 100%)!important;
-      border-bottom:1px solid #cbdfee!important;
+        radial-gradient(circle at 92% 0%,rgba(82,171,236,.20) 0,transparent 31%),
+        linear-gradient(135deg,#173f77 0%,#164f87 58%,#12669f 100%)!important;
+      color:#fff!important;
+      border-bottom:1px solid #123965!important;
+      box-shadow:0 8px 24px rgba(16,54,92,.18)!important;
+    }
+
+    #mobileHome .hero .brand,
+    #mobileHome .hero .brand-sub,
+    #mobileHome .hero .greeting-small,
+    #mobileHome .hero .greeting-name{
+      color:#fff!important;
+    }
+
+    #mobileHome .hero .brand-sub,
+    #mobileHome .hero .greeting-small{
+      color:#d7e8f7!important;
+    }
+
+    #mobileHome .hero .hero-chip{
+      background:rgba(255,255,255,.12)!important;
+      color:#f4f9ff!important;
+      border:1px solid rgba(255,255,255,.22)!important;
+      box-shadow:none!important;
+      backdrop-filter:blur(7px);
+      -webkit-backdrop-filter:blur(7px);
+    }
+
+    #mobileHome .hero .icon-btn{
+      background:rgba(255,255,255,.12)!important;
+      color:#fff!important;
+      border:1px solid rgba(255,255,255,.24)!important;
+      box-shadow:none!important;
     }
 
     #mobileHome .overview-panel{
@@ -262,9 +292,9 @@ function injectCss(){
     }
 
     #mobileHome .quick-panel{
-      background:linear-gradient(150deg,#fffdf6 0%,#fff9ec 58%,#fff4dd 100%)!important;
-      border-color:#f0dfb6!important;
-      box-shadow:0 7px 20px rgba(185,132,28,.07)!important;
+      background:linear-gradient(150deg,#f4f9ff 0%,#e9f4ff 56%,#deeeff 100%)!important;
+      border-color:#c4dcf2!important;
+      box-shadow:0 7px 20px rgba(37,105,168,.08)!important;
     }
 
     #mobileHome .section-head strong{
