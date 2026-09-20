@@ -15,7 +15,7 @@
   <link rel="manifest" href="manifest.webmanifest?v=20260920-ios1">
   <link rel="icon" href="pwa-icon.svg" type="image/svg+xml">
 
-  <link rel="stylesheet" href="mobile.css?v=20260914-1">
+  <link rel="stylesheet" href="mobile.css?v=20260920-ioslogin1">
   <link rel="stylesheet" href="mobile-sales-support.css?v=20260914-2">
   <link rel="stylesheet" href="pwa-install.css?v=20260920-ios1">
 
@@ -620,19 +620,45 @@
 
         <input
           id="loginEmail"
+          name="email"
           type="email"
+          inputmode="email"
           autocomplete="username"
+          autocapitalize="none"
+          spellcheck="false"
+          enterkeyhint="next"
+          placeholder="name@example.com"
           required>
 
         <label for="loginPassword">
           Password
         </label>
 
-        <input
-          id="loginPassword"
-          type="password"
-          autocomplete="current-password"
-          required>
+        <div class="login-password-wrap">
+          <input
+            id="loginPassword"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            autocapitalize="none"
+            spellcheck="false"
+            enterkeyhint="go"
+            placeholder="Enter password"
+            required>
+
+          <button
+            id="toggleLoginPassword"
+            class="login-password-toggle"
+            type="button"
+            aria-label="Show password"
+            aria-pressed="false">
+            Show
+          </button>
+        </div>
+
+        <div class="login-helper">
+          Your email is remembered on this device. You normally only need to sign in once.
+        </div>
 
         <button
           id="loginButton"
@@ -1101,7 +1127,7 @@
        MAIN MOBILE SCRIPTS
        ===================================================== -->
 
-  <script src="mobile.js?v=20260920-history3"></script>
+  <script src="mobile.js?v=20260920-ioslogin1"></script>
   <script data-bb-main-menu-v4 src="mobile-main-menu-v3.js?v=20260920-history3"></script>
   <script data-bb-navigation-v5 src="mobile-navigation-v5.js?v=20260920-history6"></script>\n\n  <script data-bb-theme-v1 src="mobile-theme-v1.js?v=20260920-premiumlight5"></script>
 
