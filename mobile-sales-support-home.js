@@ -251,39 +251,79 @@ function injectCss(){
     /* Slightly richer Home header / panels */
     #mobileHome .hero{
       background:
-        radial-gradient(circle at 92% 0%,rgba(255,255,255,.16) 0,transparent 31%),
-        linear-gradient(135deg,#1677ff 0%,#2587f4 58%,#2f8cff 100%)!important;
-      color:#fff!important;
-      border-bottom:1px solid #126fd0!important;
-      box-shadow:0 8px 24px rgba(22,119,255,.18)!important;
+        radial-gradient(circle at 92% 0%,rgba(255,255,255,.20) 0,transparent 31%),
+        linear-gradient(150deg,#dbeafb 0%,#c9e1f6 58%,#bed9f0 100%)!important;
+      color:#173f77!important;
+      border-bottom:1px solid #a9cce8!important;
+      box-shadow:0 8px 24px rgba(37,105,168,.11)!important;
     }
 
     #mobileHome .hero .brand,
-    #mobileHome .hero .brand-sub,
-    #mobileHome .hero .greeting-small,
     #mobileHome .hero .greeting-name{
-      color:#fff!important;
+      color:#173f77!important;
     }
 
     #mobileHome .hero .brand-sub,
     #mobileHome .hero .greeting-small{
-      color:#d7e8f7!important;
+      color:#527899!important;
     }
 
     #mobileHome .hero .hero-chip{
-      background:rgba(255,255,255,.12)!important;
-      color:#f4f9ff!important;
-      border:1px solid rgba(255,255,255,.22)!important;
-      box-shadow:none!important;
+      background:rgba(255,255,255,.48)!important;
+      color:#1c5f9b!important;
+      border:1px solid rgba(137,181,220,.68)!important;
+      box-shadow:0 2px 8px rgba(37,105,168,.045)!important;
       backdrop-filter:blur(7px);
       -webkit-backdrop-filter:blur(7px);
     }
 
     #mobileHome .hero .icon-btn{
-      background:rgba(255,255,255,.12)!important;
-      color:#fff!important;
-      border:1px solid rgba(255,255,255,.24)!important;
-      box-shadow:none!important;
+      background:rgba(255,255,255,.52)!important;
+      color:#1c5f9b!important;
+      border:1px solid rgba(137,181,220,.68)!important;
+      box-shadow:0 2px 8px rgba(37,105,168,.045)!important;
+    }
+
+    /* =====================================================
+       HOME SPACING + ROUNDED DIVIDER POLISH
+       ===================================================== */
+    #mobileHome .content{
+      padding-top:12px!important;
+    }
+
+    #mobileHome .content > .panel{
+      position:relative!important;
+      margin-bottom:13px!important;
+      border-radius:17px!important;
+    }
+
+    #mobileHome .overview-panel,
+    #mobileHome .quick-panel,
+    #mobileHome .bb-attention-panel{
+      padding:10px!important;
+    }
+
+    #mobileHome .overview-panel::after,
+    #mobileHome .quick-panel::after,
+    #mobileHome .bb-attention-panel::after{
+      content:""!important;
+      position:absolute!important;
+      left:50%!important;
+      bottom:-8px!important;
+      width:42px!important;
+      height:4px!important;
+      transform:translateX(-50%)!important;
+      border-radius:999px!important;
+      background:#98bfdf!important;
+      box-shadow:0 1px 4px rgba(37,105,168,.08)!important;
+      opacity:.62!important;
+      pointer-events:none!important;
+    }
+
+    #mobileHome .overview-panel .section-head,
+    #mobileHome .quick-panel .section-head,
+    #mobileHome .bb-attention-panel .section-head{
+      margin-bottom:8px!important;
     }
 
     #mobileHome .overview-panel{
