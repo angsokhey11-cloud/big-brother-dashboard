@@ -160,12 +160,19 @@ function toast(message){
 }
 function replaceFrameUrl(frame,url){
  try{
-   if(frame?.contentWindow?.location){
-     frame.contentWindow.location.replace(url);
-     return;
-   }
+   if(!frame?.parentNode)return;
+   const fresh=frame.cloneNode(false);
+   fresh.removeAttribute('src');
+   fresh.removeAttribute('data-bb-theme-bound');
+   frame.replaceWith(fresh);
+   fresh.addEventListener('load',()=>{
+     try{window.BBMobileThemeV1?.applyFrameTheme?.()}catch(_){}
+   });
+   fresh.src=url;
+   return fresh;
  }catch(_){}
  try{frame.src=url}catch(_){}
+ return frame;
 }
 
 function setUrlRoute(route=''){
@@ -219,7 +226,7 @@ function renderHome(){
 function showHome(clearRoute=true){
   activeTab='home';hideAll();$('mobileHome').hidden=false;
   if(clearRoute){
-    if(window.BBMobileHistoryV6)window.BBMobileHistoryV6.goHome();
+    if((window.BBMobileHistoryV7||window.BBMobileHistoryV6))(window.BBMobileHistoryV7||window.BBMobileHistoryV6).goHome();
     else setUrlRoute('');
   }
   renderHome();refreshNav('home');$('mobileScroll').scrollTop=0;
@@ -227,7 +234,7 @@ function showHome(clearRoute=true){
 function showMenu(tab,clearRoute=true){
   activeTab=tab;hideAll();$('menuScreen').hidden=false;
   if(clearRoute){
-    if(window.BBMobileHistoryV6)window.BBMobileHistoryV6.recordMenu(tab,true);
+    if((window.BBMobileHistoryV7||window.BBMobileHistoryV6))(window.BBMobileHistoryV7||window.BBMobileHistoryV6).recordMenu(tab,true);
     else setUrlRoute('');
   }
   const names={sales:'Sales',stock:'Stock',reports:'Reports',more:'More'};const items=permittedRoutes(tab);
@@ -240,7 +247,7 @@ function openModule(route,updateUrl=true){
   hideAll();$('moduleScreen').hidden=false;$('moduleTitle').textContent=item.label;replaceFrameUrl($('moduleFrame'),item.url);
   $('moduleDesktopLink').href='index.html?module='+encodeURIComponent(route)+'&autoload=1';
   if(updateUrl){
-    if(window.BBMobileHistoryV6)window.BBMobileHistoryV6.recordModule(route,true);
+    if((window.BBMobileHistoryV7||window.BBMobileHistoryV6))(window.BBMobileHistoryV7||window.BBMobileHistoryV6).recordModule(route,true);
     else setUrlRoute(route);
   }
   refreshNav('');return true;
@@ -274,7 +281,7 @@ $('loginForm').addEventListener('submit',async event=>{
 $('settingsBtn').onclick=openSettings;$('menuSettings').onclick=openSettings;$('closeSettings').onclick=closeSettings;$('settingsSheet').onclick=e=>{if(e.target===$('settingsSheet'))closeSettings()};$('signOutBtn').onclick=async()=>{closeSettings();await signOut()};
 $('notificationBtn').onclick=()=>{if(canRoute('notification-center'))openModule('notification-center',true);else toast('Notifications are not assigned to this user.')};
 $('menuBack').onclick=()=>showHome(true);$('moduleBack').onclick=()=>showMenu(ROUTES[new URLSearchParams(location.search).get('module')||'']?.tab||'home',true);
-window.addEventListener('popstate',()=>{if(window.BBMobileHistoryV6)return;const route=new URLSearchParams(location.search).get('module')||'';if(route&&ROUTES[route]&&canRoute(route))openModule(route,false);else showHome(false)});
+window.addEventListener('popstate',()=>{if((window.BBMobileHistoryV7||window.BBMobileHistoryV6))return;const route=new URLSearchParams(location.search).get('module')||'';if(route&&ROUTES[route]&&canRoute(route))openModule(route,false);else showHome(false)});
 
 boot();
 })();
