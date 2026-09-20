@@ -101,6 +101,13 @@ function shellCss(){return `
     border:1px solid #cfe0ed!important;
   }
 
+  /* Mobile shell navigation uses the bottom bar, so header back arrows stay hidden. */
+  html[data-bb-theme="premium-light"] #moduleBack,
+  html[data-bb-theme="premium-light"] #menuBack{
+    display:none!important;
+  }
+
+
   html[data-bb-theme="premium-light"] .panel,
   html[data-bb-theme="premium-light"] .menu-card,
   html[data-bb-theme="premium-light"] .bb-dd-group,
@@ -407,6 +414,21 @@ function frameCss(){return `
     border-color:#d2e1ee!important;
     box-shadow:0 4px 16px rgba(29,68,105,.07)!important;
   }
+
+  /* Embedded mobile functions: remove only header-level back controls. */
+  html[data-bb-parent-theme="premium-light"] header :is(#backBtn,#backButton,.back-btn,.back-button,.btn-back,.header-back,[data-action="back"],[aria-label="Back"],[aria-label^="Back "]),
+  html[data-bb-parent-theme="premium-light"] .header :is(#backBtn,#backButton,.back-btn,.back-button,.btn-back,.header-back,[data-action="back"],[aria-label="Back"],[aria-label^="Back "]),
+  html[data-bb-parent-theme="premium-light"] .topbar :is(#backBtn,#backButton,.back-btn,.back-button,.btn-back,.header-back,[data-action="back"],[aria-label="Back"],[aria-label^="Back "]),
+  html[data-bb-parent-theme="premium-light"] .toolbar :is(#backBtn,#backButton,.back-btn,.back-button,.btn-back,.header-back,[data-action="back"],[aria-label="Back"],[aria-label^="Back "]),
+  html[data-bb-parent-theme="premium-light"] .app-header :is(#backBtn,#backButton,.back-btn,.back-button,.btn-back,.header-back,[data-action="back"],[aria-label="Back"],[aria-label^="Back "]),
+  html[data-bb-parent-theme="premium-light"] .page-header :is(#backBtn,#backButton,.back-btn,.back-button,.btn-back,.header-back,[data-action="back"],[aria-label="Back"],[aria-label^="Back "]),
+  html[data-bb-parent-theme="premium-light"] .mobile-header :is(#backBtn,#backButton,.back-btn,.back-button,.btn-back,.header-back,[data-action="back"],[aria-label="Back"],[aria-label^="Back "]),
+  html[data-bb-parent-theme="premium-light"] .report-header :is(#backBtn,#backButton,.back-btn,.back-button,.btn-back,.header-back,[data-action="back"],[aria-label="Back"],[aria-label^="Back "]),
+  html[data-bb-parent-theme="premium-light"] .titlebar :is(#backBtn,#backButton,.back-btn,.back-button,.btn-back,.header-back,[data-action="back"],[aria-label="Back"],[aria-label^="Back "]),
+  html[data-bb-parent-theme="premium-light"] .nav-header :is(#backBtn,#backButton,.back-btn,.back-button,.btn-back,.header-back,[data-action="back"],[aria-label="Back"],[aria-label^="Back "]){
+    display:none!important;
+  }
+
 
   html[data-bb-parent-theme="premium-light"] .card,
   html[data-bb-parent-theme="premium-light"] [class$="-card"],
