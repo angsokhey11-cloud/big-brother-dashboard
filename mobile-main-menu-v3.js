@@ -112,7 +112,7 @@ const MOBILE={
  'stock-alerts':'https://angsokhey11-cloud.github.io/big-brother-admin-work/stock-alerts-mobile.html?embed=1&v=20260915-1',
 
  'monthly-sales-report':'https://angsokhey11-cloud.github.io/big-brother-report/monthly-sales-mobile.html?embed=1&v=20260915-3',
- 'income-statement-report':'https://angsokhey11-cloud.github.io/big-brother-report/income-statement-mobile.html?embed=1&v=20260915-3',
+ 'income-statement-report':'https://angsokhey11-cloud.github.io/big-brother-report/income-statement-mobile.html?embed=1&v=20260920-vaultfx1',
  'purchase-order-report':'https://angsokhey11-cloud.github.io/big-brother-report/purchase-order-report-mobile.html?embed=1&v=20260915-1',
  'cogs-daily':'https://angsokhey11-cloud.github.io/big-brother-cogs/mobile-daily.html?embed=1&v=20260915-1',
  'cogs-monthly':'https://angsokhey11-cloud.github.io/big-brother-cogs/mobile-monthly.html?embed=1&v=20260915-1',
@@ -125,14 +125,14 @@ const MOBILE={
 
  'expense-add':'https://angsokhey11-cloud.github.io/big-brother-expenses/mobile.html?embed=1&v=20260915-1',
  'expense-accrued':'https://angsokhey11-cloud.github.io/big-brother-expenses/mobile-accrued.html?embed=1&v=20260915-1',
- 'daily-cash':'https://angsokhey11-cloud.github.io/big-brother-expenses/daily-cash.html?embed=1&v=20260920-dailycash1',
+ 'daily-cash':'https://angsokhey11-cloud.github.io/big-brother-expenses/daily-cash.html?embed=1&v=20260920-vaultfx1',
  'expense-history':'https://angsokhey11-cloud.github.io/big-brother-expenses/mobile-history.html?embed=1&v=20260915-1',
 
  'staff-relation':'https://angsokhey11-cloud.github.io/big-brother-staff-relation/mobile.html?embed=1&v=20260915-1',
 
  'admin-pending-receivable':'https://angsokhey11-cloud.github.io/big-brother-admin-work/pending-receivable-mobile.html?embed=1&v=20260920-artelegram2',
  'admin-pending-daily-cash':'https://angsokhey11-cloud.github.io/big-brother-admin-work/pending-daily-cash-mobile.html?embed=1&v=20260915-1',
- 'admin-pending-deposit':'https://angsokhey11-cloud.github.io/big-brother-admin-work/pending-deposit-mobile.html?embed=1&v=20260915-2'
+ 'admin-pending-deposit':'https://angsokhey11-cloud.github.io/big-brother-admin-work/pending-deposit-mobile.html?embed=1&v=20260920-vaultfx1'
 };
 
 const PC={
@@ -140,7 +140,7 @@ const PC={
  'sales-support-request-delivery':'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=request-delivery&v=110',
  'sales-support-your-customer':'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=your-customer&v=110',
  'sales-support-successful-delivery':'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=successful-delivery&v=110',
- 'daily-cash':'https://angsokhey11-cloud.github.io/big-brother-expenses/daily-cash.html?embed=1&v=20260920-dailycash1',
+ 'daily-cash':'https://angsokhey11-cloud.github.io/big-brother-expenses/daily-cash.html?embed=1&v=20260920-vaultfx1',
  'stock-damaged':'https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=damaged&v=20',
  'ar-daily-receivable-cash':'https://angsokhey11-cloud.github.io/big-brother-daily-receivable-cash-summary/?embed=1',
  'customers-add':'https://angsokhey11-cloud.github.io/big-brother-customers-editor/?embed=1&view=add&v=21',
