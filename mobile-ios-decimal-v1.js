@@ -52,7 +52,6 @@ function patchInput(input){
      for preserving the decimal separator while the user is typing. */
   try{input.type='text'}catch(_){}
   input.setAttribute('inputmode','decimal');
-  input.setAttribute('pattern','[0-9]*[.,]?[0-9]*');
   input.setAttribute('autocapitalize','none');
   input.setAttribute('spellcheck','false');
 }
