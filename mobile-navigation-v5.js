@@ -51,9 +51,10 @@ const GROUP={
 };
 
 
-const NAV_VERSION=7;
+const NAV_VERSION=8;
 const EXIT_WINDOW_MS=1900;
 const ACTIVE_VIEW_KEY='BB_MOBILE_ACTIVE_VIEW_V1';
+const STACK_KEY='BB_MOBILE_NAV_STACK_V1';
 const navSession=String(Date.now());
 let restoring=false;
 let exitArmedUntil=0;
@@ -91,6 +92,47 @@ function readActiveEntry(){
     if(value.view==='home')return homeEntry();
   }catch(_){}
   return null;
+}
+function saveStack(){
+  try{
+    sessionStorage.setItem(
+      STACK_KEY,
+      JSON.stringify(
+        stack.map(entry=>{
+          if(entry?.view==='module')return moduleEntry(entry.route);
+          if(entry?.view==='menu')return menuEntry(entry.group||'');
+          return homeEntry();
+        })
+      )
+    );
+  }catch(_){}
+}
+function readStack(){
+  try{
+    const value=JSON.parse(sessionStorage.getItem(STACK_KEY)||'null');
+    if(!Array.isArray(value)||!value.length)return null;
+
+    const restored=[homeEntry()];
+
+    value.forEach(entry=>{
+      if(entry?.view==='module'&&entry.route&&GROUP[entry.route]){
+        const next=moduleEntry(entry.route);
+        if(entryKey(restored[restored.length-1])!==entryKey(next))restored.push(next);
+        return;
+      }
+      if(entry?.view==='menu'){
+        const next=menuEntry(entry.group||'');
+        if(entryKey(restored[restored.length-1])!==entryKey(next))restored.push(next);
+      }
+    });
+
+    return restored;
+  }catch(_){}
+  return null;
+}
+function saveNavigationState(){
+  saveActiveEntry(topEntry());
+  saveStack();
 }
 function urlForEntry(entry){
   const u=new URL(location.href);
@@ -158,11 +200,11 @@ function renderEntry(entry){
   renderHome();return true;
 }
 function syncActiveUrl(){
-  saveActiveEntry(topEntry());
+  saveNavigationState();
   try{history.replaceState(activeState(),'',urlForEntry(topEntry()))}catch(_){}
 }
 function pushActiveGuard(){
-  saveActiveEntry(topEntry());
+  saveNavigationState();
   try{history.pushState(activeState(),'',urlForEntry(topEntry()))}catch(_){}
 }
 function resetStackToHome(){
@@ -174,17 +216,38 @@ function resetStackToHome(){
 function markInitialState(){
   const requested=currentRoute();
   const saved=readActiveEntry();
+  const savedStack=readStack();
+
   stack=[homeEntry()];
 
-  if(requested&&GROUP[requested]){
-    stack.push(moduleEntry(requested));
-  }else if(saved?.view==='module'&&saved.route&&GROUP[saved.route]){
-    stack.push(moduleEntry(saved.route));
-  }else if(saved?.view==='menu'){
-    stack.push(menuEntry(saved.group||''));
+  if(savedStack?.length){
+    const savedTop=savedStack[savedStack.length-1];
+    const requestedMatches=
+      requested&&
+      savedTop?.view==='module'&&
+      savedTop.route===requested;
+
+    const savedMatches=
+      !requested&&
+      saved&&
+      entryKey(savedTop)===entryKey(saved);
+
+    if(requestedMatches||savedMatches){
+      stack=savedStack;
+    }
   }
 
-  saveActiveEntry(topEntry());
+  if(stack.length===1){
+    if(requested&&GROUP[requested]){
+      stack.push(moduleEntry(requested));
+    }else if(saved?.view==='module'&&saved.route&&GROUP[saved.route]){
+      stack.push(moduleEntry(saved.route));
+    }else if(saved?.view==='menu'){
+      stack.push(menuEntry(saved.group||''));
+    }
+  }
+
+  saveNavigationState();
 
   try{
     history.replaceState(rootState(),'',urlForEntry(homeEntry()));
@@ -328,6 +391,7 @@ function start(){
   markInitialState();
   interceptNavigation();
   watchMenu();
+  window.addEventListener('pagehide',saveNavigationState);
   window.addEventListener('popstate',event=>{
     setTimeout(()=>handleBackTrigger(event.state||{}),0);
   });
