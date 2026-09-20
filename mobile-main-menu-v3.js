@@ -158,6 +158,16 @@ const PC={
 function routeUrl(route){return MOBILE[route]||PC[route]||(DASH+'?module='+encodeURIComponent(route)+'&autoload=1')}
 function routeLabel(route){return META[route]?.[2]||route}
 
+function replaceFrameUrl(frame,url){
+ try{
+   if(frame?.contentWindow?.location){
+     frame.contentWindow.location.replace(url);
+     return;
+   }
+ }catch(_){}
+ try{frame.src=url}catch(_){}
+}
+
 function renderDirect(route){
  const frame=$('moduleFrame'),screen=$('moduleScreen');
  if(!frame||!screen)return false;
@@ -167,7 +177,7 @@ function renderDirect(route){
  screen.hidden=false;
  if($('moduleTitle'))$('moduleTitle').textContent=routeLabel(route);
  if($('moduleDesktopLink'))$('moduleDesktopLink').href=DASH+'?module='+encodeURIComponent(route)+'&autoload=1';
- frame.src=url;
+ replaceFrameUrl(frame,url);
  return true;
 }
 function openDirect(route,push=true){
