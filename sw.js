@@ -1,5 +1,5 @@
 /* BIG BROTHER Mobile PWA service worker V1.8 */
-const CACHE='bb-mobile-shell-v49';
+const CACHE='bb-mobile-shell-v50';
 const MOBILE_FILES=new Set([
   'mobile.html','mobile.css','mobile-sales-support.css','pwa-install.css','mobile.js','mobile-user-overview.js',
   'mobile-sales-support-home.js','pwa-install.js','mobile-main-menu-v3.js','mobile-ui-policy-v1.js',
@@ -10,7 +10,7 @@ function isMobileAsset(url){return MOBILE_FILES.has(fileName(url))}
 function injectRouter(html){
   let out=html;
   if(!out.includes('data-bb-router-v4')){const tag='<script data-bb-router-v4 src="mobile-main-menu-v3.js?v=20260920-dailycash1"></script>';out=out.includes('</body>')?out.replace('</body>',tag+'\n</body>'):out+tag}
-  if(!out.includes('data-bb-user-overview-v4')){const tag='<script data-bb-user-overview-v4 src="mobile-user-overview.js?v=20260920-liveoverview1"></script>';out=out.includes('</body>')?out.replace('</body>',tag+'\n</body>'):out+tag}
+  if(!out.includes('data-bb-user-overview-v4')){const tag='<script data-bb-user-overview-v4 src="mobile-user-overview.js?v=20260920-liveoverview2"></script>';out=out.includes('</body>')?out.replace('</body>',tag+'\n</body>'):out+tag}
   if(!out.includes('data-bb-mobile-policy-v1')){const tag='<script data-bb-mobile-policy-v1 src="mobile-ui-policy-v1.js?v=20260915-2"></script>';out=out.includes('</body>')?out.replace('</body>',tag+'\n</body>'):out+tag}
   if(!out.includes('data-bb-navigation-v5')){const tag='<script data-bb-navigation-v5 src="mobile-navigation-v5.js?v=20260920-history6"></script>';out=out.includes('</body>')?out.replace('</body>',tag+'\n</body>'):out+tag}
   if(!out.includes('data-bb-ios-decimal-v1')){const tag='<script data-bb-ios-decimal-v1 src="mobile-ios-decimal-v1.js?v=20260920-iosdecimal3"></script>';out=out.includes('</body>')?out.replace('</body>',tag+'\n</body>'):out+tag}
