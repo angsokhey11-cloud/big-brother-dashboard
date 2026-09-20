@@ -19,7 +19,10 @@ const observedDocs=new WeakSet();
 
 function decimalCandidate(input){
   if(!input || String(input.tagName||'').toLowerCase()!=='input')return false;
-  if(String(input.type||'').toLowerCase()!=='number')return false;
+  if(input.readOnly || input.disabled)return false;
+
+  const type=String(input.type||'text').toLowerCase();
+  if(['date','time','datetime-local','month','week','color','checkbox','radio','file','range','hidden','button','submit','reset','search','email','url'].includes(type))return false;
 
   const mode=String(input.getAttribute('inputmode')||input.inputMode||'').toLowerCase();
   if(mode==='decimal')return true;
@@ -36,22 +39,27 @@ function decimalCandidate(input){
     input.name,
     input.className,
     input.getAttribute('aria-label'),
-    input.getAttribute('placeholder')
+    input.getAttribute('placeholder'),
+    input.closest?.('label')?.textContent,
+    input.parentElement?.previousElementSibling?.textContent
   ].filter(Boolean).join(' ').toLowerCase();
 
-  return /(price|amount|rate|discount|cost|cash|paid|payment|credit|balance|total|exchange|qty|quantity|allowance|salary|expense|receiv|value)/.test(semantic);
+  return /(price|amount|rate|discount|cost|cash|paid|payment|credit|balance|total|exchange|qty|quantity|allowance|salary|expense|receiv|payable|purchase|unit price|unit cost|value)/.test(semantic);
 }
 
 function patchInput(input){
-  if(!decimalCandidate(input) || input.dataset.bbIosDecimal==='1')return;
+  if(!decimalCandidate(input))return;
 
-  input.dataset.bbIosDecimal='1';
-  input.dataset.bbOriginalType='number';
+  if(input.dataset.bbIosDecimal!=='1'){
+    input.dataset.bbIosDecimal='1';
+    input.dataset.bbOriginalType=String(input.type||'text');
+  }
 
-  /* text + decimal is more reliable in iOS standalone/PWA than number
-     for preserving the decimal separator while the user is typing. */
+  /* text + decimal is more reliable in iOS standalone/PWA than number.
+     Remove numeric patterns because iOS may interpret them as digits-only. */
   try{input.type='text'}catch(_){}
   input.setAttribute('inputmode','decimal');
+  input.removeAttribute('pattern');
   input.setAttribute('autocapitalize','none');
   input.setAttribute('spellcheck','false');
 }
@@ -61,7 +69,25 @@ function patchTree(root){
 
   if(root.matches?.('input'))patchInput(root);
 
-  root.querySelectorAll?.('input[type="number"]').forEach(patchInput);
+  root.querySelectorAll?.('input').forEach(patchInput);
+
+  /* Some BIG BROTHER mobile pages rebuild themselves with document.write()
+     or load same-origin subframes. Scan those frames too. */
+  root.querySelectorAll?.('iframe').forEach(frame=>{
+    try{
+      const doc=frame.contentDocument;
+      if(doc?.documentElement)bindDocument(doc);
+      if(!frame.dataset.bbIosDecimalBound){
+        frame.dataset.bbIosDecimalBound='1';
+        frame.addEventListener('load',()=>{
+          try{
+            const nextDoc=frame.contentDocument;
+            if(nextDoc?.documentElement)bindDocument(nextDoc);
+          }catch(_){}
+        });
+      }
+    }catch(_){}
+  });
 }
 
 function normalizeDecimal(event){
@@ -133,6 +159,11 @@ function start(){
 
   setTimeout(patchModuleFrame,250);
   setTimeout(patchModuleFrame,1200);
+
+  /* Mobile loaders can replace their document after the iframe load event.
+     Re-scan the current same-origin module document so Purchase Recorder and
+     similar loaders cannot escape the decimal-input patch. */
+  setInterval(patchModuleFrame,900);
 }
 
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});
