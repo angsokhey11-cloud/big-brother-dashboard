@@ -278,7 +278,7 @@ function injectCss(){
     }
 
     #mobileHome #kpiGrid .sales-kpi:nth-child(1){
-      background:linear-gradient(145deg,#f3f9ff,#e7f3ff)!important;
+      background:linear-gradient(145deg,#eef7ff,#dceeff)!important;
       border-color:#c5dff6!important;
       box-shadow:inset 3px 0 0 #2f80ed,0 6px 16px rgba(47,128,237,.07)!important;
     }
@@ -292,7 +292,7 @@ function injectCss(){
     }
 
     #mobileHome #kpiGrid .sales-kpi:nth-child(2){
-      background:linear-gradient(145deg,#fffaf0,#fff2d9)!important;
+      background:linear-gradient(145deg,#fff8e9,#ffeac2)!important;
       border-color:#f0d8a4!important;
       box-shadow:inset 3px 0 0 #e4a326,0 6px 16px rgba(216,154,23,.07)!important;
     }
@@ -306,7 +306,7 @@ function injectCss(){
     }
 
     #mobileHome #kpiGrid .sales-kpi:nth-child(3){
-      background:linear-gradient(145deg,#f2fbf7,#e3f6ed)!important;
+      background:linear-gradient(145deg,#edfaf3,#d8f2e5)!important;
       border-color:#bee4d2!important;
       box-shadow:inset 3px 0 0 #27ae60,0 6px 16px rgba(39,174,96,.065)!important;
     }
@@ -320,7 +320,7 @@ function injectCss(){
     }
 
     #mobileHome #kpiGrid .sales-kpi:nth-child(4){
-      background:linear-gradient(145deg,#fff6f7,#fde9ec)!important;
+      background:linear-gradient(145deg,#fff1f3,#fbdde3)!important;
       border-color:#f0cbd1!important;
       box-shadow:inset 3px 0 0 #e45f70,0 6px 16px rgba(228,95,112,.065)!important;
     }
@@ -414,7 +414,7 @@ function injectCss(){
     }
 
     #mobileHome #recentList .bb-att-row[data-att-type="receivable"]{
-      background:#fff9ec!important;
+      background:#fff4dc!important;
       border-color:#f0dfb6!important;
       box-shadow:inset 3px 0 0 #e4a326!important;
     }
@@ -438,7 +438,7 @@ function injectCss(){
     }
 
     #mobileHome #recentList .bb-att-row[data-att-type="stock"].bb-clear{
-      background:#effaf5!important;
+      background:#e8f8f0!important;
       border-color:#cbe7d9!important;
       box-shadow:inset 3px 0 0 #27ae60!important;
     }
@@ -462,7 +462,7 @@ function injectCss(){
     }
 
     #mobileHome #recentList .bb-att-row[data-att-type="pending"].bb-clear{
-      background:#f1f7fd!important;
+      background:#eaf4fc!important;
       border-color:#d4e4f1!important;
       box-shadow:inset 3px 0 0 #67a5d8!important;
     }
@@ -472,7 +472,7 @@ function injectCss(){
 
     /* Stronger but still soft active bottom nav */
     .bottom-nav .nav-btn.active{
-      background:linear-gradient(145deg,#e3f0ff,#d7eaff)!important;
+      background:linear-gradient(145deg,#d8ebff,#c9e2ff)!important;
       color:#126fd0!important;
       box-shadow:inset 0 0 0 1px #c4dcf2,0 3px 10px rgba(22,119,255,.07)!important;
     }
