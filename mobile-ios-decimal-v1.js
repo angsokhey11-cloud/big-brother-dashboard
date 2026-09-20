@@ -140,7 +140,10 @@ function patchModuleFrame(){
   if(!frame)return;
   try{
     const doc=frame.contentDocument;
-    if(doc?.documentElement)bindDocument(doc);
+    if(doc?.documentElement){
+      bindDocument(doc);
+      patchTree(doc.documentElement);
+    }
   }catch(_){}
 }
 
