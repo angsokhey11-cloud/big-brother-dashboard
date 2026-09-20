@@ -24,7 +24,7 @@ const ROUTES={
   'payment-history':{tab:'sales',icon:'💳',label:'Payment History',url:'https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=invoice&v=1'},
   'daily-sale-summary':{tab:'sales',icon:'📊',label:'Daily Sale Summary',url:'https://angsokhey11-cloud.github.io/big-brother-daily-sale-summary/?embed=1&v=1'},
   'daily-cash-collection':{tab:'sales',icon:'💵',label:'Cash Collection',url:'https://angsokhey11-cloud.github.io/big-brother-daily-cash-collection/?embed=1&v=1'},
-  'ar-your':{tab:'sales',icon:'💰',label:'My Receivables',url:'https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=your&v=3'},
+  'ar-your':{tab:'sales',icon:'💰',label:'My Receivables',url:'https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=your&v=20260920-artelegram1'},
 
   'stock-keyin':{tab:'stock',icon:'📦',label:'Stock In / Out',url:'https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=keyin&v=20'},
   'stock-damaged':{tab:'stock',icon:'⚠️',label:'Damaged Stock',url:'https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=damaged&v=20'},
@@ -48,7 +48,7 @@ const ROUTES={
   'expense-add':{tab:'more',icon:'➕',label:'Add Expense',url:'https://angsokhey11-cloud.github.io/big-brother-expenses/?embed=1&view=add-expense&v=20260920-iosdecimal1'},
   'expense-accrued':{tab:'more',icon:'⏳',label:'Accrued Expense',url:'https://angsokhey11-cloud.github.io/big-brother-expenses/?embed=1&view=accrued-expenses&v=17'},
   'expense-history':{tab:'more',icon:'🧾',label:'Expense History',url:'https://angsokhey11-cloud.github.io/big-brother-expenses/?embed=1&view=expense-history&v=17'},
-  'ar-all':{tab:'more',icon:'📋',label:'All Receivables',url:'https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=all&v=2'},
+  'ar-all':{tab:'more',icon:'📋',label:'All Receivables',url:'https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=all&v=20260920-artelegram1'},
   'ar-payment-history':{tab:'more',icon:'🧾',label:'Receivable Payments',url:'https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=receivable&v=1'},
   'ar-daily-receivable-cash':{tab:'more',icon:'💵',label:'Daily Receivable Cash',url:'https://angsokhey11-cloud.github.io/big-brother-daily-receivable-cash-summary/?embed=1'},
   'customers-add':{tab:'more',icon:'👤',label:'Add Customer',url:'https://angsokhey11-cloud.github.io/big-brother-customers-editor/?embed=1&view=add&v=20260920-1'},
