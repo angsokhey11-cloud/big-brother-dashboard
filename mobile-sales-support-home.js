@@ -731,6 +731,14 @@ function renderQuick(){
   if($('quickCount'))$('quickCount').textContent=quick.length?quick.length+' selected':'Choose your shortcuts';
 }
 
+/*
+ * Single owner for Home Quick Actions.
+ * mobile.js delegates here whenever it refreshes the Admin overview.
+ */
+window.BBMobileQuickActionsV1={
+  render:renderQuick
+};
+
 function navPageButton(slotIndex,active){
   const route=pages[slotIndex];const item=ROUTES[route];
   if(!item)return `<button type="button" class="nav-btn bb-page-empty ${active==='page'+slotIndex?'active':''}" data-bb-page="${slotIndex}"><b>＋</b><span class="bb-nav-label">Page ${slotIndex+1}</span></button>`;
