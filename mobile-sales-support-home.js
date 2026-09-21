@@ -112,6 +112,10 @@ let pages=[];
 let overview=null;
 let overviewLoading=false;
 let overviewFilter={locationCode:'',year:0,month:0};
+let preferenceSyncBusy=false;
+let preferenceWriteCount=0;
+let preferenceUpdatedAt='';
+let preferenceSyncTimer=null;
 let payment=null;
 let attention=null;
 let lastAttentionFetch=0;
@@ -725,8 +729,86 @@ async function chooseRoute(route){
   pages[pickerSlot]=route;await savePages();closePicker();renderNav(currentNavState());toast('Page '+(pickerSlot+1)+' saved');
 }
 async function removePage(){pages[pickerSlot]='';await savePages();closePicker();renderNav(currentNavState());toast('Page removed')}
-async function saveQuick(){quick=normalizeQuick(quick);writeLocal(quickKey(),quick);await safeRpc('bb_mobile_save_quick_action_order',{p_order:quick})}
-async function savePages(){pages=normalizePages(pages);writeLocal(pageKey(),pages);await safeRpc('bb_mobile_save_pinned_pages',{p_pages:pages})}
+async function saveQuick(){
+  quick=normalizeQuick(quick);
+  writeLocal(quickKey(),quick);
+  preferenceWriteCount+=1;
+  try{
+    const saved=await safeRpc('bb_mobile_save_quick_action_order',{p_order:quick});
+    if(saved?.updatedAt)preferenceUpdatedAt=clean(saved.updatedAt);
+  }finally{
+    preferenceWriteCount=Math.max(0,preferenceWriteCount-1);
+  }
+}
+async function savePages(){
+  pages=normalizePages(pages);
+  writeLocal(pageKey(),pages);
+  preferenceWriteCount+=1;
+  try{
+    const saved=await safeRpc('bb_mobile_save_pinned_pages',{p_pages:pages});
+    if(saved?.updatedAt)preferenceUpdatedAt=clean(saved.updatedAt);
+  }finally{
+    preferenceWriteCount=Math.max(0,preferenceWriteCount-1);
+  }
+}
+
+function sameArray(a,b){return JSON.stringify(a)===JSON.stringify(b)}
+async function syncPreferencesFromServer(force=false){
+  if(preferenceSyncBusy||preferenceWriteCount>0||!profile)return;
+  if(!force&&document.visibilityState==='hidden')return;
+
+  /*
+   * If another controller on THIS device has just reordered a Quick Action
+   * through localStorage, let the local watcher push it first. This prevents
+   * a server pull from overwriting an unsaved local drag/drop.
+   */
+  const localQuick=normalizeQuick(readLocal(quickKey()));
+  const localPages=normalizePages(readLocal(pageKey()));
+  if(!sameArray(localQuick,quick)||!sameArray(localPages,pages))return;
+
+  preferenceSyncBusy=true;
+  try{
+    const prefs=await safeRpc('bb_mobile_get_preferences');
+    if(!prefs?.success)return;
+
+    const serverQuick=normalizeQuick(prefs.quickActionOrder);
+    const serverPages=normalizePages(prefs.pinnedPages);
+    const quickChanged=!sameArray(serverQuick,quick);
+    const pagesChanged=!sameArray(serverPages,pages);
+
+    if(quickChanged){
+      quick=serverQuick;
+      writeLocal(quickKey(),quick);
+      renderQuick();
+      if(pickerMode==='quick'&&!$('bbFunctionPicker')?.hidden)renderPicker();
+    }
+
+    if(pagesChanged){
+      pages=serverPages;
+      writeLocal(pageKey(),pages);
+      renderNav(currentNavState());
+    }
+
+    if(prefs.updatedAt)preferenceUpdatedAt=clean(prefs.updatedAt);
+  }finally{
+    preferenceSyncBusy=false;
+  }
+}
+function installPreferenceSync(){
+  if(preferenceSyncTimer)return;
+
+  /*
+   * Quick Actions are account preferences, not device preferences.
+   * Pull the same Supabase preference row every few seconds so Device B
+   * follows changes made on Device A without requiring logout or refresh.
+   */
+  preferenceSyncTimer=setInterval(()=>syncPreferencesFromServer(false),4000);
+
+  window.addEventListener('focus',()=>syncPreferencesFromServer(true));
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='visible')syncPreferencesFromServer(true);
+  });
+}
 
 function renderQuick(){
   const host=$('quickActions');if(!host)return;
@@ -1205,11 +1287,17 @@ async function load(){
   attention=myAttention?.success?myAttention:null;
   lastAttentionFetch=Date.now();
 
-  if(prefs?.updatedAt){quick=normalizeQuick(prefs.quickActionOrder);pages=normalizePages(prefs.pinnedPages)}
-  else{quick=normalizeQuick(readLocal(quickKey()));pages=normalizePages(readLocal(pageKey()))}
+  if(prefs?.updatedAt){
+    quick=normalizeQuick(prefs.quickActionOrder);
+    pages=normalizePages(prefs.pinnedPages);
+    preferenceUpdatedAt=clean(prefs.updatedAt);
+  }else{
+    quick=normalizeQuick(readLocal(quickKey()));
+    pages=normalizePages(readLocal(pageKey()));
+  }
   writeLocal(quickKey(),quick);writeLocal(pageKey(),pages);
 
-  renderHome();renderNav(currentNavState());watchNavReplacement();
+  renderHome();renderNav(currentNavState());watchNavReplacement();installPreferenceSync();
 
   new MutationObserver(()=>{
     if(!$('mobileHome')?.hidden){renderHome();refreshOverview(true);refreshAttention(false)}
@@ -1228,7 +1316,11 @@ async function load(){
 
   setInterval(()=>{
     const local=normalizeQuick(readLocal(quickKey()));
-    if(JSON.stringify(local)!==JSON.stringify(quick)){quick=local;saveQuick();renderQuick()}
+    if(!sameArray(local,quick)){
+      quick=local;
+      saveQuick();
+      renderQuick();
+    }
   },900);
 }
 
