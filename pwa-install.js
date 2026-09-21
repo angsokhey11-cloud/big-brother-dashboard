@@ -94,11 +94,22 @@ window.addEventListener('appinstalled',()=>{deferredPrompt=null;dismissed=true;r
 let bbSwReloading=false;
 function registerWorker(){
   if(!('serviceWorker' in navigator))return;
+
+  // A first-time device has no controller yet. Gaining its first controller
+  // must never reload the login screen while the user is trying to type.
+  const hadController=Boolean(navigator.serviceWorker.controller);
+
   navigator.serviceWorker.register('./sw.js',{scope:'./',updateViaCache:'none'}).then(reg=>{
     const check=()=>reg.update().catch(()=>{});
     check();
 
     navigator.serviceWorker.addEventListener('controllerchange',()=>{
+      if(!hadController)return;
+
+      // Never interrupt credentials being entered on the login screen.
+      const login=$('loginScreen');
+      if(login&&!login.hidden)return;
+
       if(bbSwReloading)return;
       bbSwReloading=true;
       location.reload();
