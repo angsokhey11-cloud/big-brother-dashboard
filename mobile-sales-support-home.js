@@ -236,11 +236,10 @@ function injectCss(){
     #bbQuickResetBtn{display:none!important}
     .bb-qa-add{height:29px;border:1px solid #cdddec;background:#eef6ff;color:#1267b0;border-radius:999px;padding:0 10px;font:900 8.5px inherit;cursor:pointer}
 
-    .bb-overview-filters{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:0 0 9px}
-    .bb-overview-filter{display:block;min-width:0}
-    .bb-overview-filter>span{display:block;margin:0 0 3px 2px;color:#527899;font-size:7.5px;font-weight:900;letter-spacing:.15px}
-    .bb-overview-filter select{width:100%;height:38px;min-width:0;border:1px solid #aecbe3;border-radius:10px;background:rgba(255,255,255,.78);color:#173f77;padding:0 28px 0 9px;font-size:16px;font-weight:800;outline:0;-webkit-appearance:auto;appearance:auto}
-    .bb-overview-filter select:focus{border-color:#397fbd;box-shadow:0 0 0 2px rgba(57,127,189,.10)}
+    #periodLabel.bb-overview-period{display:inline-flex;align-items:center;gap:4px;padding:5px 8px;border:1px solid #b9d2e8;border-radius:999px;background:rgba(255,255,255,.58);color:#285f91!important;font-weight:900!important;cursor:pointer;user-select:none;-webkit-user-select:none}
+    #periodLabel.bb-overview-period:active{transform:scale(.98)}
+    #kpiGrid [data-overview-location]{cursor:pointer}
+    #kpiGrid [data-overview-location]:active{transform:scale(.985)}
     .bb-overview-loading{opacity:.58;pointer-events:none}
 
     #kpiGrid{gap:7px!important}
@@ -893,81 +892,157 @@ function monthOptionRows(){
   }
   return rows;
 }
-function ensureOverviewControls(){
-  const panel=document.querySelector('#mobileHome .overview-panel');
-  if(!panel)return;
+function selectedSaleLocation(){
+  const code=clean(overviewFilter.locationCode);
+  if(!code)return null;
+  return (Array.isArray(profile?.locations)?profile.locations:[]).find(x=>key(x.locationCode)===key(code))||null;
+}
+function selectedSaleLocationLabel(){
+  const loc=selectedSaleLocation();
+  return loc?clean(loc.locationName||loc.locationCode):'All Assigned Locations';
+}
+function ensureOverviewPicker(){
+  let picker=$('bbOverviewPicker');
+  if(picker)return picker;
 
-  const title=$('overviewTitle');
-  if(title)title.textContent='Overview';
+  picker=document.createElement('div');
+  picker.id='bbOverviewPicker';
+  picker.className='bb-picker';
+  picker.hidden=true;
+  picker.innerHTML=
+    '<div class="bb-picker-box">'+
+      '<div class="bb-picker-head"><div><b id="bbOverviewPickerTitle">Select</b><small id="bbOverviewPickerSub" style="display:block;margin-top:2px;color:#718197;font-size:8px"></small></div><button type="button" id="bbOverviewPickerClose">×</button></div>'+
+      '<div id="bbOverviewPickerList" class="bb-picker-list" style="margin-top:9px"></div>'+
+    '</div>';
+  document.body.appendChild(picker);
 
-  const period=$('periodLabel');
-  if(period)period.textContent=overview?.periodLabel||'';
-
-  let host=$('bbOverviewFilters');
-  if(!host){
-    host=document.createElement('div');
-    host.id='bbOverviewFilters';
-    host.className='bb-overview-filters';
-    const head=panel.querySelector('.section-head');
-    if(head)head.insertAdjacentElement('afterend',host);
-    else panel.prepend(host);
-  }
+  $('bbOverviewPickerClose').onclick=()=>picker.hidden=true;
+  picker.addEventListener('click',event=>{if(event.target===picker)picker.hidden=true});
+  return picker;
+}
+function openOverviewLocationPicker(){
+  const picker=ensureOverviewPicker();
+  const list=$('bbOverviewPickerList');
+  const title=$('bbOverviewPickerTitle');
+  const sub=$('bbOverviewPickerSub');
+  if(title)title.textContent='Sale Location';
+  if(sub)sub.textContent='Monthly Sales · assigned locations only';
 
   const locations=Array.isArray(profile?.locations)?profile.locations:[];
-  const locationOptions=[
-    '<option value="">All Assigned Locations</option>',
-    ...locations.map(loc=>'<option value="'+esc(loc.locationCode)+'">'+esc((loc.locationName||loc.locationCode)+' · '+loc.locationCode)+'</option>')
-  ].join('');
+  const rows=[
+    {locationCode:'',locationName:'All Assigned Locations'},
+    ...locations
+  ];
 
-  const selectedMonth=Number(overviewFilter.year)+'-'+String(Number(overviewFilter.month)).padStart(2,'0');
-  const monthOptions=monthOptionRows().map(row=>
-    '<option value="'+row.value+'" '+(row.value===selectedMonth?'selected':'')+'>'+esc(row.label)+'</option>'
-  ).join('');
+  list.innerHTML=rows.map(loc=>{
+    const code=clean(loc.locationCode);
+    const selected=key(code)===key(overviewFilter.locationCode);
+    const name=clean(loc.locationName||loc.locationCode||'All Assigned Locations');
+    const note=code?code:'All locations assigned to your account';
+    return '<button type="button" class="bb-picker-row '+(selected?'selected':'')+'" data-overview-location-value="'+esc(code)+'">'+
+      '<span class="bb-picker-icon">📍</span>'+
+      '<span><b>'+esc(name)+'</b><small>'+esc(note)+'</small></span>'+
+      '<span class="bb-picker-state">'+(selected?'Selected':'Select')+'</span>'+
+    '</button>';
+  }).join('');
 
-  host.innerHTML=
-    '<label class="bb-overview-filter"><span>SALE LOCATION</span><select id="bbOverviewLocation">'+locationOptions+'</select></label>'+
-    '<label class="bb-overview-filter"><span>MONTH</span><select id="bbOverviewMonth">'+monthOptions+'</select></label>';
-
-  const location=$('bbOverviewLocation');
-  if(location)location.value=clean(overviewFilter.locationCode);
-
-  if(location)location.onchange=()=>{
-    overviewFilter.locationCode=clean(location.value);
-    saveOverviewFilter();
-    refreshOverview(true);
-  };
-
-  const month=$('bbOverviewMonth');
-  if(month)month.onchange=()=>{
-    const parts=clean(month.value).split('-');
-    const year=Number(parts[0]),value=Number(parts[1]);
-    if(Number.isInteger(year)&&Number.isInteger(value)&&value>=1&&value<=12){
-      overviewFilter.year=year;
-      overviewFilter.month=value;
+  list.querySelectorAll('[data-overview-location-value]').forEach(button=>{
+    button.onclick=()=>{
+      overviewFilter.locationCode=clean(button.dataset.overviewLocationValue);
       saveOverviewFilter();
+      picker.hidden=true;
       refreshOverview(true);
-    }
-  };
+    };
+  });
+
+  picker.hidden=false;
+}
+function openOverviewMonthPicker(){
+  const picker=ensureOverviewPicker();
+  const list=$('bbOverviewPickerList');
+  const title=$('bbOverviewPickerTitle');
+  const sub=$('bbOverviewPickerSub');
+  if(title)title.textContent='Select Month';
+  if(sub)sub.textContent='Monthly Sales period';
+
+  const selected=Number(overviewFilter.year)+'-'+String(Number(overviewFilter.month)).padStart(2,'0');
+  list.innerHTML=monthOptionRows().map(row=>{
+    const active=row.value===selected;
+    return '<button type="button" class="bb-picker-row '+(active?'selected':'')+'" data-overview-month-value="'+esc(row.value)+'">'+
+      '<span class="bb-picker-icon">🗓️</span>'+
+      '<span><b>'+esc(row.label)+'</b><small>Monthly Sales</small></span>'+
+      '<span class="bb-picker-state">'+(active?'Selected':'Select')+'</span>'+
+    '</button>';
+  }).join('');
+
+  list.querySelectorAll('[data-overview-month-value]').forEach(button=>{
+    button.onclick=()=>{
+      const parts=clean(button.dataset.overviewMonthValue).split('-');
+      const year=Number(parts[0]);
+      const month=Number(parts[1]);
+      if(Number.isInteger(year)&&Number.isInteger(month)&&month>=1&&month<=12){
+        overviewFilter.year=year;
+        overviewFilter.month=month;
+        saveOverviewFilter();
+        picker.hidden=true;
+        refreshOverview(true);
+      }
+    };
+  });
+
+  picker.hidden=false;
+}
+function ensureOverviewHeader(){
+  const title=$('overviewTitle');
+  if(title){
+    title.textContent='Overview';
+    title.style.fontSize='';
+  }
+
+  // Remove the old always-visible selectors if an earlier cached script created them.
+  const oldFilters=$('bbOverviewFilters');
+  if(oldFilters)oldFilters.remove();
+
+  const period=$('periodLabel');
+  if(period){
+    period.classList.add('bb-overview-period');
+    period.textContent=(overview?.periodLabel||'Month')+' ▾';
+    period.setAttribute('role','button');
+    period.setAttribute('tabindex','0');
+    period.setAttribute('aria-label','Select overview month');
+    period.onclick=openOverviewMonthPicker;
+    period.onkeydown=event=>{
+      if(event.key==='Enter'||event.key===' '){
+        event.preventDefault();
+        openOverviewMonthPicker();
+      }
+    };
+  }
 }
 
 function renderOverview(){
-  if(!overview||!$('kpiGrid')){
-    ensureOverviewControls();
-    return;
-  }
-
-  ensureOverviewControls();
+  ensureOverviewHeader();
+  if(!overview||!$('kpiGrid'))return;
 
   const sales=overview.monthlySales||{};
   const ar=overview.receivable||{};
   const stock=overview.stock||{};
   const available=Array.isArray(payment?.available)?payment.available:[];
   const usd=available.filter(x=>key(x.currency||'USD')==='usd').reduce((sum,x)=>sum+num(x.amount),0);
+  const saleLocation=selectedSaleLocation();
+  const salesSub=(saleLocation?clean(saleLocation.locationName||saleLocation.locationCode):'All assigned')+' · '+Math.round(num(sales.invoiceCount))+' invoices';
 
-  const card=(icon,label,value,sub,route='')=>{
-    const clickable=route&&canRoute(route);
+  const card=(icon,label,value,sub,route='',action='')=>{
+    const routeClickable=route&&canRoute(route);
+    const actionClickable=!!action;
+    const clickable=routeClickable||actionClickable;
     const tag=clickable?'button':'div';
-    return `<${tag} class="sales-kpi ${clickable?'clickable':'locked'}" ${clickable?`type="button" data-kpi-route="${route}"`:''}><span class="kpi-icon">${icon}</span><small>${esc(label)}</small><strong>${esc(value)}</strong><em>${esc(sub)}</em>${clickable?'<span class="kpi-arrow">›</span>':''}</${tag}>`;
+    const attrs=routeClickable
+      ? `type="button" data-kpi-route="${route}"`
+      : actionClickable
+        ? `type="button" data-overview-action="${action}"`
+        : '';
+    return `<${tag} class="sales-kpi ${clickable?'clickable':'locked'}" ${attrs}><span class="kpi-icon">${icon}</span><small>${esc(label)}</small><strong>${esc(value)}</strong><em>${esc(sub)}</em>${clickable?'<span class="kpi-arrow">›</span>':''}</${tag}>`;
   };
 
   const receivableRoute=canRoute('sales-support-your-receivable')?'sales-support-your-receivable':canRoute('ar-all')?'ar-all':canRoute('ar-your')?'ar-your':'';
@@ -975,19 +1050,20 @@ function renderOverview(){
 
   if(isAdmin()){
     $('kpiGrid').innerHTML=
-      card('📊','Monthly Sales',money(sales.netUSD),Math.round(num(sales.invoiceCount))+' invoices')+
+      card('📊','Monthly Sales',money(sales.netUSD),salesSub,'','location')+
       card('💰','Receivable',money(ar.equivalentUSD),Math.round(num(ar.count))+' open',receivableRoute)+
       card('📦','Stock Value',money(stock.valueUSD),qty(stock.physicalQty)+' qty',stockRoute)+
       card('⏳','Pending Tasks',String(Math.round(num(overview.pendingStaffRequests))),'Staff requests');
   }else{
     $('kpiGrid').innerHTML=
-      card('📊','Monthly Sales',money(sales.netUSD),Math.round(num(sales.invoiceCount))+' invoices')+
+      card('📊','Monthly Sales',money(sales.netUSD),salesSub,'','location')+
       card('💰','Receivable',money(ar.equivalentUSD),Math.round(num(ar.count))+' open',receivableRoute)+
       card('📦','Stock Qty',qty(stock.physicalQty),Math.round(num(stock.openBatchCount))+' open batches',stockRoute)+
       card('👛','Your Earning',money(usd),available.length+' available',canRoute('staff-relation')?'staff-relation':'');
   }
 
   $('kpiGrid').querySelectorAll('[data-kpi-route]').forEach(button=>button.onclick=()=>openRoute(button.dataset.kpiRoute));
+  $('kpiGrid').querySelectorAll('[data-overview-action="location"]').forEach(button=>button.onclick=openOverviewLocationPicker);
 }
 
 async function refreshOverview(force=false){
@@ -995,8 +1071,8 @@ async function refreshOverview(force=false){
   if(!profile)return;
 
   overviewLoading=true;
-  const host=$('bbOverviewFilters');
-  if(host)host.classList.add('bb-overview-loading');
+  const panel=document.querySelector('#mobileHome .overview-panel');
+  if(panel)panel.classList.add('bb-overview-loading');
 
   try{
     const next=await safeRpc('bb_mobile_overview_filtered',overviewArgs());
@@ -1006,8 +1082,7 @@ async function refreshOverview(force=false){
     }
   }finally{
     overviewLoading=false;
-    const current=$('bbOverviewFilters');
-    if(current)current.classList.remove('bb-overview-loading');
+    if(panel)panel.classList.remove('bb-overview-loading');
   }
 }
 
