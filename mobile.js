@@ -277,7 +277,22 @@ function renderRecent(){
 function bindRouteButtons(host){host.querySelectorAll('[data-route]').forEach(btn=>btn.onclick=()=>openModule(btn.dataset.route,true))}
 function renderHome(){
   $('greeting').textContent=greeting();$('userName').textContent=displayName();$('locationChip').textContent='📍 '+locationText();$('dateChip').textContent=dateText();
-  renderKpis();$('quickActions').innerHTML=quickHtml();bindRouteButtons($('quickActions'));renderAttention();renderRecent();
+  renderKpis();
+
+  /*
+   * Quick Actions are owned by mobile-sales-support-home.js.
+   * The old fixed QUICK list is only a fallback for deployments where
+   * the unified controller is unavailable. This prevents Admin refreshes
+   * and live-overview updates from restoring the legacy 8-item list.
+   */
+  if(window.BBMobileQuickActionsV1?.render){
+    window.BBMobileQuickActionsV1.render();
+  }else{
+    $('quickActions').innerHTML=quickHtml();
+    bindRouteButtons($('quickActions'));
+  }
+
+  renderAttention();renderRecent();
   $('notificationBtn').style.opacity=canRoute('notification-center')?'1':'.35';
 }
 function mobileHomeVisible(){
