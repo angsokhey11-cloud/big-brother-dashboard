@@ -92,8 +92,8 @@ function ensureButton(){
   button.id='bbDesktopInstallApp';
   button.className='bb-desktop-install';
   button.type='button';
-  button.innerHTML='<span>📲</span><span>Install App</span>';
-  button.title='Install the BIG BROTHER mobile app on this device';
+  button.innerHTML='<span>📲</span><span>Install Desktop App</span>';
+  button.title='Install the BIG BROTHER desktop dashboard on this computer';
   button.addEventListener('click',installApp);
 
   const tools=$('bbUserTools');
@@ -121,22 +121,22 @@ function render(){
   button.hidden=false;
   button.disabled=false;
   button.innerHTML=deferredPrompt
-    ? '<span>📲</span><span>Install App</span>'
-    : '<span>📲</span><span>Install App</span>';
+    ? '<span>📲</span><span>Install Desktop App</span>'
+    : '<span>📲</span><span>Install Desktop App</span>';
 }
 
 async function installApp(){
   if(isStandalone()||installed){
-    note('BIG BROTHER is already installed on this device.');
+    note('BIG BROTHER Desktop is already installed on this device.');
     render();
     return;
   }
 
   if(!deferredPrompt){
     if(isChromium()){
-      note('Install is not ready yet. Wait a moment, then tap Install App again. You can also use the browser Install icon in the address bar.');
+      note('Install is not ready yet. Wait a moment, then tap Install Desktop App again. You can also use the browser Install icon in the address bar.');
     }else{
-      note('For direct app installation, open BIG BROTHER in Chrome or Microsoft Edge and tap Install App.');
+      note('For direct app installation, open BIG BROTHER in Chrome or Microsoft Edge and tap Install Desktop App.');
     }
     return;
   }
@@ -149,7 +149,7 @@ async function installApp(){
     const choice=await prompt.userChoice;
 
     if(choice?.outcome==='accepted'){
-      note('Installing BIG BROTHER…');
+      note('Installing BIG BROTHER Desktop…');
     }else{
       note('Installation cancelled.');
     }
@@ -186,7 +186,7 @@ function start(){
     deferredPrompt=null;
     installed=true;
     render();
-    note('BIG BROTHER installed successfully ✓');
+    note('BIG BROTHER Desktop installed successfully ✓');
   });
 
   window.matchMedia?.('(display-mode: standalone)')?.addEventListener?.('change',render);
