@@ -1135,7 +1135,7 @@
 
   <script data-bb-theme-v1 src="mobile-theme-v1.js?v=20260920-premiumlight5"></script>
 
-  <script src="mobile-sales-support-home.js?v=20260920-history3"></script>
+  <script src="mobile-sales-support-home.js?v=20260921-accountquick1"></script>
 
   <script src="pwa-install.js?v=20260920-ios1"></script>
 
@@ -1381,6 +1381,69 @@
 
     function staffKey(){
 
+      /*
+       * Quick Action layout belongs to the signed-in Auth account,
+       * not to a Staff ID/name. This prevents an Admin and Staff login
+       * used on the same phone from sharing the same local layout.
+       */
+      try{
+        const session =
+          JSON.parse(
+            localStorage.getItem(
+              'BB_SUPABASE_DEV_SESSION_V1'
+            ) || 'null'
+          );
+
+        const direct =
+          clean(
+            session
+              ?.user
+              ?.id
+          );
+
+        if(direct){
+          return direct;
+        }
+
+        const token =
+          clean(
+            session
+              ?.access_token
+          );
+
+        const part =
+          token.split('.')[1];
+
+        if(part){
+          const base =
+            part
+              .replace(/-/g,'+')
+              .replace(/_/g,'/');
+
+          const padded =
+            base +
+            '='.repeat(
+              (4 - base.length % 4) % 4
+            );
+
+          const payload =
+            JSON.parse(
+              atob(padded)
+            );
+
+          const sub =
+            clean(
+              payload
+                ?.sub
+            );
+
+          if(sub){
+            return sub;
+          }
+        }
+      }catch(_){}
+
+
       const meta =
         document.querySelector(
           '#salesmanIntro .salesman-meta'
@@ -1423,7 +1486,7 @@
     function storageKey(){
 
       return (
-        'bb_mobile_quick_order_v2::' +
+        'bb_mobile_quick_order_v3::' +
         staffKey()
       );
     }
