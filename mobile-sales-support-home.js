@@ -167,9 +167,30 @@ function canRoute(route){
   const grant=grantFor(route);if(!grant)return false;
   return CREATE_ROUTES.has(route)?grant.canView===true&&grant.canCreate===true:grant.canView===true;
 }
-function userId(){return clean(profile?.staff?.staffId||profile?.user?.staffId||profile?.user?.userId||profile?.user?.email||'user')}
-function quickKey(){return 'bb_mobile_quick_order_v2::'+userId()}
-function pageKey(){return 'bb_mobile_pinned_pages_v1::'+userId()}
+function authAccountId(){
+  const s=readSession();
+  const direct=clean(s?.user?.id);
+  if(direct)return direct;
+
+  /* Fallback only for local preference namespacing. Authorization still
+     comes from the server-side access profile / RPCs. */
+  try{
+    const token=clean(s?.access_token);
+    const part=token.split('.')[1];
+    if(part){
+      const base=part.replace(/-/g,'+').replace(/_/g,'/');
+      const padded=base+'='.repeat((4-base.length%4)%4);
+      const payload=JSON.parse(atob(padded));
+      const sub=clean(payload?.sub);
+      if(sub)return sub;
+    }
+  }catch(_){}
+
+  return clean(profile?.user?.userId||profile?.user?.email||profile?.staff?.staffId||profile?.user?.staffId||'user');
+}
+function userId(){return authAccountId()}
+function quickKey(){return 'bb_mobile_quick_order_v3::'+userId()}
+function pageKey(){return 'bb_mobile_pinned_pages_v2::'+userId()}
 function readLocal(storageKey){try{return JSON.parse(localStorage.getItem(storageKey)||'[]')}catch(_){return[]}}
 function writeLocal(storageKey,value){try{localStorage.setItem(storageKey,JSON.stringify(value))}catch(_){}}
 function normalizeQuick(value,max=64){
