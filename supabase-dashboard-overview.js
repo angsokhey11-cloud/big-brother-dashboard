@@ -57,9 +57,29 @@ async function rpc(fn,args={}){
 
 function openShortcut(route){
   if(!route)return false;
+
+  /*
+   * Sales Support "Your ..." desktop pages are installed by their own
+   * controllers and are not part of the legacy MODULE_URLS map.
+   * Open them through their real controller so Overview cards behave
+   * exactly like the matching left-menu function.
+   */
+  const personalOpeners={
+    'sales-support-your-invoices':()=>window.BBYourInvoices?.open?.(true),
+    'sales-support-your-collection':()=>window.BBYourCollection?.open?.(true),
+    'sales-support-your-receivable':()=>window.BBYourReceivable?.open?.(true),
+    'sales-support-your-stock':()=>window.BBYourStock?.open?.(true)
+  };
+
+  if(personalOpeners[route]){
+    const result=personalOpeners[route]();
+    if(result!==undefined)return result;
+  }
+
   if(['monthly-sales-report','income-statement-report','purchase-order-report'].includes(route)){
     return window.BBCompanyFeatures?.open?.(route)??false;
   }
+
   if(typeof window.loadWorkspace==='function')return window.loadWorkspace(route,true);
   return false;
 }
