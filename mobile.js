@@ -242,6 +242,9 @@ function quickHtml(){
   return items.map(route=>{const x=ROUTES[route];return `<button type="button" class="quick-btn" data-route="${route}"><div class="quick-icon">${x.icon}</div><span>${esc(x.label)}</span></button>`}).join('')||'<div class="menu-empty">No quick actions assigned.</div>';
 }
 function renderKpis(){
+  if(window.BBMobileOverviewV1?.render){
+    try{window.BBMobileOverviewV1.render();return}catch(_){}
+  }
   const grid=$('kpiGrid');
   if(isAdmin()&&overview){
     const m=overview.monthly||{},s=overview.currentSnapshot||{};
@@ -259,13 +262,13 @@ function renderKpis(){
         <em>${esc(x[3])}</em>
       </div>
     `).join('');
-    $('overviewTitle').textContent='Monthly Overview';$('periodLabel').textContent=overview.periodLabel||currentPeriod();
+    $('overviewTitle').textContent='Overview';$('periodLabel').textContent=overview.periodLabel||currentPeriod();
   }else{
     const locs=Array.isArray(profile?.locations)?profile.locations.length:0;
     const role=isAdmin()?'Admin':'User';
     const data=[['My Locations',String(locs),locationText()],['Available Actions',String(availableCount()),'Based on permissions'],['Access Level',role,'BIG BROTHER account'],['Workspace','Mobile','Standalone V1']];
     grid.innerHTML=data.map(x=>`<div class="kpi"><small>${esc(x[0])}</small><strong>${esc(x[1])}</strong><em>${esc(x[2])}</em></div>`).join('');
-    $('overviewTitle').textContent='My Workspace';$('periodLabel').textContent=currentPeriod();
+    $('overviewTitle').textContent='Overview';$('periodLabel').textContent=currentPeriod();
   }
 }
 function renderAttention(){
@@ -352,6 +355,13 @@ function openSettings(){$('settingsSheet').hidden=false}
 function closeSettings(){$('settingsSheet').hidden=true}
 
 async function loadOverview(force=false){
+  if(window.BBMobileOverviewV1?.refresh){
+    try{
+      await window.BBMobileOverviewV1.refresh(force);
+      adminOverviewLastLoad=Date.now();
+      return;
+    }catch(_){}
+  }
   if(!isAdmin())return;
   if(adminOverviewLoading)return;
   if(!force&&Date.now()-adminOverviewLastLoad<LIVE_OVERVIEW_MS-1000)return;
