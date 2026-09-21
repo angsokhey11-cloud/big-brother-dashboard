@@ -35,7 +35,7 @@ function installOverview(){
   if(!document.getElementById('bbMonthlyOverviewScript')){
     const s=document.createElement('script');
     s.id='bbMonthlyOverviewScript';
-    s.src='supabase-dashboard-overview.js?v=20260921-staffdesktop1';
+    s.src='supabase-dashboard-overview.js?v=20260921-stafflinks1';
     document.body.appendChild(s);
   }
   if(!document.getElementById('bbMonthlyOverviewEnhancer')){
