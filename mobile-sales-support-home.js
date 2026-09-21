@@ -110,6 +110,8 @@ let profile=null;
 let quick=[];
 let pages=[];
 let overview=null;
+let overviewLoading=false;
+let overviewFilter={locationCode:'',year:0,month:0};
 let payment=null;
 let attention=null;
 let lastAttentionFetch=0;
@@ -233,6 +235,13 @@ function injectCss(){
   style.textContent=`
     #bbQuickResetBtn{display:none!important}
     .bb-qa-add{height:29px;border:1px solid #cdddec;background:#eef6ff;color:#1267b0;border-radius:999px;padding:0 10px;font:900 8.5px inherit;cursor:pointer}
+
+    .bb-overview-filters{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:0 0 9px}
+    .bb-overview-filter{display:block;min-width:0}
+    .bb-overview-filter>span{display:block;margin:0 0 3px 2px;color:#527899;font-size:7.5px;font-weight:900;letter-spacing:.15px}
+    .bb-overview-filter select{width:100%;height:38px;min-width:0;border:1px solid #aecbe3;border-radius:10px;background:rgba(255,255,255,.78);color:#173f77;padding:0 28px 0 9px;font-size:16px;font-weight:800;outline:0;-webkit-appearance:auto;appearance:auto}
+    .bb-overview-filter select:focus{border-color:#397fbd;box-shadow:0 0 0 2px rgba(57,127,189,.10)}
+    .bb-overview-loading{opacity:.58;pointer-events:none}
 
     #kpiGrid{gap:7px!important}
     #kpiGrid .sales-kpi{grid-template-columns:34px minmax(0,1fr) 23px!important;min-height:78px!important;padding:8px!important;column-gap:7px!important;border-radius:13px!important}
@@ -843,24 +852,169 @@ function openRoute(route,navState=''){
   renderNav(navState||currentNavState());
 }
 
-function renderStaffKpis(){
-  if(isAdmin()||!overview||!$('kpiGrid'))return;
-  const sales=overview.monthlySales||{},ar=overview.receivable||{},stock=overview.stock||{};
+function overviewFilterKey(){return 'bb_mobile_overview_filter_v1::'+userId()}
+function defaultOverviewFilter(){
+  const d=new Date();
+  return{locationCode:'',year:d.getFullYear(),month:d.getMonth()+1};
+}
+function loadOverviewFilter(){
+  const fallback=defaultOverviewFilter();
+  let saved=null;
+  try{saved=JSON.parse(localStorage.getItem(overviewFilterKey())||'null')}catch(_){}
+  const year=Number(saved?.year);
+  const month=Number(saved?.month);
+  const allowed=new Set((Array.isArray(profile?.locations)?profile.locations:[]).map(x=>key(x.locationCode)));
+  const locationCode=allowed.has(key(saved?.locationCode))?clean(saved.locationCode):'';
+  return{
+    locationCode,
+    year:Number.isInteger(year)&&year>=2000&&year<=2100?year:fallback.year,
+    month:Number.isInteger(month)&&month>=1&&month<=12?month:fallback.month
+  };
+}
+function saveOverviewFilter(){
+  try{localStorage.setItem(overviewFilterKey(),JSON.stringify(overviewFilter))}catch(_){}
+}
+function overviewArgs(){
+  return{
+    p_year:Number(overviewFilter.year),
+    p_month:Number(overviewFilter.month),
+    p_location_code:clean(overviewFilter.locationCode)||null
+  };
+}
+function monthOptionRows(){
+  const rows=[];
+  const now=new Date();
+  for(let offset=0;offset<36;offset++){
+    const d=new Date(now.getFullYear(),now.getMonth()-offset,1);
+    rows.push({
+      value:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),
+      label:d.toLocaleDateString(undefined,{month:'long',year:'numeric'})
+    });
+  }
+  return rows;
+}
+function ensureOverviewControls(){
+  const panel=document.querySelector('#mobileHome .overview-panel');
+  if(!panel)return;
+
+  const title=$('overviewTitle');
+  if(title)title.textContent='Overview';
+
+  const period=$('periodLabel');
+  if(period)period.textContent=overview?.periodLabel||'';
+
+  let host=$('bbOverviewFilters');
+  if(!host){
+    host=document.createElement('div');
+    host.id='bbOverviewFilters';
+    host.className='bb-overview-filters';
+    const head=panel.querySelector('.section-head');
+    if(head)head.insertAdjacentElement('afterend',host);
+    else panel.prepend(host);
+  }
+
+  const locations=Array.isArray(profile?.locations)?profile.locations:[];
+  const locationOptions=[
+    '<option value="">All Assigned Locations</option>',
+    ...locations.map(loc=>'<option value="'+esc(loc.locationCode)+'">'+esc((loc.locationName||loc.locationCode)+' · '+loc.locationCode)+'</option>')
+  ].join('');
+
+  const selectedMonth=Number(overviewFilter.year)+'-'+String(Number(overviewFilter.month)).padStart(2,'0');
+  const monthOptions=monthOptionRows().map(row=>
+    '<option value="'+row.value+'" '+(row.value===selectedMonth?'selected':'')+'>'+esc(row.label)+'</option>'
+  ).join('');
+
+  host.innerHTML=
+    '<label class="bb-overview-filter"><span>SALE LOCATION</span><select id="bbOverviewLocation">'+locationOptions+'</select></label>'+
+    '<label class="bb-overview-filter"><span>MONTH</span><select id="bbOverviewMonth">'+monthOptions+'</select></label>';
+
+  const location=$('bbOverviewLocation');
+  if(location)location.value=clean(overviewFilter.locationCode);
+
+  if(location)location.onchange=()=>{
+    overviewFilter.locationCode=clean(location.value);
+    saveOverviewFilter();
+    refreshOverview(true);
+  };
+
+  const month=$('bbOverviewMonth');
+  if(month)month.onchange=()=>{
+    const parts=clean(month.value).split('-');
+    const year=Number(parts[0]),value=Number(parts[1]);
+    if(Number.isInteger(year)&&Number.isInteger(value)&&value>=1&&value<=12){
+      overviewFilter.year=year;
+      overviewFilter.month=value;
+      saveOverviewFilter();
+      refreshOverview(true);
+    }
+  };
+}
+
+function renderOverview(){
+  if(!overview||!$('kpiGrid')){
+    ensureOverviewControls();
+    return;
+  }
+
+  ensureOverviewControls();
+
+  const sales=overview.monthlySales||{};
+  const ar=overview.receivable||{};
+  const stock=overview.stock||{};
   const available=Array.isArray(payment?.available)?payment.available:[];
   const usd=available.filter(x=>key(x.currency||'USD')==='usd').reduce((sum,x)=>sum+num(x.amount),0);
+
   const card=(icon,label,value,sub,route='')=>{
-    const clickable=route&&canRoute(route);const tag=clickable?'button':'div';
+    const clickable=route&&canRoute(route);
+    const tag=clickable?'button':'div';
     return `<${tag} class="sales-kpi ${clickable?'clickable':'locked'}" ${clickable?`type="button" data-kpi-route="${route}"`:''}><span class="kpi-icon">${icon}</span><small>${esc(label)}</small><strong>${esc(value)}</strong><em>${esc(sub)}</em>${clickable?'<span class="kpi-arrow">›</span>':''}</${tag}>`;
   };
-  const receivableRoute=canRoute('sales-support-your-receivable')?'sales-support-your-receivable':canRoute('ar-your')?'ar-your':'';
+
+  const receivableRoute=canRoute('sales-support-your-receivable')?'sales-support-your-receivable':canRoute('ar-all')?'ar-all':canRoute('ar-your')?'ar-your':'';
   const stockRoute=canRoute('sales-support-your-stock')?'sales-support-your-stock':canRoute('stock-report')?'stock-report':'';
-  $('kpiGrid').innerHTML=
-    card('📊','Monthly Sales',money(sales.netUSD),Math.round(num(sales.invoiceCount))+' invoices')+
-    card('💰','Receivable',money(ar.equivalentUSD),Math.round(num(ar.count))+' open',receivableRoute)+
-    card('📦','Stock Qty',qty(stock.physicalQty),Math.round(num(stock.openBatchCount))+' open batches',stockRoute)+
-    card('👛','Your Earning',money(usd),available.length+' available',canRoute('staff-relation')?'staff-relation':'');
+
+  if(isAdmin()){
+    $('kpiGrid').innerHTML=
+      card('📊','Monthly Sales',money(sales.netUSD),Math.round(num(sales.invoiceCount))+' invoices')+
+      card('💰','Receivable',money(ar.equivalentUSD),Math.round(num(ar.count))+' open',receivableRoute)+
+      card('📦','Stock Value',money(stock.valueUSD),qty(stock.physicalQty)+' qty',stockRoute)+
+      card('⏳','Pending Tasks',String(Math.round(num(overview.pendingStaffRequests))),'Staff requests');
+  }else{
+    $('kpiGrid').innerHTML=
+      card('📊','Monthly Sales',money(sales.netUSD),Math.round(num(sales.invoiceCount))+' invoices')+
+      card('💰','Receivable',money(ar.equivalentUSD),Math.round(num(ar.count))+' open',receivableRoute)+
+      card('📦','Stock Qty',qty(stock.physicalQty),Math.round(num(stock.openBatchCount))+' open batches',stockRoute)+
+      card('👛','Your Earning',money(usd),available.length+' available',canRoute('staff-relation')?'staff-relation':'');
+  }
+
   $('kpiGrid').querySelectorAll('[data-kpi-route]').forEach(button=>button.onclick=()=>openRoute(button.dataset.kpiRoute));
 }
+
+async function refreshOverview(force=false){
+  if(overviewLoading)return;
+  if(!profile)return;
+
+  overviewLoading=true;
+  const host=$('bbOverviewFilters');
+  if(host)host.classList.add('bb-overview-loading');
+
+  try{
+    const next=await safeRpc('bb_mobile_overview_filtered',overviewArgs());
+    if(next?.success){
+      overview=next;
+      renderOverview();
+    }
+  }finally{
+    overviewLoading=false;
+    const current=$('bbOverviewFilters');
+    if(current)current.classList.remove('bb-overview-loading');
+  }
+}
+
+window.BBMobileOverviewV1={
+  render:renderOverview,
+  refresh:refreshOverview
+};
 
 function attentionRoute(type){
   if(type==='receivable'){
@@ -949,7 +1103,7 @@ function ensureHeaderQuote(){
 function renderHome(){
   if($('mobileHome')?.hidden)return;
   injectCss();ensureHiddenStaffMeta();installQuickControls();installPicker();ensureHeaderQuote();
-  renderStaffKpis();renderQuick();renderAttention();renderNav('home');
+  renderOverview();renderQuick();renderAttention();renderNav('home');
 }
 
 function watchNavReplacement(){
@@ -963,13 +1117,15 @@ function watchNavReplacement(){
 
 async function load(){
   profile=await rpc('bb_current_access_profile');
-  const [prefs,staffOverview,staffPayment,myAttention]=await Promise.all([
+  overviewFilter=loadOverviewFilter();
+
+  const [prefs,overviewData,staffPayment,myAttention]=await Promise.all([
     safeRpc('bb_mobile_get_preferences'),
-    isAdmin()?null:safeRpc('bb_mobile_user_overview'),
+    safeRpc('bb_mobile_overview_filtered',overviewArgs()),
     canRoute('staff-relation')?safeRpc('bb_staff_relation_my_payments',{p_from:null,p_to:null,p_salary_month:null}):null,
     safeRpc('bb_mobile_my_attention')
   ]);
-  overview=staffOverview;
+  overview=overviewData?.success?overviewData:null;
   payment=staffPayment;
   attention=myAttention?.success?myAttention:null;
   lastAttentionFetch=Date.now();
@@ -981,7 +1137,7 @@ async function load(){
   renderHome();renderNav(currentNavState());watchNavReplacement();
 
   new MutationObserver(()=>{
-    if(!$('mobileHome')?.hidden){renderHome();refreshAttention(false)}
+    if(!$('mobileHome')?.hidden){renderHome();refreshOverview(true);refreshAttention(false)}
   }).observe($('mobileHome'),{attributes:true,attributeFilter:['hidden']});
   new MutationObserver(()=>{
     if(!$('menuScreen')?.hidden){renderMainMenu();renderNav('menu')}
