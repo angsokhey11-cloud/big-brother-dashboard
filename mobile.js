@@ -189,16 +189,24 @@ function showLogin(message=''){
   hideAll();$('loginScreen').hidden=false;$('loginError').textContent=message||'';
   const email=$('loginEmail');
   const password=$('loginPassword');
+
   if(email&&!email.value){
     const remembered=readRememberedEmail();
     if(remembered)email.value=remembered;
   }
-  setTimeout(()=>{
-    try{
-      if(email?.value)password?.focus({preventScroll:true});
-      else email?.focus({preventScroll:true});
-    }catch(_){}
-  },120);
+
+  /*
+   * iPhone first-run rule:
+   * do not programmatically focus the login fields while Safari/PWA and the
+   * service worker are still settling. The fields stay immediately tappable
+   * and the keyboard opens only from the user's own tap.
+   */
+  [email,password].forEach(input=>{
+    if(!input)return;
+    input.disabled=false;
+    input.readOnly=false;
+    input.style.pointerEvents='auto';
+  });
 }
 function toast(message){
   const t=$('toast');t.textContent=message;t.hidden=false;clearTimeout(toast._timer);toast._timer=setTimeout(()=>t.hidden=true,2600);
