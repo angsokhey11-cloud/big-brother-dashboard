@@ -117,6 +117,7 @@ let preferenceWriteCount=0;
 let preferenceUpdatedAt='';
 let preferenceSyncTimer=null;
 let payment=null;
+let stockReport=null;
 let attention=null;
 let lastAttentionFetch=0;
 let pickerMode='quick';
@@ -1128,13 +1129,21 @@ function renderOverview(){
   };
 
   const receivableRoute=canRoute('sales-support-your-receivable')?'sales-support-your-receivable':canRoute('ar-all')?'ar-all':canRoute('ar-your')?'ar-your':'';
-  const stockRoute=canRoute('sales-support-your-stock')?'sales-support-your-stock':canRoute('stock-report')?'stock-report':'';
+  const stockRoute=isAdmin()
+    ? (canRoute('stock-report')?'stock-report':'')
+    : (canRoute('sales-support-your-stock')?'sales-support-your-stock':canRoute('stock-report')?'stock-report':'');
 
   if(isAdmin()){
     $('kpiGrid').innerHTML=
       card('📊','Monthly Sales',money(sales.netUSD),salesSub,'','location')+
       card('💰','Receivable',money(ar.equivalentUSD),Math.round(num(ar.count))+' open',receivableRoute)+
-      card('📦','Stock Value',money(stock.valueUSD),qty(stock.physicalQty)+' qty',stockRoute)+
+      card(
+        '📦',
+        'Stock Value',
+        money(stockReport?.totals?.warehouseValue ?? stock.valueUSD),
+        'Warehouse · '+qty(stockReport?.totals?.warehousePhysicalQty ?? stock.physicalQty)+' qty',
+        stockRoute
+      )+
       card('⏳','Pending Tasks',String(Math.round(num(overview.pendingStaffRequests))),'Staff requests');
   }else{
     $('kpiGrid').innerHTML=
@@ -1157,7 +1166,11 @@ async function refreshOverview(force=false){
   if(panel)panel.classList.add('bb-overview-loading');
 
   try{
-    const next=await safeRpc('bb_mobile_overview_filtered',overviewArgs());
+    const [next,nextStockReport]=await Promise.all([
+      safeRpc('bb_mobile_overview_filtered',overviewArgs()),
+      isAdmin()?safeRpc('bb_stock_report_fast'):Promise.resolve(null)
+    ]);
+    if(nextStockReport?.success)stockReport=nextStockReport;
     if(next?.success){
       overview=next;
       renderOverview();
@@ -1276,14 +1289,16 @@ async function load(){
   profile=await rpc('bb_current_access_profile');
   overviewFilter=loadOverviewFilter();
 
-  const [prefs,overviewData,staffPayment,myAttention]=await Promise.all([
+  const [prefs,overviewData,staffPayment,myAttention,stockReportData]=await Promise.all([
     safeRpc('bb_mobile_get_preferences'),
     safeRpc('bb_mobile_overview_filtered',overviewArgs()),
     canRoute('staff-relation')?safeRpc('bb_staff_relation_my_payments',{p_from:null,p_to:null,p_salary_month:null}):null,
-    safeRpc('bb_mobile_my_attention')
+    safeRpc('bb_mobile_my_attention'),
+    isAdmin()?safeRpc('bb_stock_report_fast'):null
   ]);
   overview=overviewData?.success?overviewData:null;
   payment=staffPayment;
+  stockReport=stockReportData?.success?stockReportData:null;
   attention=myAttention?.success?myAttention:null;
   lastAttentionFetch=Date.now();
 
