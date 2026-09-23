@@ -136,7 +136,7 @@ const MOBILE={
 };
 
 const PC={
- 'sales-support-calculator':'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=calculator&v=20260923-productlist1',
+ 'sales-support-calculator':'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=calculator&v=20260923-productdropdown1',
  'sales-support-request-delivery':'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=request-delivery&v=110',
  'sales-support-your-customer':'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=your-customer&v=110',
  'sales-support-successful-delivery':'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=successful-delivery&v=110',
