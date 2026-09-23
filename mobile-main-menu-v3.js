@@ -105,7 +105,7 @@ const MOBILE={
  'stock-damaged-report':'https://angsokhey11-cloud.github.io/big-brother-stock-report/damage-stock-report-mobile.html?embed=1&v=20260915-3',
  'stock-damaged-cleared':'https://angsokhey11-cloud.github.io/big-brother-stock-report/damaged-stock-cleared-mobile.html?embed=1&v=20260915-2',
  'stock-damaged-accounting':'https://angsokhey11-cloud.github.io/big-brother-damaged-stock/accounting-mobile.html?embed=1&v=20260915-3',
- 'stock-report':'https://angsokhey11-cloud.github.io/big-brother-stock-report/mobile.html?embed=1&v=20260923-simple2',
+ 'stock-report':'https://angsokhey11-cloud.github.io/big-brother-stock-report/mobile.html?embed=1&v=20260923-defaultorder1',
  'batch-report':'https://angsokhey11-cloud.github.io/big-brother-stock-report/batch-mobile.html?embed=1&v=20260915-4',
  'closed-batch':'https://angsokhey11-cloud.github.io/big-brother-stock-report/closed-batch-mobile.html?embed=1&v=20260915-1',
  'stock-transactions':'https://angsokhey11-cloud.github.io/big-brother-stock-report/transactions-mobile.html?embed=1&v=20260915-2',
