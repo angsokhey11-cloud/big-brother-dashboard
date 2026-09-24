@@ -17,7 +17,7 @@ function installSalesSupportYourStock(){
   if(document.getElementById('bbSalesSupportYourStockScript'))return;
   const s=document.createElement('script');
   s.id='bbSalesSupportYourStockScript';
-  s.src='supabase-sales-support-your-stock.js?v=20260914-4';
+  s.src='supabase-sales-support-your-stock.js?v=20260924-adminbatch1';
   s.async=false;
   document.body.appendChild(s);
 }
