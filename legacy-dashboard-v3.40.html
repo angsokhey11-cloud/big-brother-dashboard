@@ -2020,7 +2020,35 @@
       frame.src &&
       frame.src !== 'about:blank';
 
-    if (!sameModule) {
+    /*
+     * Invoice Generator build guard:
+     * If this dashboard kept an older Invoice iframe alive while a new
+     * Invoice Generator build was deployed, clicking Create Invoice again
+     * must refresh ONLY that iframe. Other modules keep the V3.40 no-reload
+     * behavior.
+     */
+    const expectedInvoiceBuild =
+      '20260924-confirmfix2';
+
+    let invoiceFrameOutdated = false;
+
+    if (
+      moduleName === 'invoice' &&
+      sameModule
+    ) {
+      try {
+        invoiceFrameOutdated =
+          frame.contentWindow?.BB_INVOICE_GENERATOR_BUILD !==
+          expectedInvoiceBuild;
+      } catch (_) {
+        invoiceFrameOutdated = true;
+      }
+    }
+
+    if (
+      !sameModule ||
+      invoiceFrameOutdated
+    ) {
       frame.dataset.module = moduleName;
       const separator = url.includes('?') ? '&' : '?';
       frame.src =
