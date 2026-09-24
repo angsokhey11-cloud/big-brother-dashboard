@@ -41,7 +41,7 @@ function installOverview(){
   if(!document.getElementById('bbMonthlyOverviewEnhancer')){
     const e=document.createElement('script');
     e.id='bbMonthlyOverviewEnhancer';
-    e.src='supabase-dashboard-overview-enhancer.js?v=20260924-salesmanbatch1';
+    e.src='supabase-dashboard-overview-enhancer.js?v=20260924-adminselectfix1';
     document.body.appendChild(e);
   }
 }
