@@ -169,10 +169,7 @@ function isAdmin(){return profile?.user?.isAdmin===true}
 function grantFor(route){
   if(isAdmin())return{canView:true,canCreate:true,canEdit:true,canApprove:true};
   const modules=Array.isArray(profile?.modules)?profile.modules:[];
-  const permissionRoute=route==='sales-support-batch-selling-tracker'
-    ? 'sales-support-your-stock'
-    : route;
-  return modules.find(x=>key(x.moduleKey)==='*')||modules.find(x=>key(x.moduleKey)==='route.'+key(permissionRoute))||null;
+  return modules.find(x=>key(x.moduleKey)==='*')||modules.find(x=>key(x.moduleKey)==='route.'+key(route))||null;
 }
 function canRoute(route){
   if(!ROUTES[route])return false;
