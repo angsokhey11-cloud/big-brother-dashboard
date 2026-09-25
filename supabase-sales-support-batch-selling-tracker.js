@@ -14,7 +14,7 @@ function canView(){
   if(p?.user?.isAdmin===true)return true;
   const mods=Array.isArray(p?.modules)?p.modules:[];
   const g=mods.find(x=>key(x.moduleKey)==='*')
-    ||mods.find(x=>key(x.moduleKey)==='route.sales-support-your-stock');
+    ||mods.find(x=>key(x.moduleKey)==='route.sales-support-batch-selling-tracker');
   return g?.canView===true;
 }
 function ensureMenu(){
