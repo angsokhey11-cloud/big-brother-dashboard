@@ -100,6 +100,7 @@ function restore(){
     autoload=q.get('autoload')||'';
   }catch(_){}
   if(route===ROUTE&&autoload==='1'){
+    if(!profile())return;
     restoreDone=true;
     setTimeout(()=>open(false),60);
   }
