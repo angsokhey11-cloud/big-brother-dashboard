@@ -17,7 +17,7 @@ const ROUTES={
   'sales-support-request-delivery':{tab:'sales',icon:'🚚',label:'Request Delivery',url:'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=request-delivery&v=110'},
   'sales-support-your-customer':{tab:'sales',icon:'👥',label:'My Customers',url:'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=your-customer&v=110'},
   'sales-support-successful-delivery':{tab:'sales',icon:'✅',label:'Successful Delivery',url:'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=successful-delivery&v=110'},
-  'invoice':{tab:'sales',icon:'🧾',label:'Create Invoice',url:'https://angsokhey11-cloud.github.io/big-brother-invoice-generator/mobile.html?embed=1&v=20260924-cashbank1'},
+  'invoice':{tab:'sales',icon:'🧾',label:'Create Invoice',url:'https://angsokhey11-cloud.github.io/big-brother-invoice-generator/mobile.html?embed=1&v=20260925-mobiledb2'},
   'history':{tab:'sales',icon:'📚',label:'Invoice History',url:'https://angsokhey11-cloud.github.io/invoice-history/invoice-history-mobile.html?embed=1&v=20260924-sheetsync1'},
   'sale-return':{tab:'sales',icon:'↩️',label:'Invoice Reversal',url:'https://angsokhey11-cloud.github.io/big-brother-invoice-reversal/mobile.html?embed=1&v=20260924-invoiceid1'},
   'reversal-history':{tab:'sales',icon:'📜',label:'Reversal History',url:'https://angsokhey11-cloud.github.io/big-brother-invoice-reversal/history.html?embed=1&v=20260914-1'},
