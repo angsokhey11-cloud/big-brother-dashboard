@@ -18,6 +18,7 @@ sales-support-your-customer|Sales Support|👥|Your Customer
 sales-support-add-customer|Sales Support|👤+|Add Customer
 sales-support-customer-map|Sales Support|📍|Customer Map
 sales-support-your-stock|Sales Support|📦|Your Stock
+sales-support-batch-selling-tracker|Sales Support|🔎|Batch Selling Tracker
 sales-support-your-collection|Sales Support|💵|Your Collection
 sales-support-your-invoices|Sales Support|🧾|Your Invoices
 sales-support-your-receivable|Sales Support|💳|Your Receivable
@@ -85,6 +86,7 @@ const MOBILE_URLS={
   'sales-support-add-customer':'big-brother-sales-support/add-customer-mobile.html?embed=1&v=20260914-2',
   'sales-support-customer-map':'big-brother-customers-editor/sales-support-customer-map-mobile.html?embed=1&v=20260914-2',
   'sales-support-your-stock':'big-brother-sales-support/your-stock-mobile.html?embed=1&v=20260914-5',
+  'sales-support-batch-selling-tracker':'big-brother-batch-selling-tracker/mobile.html?embed=1&v=20260925-dashboard1',
   'sales-support-your-collection':'big-brother-daily-cash-collection/your-collection-mobile.html?embed=1&v=20260921-owner1',
   'sales-support-your-invoices':'invoice-history/your-invoices-mobile.html?embed=1&v=20260925-assigned2',
   'sales-support-your-receivable':'big-brother-ar/your-receivable-mobile.html?embed=1&view=your&v=20260914-3',
@@ -167,7 +169,10 @@ function isAdmin(){return profile?.user?.isAdmin===true}
 function grantFor(route){
   if(isAdmin())return{canView:true,canCreate:true,canEdit:true,canApprove:true};
   const modules=Array.isArray(profile?.modules)?profile.modules:[];
-  return modules.find(x=>key(x.moduleKey)==='*')||modules.find(x=>key(x.moduleKey)==='route.'+key(route))||null;
+  const permissionRoute=route==='sales-support-batch-selling-tracker'
+    ? 'sales-support-your-stock'
+    : route;
+  return modules.find(x=>key(x.moduleKey)==='*')||modules.find(x=>key(x.moduleKey)==='route.'+key(permissionRoute))||null;
 }
 function canRoute(route){
   if(!ROUTES[route])return false;
