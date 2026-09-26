@@ -5,6 +5,8 @@
 const ROUTE='sales-support-batch-selling-tracker';
 const URL='https://angsokhey11-cloud.github.io/big-brother-batch-selling-tracker/?embed=1&v=20260925-dashboard1';
 let restoreDone=false;
+let profileWatchTimer=null;
+let profileWatchStartedAt=0;
 
 const key=v=>String(v||'').trim().toLowerCase();
 function profile(){return window.BBDashboardAdapter?.getProfile?.()||null}
@@ -105,13 +107,49 @@ function restore(){
     setTimeout(()=>open(false),60);
   }
 }
+function syncWhenProfileReady(){
+  ensureMenu();
+  restore();
+
+  if(profile()){
+    if(profileWatchTimer){
+      clearInterval(profileWatchTimer);
+      profileWatchTimer=null;
+    }
+    return true;
+  }
+  return false;
+}
+
+function startProfileWatch(){
+  if(profileWatchTimer)return;
+  profileWatchStartedAt=Date.now();
+
+  syncWhenProfileReady();
+
+  profileWatchTimer=setInterval(()=>{
+    if(syncWhenProfileReady())return;
+
+    if(Date.now()-profileWatchStartedAt>20000){
+      clearInterval(profileWatchTimer);
+      profileWatchTimer=null;
+    }
+  },250);
+}
+
 function install(){
   ensureMenu();
   restore();
+  startProfileWatch();
 }
-window.BBBatchSellingTracker={open,canView,ensureMenu};
+window.BBBatchSellingTracker={open,canView,ensureMenu,syncWhenProfileReady};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});
 else install();
+
+window.addEventListener('focus',syncWhenProfileReady);
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible')syncWhenProfileReady();
+});
 
 window.addEventListener('popstate',()=>{
   try{
@@ -120,6 +158,7 @@ window.addEventListener('popstate',()=>{
   }catch(_){}
 });
 
-setTimeout(install,300);
-setTimeout(install,1200);
+setTimeout(syncWhenProfileReady,300);
+setTimeout(syncWhenProfileReady,1200);
+setTimeout(syncWhenProfileReady,3000);
 })();
