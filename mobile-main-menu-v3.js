@@ -121,7 +121,7 @@ const MOBILE={
  'expense-monthly-report':'https://angsokhey11-cloud.github.io/big-brother-expenses/mobile-monthly.html?embed=1&v=20260915-1',
 
  'purchase-create':'https://angsokhey11-cloud.github.io/big-brother-purchase-recorder/mobile.html?embed=1&v=20260915-1',
- 'purchase-history':'https://angsokhey11-cloud.github.io/big-brother-puchase-history/mobile.html?embed=1&v=20260915-1',
+ 'purchase-history':'https://angsokhey11-cloud.github.io/big-brother-puchase-history/mobile.html?embed=1&v=20260926-edit1',
  'purchase-payable':'https://angsokhey11-cloud.github.io/big-brother-purchase-payable-invoice/mobile.html?embed=1&v=20260915-1',
  'purchase-payment-history':'https://angsokhey11-cloud.github.io/big-brother-purchase-payment-history/mobile.html?embed=1&v=20260915-1',
 
