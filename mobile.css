@@ -76,11 +76,13 @@
   box-shadow:0 3px 12px rgba(12,45,80,.14);font:900 16px/1 inherit;
   display:flex;align-items:center;justify-content:center;transition:bottom .2s ease;
 }
-html.bb-bottom-nav-collapsed #bottomNav{
+html.bb-bottom-nav-collapsed #bottomNav,
+html.bb-bottom-nav-collapsed #moduleBottomNav,
+html.bb-bottom-nav-collapsed #menuBottomNav{
   transform:translateY(calc(100% + env(safe-area-inset-bottom) + 14px))!important;
   opacity:0!important;pointer-events:none!important;
 }
 html.bb-bottom-nav-collapsed .bb-bottom-nav-collapse{
   bottom:calc(8px + env(safe-area-inset-bottom));
 }
-#bottomNav{transition:transform .2s ease,opacity .2s ease}
+#bottomNav,#moduleBottomNav,#menuBottomNav{transition:transform .2s ease,opacity .2s ease}
