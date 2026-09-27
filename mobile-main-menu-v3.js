@@ -69,6 +69,7 @@ const META={
  'products-add':['Master Data','🥛','Add Product'],
  'products-details':['Master Data','📦','Product Details'],
  'master-expense-categories':['Master Data','💸','Expense Categories'],
+ 'master-audit-center':['Master Data','🛡️','Audit & Correction Center'],
 
  'admin-pending-receivable':['Admin Work','💰','Pending Receivable Request'],
  'admin-pending-daily-cash':['Admin Work','💵','Pending Daily Cash Request'],
@@ -153,6 +154,7 @@ const PC={
  'products-add':'https://angsokhey11-cloud.github.io/big-brother-products-editor/?embed=1&view=add&v=10',
  'products-details':'https://angsokhey11-cloud.github.io/big-brother-products-editor/?embed=1&view=details&v=10',
  'master-expense-categories':'https://angsokhey11-cloud.github.io/big-brother-master-data/expense-categories.html?embed=1&v=21',
+ 'master-audit-center':'https://angsokhey11-cloud.github.io/big-brother-master-data/audit-center.html?embed=1&v=20260927-1',
  'admin-deposit-history':'https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=deposit-history',
  'admin-staff-request':'https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=staff-request',
  'admin-request':'https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=admin-request',
