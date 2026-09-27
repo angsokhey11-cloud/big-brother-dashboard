@@ -561,7 +561,7 @@
 
   
 /* MOBILE BOTTOM NAV COLLAPSE V1 */
-#mobileHome .bottom-nav{transition:transform .22s ease,opacity .22s ease!important}
+.bottom-nav{transition:transform .22s ease,opacity .22s ease!important}
 #bbBottomNavToggle{
   position:fixed!important;right:12px!important;bottom:calc(66px + env(safe-area-inset-bottom))!important;
   z-index:10020!important;width:32px!important;height:25px!important;padding:0!important;
@@ -571,7 +571,7 @@
   font-weight:900!important;line-height:1!important;display:flex!important;align-items:center!important;
   justify-content:center!important;transition:bottom .22s ease,transform .22s ease!important;
 }
-body.bb-bottom-nav-collapsed #mobileHome .bottom-nav{
+body.bb-bottom-nav-collapsed .bottom-nav{
   transform:translateY(calc(100% + env(safe-area-inset-bottom) + 12px))!important;
   opacity:0!important;pointer-events:none!important;
 }
@@ -2355,18 +2355,33 @@ body.bb-bottom-nav-collapsed #bbBottomNavToggle{
     }
   }
   function init(){
-    if(document.getElementById('bbBottomNavToggle')) return;
-    const nav=document.getElementById('bottomNav');
-    if(!nav) return;
-    const b=document.createElement('button');
-    b.id='bbBottomNavToggle'; b.type='button';
-    b.addEventListener('click',function(e){
-      e.preventDefault();e.stopPropagation();
-      const next=!document.body.classList.contains('bb-bottom-nav-collapsed');
-      apply(next);save(next);
-    });
-    document.body.appendChild(b);
+    let b=document.getElementById('bbBottomNavToggle');
+    if(!b){
+      b=document.createElement('button');
+      b.id='bbBottomNavToggle'; b.type='button';
+      b.addEventListener('click',function(e){
+        e.preventDefault();e.stopPropagation();
+        const next=!document.body.classList.contains('bb-bottom-nav-collapsed');
+        apply(next);save(next);
+      });
+      document.body.appendChild(b);
+    }
     apply(saved());
+
+    function syncToggle(){
+      const navs=Array.from(document.querySelectorAll('.bottom-nav, #bottomNav'));
+      const visible=navs.some(nav=>{
+        const s=getComputedStyle(nav);
+        const r=nav.getBoundingClientRect();
+        return s.display!=='none' && s.visibility!=='hidden' && r.width>0 && r.height>0;
+      });
+      b.hidden=!visible;
+      if(visible) apply(document.body.classList.contains('bb-bottom-nav-collapsed'));
+    }
+    syncToggle();
+    new MutationObserver(syncToggle).observe(document.body,{subtree:true,attributes:true,attributeFilter:['hidden','class','style']});
+    window.addEventListener('popstate',()=>setTimeout(syncToggle,30));
+    window.addEventListener('hashchange',()=>setTimeout(syncToggle,30));
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init,{once:true});
   else init();
