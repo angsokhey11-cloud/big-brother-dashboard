@@ -73,7 +73,7 @@ function setBottomNavCollapsed(collapsed){
   }
 }
 function ensureBottomNavCollapse(){
-  const nav=$('bottomNav');
+  const nav=$('bottomNav')||$('moduleBottomNav')||$('menuBottomNav');
   if(!nav)return;
   let btn=$('bbBottomNavCollapse');
   if(!btn){
