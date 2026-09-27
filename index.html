@@ -224,6 +224,14 @@ body{
             💸 Expense Categories
           </button>
 
+          <button
+            type="button"
+            id="navMasterAuditCenter"
+            onclick="loadWorkspace('master-audit-center')"
+          >
+            🛡️ Audit & Correction Center
+          </button>
+
         </div>`;
 
 
@@ -247,7 +255,8 @@ body{
     const productRouteWithExpenseCategory =
       productRoute
       +
-      '\n    "master-expense-categories": "https://angsokhey11-cloud.github.io/big-brother-master-data/expense-categories.html?embed=1&v=20260912-3",';
+      '\n    "master-expense-categories": "https://angsokhey11-cloud.github.io/big-brother-master-data/expense-categories.html?embed=1&v=20260912-3",' +
+      '\n    "master-audit-center": "https://angsokhey11-cloud.github.io/big-brother-master-data/audit-center.html?embed=1&v=20260927-1",';
 
 
     mustReplace(
@@ -282,6 +291,8 @@ body{
     const isProductModule = productModules.includes(moduleName);
     const isExpenseCategoryMaster =
       moduleName === 'master-expense-categories';
+    const isAuditCenterMaster =
+      moduleName === 'master-audit-center';
 
     const isSalesSupportModule = salesSupportModules.includes(moduleName);
     const isExpensesModule = expenseModules.includes(moduleName);
@@ -291,7 +302,8 @@ body{
       isCustomerModule ||
       isClientModule ||
       isProductModule ||
-      isExpenseCategoryMaster;`;
+      isExpenseCategoryMaster ||
+      isAuditCenterMaster;`;
 
 
     mustReplace(
@@ -332,6 +344,13 @@ body{
       if (isExpenseCategoryMaster) {
         document
           .getElementById('navMasterExpenseCategories')
+          ?.classList
+          .add('active');
+      }
+
+      if (isAuditCenterMaster) {
+        document
+          .getElementById('navMasterAuditCenter')
           ?.classList
           .add('active');
       }
