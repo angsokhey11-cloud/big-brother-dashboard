@@ -82,6 +82,13 @@ html.bb-bottom-nav-collapsed #menuBottomNav{
   transform:translateY(calc(100% + env(safe-area-inset-bottom) + 14px))!important;
   opacity:0!important;pointer-events:none!important;
 }
+
+/* When module nav is collapsed, give its iframe the recovered nav space. */
+html.bb-bottom-nav-collapsed #moduleScreen .module-frame{
+  bottom:0 !important;
+  height:calc(100dvh - 58px - env(safe-area-inset-top)) !important;
+}
+
 html.bb-bottom-nav-collapsed .bb-bottom-nav-collapse{
   bottom:calc(8px + env(safe-area-inset-bottom));
 }
