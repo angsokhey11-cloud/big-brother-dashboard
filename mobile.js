@@ -59,6 +59,8 @@ const ROUTES={
   'clients-details':{tab:'more',icon:'🏭',label:'Client Details',url:'https://angsokhey11-cloud.github.io/big-brother-clients-editor/?embed=1&view=details&v=10'},
   'products-add':{tab:'more',icon:'🥛',label:'Add Product',url:'https://angsokhey11-cloud.github.io/big-brother-products-editor/?embed=1&view=add&v=10'},
   'products-details':{tab:'more',icon:'📦',label:'Product Details',url:'https://angsokhey11-cloud.github.io/big-brother-products-editor/?embed=1&view=details&v=10'},
+  'master-expense-categories':{tab:'more',icon:'💸',label:'Expense Categories',url:'https://angsokhey11-cloud.github.io/big-brother-master-data/expense-categories.html?embed=1&v=21'},
+  'master-audit-center':{tab:'more',icon:'🛡️',label:'Audit & Correction Center',url:'https://angsokhey11-cloud.github.io/big-brother-master-data/audit-center.html?embed=1&v=20260927-2'},
   'staff-relation':{tab:'more',icon:'🤝',label:'Staff Relation',url:'https://angsokhey11-cloud.github.io/big-brother-staff-relation/?embed=1&v=20260913-1'},
   'notification-center':{tab:'more',icon:'🔔',label:'Notifications',url:'https://angsokhey11-cloud.github.io/big-brother-admin-work/company-control.html?embed=1&view=notifications&v=1'}
 };
