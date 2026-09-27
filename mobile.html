@@ -2355,33 +2355,21 @@ body.bb-bottom-nav-collapsed #bbBottomNavToggle{
     }
   }
   function init(){
-    let b=document.getElementById('bbBottomNavToggle');
-    if(!b){
-      b=document.createElement('button');
-      b.id='bbBottomNavToggle'; b.type='button';
-      b.addEventListener('click',function(e){
-        e.preventDefault();e.stopPropagation();
-        const next=!document.body.classList.contains('bb-bottom-nav-collapsed');
-        apply(next);save(next);
-      });
-      document.body.appendChild(b);
-    }
+    if(document.getElementById('bbBottomNavToggle')) return;
+    const nav=document.getElementById('bottomNav');
+    if(!nav) return;
+    const b=document.createElement('button');
+    b.id='bbBottomNavToggle';
+    b.type='button';
+    b.addEventListener('click',function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      const next=!document.body.classList.contains('bb-bottom-nav-collapsed');
+      apply(next);
+      save(next);
+    });
+    document.body.appendChild(b);
     apply(saved());
-
-    function syncToggle(){
-      const navs=Array.from(document.querySelectorAll('.bottom-nav, #bottomNav'));
-      const visible=navs.some(nav=>{
-        const s=getComputedStyle(nav);
-        const r=nav.getBoundingClientRect();
-        return s.display!=='none' && s.visibility!=='hidden' && r.width>0 && r.height>0;
-      });
-      b.hidden=!visible;
-      if(visible) apply(document.body.classList.contains('bb-bottom-nav-collapsed'));
-    }
-    syncToggle();
-    new MutationObserver(syncToggle).observe(document.body,{subtree:true,attributes:true,attributeFilter:['hidden','class','style']});
-    window.addEventListener('popstate',()=>setTimeout(syncToggle,30));
-    window.addEventListener('hashchange',()=>setTimeout(syncToggle,30));
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init,{once:true});
   else init();
