@@ -86,7 +86,7 @@ html.bb-bottom-nav-collapsed #menuBottomNav{
 /* When module nav is collapsed, give its iframe the recovered nav space. */
 html.bb-bottom-nav-collapsed #moduleScreen .module-frame{
   bottom:0 !important;
-  height:auto !important;
+  height:calc(100dvh - 58px - env(safe-area-inset-top)) !important;
 }
 
 html.bb-bottom-nav-collapsed .bb-bottom-nav-collapse{
