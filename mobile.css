@@ -66,3 +66,21 @@
     margin-bottom:12px;
   }
 }
+
+
+/* Bottom navigation collapse — controlled by mobile-navigation-v5.js */
+.bb-bottom-nav-collapse{
+  position:fixed;right:12px;bottom:calc(68px + env(safe-area-inset-bottom));
+  z-index:10020;width:34px;height:26px;padding:0;border:1px solid rgba(18,103,176,.22);
+  border-radius:999px;background:rgba(255,255,255,.96);color:#1267b0;
+  box-shadow:0 3px 12px rgba(12,45,80,.14);font:900 16px/1 inherit;
+  display:flex;align-items:center;justify-content:center;transition:bottom .2s ease;
+}
+html.bb-bottom-nav-collapsed #bottomNav{
+  transform:translateY(calc(100% + env(safe-area-inset-bottom) + 14px))!important;
+  opacity:0!important;pointer-events:none!important;
+}
+html.bb-bottom-nav-collapsed .bb-bottom-nav-collapse{
+  bottom:calc(8px + env(safe-area-inset-bottom));
+}
+#bottomNav{transition:transform .2s ease,opacity .2s ease}
