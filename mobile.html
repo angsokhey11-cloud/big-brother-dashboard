@@ -559,7 +559,27 @@
       }
     }
 
-  </style>
+  
+/* MOBILE BOTTOM NAV COLLAPSE V1 */
+#mobileHome .bottom-nav{transition:transform .22s ease,opacity .22s ease!important}
+#bbBottomNavToggle{
+  position:fixed!important;right:12px!important;bottom:calc(66px + env(safe-area-inset-bottom))!important;
+  z-index:10020!important;width:32px!important;height:25px!important;padding:0!important;
+  border:1px solid rgba(18,103,176,.22)!important;border-radius:999px!important;
+  background:rgba(255,255,255,.96)!important;color:#1267b0!important;
+  box-shadow:0 3px 12px rgba(12,45,80,.14)!important;font-size:16px!important;
+  font-weight:900!important;line-height:1!important;display:flex!important;align-items:center!important;
+  justify-content:center!important;transition:bottom .22s ease,transform .22s ease!important;
+}
+body.bb-bottom-nav-collapsed #mobileHome .bottom-nav{
+  transform:translateY(calc(100% + env(safe-area-inset-bottom) + 12px))!important;
+  opacity:0!important;pointer-events:none!important;
+}
+body.bb-bottom-nav-collapsed #bbBottomNavToggle{
+  bottom:calc(8px + env(safe-area-inset-bottom))!important;
+}
+
+</style>
 </head>
 
 
@@ -2317,6 +2337,41 @@
 
   })();
   </script>
+
+
+<script id="bb-bottom-nav-collapse-v1">
+(function(){
+  const KEY='bb_mobile_bottom_nav_collapsed_v1';
+  function saved(){try{return localStorage.getItem(KEY)==='1'}catch(_){return false}}
+  function save(v){try{localStorage.setItem(KEY,v?'1':'0')}catch(_){}}
+  function apply(v){
+    document.body.classList.toggle('bb-bottom-nav-collapsed',v);
+    const b=document.getElementById('bbBottomNavToggle');
+    if(b){
+      b.textContent=v?'⌃':'⌄';
+      b.setAttribute('aria-label',v?'Expand bottom navigation':'Collapse bottom navigation');
+      b.setAttribute('aria-expanded',String(!v));
+      b.title=v?'Show navigation':'Hide navigation';
+    }
+  }
+  function init(){
+    if(document.getElementById('bbBottomNavToggle')) return;
+    const nav=document.getElementById('bottomNav');
+    if(!nav) return;
+    const b=document.createElement('button');
+    b.id='bbBottomNavToggle'; b.type='button';
+    b.addEventListener('click',function(e){
+      e.preventDefault();e.stopPropagation();
+      const next=!document.body.classList.contains('bb-bottom-nav-collapsed');
+      apply(next);save(next);
+    });
+    document.body.appendChild(b);
+    apply(saved());
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init,{once:true});
+  else init();
+})();
+</script>
 
 </body>
 </html>
