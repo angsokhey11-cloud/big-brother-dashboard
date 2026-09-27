@@ -56,6 +56,41 @@ const EXIT_WINDOW_MS=1900;
 const ACTIVE_VIEW_KEY='BB_MOBILE_ACTIVE_VIEW_V1';
 const STACK_KEY='BB_MOBILE_NAV_STACK_V1';
 const navSession=String(Date.now());
+const BOTTOM_NAV_COLLAPSE_KEY='BB_MOBILE_BOTTOM_NAV_COLLAPSED_V1';
+
+function isBottomNavCollapsed(){
+  try{return localStorage.getItem(BOTTOM_NAV_COLLAPSE_KEY)==='1'}catch(_){return false}
+}
+function setBottomNavCollapsed(collapsed){
+  collapsed=!!collapsed;
+  try{localStorage.setItem(BOTTOM_NAV_COLLAPSE_KEY,collapsed?'1':'0')}catch(_){}
+  document.documentElement.classList.toggle('bb-bottom-nav-collapsed',collapsed);
+  const btn=$('bbBottomNavCollapse');
+  if(btn){
+    btn.textContent=collapsed?'⌃':'⌄';
+    btn.setAttribute('aria-label',collapsed?'Expand bottom navigation':'Collapse bottom navigation');
+    btn.setAttribute('aria-expanded',String(!collapsed));
+  }
+}
+function ensureBottomNavCollapse(){
+  const nav=$('bottomNav');
+  if(!nav)return;
+  let btn=$('bbBottomNavCollapse');
+  if(!btn){
+    btn=document.createElement('button');
+    btn.id='bbBottomNavCollapse';
+    btn.type='button';
+    btn.className='bb-bottom-nav-collapse';
+    btn.addEventListener('click',event=>{
+      event.preventDefault();
+      event.stopPropagation();
+      setBottomNavCollapsed(!document.documentElement.classList.contains('bb-bottom-nav-collapsed'));
+    });
+    nav.insertAdjacentElement('beforebegin',btn);
+  }
+  setBottomNavCollapsed(isBottomNavCollapsed());
+}
+
 let restoring=false;
 let exitArmedUntil=0;
 let stack=[];
@@ -171,10 +206,12 @@ function applyOpenGroup(group=''){
   else host.scrollTop=0;
 }
 function renderHome(){
+  ensureBottomNavCollapse();
   hideAll();
   if($('mobileHome'))$('mobileHome').hidden=false;
 }
 function renderMenu(group=''){
+  ensureBottomNavCollapse();
   hideAll();
   if($('menuScreen'))$('menuScreen').hidden=false;
   setTimeout(()=>{
@@ -183,6 +220,7 @@ function renderMenu(group=''){
   },0);
 }
 function renderModule(route){
+  ensureBottomNavCollapse();
   if(!route)return false;
   restoring=true;
   let ok=false;
@@ -388,6 +426,7 @@ function watchMenu(){
   }).observe(menu,{attributes:true,attributeFilter:['hidden']});
 }
 function start(){
+  ensureBottomNavCollapse();
   markInitialState();
   interceptNavigation();
   watchMenu();
