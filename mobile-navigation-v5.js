@@ -72,8 +72,8 @@ function setBottomNavCollapsed(collapsed){
     btn.setAttribute('aria-expanded',String(!collapsed));
   }
 }
-function ensureBottomNavCollapse(){
-  const nav=$('bottomNav')||$('moduleBottomNav')||$('menuBottomNav');
+function ensureBottomNavCollapse(targetNav){
+  const nav=targetNav||$('bottomNav');
   if(!nav)return;
   let btn=$('bbBottomNavCollapse');
   if(!btn){
@@ -86,8 +86,9 @@ function ensureBottomNavCollapse(){
       event.stopPropagation();
       setBottomNavCollapsed(!document.documentElement.classList.contains('bb-bottom-nav-collapsed'));
     });
-    nav.insertAdjacentElement('beforebegin',btn);
   }
+  if(btn.nextElementSibling!==nav)nav.insertAdjacentElement('beforebegin',btn);
+  btn.hidden=false;
   setBottomNavCollapsed(isBottomNavCollapsed());
 }
 
@@ -206,22 +207,24 @@ function applyOpenGroup(group=''){
   else host.scrollTop=0;
 }
 function renderHome(){
-  ensureBottomNavCollapse();
   hideAll();
   if($('mobileHome'))$('mobileHome').hidden=false;
+  ensureBottomNavCollapse($('bottomNav'));
 }
 function renderMenu(group=''){
-  ensureBottomNavCollapse();
   hideAll();
   if($('menuScreen'))$('menuScreen').hidden=false;
+  const menuNav=$('menuBottomNav');
+  if(menuNav)ensureBottomNavCollapse(menuNav);
+  else if($('bbBottomNavCollapse'))$('bbBottomNavCollapse').hidden=true;
   setTimeout(()=>{
     try{window.BBMobileRouteV4?.rebuildMenu?.()}catch(_){}
     setTimeout(()=>applyOpenGroup(group),25);
   },0);
 }
 function renderModule(route){
-  ensureBottomNavCollapse();
   if(!route)return false;
+  ensureBottomNavCollapse($('moduleBottomNav'));
   restoring=true;
   let ok=false;
   try{
@@ -426,7 +429,7 @@ function watchMenu(){
   }).observe(menu,{attributes:true,attributeFilter:['hidden']});
 }
 function start(){
-  ensureBottomNavCollapse();
+  ensureBottomNavCollapse($('bottomNav'));
   markInitialState();
   interceptNavigation();
   watchMenu();
