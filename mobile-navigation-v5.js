@@ -87,7 +87,8 @@ function ensureBottomNavCollapse(targetNav){
       setBottomNavCollapsed(!document.documentElement.classList.contains('bb-bottom-nav-collapsed'));
     });
   }
-  if(btn.nextElementSibling!==nav)nav.insertAdjacentElement('beforebegin',btn);
+  if(btn.parentElement!==document.body)document.body.appendChild(btn);
+  btn.dataset.navTarget=nav.id||'';
   btn.hidden=false;
   setBottomNavCollapsed(isBottomNavCollapsed());
 }
