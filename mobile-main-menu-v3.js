@@ -84,7 +84,7 @@ const META={
 };
 
 const MOBILE={
- 'invoice':'https://angsokhey11-cloud.github.io/big-brother-invoice-generator/mobile.html?embed=1&v=20260930-service1',
+ 'invoice':'https://angsokhey11-cloud.github.io/big-brother-invoice-generator/mobile.html?embed=1&v=20260930-service2',
  'history':'https://angsokhey11-cloud.github.io/invoice-history/invoice-history-mobile.html?embed=1&v=20260930-service1',
  'sale-return':'https://angsokhey11-cloud.github.io/big-brother-invoice-reversal/mobile.html?embed=1&v=20260924-invoiceid1',
  'reversal-history':'https://angsokhey11-cloud.github.io/big-brother-invoice-reversal/mobile-history.html?embed=1&v=20260915-1',
@@ -151,8 +151,8 @@ const PC={
  'customers-details':'https://angsokhey11-cloud.github.io/big-brother-customers-editor/?embed=1&view=details&v=21',
  'clients-add':'https://angsokhey11-cloud.github.io/big-brother-clients-editor/?embed=1&view=add&v=10',
  'clients-details':'https://angsokhey11-cloud.github.io/big-brother-clients-editor/?embed=1&view=details&v=10',
- 'products-add':'https://angsokhey11-cloud.github.io/big-brother-products-editor/?embed=1&view=add&v=20260930-service1',
- 'products-details':'https://angsokhey11-cloud.github.io/big-brother-products-editor/?embed=1&view=details&v=20260930-service1',
+ 'products-add':'https://angsokhey11-cloud.github.io/big-brother-products-editor/?embed=1&view=add&v=20260930-service2',
+ 'products-details':'https://angsokhey11-cloud.github.io/big-brother-products-editor/?embed=1&view=details&v=20260930-service2',
  'master-expense-categories':'https://angsokhey11-cloud.github.io/big-brother-master-data/expense-categories.html?embed=1&v=21',
  'master-audit-center':'https://angsokhey11-cloud.github.io/big-brother-master-data/audit-center.html?embed=1&v=20260927-1',
  'admin-deposit-history':'https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=deposit-history',
