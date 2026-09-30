@@ -66,7 +66,7 @@ const META={
  'customers-details':['Master Data','👥','Customer Details'],
  'clients-add':['Master Data','🏢','Add Client'],
  'clients-details':['Master Data','🏭','Client Details'],
- 'products-add':['Master Data','🥛','Add Product'],
+ 'products-add':['Master Data','🥛','Add Product / Service'],
  'products-details':['Master Data','📦','Product Details'],
  'master-expense-categories':['Master Data','💸','Expense Categories'],
  'master-audit-center':['Master Data','🛡️','Audit & Correction Center'],
