@@ -113,7 +113,7 @@ const MOBILE={
  'batch-report':'https://angsokhey11-cloud.github.io/big-brother-stock-report/batch-mobile.html?embed=1&v=20260923-batchedit2',
  'closed-batch':'https://angsokhey11-cloud.github.io/big-brother-stock-report/closed-batch-mobile.html?embed=1&v=20260915-1',
  'stock-transactions':'https://angsokhey11-cloud.github.io/big-brother-stock-report/transactions-mobile.html?embed=1&v=20260915-2',
- 'stock-pending-borrow':'https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/pending-borrowed-stock.html?embed=1&v=20261001-mobilefix1',
+ 'stock-pending-borrow':'https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/pending-borrowed-stock.html?embed=1&mobile=1&v=20261001-receiptphone2',
  'stock-alerts':'https://angsokhey11-cloud.github.io/big-brother-admin-work/stock-alerts-mobile.html?embed=1&v=20260915-1',
 
  'monthly-sales-report':'https://angsokhey11-cloud.github.io/big-brother-report/monthly-sales-mobile.html?embed=1&v=20260915-3',
