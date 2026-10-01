@@ -50,7 +50,7 @@ const ROUTES={
   'expense-accrued':{tab:'more',icon:'⏳',label:'Accrued Expense',url:'https://angsokhey11-cloud.github.io/big-brother-expenses/?embed=1&view=accrued-expenses&v=17'},
   'daily-cash':{tab:'more',icon:'💵',label:'Daily Cash',url:'https://angsokhey11-cloud.github.io/big-brother-expenses/daily-cash.html?embed=1&v=20260920-vaultfx1'},
   'expense-history':{tab:'more',icon:'🧾',label:'Expense History',url:'https://angsokhey11-cloud.github.io/big-brother-expenses/?embed=1&view=expense-history&v=17'},
-  'real-invoice':{tab:'more',icon:'📷',label:'Real Invoice Scanner',url:'https://angsokhey11-cloud.github.io/big-brother-real-invoice/?embed=1&v=20261001-paste2'},
+  'real-invoice':{tab:'more',icon:'📷',label:'Real Invoice Scanner',url:'https://angsokhey11-cloud.github.io/big-brother-real-invoice/?embed=1&v=20261001-filters3'},
   'ar-all':{tab:'more',icon:'📋',label:'All Receivables',url:'https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=all&v=20260920-artelegram1'},
   'ar-payment-history':{tab:'more',icon:'🧾',label:'Receivable Payments',url:'https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=receivable&v=1'},
   'ar-daily-receivable-cash':{tab:'more',icon:'💵',label:'Daily Receivable Cash',url:'https://angsokhey11-cloud.github.io/big-brother-daily-receivable-cash-summary/?embed=1'},
