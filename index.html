@@ -999,7 +999,7 @@ body{
 
         '"ar-all": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=all&v=2"',
 
-        '"ar-all": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=all&v=20261001-realview1"'
+        '"ar-all": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=all&v=20261001-ar-layout3"'
 
       );
 
@@ -1009,7 +1009,7 @@ body{
 
         '"ar-your": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=your&v=3"',
 
-        '"ar-your": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=your&v=20261001-realview1"'
+        '"ar-your": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=your&v=20261001-ar-layout3"'
 
       );
 
@@ -1197,7 +1197,7 @@ body{
     const arNavAnchor='<button type="button" id="navARAll"';
     if(!html.includes(arNavAnchor))throw Error('Real Invoice AR navigation anchor missing.');
     html=html.replace(arNavAnchor,realInvoiceNav+'\n          '+arNavAnchor);
-    const arRouteAnchor='"ar-all": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=all&v=20261001-realview1",';
+    const arRouteAnchor='"ar-all": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=all&v=20261001-ar-layout3",';
     if(!html.includes(arRouteAnchor))throw Error('Real Invoice route anchor missing.');
     html=html.replace(arRouteAnchor,
       arRouteAnchor+'\n    "real-invoice": "https://angsokhey11-cloud.github.io/big-brother-real-invoice/?embed=1&v=20261001-filters3",');
