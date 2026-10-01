@@ -32,7 +32,7 @@ const ROUTES={
   'batch-report':{tab:'stock',icon:'🗂️',label:'Batch Report',url:'https://angsokhey11-cloud.github.io/big-brother-stock-report/batch-report.html?embed=1&v=20260923-batchedit2'},
   'closed-batch':{tab:'stock',icon:'✅',label:'Closed Batch',url:'https://angsokhey11-cloud.github.io/big-brother-stock-report/closed-batch.html?embed=1&v=10'},
   'stock-transactions':{tab:'stock',icon:'🔄',label:'Stock Transactions',url:'https://angsokhey11-cloud.github.io/big-brother-stock-report/transactions.html?embed=1&v=10'},
-  'stock-pending-borrow':{tab:'stock',icon:'📋',label:'Pending Borrowed Stock',url:'https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/pending-borrowed-stock.html?embed=1&v=20261001-2'},
+  'stock-pending-borrow':{tab:'stock',icon:'📋',label:'Pending Borrowed Stock',url:'https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/pending-borrowed-stock.html?embed=1&v=20261001-summary2'},
   'stock-alerts':{tab:'stock',icon:'🚨',label:'Smart Stock Alerts',url:'https://angsokhey11-cloud.github.io/big-brother-admin-work/company-control.html?embed=1&view=stock-alerts&v=1'},
 
   'monthly-sales-report':{tab:'reports',icon:'📈',label:'Monthly Sales',url:'https://angsokhey11-cloud.github.io/big-brother-report/monthly-sales.html?embed=1&v=20260913-4'},
