@@ -8,7 +8,7 @@ const KNOWN_ROUTES=new Set([
   'purchase-create','purchase-history','purchase-payable','purchase-payment-history',
   'expense-add','expense-accrued','expense-history','expense-monthly-report','cogs-daily','cogs-monthly',
   'stock-keyin','stock-damaged','stock-damaged-report','stock-damaged-cleared','stock-damaged-accounting',
-  'stock-report','batch-report','closed-batch','stock-transactions','stock-alerts',
+  'stock-report','batch-report','closed-batch','stock-transactions','stock-pending-borrow','stock-alerts',
   'ar-all','ar-your','ar-payment-history','ar-daily-receivable-cash',
   'customers-editor','customers-add','customers-map','customers-details','customer-credit-control',
   'clients-editor','clients-add','clients-details',
@@ -46,7 +46,7 @@ function grantFor(moduleKey){
 function canRoute(route){
   route=String(route||'').trim();
   if(!KNOWN_ROUTES.has(route))return true;
-  const g=grantFor('route.'+route);
+  const g=grantFor('route.'+(route==='stock-pending-borrow'?'stock-keyin':route));
   if(!g)return false;
   const action=REQUIRED_ACTION[route]||'view';
   return action==='create'?g.canCreate===true:action==='edit'?g.canEdit===true:action==='approve'?g.canApprove===true:g.canView===true;
