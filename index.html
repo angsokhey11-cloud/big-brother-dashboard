@@ -835,7 +835,7 @@ body{
 
         'invoice: "https://angsokhey11-cloud.github.io/big-brother-invoice-generator/"',
 
-        'invoice: "https://angsokhey11-cloud.github.io/big-brother-invoice-generator/?embed=1&v=20261001-smartverify1"'
+        'invoice: "https://angsokhey11-cloud.github.io/big-brother-invoice-generator/?embed=1&v=20261001-smartverify2"'
 
       );
 
@@ -1200,7 +1200,7 @@ body{
     const arRouteAnchor='"ar-all": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=all&v=20261001-ar-layout3",';
     if(!html.includes(arRouteAnchor))throw Error('Real Invoice route anchor missing.');
     html=html.replace(arRouteAnchor,
-      arRouteAnchor+'\n    "real-invoice": "https://angsokhey11-cloud.github.io/big-brother-real-invoice/?embed=1&v=20261001-smartverify1",');
+      arRouteAnchor+'\n    "real-invoice": "https://angsokhey11-cloud.github.io/big-brother-real-invoice/?embed=1&v=20261001-smartverify2",');
     html=html.replace("      moduleName === 'ar-all' ||",
       "      moduleName === 'real-invoice' ||\n      moduleName === 'ar-all' ||");
     html=html.replace("      const arId =\n        moduleName === 'ar-all'",
