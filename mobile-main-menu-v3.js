@@ -96,7 +96,7 @@ const MOBILE={
 
  'sales-support-add-customer':'https://angsokhey11-cloud.github.io/big-brother-sales-support/add-customer-mobile.html?embed=1&v=20260915-1',
  'sales-support-customer-map':'https://angsokhey11-cloud.github.io/big-brother-customers-editor/sales-support-customer-map-mobile.html?embed=1&v=20260915-1',
- 'sales-support-your-stock':'https://angsokhey11-cloud.github.io/big-brother-sales-support/your-stock-mobile.html?embed=1&v=20261001-damagereturn1',
+ 'sales-support-your-stock':'https://angsokhey11-cloud.github.io/big-brother-sales-support/your-stock-mobile.html?embed=1&v=20261001-salesmandamage1',
  'sales-support-batch-selling-tracker':'https://angsokhey11-cloud.github.io/big-brother-batch-selling-tracker/mobile.html?embed=1&v=20260925-dashboard1',
  'sales-support-your-collection':'https://angsokhey11-cloud.github.io/big-brother-daily-cash-collection/your-collection-mobile.html?embed=1&v=20260921-owner1',
  'sales-support-your-invoices':'https://angsokhey11-cloud.github.io/invoice-history/your-invoices-mobile.html?embed=1&v=20260925-assigned2',
