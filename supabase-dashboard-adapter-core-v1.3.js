@@ -50,6 +50,7 @@
     'batch-report':{module:'Stock Report',action:'view'},
     'closed-batch':{module:'Stock Report',action:'view'},
     'stock-transactions':{module:'Stock Report',action:'view'},
+    'real-invoice':{module:'route.real-invoice',action:'view'},
     'ar-all':{module:'accounts_receivable',action:'view'},
     'ar-your':{module:'accounts_receivable',action:'view'},
     'ar-payment-history':{module:'ar_payment_history',action:'view'},
