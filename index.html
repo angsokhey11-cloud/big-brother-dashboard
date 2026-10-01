@@ -1208,6 +1208,15 @@ body{
     html=html.replace("'ar-all','ar-your','ar-payment-history'",
       "'real-invoice','ar-all','ar-your','ar-payment-history'");
 
+    /* Refresh only the desktop A/R workspace URLs after all route injections. */
+    html=html.replaceAll(
+      'big-brother-ar/?embed=1&view=your&v=20261001-ar-layout3',
+      'big-brother-ar/?embed=1&view=your&v=20261001-desktopfit4'
+    ).replaceAll(
+      'big-brother-ar/?embed=1&view=all&v=20261001-ar-layout3',
+      'big-brother-ar/?embed=1&view=all&v=20261001-desktopfit4'
+    );
+
     /* =====================================================
        OPEN FINAL DASHBOARD
        ===================================================== */
