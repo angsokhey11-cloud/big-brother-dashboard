@@ -28,6 +28,7 @@ const META={
  'daily-sale-summary':['Sales','📊','Daily Sale Summary'],
  'daily-cash-collection':['Sales','💵','Cash Collection'],
 
+ 'real-invoice':['Receivable','📷','Real Invoice Scanner'],
  'ar-all':['Receivable','📋','All Receivables'],
  'ar-your':['Receivable','💰','My Receivables'],
  'ar-payment-history':['Receivable','🧾','Receivable Payments'],
@@ -101,6 +102,7 @@ const MOBILE={
  'sales-support-your-invoices':'https://angsokhey11-cloud.github.io/invoice-history/your-invoices-mobile.html?embed=1&v=20260925-assigned2',
  'sales-support-your-receivable':'https://angsokhey11-cloud.github.io/big-brother-ar/your-receivable-mobile.html?embed=1&v=20260915-1',
 
+ 'real-invoice':'https://angsokhey11-cloud.github.io/big-brother-real-invoice/?embed=1&v=20261001-real1',
  'ar-all':'https://angsokhey11-cloud.github.io/big-brother-ar/all-receivable-mobile.html?embed=1&v=20260921-arassigned2',
  'ar-your':'https://angsokhey11-cloud.github.io/big-brother-ar/your-receivable-mobile.html?embed=1&v=20260915-1',
  'ar-payment-history':'https://angsokhey11-cloud.github.io/big-brother-payment-history/receivable-mobile.html?embed=1&v=20260915-clean2',
