@@ -93,7 +93,7 @@ const MOBILE_URLS={
   'sales-support-batch-selling-tracker':'big-brother-batch-selling-tracker/mobile.html?embed=1&v=20260925-dashboard1',
   'sales-support-your-collection':'big-brother-daily-cash-collection/your-collection-mobile.html?embed=1&v=20260921-owner1',
   'sales-support-your-invoices':'invoice-history/your-invoices-mobile.html?embed=1&v=20260925-assigned2',
-  'sales-support-your-receivable':'big-brother-ar/your-receivable-mobile.html?embed=1&view=your&v=20261001-ar-layout3',
+  'sales-support-your-receivable':'big-brother-ar/your-receivable-mobile.html?embed=1&view=your&v=20261001-downloadshare5',
   'master-expense-categories':'big-brother-master-data/expense-categories.html?embed=1&v=20260912-3',
   'admin-pending-receivable':'big-brother-admin-work/?embed=1&view=pending-receivable',
   'admin-pending-daily-cash':'big-brother-admin-work/?embed=1&view=pending-daily-cash',
