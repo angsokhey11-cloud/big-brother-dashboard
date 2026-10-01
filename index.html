@@ -1191,6 +1191,23 @@ body{
       );
     }
 
+
+    /* Real Invoice Scanner — separate Receivable submenu and route. */
+    const realInvoiceNav='<button type="button" id="navRealInvoice" onclick="loadWorkspace(\'real-invoice\')">📷 Real Invoice Scanner</button>';
+    const arNavAnchor='<button type="button" id="navARAll"';
+    if(!html.includes(arNavAnchor))throw Error('Real Invoice AR navigation anchor missing.');
+    html=html.replace(arNavAnchor,realInvoiceNav+'\n          '+arNavAnchor);
+    const arRouteAnchor='"ar-all": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=all&v=20260930-invoiceid1",';
+    if(!html.includes(arRouteAnchor))throw Error('Real Invoice route anchor missing.');
+    html=html.replace(arRouteAnchor,
+      arRouteAnchor+'\n    "real-invoice": "https://angsokhey11-cloud.github.io/big-brother-real-invoice/?embed=1&v=20261001-real1",');
+    html=html.replace("      moduleName === 'ar-all' ||",
+      "      moduleName === 'real-invoice' ||\n      moduleName === 'ar-all' ||");
+    html=html.replace("      const arId =\n        moduleName === 'ar-all'",
+      "      const arId =\n        moduleName === 'real-invoice' ? 'navRealInvoice' :\n        moduleName === 'ar-all'");
+    html=html.replace("'ar-all','ar-your','ar-payment-history'",
+      "'real-invoice','ar-all','ar-your','ar-payment-history'");
+
     /* =====================================================
        OPEN FINAL DASHBOARD
        ===================================================== */
