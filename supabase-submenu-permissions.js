@@ -46,7 +46,7 @@ function grantFor(moduleKey){
 function canRoute(route){
   route=String(route||'').trim();
   if(!KNOWN_ROUTES.has(route))return true;
-  const g=grantFor('route.'+(route==='stock-pending-borrow'?'stock-keyin':route));
+  const g=grantFor('route.'+route);
   if(!g)return false;
   const action=REQUIRED_ACTION[route]||'view';
   return action==='create'?g.canCreate===true:action==='edit'?g.canEdit===true:action==='approve'?g.canApprove===true:g.canView===true;
