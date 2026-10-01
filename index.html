@@ -1147,6 +1147,45 @@ body{
 
 
 
+    /* Pending Borrowed Stock — inject after all existing menu/route transformations. */
+    const pendingBorrowNav =
+      '<button type="button" id="navStockPendingBorrow" onclick="loadWorkspace(\'stock-pending-borrow\')">📋 Pending Borrowed Stock</button>';
+
+    if(!html.includes('id="navStockPendingBorrow"')){
+      const target = '<button type="button" id="navStockTransactions"';
+      const at = html.indexOf(target);
+      if(at < 0) throw new Error('Stock Pending Borrow navigation anchor not found.');
+      html = html.slice(0,at) + pendingBorrowNav + '\n          ' + html.slice(at);
+    }
+
+    const borrowRouteAnchor =
+      '"stock-transactions": "https://angsokhey11-cloud.github.io/big-brother-stock-report/transactions.html?embed=1&v=20260912-zero-cost-3",';
+    if(!html.includes(borrowRouteAnchor)){
+      throw new Error('Stock Pending Borrow route anchor not found.');
+    }
+    html=html.replace(
+      borrowRouteAnchor,
+      borrowRouteAnchor+'\n    "stock-pending-borrow": "https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/pending-borrowed-stock.html?embed=1&v=20261001-1",'
+    );
+
+    html=html.replace(
+      "'stock-damaged',\n      'stock-transactions'",
+      "'stock-damaged',\n      'stock-transactions',\n      'stock-pending-borrow'"
+    );
+    html=html.replace(
+      "'stock-damaged', 'stock-transactions'",
+      "'stock-damaged', 'stock-transactions', 'stock-pending-borrow'"
+    );
+
+    const pendingBorrowActiveAnchor =
+      "document.getElementById('navStockTransactions')?.classList.add('active');";
+    if(html.includes(pendingBorrowActiveAnchor)){
+      html=html.replace(
+        pendingBorrowActiveAnchor,
+        pendingBorrowActiveAnchor+"\n      if(moduleName==='stock-pending-borrow')document.getElementById('navStockPendingBorrow')?.classList.add('active');"
+      );
+    }
+
     /* =====================================================
        OPEN FINAL DASHBOARD
        ===================================================== */
