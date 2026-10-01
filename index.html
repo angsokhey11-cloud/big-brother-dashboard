@@ -1177,6 +1177,11 @@ body{
       "'stock-damaged', 'stock-transactions', 'stock-pending-borrow'"
     );
 
+    html=html.replace(
+      "                  : 'navStockTransactions';",
+      "                  : moduleName === 'stock-pending-borrow'\n                    ? 'navStockPendingBorrow'\n                    : 'navStockTransactions';"
+    );
+
     const pendingBorrowActiveAnchor =
       "document.getElementById('navStockTransactions')?.classList.add('active');";
     if(html.includes(pendingBorrowActiveAnchor)){
