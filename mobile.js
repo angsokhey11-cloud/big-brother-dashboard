@@ -164,7 +164,7 @@ function grantFor(moduleKey){
 function canRoute(route){
   if(!ROUTES[route])return false;
   if(isAdmin())return true;
-  const g=grantFor('route.'+(route==='stock-pending-borrow'?'stock-keyin':route));
+  const g=grantFor('route.'+route);
   if(!g)return false;
   const action=REQUIRED_ACTION[route]||'view';
   if(action==='create')return g.canCreate===true;
