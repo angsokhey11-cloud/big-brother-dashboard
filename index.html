@@ -1200,7 +1200,7 @@ body{
     const arRouteAnchor='"ar-all": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=all&v=20260930-invoiceid1",';
     if(!html.includes(arRouteAnchor))throw Error('Real Invoice route anchor missing.');
     html=html.replace(arRouteAnchor,
-      arRouteAnchor+'\n    "real-invoice": "https://angsokhey11-cloud.github.io/big-brother-real-invoice/?embed=1&v=20261001-paste2",');
+      arRouteAnchor+'\n    "real-invoice": "https://angsokhey11-cloud.github.io/big-brother-real-invoice/?embed=1&v=20261001-filters3",');
     html=html.replace("      moduleName === 'ar-all' ||",
       "      moduleName === 'real-invoice' ||\n      moduleName === 'ar-all' ||");
     html=html.replace("      const arId =\n        moduleName === 'ar-all'",
