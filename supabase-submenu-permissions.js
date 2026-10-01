@@ -9,7 +9,7 @@ const KNOWN_ROUTES=new Set([
   'expense-add','expense-accrued','expense-history','expense-monthly-report','cogs-daily','cogs-monthly',
   'stock-keyin','stock-damaged','stock-damaged-report','stock-damaged-cleared','stock-damaged-accounting',
   'stock-report','batch-report','closed-batch','stock-transactions','stock-pending-borrow','stock-alerts',
-  'ar-all','ar-your','ar-payment-history','ar-daily-receivable-cash',
+  'real-invoice','ar-all','ar-your','ar-payment-history','ar-daily-receivable-cash',
   'customers-editor','customers-add','customers-map','customers-details','customer-credit-control',
   'clients-editor','clients-add','clients-details',
   'products-editor','products-add','products-details',
