@@ -40,6 +40,7 @@ stock-report|Stock|📋|Stock Report
 batch-report|Stock|🗂️|Batch Report
 closed-batch|Stock|✅|Closed Batch
 stock-transactions|Stock|🔄|Stock Transactions
+stock-pending-borrow|Stock|📋|Pending Borrowed Stock
 stock-alerts|Stock|🚨|Smart Stock Alerts
 monthly-sales-report|Reports|📈|Monthly Sales
 income-statement-report|Reports|📊|Income Statement
@@ -75,7 +76,7 @@ notification-center|Company|🔔|Notifications`.trim().split('\n').map(row=>row.
 const BASE_ROUTES=new Set([
   'sales-support-calculator','sales-support-request-delivery','sales-support-your-customer','sales-support-successful-delivery',
   'invoice','history','sale-return','reversal-history','payment-history','daily-sale-summary','daily-cash-collection','ar-your',
-  'stock-keyin','stock-damaged','stock-report','batch-report','closed-batch','stock-transactions','stock-alerts',
+  'stock-keyin','stock-damaged','stock-report','batch-report','closed-batch','stock-transactions','stock-pending-borrow','stock-alerts',
   'monthly-sales-report','income-statement-report','purchase-order-report','cogs-daily','cogs-monthly','expense-monthly-report',
   'purchase-create','purchase-history','purchase-payable','purchase-payment-history','expense-add','expense-accrued','expense-history',
   'ar-all','ar-payment-history','ar-daily-receivable-cash','customers-add','customers-map','customers-details','clients-add','clients-details',
@@ -83,6 +84,7 @@ const BASE_ROUTES=new Set([
 ]);
 
 const MOBILE_URLS={
+  'stock-pending-borrow':'big-brother-stock-managemenet/pending-borrowed-stock.html?embed=1&v=20261001-telegramdate1',
   'sales-support-add-customer':'big-brother-sales-support/add-customer-mobile.html?embed=1&v=20260914-2',
   'sales-support-customer-map':'big-brother-customers-editor/sales-support-customer-map-mobile.html?embed=1&v=20260914-2',
   'sales-support-your-stock':'big-brother-sales-support/your-stock-mobile.html?embed=1&v=20260914-5',
