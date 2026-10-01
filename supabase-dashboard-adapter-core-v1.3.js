@@ -40,7 +40,7 @@
     'cogs-monthly':{module:'expenses',action:'view'},
     'master-expense-categories':{module:'master_data',action:'edit',adminOnly:true},
     'stock-keyin':{module:'Stock Management',action:'view'},
-    'stock-pending-borrow':{module:'Stock Management',action:'view'},
+    'stock-pending-borrow':{module:'route.stock-pending-borrow',action:'view'},
     'stock-adjustment':{module:'Stock Management',action:'create'},
     'stock-damaged':{module:'Stock Management',action:'view'},
     'stock-damaged-report':{module:'Stock Management',action:'view'},
