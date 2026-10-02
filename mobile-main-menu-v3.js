@@ -8,6 +8,8 @@ const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
 
 const META={
+ 'stock-control-allocation':['Stock Control','📦','Stock Allocation'],
+ 'stock-control-back-sale':['Stock Control','↩️','Back Sale'],
  'sales-support-calculator':['Sales Support','🧮','Calculator'],
  'sales-support-request-delivery':['Sales Support','🚚','Request Delivery'],
  'sales-support-your-customer':['Sales Support','👥','Your Customer'],
@@ -86,6 +88,8 @@ const META={
 };
 
 const MOBILE={
+ 'stock-control-allocation':'https://angsokhey11-cloud.github.io/big-brother-stock-allocation/mobile.html?embed=1&v=20261002-mobile1',
+ 'stock-control-back-sale':'https://angsokhey11-cloud.github.io/big-brother-stock-allocation/back-sale-mobile.html?embed=1&v=20261002-mobile1',
  'invoice':'https://angsokhey11-cloud.github.io/big-brother-invoice-generator/mobile.html?embed=1&v=20261001-scanfix2',
  'history':'https://angsokhey11-cloud.github.io/invoice-history/invoice-history-mobile.html?embed=1&v=20261001-creditdigitalfix4',
  'sale-return':'https://angsokhey11-cloud.github.io/big-brother-invoice-reversal/mobile.html?embed=1&v=20260924-invoiceid1',
@@ -233,7 +237,7 @@ function injectMenuCss(){
  `;document.head.appendChild(s);
 }
 
-const GROUP_ICON={'Sales Support':'🧰','Sales':'🧾','Receivable':'💰','Stock':'📦','Reports':'📊','Purchase':'🛒','Expenses':'💸','Master Data':'🗂️','Admin Work':'🛠️','Company':'⚙️'};
+const GROUP_ICON={'Sales Support':'🧰','Sales':'🧾','Receivable':'💰','Stock Control':'📦','Stock':'📦','Reports':'📊','Purchase':'🛒','Expenses':'💸','Master Data':'🗂️','Admin Work':'🛠️','Company':'⚙️'};
 let rebuilding=false;
 function rebuildMenu(){
  const host=$('menuGrid');
