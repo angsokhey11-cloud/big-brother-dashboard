@@ -39,6 +39,8 @@
     'cogs-daily':{module:'expenses',action:'view'},
     'cogs-monthly':{module:'expenses',action:'view'},
     'master-expense-categories':{module:'master_data',action:'edit',adminOnly:true},
+    'stock-control-allocation':{module:'Stock Management',action:'view'},
+    'stock-control-back-sale':{module:'Stock Management',action:'view'},
     'stock-keyin':{module:'Stock Management',action:'view'},
     'stock-pending-borrow':{module:'route.stock-pending-borrow',action:'view'},
     'stock-adjustment':{module:'Stock Management',action:'create'},
