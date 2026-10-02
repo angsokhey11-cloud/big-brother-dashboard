@@ -1220,8 +1220,8 @@ body{
     /* Ensure switching Stock Key-In always replaces the old workspace iframe,
        including a previously open Stock Adjustment page. */
     html=html.replace(
-      '    const sameModule =\\n      frame.dataset.module === moduleName &&',
-      '    const sameModule =\\n      moduleName !== \\'stock-keyin\\' &&\\n      frame.dataset.module === moduleName &&'
+      "    const sameModule =\\n      frame.dataset.module === moduleName &&",
+      "    const sameModule =\\n      moduleName !== 'stock-keyin' &&\\n      frame.dataset.module === moduleName &&"
     );
 
     /* =====================================================
