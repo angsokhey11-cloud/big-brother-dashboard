@@ -88,7 +88,7 @@ body{
 
     const response =
       await fetch(
-        "legacy-dashboard-v3.40.html?v=20261002-stock-nav-fix1",
+        "legacy-dashboard-v3.40.html?v=20261002-stock-nav-direct1",
         {
           cache:"no-store"
         }
@@ -1223,6 +1223,9 @@ body{
     if(!html.includes(stockNavGuard))throw Error('Dashboard Stock navigation guard not found.');
     html=html.replace(stockNavGuard,
       "    const sameModule =\\n      moduleName !== 'stock-keyin' &&\\n      frame.dataset.module === moduleName &&");
+
+    html=html.replace("onclick=\"loadWorkspace('stock-keyin')\"","onclick=\"bbOpenStockKeyin()\"");
+    html=html.replace('</body>',"<script>\nfunction bbOpenStockKeyin(){\n const home=document.getElementById('dashboardHome'), workspace=document.getElementById('moduleWorkspace'), previous=document.getElementById('moduleFrame');\n if(!home||!workspace||!previous)return;\n const fresh=previous.cloneNode(false);fresh.removeAttribute('src');fresh.dataset.module='stock-keyin';previous.replaceWith(fresh);\n home.hidden=true;workspace.hidden=false;\n fresh.src='https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=keyin&v=20261002-stock-nav-direct1';\n if(typeof setShellActive==='function')setShellActive('stock-keyin');\n history.replaceState(null,'','?module=stock-keyin');\n}\n</scr'+'ipt>"+'</body>');
 
     /* =====================================================
        OPEN FINAL DASHBOARD
