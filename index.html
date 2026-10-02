@@ -88,7 +88,7 @@ body{
 
     const response =
       await fetch(
-        "legacy-dashboard-v3.40.html?v=20261002-stock-workspace-reset3",
+        "legacy-dashboard-v3.40.html?v=20261002-stock-workspace-reset4",
         {
           cache:"no-store"
         }
@@ -1217,18 +1217,17 @@ body{
       'big-brother-ar/?embed=1&view=all&v=20261001-batchreal3'
     );
 
-    /* Stock Key-In must replace any previously displayed workspace, not just
-       update the existing iframe's src. This also clears old adjustment views. */
+    /* Reset the stock workspace on each Stock Key-In navigation. */
     html=html.replace(
       "    const frame = document.getElementById('moduleFrame');",
-      "    let frame = document.getElementById('moduleFrame');\\n" +
-      "    if(moduleName === 'stock-keyin' && frame){\\n" +
-      "      const fresh=frame.cloneNode(false);\\n" +
-      "      fresh.removeAttribute('src');\\n" +
-      "      fresh.dataset.module='';\\n" +
-      "      frame.replaceWith(fresh);\\n" +
-      "      frame=fresh;\\n" +
-      "    }"
+      `    let frame = document.getElementById('moduleFrame');
+    if (moduleName === 'stock-keyin' && frame) {
+      const fresh = frame.cloneNode(false);
+      fresh.removeAttribute('src');
+      fresh.dataset.module = '';
+      frame.replaceWith(fresh);
+      frame = fresh;
+    }`
     );
 
     /* =====================================================
