@@ -35,6 +35,8 @@ ar-all|Receivable|📋|All Receivables
 ar-your|Receivable|💰|My Receivables
 ar-payment-history|Receivable|🧾|Receivable Payments
 ar-daily-receivable-cash|Receivable|💵|Daily Receivable Cash
+stock-control-allocation|Stock Control|📦|Stock Allocation
+stock-control-back-sale|Stock Control|↩️|Back Sale
 stock-keyin|Stock|📦|Stock In / Out
 stock-damaged|Stock|⚠️|Damaged Stock
 stock-report|Stock|📋|Stock Report
@@ -77,7 +79,7 @@ notification-center|Company|🔔|Notifications`.trim().split('\n').map(row=>row.
 const BASE_ROUTES=new Set([
   'sales-support-calculator','sales-support-request-delivery','sales-support-your-customer','sales-support-successful-delivery',
   'invoice','history','sale-return','reversal-history','payment-history','daily-sale-summary','daily-cash-collection','ar-your',
-  'stock-keyin','stock-damaged','stock-report','batch-report','closed-batch','stock-transactions','stock-pending-borrow','stock-alerts',
+  'stock-control-allocation','stock-control-back-sale','stock-keyin','stock-damaged','stock-report','batch-report','closed-batch','stock-transactions','stock-pending-borrow','stock-alerts',
   'monthly-sales-report','income-statement-report','purchase-order-report','cogs-daily','cogs-monthly','expense-monthly-report',
   'purchase-create','purchase-history','purchase-payable','purchase-payment-history','expense-add','expense-accrued','expense-history',
   'real-invoice','ar-all','ar-payment-history','ar-daily-receivable-cash','customers-add','customers-map','customers-details','clients-add','clients-details',
@@ -85,6 +87,8 @@ const BASE_ROUTES=new Set([
 ]);
 
 const MOBILE_URLS={
+  'stock-control-allocation':'big-brother-stock-allocation/?embed=1&mobile=1&v=20261002-sync5',
+  'stock-control-back-sale':'big-brother-stock-allocation/back-sale.html?embed=1&mobile=1&v=20261002-4',
   'real-invoice':'big-brother-real-invoice/?embed=1&v=20261001-photo-buttons3',
   'stock-pending-borrow':'big-brother-stock-managemenet/pending-borrowed-stock.html?embed=1&mobile=1&v=20261001-compactreceipt3',
   'sales-support-add-customer':'big-brother-sales-support/add-customer-mobile.html?embed=1&v=20260914-2',
