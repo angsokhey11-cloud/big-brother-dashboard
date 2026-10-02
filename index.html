@@ -88,7 +88,7 @@ body{
 
     const response =
       await fetch(
-        "legacy-dashboard-v3.40.html?v=20261002-dashboard-recovery1",
+        "legacy-dashboard-v3.40.html?v=20261002-stock-nav-fix1",
         {
           cache:"no-store"
         }
@@ -1216,6 +1216,13 @@ body{
       'big-brother-ar/?embed=1&view=all&v=20261001-ar-layout3',
       'big-brother-ar/?embed=1&view=all&v=20261001-batchreal3'
     );
+
+    /* Stock Key-In must reload even when the dashboard still remembers it
+       as the active iframe after another stock page has been shown. */
+    const stockNavGuard = "    const sameModule =\\n      frame.dataset.module === moduleName &&";
+    if(!html.includes(stockNavGuard))throw Error('Dashboard Stock navigation guard not found.');
+    html=html.replace(stockNavGuard,
+      "    const sameModule =\\n      moduleName !== 'stock-keyin' &&\\n      frame.dataset.module === moduleName &&");
 
     /* =====================================================
        OPEN FINAL DASHBOARD
