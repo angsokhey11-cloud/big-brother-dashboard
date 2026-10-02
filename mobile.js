@@ -26,6 +26,8 @@ const ROUTES={
   'daily-cash-collection':{tab:'sales',icon:'💵',label:'Cash Collection',url:'https://angsokhey11-cloud.github.io/big-brother-daily-cash-collection/?embed=1&v=1'},
   'ar-your':{tab:'sales',icon:'💰',label:'My Receivables',url:'https://angsokhey11-cloud.github.io/big-brother-ar/your-receivable-mobile.html?embed=1&v=20261001-batchreal3'},
 
+  'stock-control-allocation':{tab:'stock',icon:'📦',label:'Stock Allocation',url:'https://angsokhey11-cloud.github.io/big-brother-stock-allocation/?embed=1&mobile=1&v=25'},
+  'stock-control-back-sale':{tab:'stock',icon:'↩️',label:'Back Sale',url:'https://angsokhey11-cloud.github.io/big-brother-stock-allocation/back-sale.html?embed=1&mobile=1&v=14'},
   'stock-keyin':{tab:'stock',icon:'📦',label:'Stock In / Out',url:'https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/mobile.html?embed=1&v=20260923-borrow4'},
   'stock-damaged':{tab:'stock',icon:'⚠️',label:'Damaged Stock',url:'https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=damaged&v=20'},
   'stock-report':{tab:'stock',icon:'📋',label:'Live Stock',url:'https://angsokhey11-cloud.github.io/big-brother-stock-report/mobile.html?embed=1&v=20260923-defaultorder1'},
@@ -338,7 +340,7 @@ function showMenu(tab,clearRoute=true){
   }
   const names={sales:'Sales',stock:'Stock',reports:'Reports',more:'More'};const items=permittedRoutes(tab);
   $('menuTitle').textContent=names[tab]||'Workspace';$('menuSubtitle').textContent=items.length+' available functions';
-  $('menuGrid').innerHTML=items.length?items.map(([route,x])=>`<button type="button" class="menu-card" data-route="${route}"><b>${x.icon}</b><strong>${esc(x.label)}</strong><small>Open function</small></button>`).join(''):'<div class="menu-empty">No functions assigned in this section.</div>';
+  $('menuGrid').innerHTML=items.length?(tab==='stock'?'<div style="grid-column:1/-1;font-weight:800;font-size:17px;padding:12px 2px 4px">📦 Stock Control</div>':'')+items.map(([route,x],i)=>`${tab==='stock'&&route==='stock-keyin'?'<div style="grid-column:1/-1;font-weight:800;font-size:17px;padding:12px 2px 4px">📋 Stock Management</div>':''}<button type="button" class="menu-card" data-route="${route}"><b>${x.icon}</b><strong>${esc(x.label)}</strong><small>Open function</small></button>`).join(''):'<div class="menu-empty">No functions assigned in this section.</div>';
   bindRouteButtons($('menuGrid'));refreshNav(tab);$('menuGrid').scrollTop=0;
 }
 function openModule(route,updateUrl=true){
