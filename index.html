@@ -88,7 +88,7 @@ body{
 
     const response =
       await fetch(
-        "legacy-dashboard-v3.40.html?v=20261002-stock-workspace-reset4",
+        "legacy-dashboard-v3.40.html?v=20261002-dashboard-recovery1",
         {
           cache:"no-store"
         }
@@ -1215,19 +1215,6 @@ body{
     ).replaceAll(
       'big-brother-ar/?embed=1&view=all&v=20261001-ar-layout3',
       'big-brother-ar/?embed=1&view=all&v=20261001-batchreal3'
-    );
-
-    /* Reset the stock workspace on each Stock Key-In navigation. */
-    html=html.replace(
-      "    const frame = document.getElementById('moduleFrame');",
-      `    let frame = document.getElementById('moduleFrame');
-    if (moduleName === 'stock-keyin' && frame) {
-      const fresh = frame.cloneNode(false);
-      fresh.removeAttribute('src');
-      fresh.dataset.module = '';
-      frame.replaceWith(fresh);
-      frame = fresh;
-    }`
     );
 
     /* =====================================================
