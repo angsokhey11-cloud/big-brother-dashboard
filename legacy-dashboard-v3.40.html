@@ -628,7 +628,8 @@
       </div>
 
 
-      <div class="nav-group" id="salesSupportNavGroup">
+      <div class="nav-group" id="stockControlNavGroup"><button type="button" id="stockControlMenuButton" class="nav-toggle" aria-expanded="false" aria-controls="stockControlSubmenu" onclick="toggleStockControlMenu()"><span class="nav-toggle-main"><span>📦</span><span>Stock Control</span></span><span class="nav-arrow">▼</span></button><div id="stockControlSubmenu" class="nav-submenu"><button type="button" id="navStockAllocation" onclick="loadWorkspace('stock-control-allocation')">📦 Stock Allocation</button><button type="button" id="navBackSale" onclick="loadWorkspace('stock-control-back-sale')">↩️ Back Sale</button></div></div>
+<div class="nav-group" id="salesSupportNavGroup">
         <button
           type="button"
           id="salesSupportMenuButton"
@@ -1367,6 +1368,8 @@
     "products-add": "https://angsokhey11-cloud.github.io/big-brother-products-editor/?embed=1&view=add&v=10",
     "products-details": "https://angsokhey11-cloud.github.io/big-brother-products-editor/?embed=1&view=details&v=10",
     // Salesman support workspace. No Sales Invoice write connection.
+    "stock-control-allocation": "https://angsokhey11-cloud.github.io/big-brother-stock-allocation/?embed=1&v=25",
+    "stock-control-back-sale": "https://angsokhey11-cloud.github.io/big-brother-stock-allocation/back-sale.html?embed=1&v=14",
     "sales-support-calculator": "https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=calculator&v=20260922-nodeliverypopup1",
     "sales-support-request-delivery": "https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=request-delivery&v=110",
     "sales-support-your-customer": "https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=your-customer&v=110",
@@ -1770,6 +1773,7 @@
     if (arrow) arrow.textContent = open ? '▲' : '▼';
   }
 
+  function toggleStockControlMenu(){const submenu=document.getElementById('stockControlSubmenu'),button=document.getElementById('stockControlMenuButton');if(!submenu||!button)return;const open=!submenu.classList.contains('open');submenu.classList.toggle('open',open);button.classList.toggle('open',open);button.setAttribute('aria-expanded',String(open));button.querySelector('.nav-arrow').textContent=open?'▲':'▼'}
   function toggleSalesSupportMenu() {
     const submenu = document.getElementById('salesSupportSubmenu');
     const button = document.getElementById('salesSupportMenuButton');
@@ -2084,7 +2088,7 @@
      */
     if (
       allowAutoload &&
-      ['customers-editor','customers-add','customers-map','customers-details','clients-editor','clients-add','clients-details','products-editor','products-add','products-details','sales-support-calculator','sales-support-request-delivery','sales-support-your-customer','sales-support-successful-delivery','invoice','history','sale-return','payment-history','daily-sale-summary','daily-cash-collection','purchase-create','purchase-history','purchase-payable','purchase-payment-history','expense-add','expense-accrued','expense-history','expense-monthly-report','stock-keyin','stock-report','batch-report','closed-batch','stock-damaged','stock-transactions','ar-all','ar-your','ar-payment-history','ar-daily-receivable-cash','admin-pending-receivable','admin-pending-daily-cash','admin-pending-deposit','admin-deposit-history','admin-staff-request','admin-request']
+      ['customers-editor','customers-add','customers-map','customers-details','clients-editor','clients-add','clients-details','products-editor','products-add','products-details','stock-control-allocation','stock-control-back-sale','sales-support-calculator','sales-support-request-delivery','sales-support-your-customer','sales-support-successful-delivery','invoice','history','sale-return','payment-history','daily-sale-summary','daily-cash-collection','purchase-create','purchase-history','purchase-payable','purchase-payment-history','expense-add','expense-accrued','expense-history','expense-monthly-report','stock-keyin','stock-report','batch-report','closed-batch','stock-damaged','stock-transactions','ar-all','ar-your','ar-payment-history','ar-daily-receivable-cash','admin-pending-receivable','admin-pending-daily-cash','admin-pending-deposit','admin-deposit-history','admin-staff-request','admin-request']
         .includes(moduleName)
     ) {
       loadWorkspace(moduleName, false);
