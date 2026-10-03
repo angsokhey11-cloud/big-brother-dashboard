@@ -194,8 +194,8 @@ async function rpcNetwork(fn,args={}){
   });
   let response=await call(s.access_token);
   if(response.status===401){
-    // Retry only an explicitly read-only Home RPC; never replay writes on 401.
-    if(!safeReadOnlyFunctions.has(fn))return parseResponse(response);
+    // Preserve existing 401 retry behavior for all RPCs; prefer an already
+    // renewed shared session so simultaneous components don't refresh twice.
     const latest=readSession();
     s=latest?.access_token&&latest.access_token!==s.access_token
       ?latest:await refreshSession();
