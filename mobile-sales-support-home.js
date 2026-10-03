@@ -181,13 +181,26 @@ async function rpc(fn,args={}){
 }
 async function rpcNetwork(fn,args={}){
   let s=readSession();if(!s?.access_token)throw new Error('Please sign in.');
-  if(s.expires_at&&Number(s.expires_at)<Math.floor(Date.now()/1000)+45)s=await refreshSession();
+  if(s.expires_at&&Number(s.expires_at)<Math.floor(Date.now()/1000)+45){
+    // Another dashboard component may already have renewed the shared session.
+    const latest=readSession();
+    s=latest?.access_token&&latest.access_token!==s.access_token&&
+      (!latest.expires_at||Number(latest.expires_at)>=Math.floor(Date.now()/1000)+45)
+      ?latest:await refreshSession();
+  }
   const call=token=>fetch(SUPABASE_URL+'/rest/v1/rpc/'+fn,{
     method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+token,'Content-Type':'application/json'},
     body:JSON.stringify(args||{}),cache:'no-store'
   });
   let response=await call(s.access_token);
-  if(response.status===401){s=await refreshSession();response=await call(s.access_token)}
+  if(response.status===401){
+    // Retry only an explicitly read-only Home RPC; never replay writes on 401.
+    if(!safeReadOnlyFunctions.has(fn))return parseResponse(response);
+    const latest=readSession();
+    s=latest?.access_token&&latest.access_token!==s.access_token
+      ?latest:await refreshSession();
+    response=await call(s.access_token);
+  }
   return parseResponse(response);
 }
 async function safeRpc(fn,args={}){try{return await rpc(fn,args)}catch(error){console.warn('Mobile '+fn+':',error?.message||error);return null}}
