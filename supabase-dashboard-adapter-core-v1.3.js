@@ -64,7 +64,9 @@
     'admin-deposit-history':{module:'admin_work',action:'view'},
     'admin-staff-request':{module:'admin_work',action:'view'},
     'admin-request':{module:'admin_work',action:'view'},
-    'admin-user-permissions':{module:'admin_work',action:'view',adminOnly:true}
+    'admin-user-permissions':{module:'admin_work',action:'view',adminOnly:true},
+    'admin-bank-register':{module:'admin_work',action:'view',adminOnly:true},
+    'admin-bank-history':{module:'admin_work',action:'view',adminOnly:true}
   };
 
   let session=null;
