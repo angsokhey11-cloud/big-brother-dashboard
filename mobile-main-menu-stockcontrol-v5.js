@@ -280,7 +280,7 @@ function interceptButtons(){
 function start(){
  injectMenuCss();patchBBMobile();installMenuWatcher();interceptButtons();
  setInterval(patchBBMobile,250);
- setInterval(()=>{if(!$('menuScreen')?.hidden)rebuildMenu()},500);
+ // Rebuild is triggered by menu visibility and menuGrid mutations; no polling needed.
  setTimeout(()=>{patchBBMobile();rebuildMenu()},300);
  setTimeout(()=>{patchBBMobile();rebuildMenu()},1200);
 }
