@@ -424,10 +424,12 @@ function installAdminOverviewLive(){
 
 async function activate(){
   profile=await rpc('bb_current_access_profile');
-  await loadOverview(true);
   installAdminOverviewLive();
   const requested=new URLSearchParams(location.search).get('module')||'';
+  // Direct module links need authentication and permissions, not a blocking Home overview.
+  // The unified Home controller still loads independently; returning Home refreshes live data.
   if(requested&&ROUTES[requested]&&canRoute(requested)){openModule(requested,false);return}
+  await loadOverview(true);
   // The first overview was just loaded above. Do not immediately request it twice.
   showHome(!requested,true);
 }
