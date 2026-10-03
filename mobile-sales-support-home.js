@@ -160,7 +160,26 @@ async function refreshSession(){
   if(!next.expires_at&&next.expires_in)next.expires_at=Math.floor(Date.now()/1000)+Number(next.expires_in);
   localStorage.setItem(SESSION_KEY,JSON.stringify(next));return next;
 }
+/* Share simultaneous identical read-only home requests only.
+   No response caching, no write coalescing, and no change to live refresh cadence. */
+const readOnlyFlights=new Map();
+const safeReadOnlyFunctions=new Set([
+  'bb_mobile_overview_filtered','bb_mobile_my_attention',
+  'bb_stock_report_fast','bb_mobile_get_preferences',
+  'bb_staff_relation_my_payments'
+]);
 async function rpc(fn,args={}){
+  if(!safeReadOnlyFunctions.has(fn))return rpcNetwork(fn,args);
+  const session=readSession();
+  if(!session?.access_token)return rpcNetwork(fn,args);
+  const flightKey=JSON.stringify([session.access_token,fn,args||{}]);
+  if(readOnlyFlights.has(flightKey))return readOnlyFlights.get(flightKey);
+  const flight=rpcNetwork(fn,args);
+  readOnlyFlights.set(flightKey,flight);
+  try{return await flight}
+  finally{if(readOnlyFlights.get(flightKey)===flight)readOnlyFlights.delete(flightKey)}
+}
+async function rpcNetwork(fn,args={}){
   let s=readSession();if(!s?.access_token)throw new Error('Please sign in.');
   if(s.expires_at&&Number(s.expires_at)<Math.floor(Date.now()/1000)+45)s=await refreshSession();
   const call=token=>fetch(SUPABASE_URL+'/rest/v1/rpc/'+fn,{
