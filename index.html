@@ -721,7 +721,7 @@ body{
 
       adminMenuMarker
       +
-      '\n          <button type="button" id="navAdminUserPermissions" onclick="loadWorkspace(\'admin-user-permissions\')">🔐 User & Permission Manager</button>'
+      '\n          <button type="button" id="navAdminUserPermissions" onclick="loadWorkspace(\'admin-user-permissions\')">🔐 User & Permission Manager</button>\n          <button type="button" id="navAdminBankRegister" onclick="loadWorkspace(\'admin-bank-register\')">🏦 Bank Transaction Register</button>\n          <button type="button" id="navAdminBankHistory" onclick="loadWorkspace(\'admin-bank-history\')">📋 Bank Transaction History</button>\n          <button type="button" id="navAdminTelegramManager" onclick="loadWorkspace(\'admin-telegram-manager\')">🤖 Telegram Management</button>'
 
     );
 
@@ -739,7 +739,7 @@ body{
 
       adminUrlMarker
       +
-      ',\n    "admin-user-permissions": "https://angsokhey11-cloud.github.io/big-brother-admin-work/user-permissions.html?embed=1&v=1"'
+      ',\n    "admin-user-permissions": "https://angsokhey11-cloud.github.io/big-brother-admin-work/user-permissions.html?embed=1&v=1",\n    "admin-bank-register": "https://angsokhey11-cloud.github.io/big-brother-admin-work/bank-register.html?embed=1",\n    "admin-bank-history": "https://angsokhey11-cloud.github.io/big-brother-admin-work/bank-history.html?embed=1",\n    "admin-telegram-manager": "https://angsokhey11-cloud.github.io/big-brother-notification-center/?embed=1"'
 
     );
 
@@ -777,7 +777,10 @@ body{
     const adminConditionNew =
 `moduleName === 'admin-staff-request' ||
       moduleName === 'admin-request' ||
-      moduleName === 'admin-user-permissions'
+      moduleName === 'admin-user-permissions' ||
+      moduleName === 'admin-bank-register' ||
+      moduleName === 'admin-bank-history' ||
+      moduleName === 'admin-telegram-manager'
     ) {`;
 
 
@@ -798,9 +801,15 @@ body{
     const adminActiveReplacement =
 `: moduleName === 'admin-staff-request'
                   ? 'navAdminStaffRequest'
-                  : moduleName === 'admin-user-permissions'
+                   : moduleName === 'admin-user-permissions'
                     ? 'navAdminUserPermissions'
-                    : 'navAdminRequest';`;
+                    : moduleName === 'admin-bank-register'
+                      ? 'navAdminBankRegister'
+                      : moduleName === 'admin-bank-history'
+                        ? 'navAdminBankHistory'
+                        : moduleName === 'admin-telegram-manager'
+                          ? 'navAdminTelegramManager'
+                          : 'navAdminRequest';`;
 
 
     mustReplace(
