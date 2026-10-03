@@ -1225,6 +1225,15 @@ body{
         "    const sameModule =\n      moduleName !== 'stock-keyin' &&\n      frame.dataset.module === moduleName &&");
     }
 
+    /* Shared Stock Allocation / Back Sale logic, sized by each desktop page. */
+    html=html.replaceAll(
+      'big-brother-stock-allocation/?embed=1&v=25',
+      'big-brother-stock-allocation/?embed=1&v=20261003-shared-desktop1'
+    ).replaceAll(
+      'big-brother-stock-allocation/back-sale.html?embed=1&v=14',
+      'big-brother-stock-allocation/back-sale.html?embed=1&v=20261003-shared-desktop1'
+    );
+
     /* =====================================================
        OPEN FINAL DASHBOARD
        ===================================================== */
