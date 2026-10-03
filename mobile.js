@@ -321,7 +321,7 @@ function mobileHomeVisible(){
   );
 }
 
-function showHome(clearRoute=true){
+function showHome(clearRoute=true,skipStartupDuplicateRefresh=false){
   activeTab='home';hideAll();$('mobileHome').hidden=false;
   if(clearRoute){
     if((window.BBMobileHistoryV7||window.BBMobileHistoryV6))(window.BBMobileHistoryV7||window.BBMobileHistoryV6).goHome();
@@ -330,7 +330,7 @@ function showHome(clearRoute=true){
   renderHome();refreshNav('home');$('mobileScroll').scrollTop=0;
 
   /* Returning Home must immediately refresh Admin management data. */
-  if(isAdmin())setTimeout(()=>loadOverview(true),40);
+  if(isAdmin()&&!skipStartupDuplicateRefresh)setTimeout(()=>loadOverview(true),40);
 }
 function showMenu(tab,clearRoute=true){
   activeTab=tab;hideAll();$('menuScreen').hidden=false;
@@ -428,7 +428,8 @@ async function activate(){
   installAdminOverviewLive();
   const requested=new URLSearchParams(location.search).get('module')||'';
   if(requested&&ROUTES[requested]&&canRoute(requested)){openModule(requested,false);return}
-  showHome(!requested);
+  // The first overview was just loaded above. Do not immediately request it twice.
+  showHome(!requested,true);
 }
 async function boot(){
   hideAll();$('bootScreen').hidden=false;
