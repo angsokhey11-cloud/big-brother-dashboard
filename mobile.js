@@ -28,7 +28,7 @@ const ROUTES={
 
   'stock-control-allocation':{tab:'stock',icon:'📦',label:'Stock Allocation',url:'https://angsokhey11-cloud.github.io/big-brother-stock-allocation/mobile.html?embed=1&v=20261002-mobile1'},
   'stock-control-back-sale':{tab:'stock',icon:'↩️',label:'Back Sale',url:'https://angsokhey11-cloud.github.io/big-brother-stock-allocation/back-sale-mobile.html?embed=1&v=20261002-mobile1'},
-  'stock-keyin':{tab:'stock',icon:'📦',label:'Stock In / Out',url:'https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/mobile.html?embed=1&v=20261003-numberedbatch1'},
+  'stock-keyin':{tab:'stock',icon:'📦',label:'Stock In / Out',url:'https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/mobile.html?embed=1&v=20261003-backsaleedit1'},
   'stock-damaged':{tab:'stock',icon:'⚠️',label:'Damaged Stock',url:'https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=damaged&v=20'},
   'stock-report':{tab:'stock',icon:'📋',label:'Live Stock',url:'https://angsokhey11-cloud.github.io/big-brother-stock-report/mobile.html?embed=1&v=20260923-defaultorder1'},
   'batch-report':{tab:'stock',icon:'🗂️',label:'Batch Report',url:'https://angsokhey11-cloud.github.io/big-brother-stock-report/batch-report.html?embed=1&v=20260923-batchedit2'},
