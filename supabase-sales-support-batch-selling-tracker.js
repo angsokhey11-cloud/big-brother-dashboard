@@ -3,8 +3,8 @@
 'use strict';
 
 const ROUTE='sales-support-batch-selling-tracker';
-const DESKTOP_URL='https://angsokhey11-cloud.github.io/big-brother-batch-selling-tracker/?embed=1&v=20261004-mobile-scale-wait2';
-const MOBILE_URL='https://angsokhey11-cloud.github.io/big-brother-batch-selling-tracker/mobile.html?embed=1&v=20261004-mobile-scale-wait2';
+const DESKTOP_URL='https://angsokhey11-cloud.github.io/big-brother-batch-selling-tracker/?embed=1&v=20261004-money-view1';
+const MOBILE_URL='https://angsokhey11-cloud.github.io/big-brother-batch-selling-tracker/mobile.html?embed=1&v=20261004-money-view1';
 function trackerUrl(){
   const mobile=window.matchMedia?.('(max-width:700px)')?.matches
     || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent||'');
