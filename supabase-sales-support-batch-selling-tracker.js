@@ -3,7 +3,13 @@
 'use strict';
 
 const ROUTE='sales-support-batch-selling-tracker';
-const URL='https://angsokhey11-cloud.github.io/big-brother-batch-selling-tracker/?embed=1&v=20260925-dashboard1';
+const DESKTOP_URL='https://angsokhey11-cloud.github.io/big-brother-batch-selling-tracker/?embed=1&v=20261004-mobile-scale-wait2';
+const MOBILE_URL='https://angsokhey11-cloud.github.io/big-brother-batch-selling-tracker/mobile.html?embed=1&v=20261004-mobile-scale-wait2';
+function trackerUrl(){
+  const mobile=window.matchMedia?.('(max-width:700px)')?.matches
+    || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent||'');
+  return mobile?MOBILE_URL:DESKTOP_URL;
+}
 let restoreDone=false;
 let profileWatchTimer=null;
 let profileWatchStartedAt=0;
@@ -87,7 +93,7 @@ function open(updateUrl=true){
 
   if(home)home.hidden=true;
   workspace.hidden=false;
-  frame.src=URL;
+  frame.src=trackerUrl();
   markActive();
   if(updateUrl!==false)persist();
   return true;
