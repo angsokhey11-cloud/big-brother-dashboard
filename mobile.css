@@ -101,7 +101,7 @@ html.bb-bottom-nav-collapsed .bb-bottom-nav-collapse{
    Login shell only — dashboard/function UI is untouched.
    ===================================================== */
 .login-screen{
-  background:#261507 url("assets/big-brother-angkor-login.png?v=20261005-login11") 64% center/cover no-repeat !important;
+  background:#261507 url("assets/big-brother-angkor-login.png?v=20261005-login12") 64% center/cover no-repeat !important;
   position:fixed;
   isolation:isolate;
 }
@@ -306,7 +306,7 @@ html.bb-bottom-nav-collapsed .bb-bottom-nav-collapse{
   inset:-5% !important;
   z-index:-2 !important;
   pointer-events:none !important;
-  background:url("assets/big-brother-angkor-login.png?v=20261005-login11") center/cover no-repeat !important;
+  background:url("assets/big-brother-angkor-login.png?v=20261005-login12") center/cover no-repeat !important;
   filter:blur(16px) brightness(.72) saturate(1.04) !important;
   transform:scale(1.08) !important;
   opacity:.86 !important;
@@ -320,10 +320,90 @@ html.bb-bottom-nav-collapsed .bb-bottom-nav-collapse{
   pointer-events:none !important;
   background:
     linear-gradient(180deg,rgba(32,18,7,.08),rgba(32,18,7,.04)),
-    url("assets/big-brother-angkor-login.png?v=20261005-login11") center center/100% auto no-repeat !important;
+    url("assets/big-brother-angkor-login.png?v=20261005-login12") center center/100% auto no-repeat !important;
 }
 @media(max-width:620px){
   .login-card{
     width:min(92vw,360px) !important;
   }
+}
+
+/* =====================================================
+   BIG BROTHER MOBILE LOGIN V12
+   Ratio-responsive scene: no hard image width/height crop.
+   The real image always uses contain; same image fills behind softly.
+   ===================================================== */
+.login-screen{
+  min-height:100svh !important;
+  height:100dvh !important;
+  width:100vw !important;
+  padding:
+    max(14px,env(safe-area-inset-top))
+    max(14px,env(safe-area-inset-right))
+    max(14px,env(safe-area-inset-bottom))
+    max(14px,env(safe-area-inset-left)) !important;
+  display:grid !important;
+  place-items:center !important;
+  background:#2a1809 !important;
+  overflow:hidden !important;
+  isolation:isolate !important;
+}
+.login-screen::before{
+  content:"" !important;
+  position:absolute !important;
+  inset:-7vmax !important;
+  z-index:-2 !important;
+  pointer-events:none !important;
+  background:url("assets/big-brother-angkor-login.png?v=20261005-login12") center/cover no-repeat !important;
+  filter:blur(clamp(12px,2.2vmax,28px)) brightness(.70) saturate(1.05) !important;
+  transform:scale(1.05) !important;
+  opacity:.90 !important;
+  animation:none !important;
+}
+.login-screen::after{
+  content:"" !important;
+  position:absolute !important;
+  inset:0 !important;
+  z-index:-1 !important;
+  pointer-events:none !important;
+  background:
+    linear-gradient(180deg,rgba(28,15,5,.05),rgba(28,15,5,.08)),
+    url("assets/big-brother-angkor-login.png?v=20261005-login12") center/contain no-repeat !important;
+}
+.login-card{
+  width:min(90vw,22.5rem) !important;
+  max-height:calc(100dvh - max(28px,env(safe-area-inset-top)) - max(28px,env(safe-area-inset-bottom))) !important;
+  overflow:auto !important;
+  padding:clamp(16px,3.5vw,22px) clamp(14px,3.5vw,18px) !important;
+  margin:0 !important;
+}
+.login-brand{font-size:clamp(22px,6vw,28px)!important}
+.login-quote{font-size:clamp(10px,2.8vw,12px)!important}
+.login-card input{
+  min-height:clamp(48px,7svh,54px)!important;
+  height:clamp(48px,7svh,54px)!important;
+  font-size:clamp(15px,4vw,17px)!important;
+}
+#loginButton{
+  min-height:clamp(48px,7svh,54px)!important;
+  height:clamp(48px,7svh,54px)!important;
+  font-size:clamp(14px,4vw,16px)!important;
+}
+.login-version{
+  top:max(10px,env(safe-area-inset-top)) !important;
+  right:max(10px,env(safe-area-inset-right)) !important;
+  font-size:clamp(8px,2.2vw,10px)!important;
+}
+
+/* Very short landscape phones: compact vertically instead of cropping the scene. */
+@media (orientation:landscape) and (max-height:520px){
+  .login-card{
+    width:min(78vw,22rem)!important;
+    padding:10px 16px!important;
+  }
+  .login-mark{display:none!important}
+  .login-quote{margin-bottom:8px!important}
+  .login-card input{height:44px!important;min-height:44px!important}
+  #loginButton{height:44px!important;min-height:44px!important}
+  .desktop-link{margin-top:5px!important}
 }
