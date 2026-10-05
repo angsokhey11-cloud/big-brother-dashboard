@@ -1,9 +1,9 @@
 /* BIG BROTHER Mobile PWA service worker V1.9 */
-const CACHE='bb-mobile-shell-v71';
+const CACHE='bb-mobile-shell-v72';
 const MOBILE_FILES=new Set([
   'mobile.html','mobile.css','mobile-sales-support.css','pwa-install.css','mobile.js','mobile-user-overview.js',
   'mobile-sales-support-home.js','pwa-install.js','mobile-main-menu-v3.js','mobile-ui-policy-v1.js',
-  'mobile-navigation-v5.js','mobile-ios-decimal-v1.js','mobile-theme-v1.js','manifest.webmanifest','pwa-icon.svg','pwa-icon-maskable.svg'
+  'mobile-navigation-v5.js','mobile-ios-decimal-v1.js','mobile-theme-v1.js','manifest.webmanifest','pwa-icon.svg','pwa-icon-maskable.svg','big-brother-angkor-login.png'
 ]);
 function fileName(url){const parts=url.pathname.split('/');return parts[parts.length-1]||''}
 function isMobileAsset(url){return MOBILE_FILES.has(fileName(url))}
@@ -20,7 +20,7 @@ function injectRouter(html){
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll([
   './mobile.html','./mobile.css','./mobile-sales-support.css','./pwa-install.css','./mobile.js','./mobile-user-overview.js',
   './mobile-sales-support-home.js','./pwa-install.js','./mobile-main-menu-v3.js','./mobile-ui-policy-v1.js',
-  './mobile-navigation-v5.js','./mobile-ios-decimal-v1.js','./mobile-theme-v1.js','./manifest.webmanifest','./pwa-icon.svg','./pwa-icon-maskable.svg'
+  './mobile-navigation-v5.js','./mobile-ios-decimal-v1.js','./mobile-theme-v1.js','./manifest.webmanifest','./pwa-icon.svg','./pwa-icon-maskable.svg','./assets/big-brother-angkor-login.png'
 ]).catch(()=>{})).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',event=>{
   event.waitUntil(
