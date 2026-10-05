@@ -101,7 +101,7 @@ html.bb-bottom-nav-collapsed .bb-bottom-nav-collapse{
    Login shell only — dashboard/function UI is untouched.
    ===================================================== */
 .login-screen{
-  background:#261507 url("assets/big-brother-angkor-login.png?v=20261005-login9") 64% center/cover no-repeat !important;
+  background:#261507 url("assets/big-brother-angkor-login.png?v=20261005-login10") 64% center/cover no-repeat !important;
   position:fixed;
   isolation:isolate;
 }
