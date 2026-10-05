@@ -122,8 +122,7 @@ function shellCss(){return `
   html[data-bb-theme="premium-light"] .panel,
   html[data-bb-theme="premium-light"] .menu-card,
   html[data-bb-theme="premium-light"] .bb-dd-group,
-  html[data-bb-theme="premium-light"] .sheet-card,
-  html[data-bb-theme="premium-light"] .login-card{
+  html[data-bb-theme="premium-light"] .sheet-card{
     background:rgba(249,252,255,.97)!important;
     color:var(--bb-text)!important;
     border:1px solid var(--bb-border)!important;
@@ -138,8 +137,7 @@ function shellCss(){return `
   html[data-bb-theme="premium-light"] .sheet-card h3,
   html[data-bb-theme="premium-light"] .sheet-option,
   html[data-bb-theme="premium-light"] .sheet-option strong,
-  html[data-bb-theme="premium-light"] .bb-dd-copy strong,
-  html[data-bb-theme="premium-light"] .login-brand{
+  html[data-bb-theme="premium-light"] .bb-dd-copy strong{
     color:var(--bb-text)!important;
   }
 
@@ -149,8 +147,7 @@ function shellCss(){return `
   html[data-bb-theme="premium-light"] .recent-side span,
   html[data-bb-theme="premium-light"] .sheet-card p,
   html[data-bb-theme="premium-light"] .sheet-option small,
-  html[data-bb-theme="premium-light"] .bb-dd-copy small,
-  html[data-bb-theme="premium-light"] .login-sub{
+  html[data-bb-theme="premium-light"] .bb-dd-copy small{
     color:var(--bb-muted)!important;
   }
 
@@ -223,23 +220,7 @@ function shellCss(){return `
     border:1px solid #cfdeea!important;
   }
 
-  html[data-bb-theme="premium-light"] .login-card input{
-    background:#f5f9fd!important;
-    color:var(--bb-text)!important;
-    border-color:#c4d8e8!important;
-  }
-  html[data-bb-theme="premium-light"] .login-card input:focus{
-    border-color:#4e9ee7!important;
-    box-shadow:0 0 0 3px rgba(22,119,255,.10)!important;
-  }
-  html[data-bb-theme="premium-light"] .login-card button{
-    background:linear-gradient(135deg,#1677ff,#2f8cff)!important;
-    color:#fff!important;
-    box-shadow:0 6px 16px rgba(22,119,255,.18)!important;
-  }
-
-  html[data-bb-theme="premium-light"] .boot-screen,
-  html[data-bb-theme="premium-light"] .login-screen{
+  html[data-bb-theme="premium-light"] .boot-screen{
     background:
       radial-gradient(circle at 80% 10%,rgba(73,162,239,.14) 0,transparent 30%),
       linear-gradient(155deg,#f7fbff 0%,#edf5fb 52%,#e5f0f9 100%)!important;
@@ -261,6 +242,44 @@ function shellCss(){return `
         #dfeaf4!important;
     }
   }
+
+  /* LOGIN V10 — login design is independent from dashboard theme. */
+  html[data-bb-theme="premium-light"] .login-screen{
+    background:#261507 url("assets/big-brother-angkor-login.png?v=20261005-login10") 64% center/cover no-repeat!important;
+  }
+  html[data-bb-theme="premium-light"] .login-card{
+    background:transparent!important;
+    border:0!important;
+    box-shadow:none!important;
+    color:#432e19!important;
+  }
+  html[data-bb-theme="premium-light"] .login-brand{color:#4a2d14!important}
+  html[data-bb-theme="premium-light"] .login-quote{color:#684a2e!important}
+  html[data-bb-theme="premium-light"] .login-card input{
+    background:rgba(255,250,241,.62)!important;
+    color:#402b18!important;
+    border:1px solid rgba(255,255,255,.84)!important;
+    box-shadow:0 7px 18px rgba(79,43,12,.10),inset 0 1px 0 rgba(255,255,255,.65)!important;
+  }
+  html[data-bb-theme="premium-light"] .login-card input:focus{
+    background:rgba(255,255,255,.82)!important;
+    border-color:rgba(145,89,27,.58)!important;
+    box-shadow:0 0 0 3px rgba(173,112,42,.14),0 8px 22px rgba(79,43,12,.10)!important;
+  }
+  html[data-bb-theme="premium-light"] #loginButton{
+    background:linear-gradient(135deg,#6c421d,#a46a28)!important;
+    color:#fff7e8!important;
+    box-shadow:0 8px 20px rgba(88,49,15,.22)!important;
+  }
+  html[data-bb-theme="premium-light"] .login-password-toggle{
+    background:rgba(255,247,232,.78)!important;
+    color:#6b421d!important;
+    border:1px solid rgba(120,76,32,.24)!important;
+    box-shadow:none!important;
+  }
+  html[data-bb-theme="premium-light"] .login-helper,
+  html[data-bb-theme="premium-light"] .desktop-link{color:#684a2e!important}
+
 
   /* PREMIUM LIGHT — lighter tabs only; original cartoon/emoji icons preserved */
   html[data-bb-theme="premium-light"] .tabs,
