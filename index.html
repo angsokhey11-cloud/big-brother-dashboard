@@ -156,6 +156,12 @@ body{
       +
       'ipt src="supabase-dashboard-adapter.js?v=20261004-bank-permissions2"></scr'
       +
+      'ipt>\n'
+      +
+      '<scr'
+      +
+      'ipt src="bb-system-dialog-v1.js?v=20261005-dialog1"></scr'
+      +
       'ipt>';
 
 
@@ -1243,6 +1249,12 @@ body{
     /* =====================================================
        OPEN FINAL DASHBOARD
        ===================================================== */
+
+    const dialogBodyClose=html.toLowerCase().lastIndexOf('</body>');
+    if(dialogBodyClose<0)throw Error('Dashboard body closing tag missing for dialog layer.');
+    html=html.slice(0,dialogBodyClose)
+      +'<scr'+'ipt>(function(){const install=function(){const f=document.getElementById("moduleFrame");if(!f)return;const apply=function(){try{window.BBSystemDialog?.installWindow(f.contentWindow);}catch(_){}};f.addEventListener("load",()=>setTimeout(apply,50));apply();};if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",install,{once:true});else install();})();</scr'+'ipt>'
+      +html.slice(dialogBodyClose);
 
     document.open();
 
