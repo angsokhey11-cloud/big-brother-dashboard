@@ -101,7 +101,7 @@ html.bb-bottom-nav-collapsed .bb-bottom-nav-collapse{
    Login shell only — dashboard/function UI is untouched.
    ===================================================== */
 .login-screen{
-  background:#261507 url("assets/angkor-login-bg.webp?v=20261005-login1") 54% center/cover no-repeat !important;
+  background:#261507 url("assets/angkor-login-bg.webp?v=20261005-login3") 54% center/cover no-repeat !important;
   position:fixed;
   isolation:isolate;
 }
