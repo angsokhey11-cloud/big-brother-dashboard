@@ -101,7 +101,7 @@ html.bb-bottom-nav-collapsed .bb-bottom-nav-collapse{
    Login shell only — dashboard/function UI is untouched.
    ===================================================== */
 .login-screen{
-  background:#261507 url("assets/big-brother-angkor-login.png?v=20261005-login16") 64% center/cover no-repeat !important;
+  background:#261507 url("assets/big-brother-angkor-login.png?v=20261006-login17") 64% center/cover no-repeat !important;
   position:fixed;
   isolation:isolate;
 }
@@ -306,7 +306,7 @@ html.bb-bottom-nav-collapsed .bb-bottom-nav-collapse{
   inset:-5% !important;
   z-index:-2 !important;
   pointer-events:none !important;
-  background:url("assets/big-brother-angkor-login.png?v=20261005-login16") center/cover no-repeat !important;
+  background:url("assets/big-brother-angkor-login.png?v=20261006-login17") center/cover no-repeat !important;
   filter:blur(16px) brightness(.72) saturate(1.04) !important;
   transform:scale(1.08) !important;
   opacity:.86 !important;
@@ -320,7 +320,7 @@ html.bb-bottom-nav-collapsed .bb-bottom-nav-collapse{
   pointer-events:none !important;
   background:
     linear-gradient(180deg,rgba(32,18,7,.08),rgba(32,18,7,.04)),
-    url("assets/big-brother-angkor-login.png?v=20261005-login16") center center/100% auto no-repeat !important;
+    url("assets/big-brother-angkor-login.png?v=20261006-login17") center center/100% auto no-repeat !important;
 }
 @media(max-width:620px){
   .login-card{
@@ -354,7 +354,7 @@ html.bb-bottom-nav-collapsed .bb-bottom-nav-collapse{
   inset:-7vmax !important;
   z-index:-2 !important;
   pointer-events:none !important;
-  background:url("assets/big-brother-angkor-login.png?v=20261005-login16") center/cover no-repeat !important;
+  background:url("assets/big-brother-angkor-login.png?v=20261006-login17") center/cover no-repeat !important;
   filter:blur(clamp(12px,2.2vmax,28px)) brightness(.70) saturate(1.05) !important;
   transform:scale(1.05) !important;
   opacity:.90 !important;
@@ -368,7 +368,7 @@ html.bb-bottom-nav-collapsed .bb-bottom-nav-collapse{
   pointer-events:none !important;
   background:
     linear-gradient(180deg,rgba(28,15,5,.05),rgba(28,15,5,.08)),
-    url("assets/big-brother-angkor-login.png?v=20261005-login16") center/contain no-repeat !important;
+    url("assets/big-brother-angkor-login.png?v=20261006-login17") center/contain no-repeat !important;
 }
 .login-card{
   width:min(90vw,22.5rem) !important;
@@ -424,7 +424,7 @@ html.bb-bottom-nav-collapsed .bb-bottom-nav-collapse{
   inset:0 !important;
   z-index:-2 !important;
   pointer-events:none !important;
-  background-image:url("assets/big-brother-angkor-login.png?v=20261005-login16") !important;
+  background-image:url("assets/big-brother-angkor-login.png?v=20261006-login17") !important;
   background-repeat:no-repeat !important;
   background-size:cover !important;
   background-position:72% center !important;
@@ -464,7 +464,7 @@ html.bb-bottom-nav-collapsed .bb-bottom-nav-collapse{
   min-height:100dvh !important;
   height:100dvh !important;
   width:100vw !important;
-  background:#261507 url("assets/big-brother-angkor-login.png?v=20261005-login16") 72% center/cover no-repeat !important;
+  background:#261507 url("assets/big-brother-angkor-login.png?v=20261006-login17") 72% center/cover no-repeat !important;
   animation:bbMobileAngkorScreenPan 18s ease-in-out infinite alternate !important;
   overflow:hidden !important;
   isolation:isolate !important;
@@ -510,7 +510,7 @@ html.bb-bottom-nav-collapsed .bb-bottom-nav-collapse{
    Exact V10 visual behavior + auto-pan only.
    ===================================================== */
 .login-screen{
-  background:#261507 url("assets/big-brother-angkor-login.png?v=20261005-login16") 72% center/cover no-repeat !important;
+  background:#261507 url("assets/big-brother-angkor-login.png?v=20261006-login17") 72% center/cover no-repeat !important;
   animation:bbMobileAngkorScreenPan 18s ease-in-out infinite alternate !important;
 }
 .login-screen::before{
@@ -550,7 +550,7 @@ html.bb-bottom-nav-collapsed .bb-bottom-nav-collapse{
   inset:0;
   z-index:-2;
   pointer-events:none;
-  background-image:url("assets/big-brother-angkor-login.png?v=20261005-login16");
+  background-image:url("assets/big-brother-angkor-login.png?v=20261006-login17");
   background-repeat:no-repeat;
   background-size:cover;
   background-position:72% center;
@@ -595,4 +595,19 @@ html.bb-bottom-nav-collapsed .bb-bottom-nav-collapse{
     animation:none !important;
     background-position:72% center !important;
   }
+}
+
+/* =====================================================
+   BIG BROTHER MOBILE LOGIN V17
+   AUTH VISIBILITY FIX
+   Legacy login experiments set display:grid!important.
+   This rule guarantees JS hidden state wins after sign-in.
+   ===================================================== */
+#loginScreen[hidden],
+.login-screen[hidden],
+#bootScreen[hidden],
+#mobileHome[hidden],
+#menuScreen[hidden],
+#moduleScreen[hidden]{
+  display:none !important;
 }
