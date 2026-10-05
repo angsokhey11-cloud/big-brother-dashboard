@@ -178,7 +178,7 @@
     style.id='bbDashboardAuthStyle';
     style.textContent=`
       .bb-auth-hidden{display:none!important}
-      .bb-auth-overlay{position:fixed;inset:0;z-index:999999;display:flex;align-items:center;justify-content:center;padding:18px;background:#201508 url("assets/angkor-login-bg.webp?v=20261005-login1") center/cover no-repeat;overflow:hidden}
+      .bb-auth-overlay{position:fixed;inset:0;z-index:999999;display:flex;align-items:center;justify-content:center;padding:18px;background:#201508 url("assets/angkor-login-bg.webp?v=20261005-login3") center/cover no-repeat;overflow:hidden}
       .bb-auth-overlay:before{content:"";position:absolute;inset:-4%;pointer-events:none;background:radial-gradient(circle at 50% 42%,rgba(255,243,205,.14),transparent 28%),linear-gradient(180deg,rgba(42,24,8,.03),rgba(31,17,6,.16));animation:bbAngkorBreath 12s ease-in-out infinite alternate}
       .bb-auth-overlay:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(34,18,6,.15),transparent 28%,transparent 72%,rgba(34,18,6,.12))}
       @keyframes bbAngkorBreath{from{transform:scale(1);opacity:.72}to{transform:scale(1.018);opacity:1}}
