@@ -101,7 +101,7 @@ html.bb-bottom-nav-collapsed .bb-bottom-nav-collapse{
    Login shell only — dashboard/function UI is untouched.
    ===================================================== */
 .login-screen{
-  background:#261507 url("assets/big-brother-angkor-login.png?v=20261005-login10") 64% center/cover no-repeat !important;
+  background:#261507 url("assets/big-brother-angkor-login.png?v=20261005-login11") 64% center/cover no-repeat !important;
   position:fixed;
   isolation:isolate;
 }
@@ -288,4 +288,42 @@ html.bb-bottom-nav-collapsed .bb-bottom-nav-collapse{
   backdrop-filter:blur(8px);
   -webkit-backdrop-filter:blur(8px);
   user-select:none;
+}
+
+/* =====================================================
+   BIG BROTHER MOBILE LOGIN V11
+   Show the entire landscape image on portrait screens.
+   A blurred cover layer fills unused vertical space.
+   ===================================================== */
+.login-screen{
+  background:#2a1809 !important;
+  overflow:hidden !important;
+  isolation:isolate !important;
+}
+.login-screen::before{
+  content:"" !important;
+  position:fixed !important;
+  inset:-5% !important;
+  z-index:-2 !important;
+  pointer-events:none !important;
+  background:url("assets/big-brother-angkor-login.png?v=20261005-login11") center/cover no-repeat !important;
+  filter:blur(16px) brightness(.72) saturate(1.04) !important;
+  transform:scale(1.08) !important;
+  opacity:.86 !important;
+  animation:none !important;
+}
+.login-screen::after{
+  content:"" !important;
+  position:fixed !important;
+  inset:0 !important;
+  z-index:-1 !important;
+  pointer-events:none !important;
+  background:
+    linear-gradient(180deg,rgba(32,18,7,.08),rgba(32,18,7,.04)),
+    url("assets/big-brother-angkor-login.png?v=20261005-login11") center center/100% auto no-repeat !important;
+}
+@media(max-width:620px){
+  .login-card{
+    width:min(92vw,360px) !important;
+  }
 }
