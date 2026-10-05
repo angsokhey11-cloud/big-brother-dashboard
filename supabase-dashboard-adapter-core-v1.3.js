@@ -178,11 +178,13 @@
     style.id='bbDashboardAuthStyle';
     style.textContent=`
       .bb-auth-hidden{display:none!important}
-      .bb-auth-overlay{position:fixed;inset:0;z-index:999999;display:flex;align-items:center;justify-content:center;padding:18px;background:#201508 url("assets/angkor-login-bg.webp?v=20261005-login3") center/cover no-repeat;overflow:hidden}
-      .bb-auth-overlay:before{content:"";position:absolute;inset:-4%;pointer-events:none;background:radial-gradient(circle at 50% 42%,rgba(255,243,205,.14),transparent 28%),linear-gradient(180deg,rgba(42,24,8,.03),rgba(31,17,6,.16));animation:bbAngkorBreath 12s ease-in-out infinite alternate}
-      .bb-auth-overlay:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(34,18,6,.15),transparent 28%,transparent 72%,rgba(34,18,6,.12))}
-      @keyframes bbAngkorBreath{from{transform:scale(1);opacity:.72}to{transform:scale(1.018);opacity:1}}
-      .bb-auth-card{position:relative;z-index:1;width:min(390px,calc(100vw - 38px));padding:30px 26px 24px;background:rgba(255,249,236,.18);border:1px solid rgba(255,255,255,.58);border-radius:22px;box-shadow:0 20px 60px rgba(69,38,9,.23),inset 0 1px 0 rgba(255,255,255,.42);backdrop-filter:blur(9px) saturate(112%);-webkit-backdrop-filter:blur(9px) saturate(112%);text-align:center;color:#3f2c19}
+      .bb-auth-overlay{position:fixed;inset:0;z-index:999999;display:flex;align-items:center;justify-content:center;padding:18px;background:#2a1809;overflow:hidden;isolation:isolate}
+      .bb-auth-overlay:before,.bb-auth-overlay:after{content:"";position:absolute;top:0;bottom:0;width:50.5%;z-index:-2;pointer-events:none;background-image:url("assets/angkor-login-bg-hq.webp?v=20261005-login5");background-repeat:no-repeat;background-size:286% 100%;filter:saturate(1.03) contrast(1.02);animation:bbAngkorBreath 12s ease-in-out infinite alternate}
+      .bb-auth-overlay:before{left:0;background-position:left center}
+      .bb-auth-overlay:after{right:0;background-position:right center}
+      @keyframes bbAngkorBreath{from{transform:scale(1);opacity:.97}to{transform:scale(1.012);opacity:1}}
+      .bb-auth-card{position:relative;z-index:1;width:min(360px,calc(100vw - 38px));padding:24px 20px 18px;background:transparent;border:0;border-radius:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;text-align:center;color:#3f2c19}
+      .bb-auth-card:before{content:"";position:absolute;z-index:-1;left:50%;top:50%;width:520px;height:480px;transform:translate(-50%,-50%);pointer-events:none;background:radial-gradient(ellipse at center,rgba(255,244,220,.34) 0%,rgba(255,236,197,.16) 38%,rgba(61,34,11,.08) 60%,transparent 74%);filter:blur(18px)}
       .bb-auth-mark{width:58px;height:28px;margin:0 auto 8px;position:relative}
       .bb-auth-mark:before{content:"";position:absolute;left:10px;right:10px;bottom:2px;height:2px;background:#a86b21;border-radius:99px;box-shadow:0 -6px 0 -1px #a86b21}
       .bb-auth-brand{color:#4a2d14;font-size:28px;font-weight:900;letter-spacing:1.5px;text-shadow:0 1px 0 rgba(255,255,255,.5)}
@@ -197,7 +199,7 @@
       .bb-auth-btn:disabled{opacity:.55;cursor:wait;transform:none}
       .bb-auth-error{min-height:18px;margin-top:10px;padding:0 4px;color:#8f211d;font-size:11px;font-weight:800;text-shadow:0 1px 0 rgba(255,255,255,.45)}
       .bb-auth-note{margin-top:7px;color:#735c43;font-size:9px;line-height:1.4}
-      @media(max-width:620px){.bb-auth-overlay{background-position:54% center;padding:16px}.bb-auth-card{width:min(350px,calc(100vw - 28px));padding:24px 20px 20px;border-radius:20px}.bb-auth-brand{font-size:24px}.bb-auth-quote{font-size:11px;margin-bottom:15px}}
+      @media(max-width:620px){.bb-auth-overlay{padding:16px;background:#2a1809 url("assets/angkor-login-bg-hq.webp?v=20261005-login5") 78% center/auto 100% no-repeat}.bb-auth-overlay:before,.bb-auth-overlay:after{display:none}.bb-auth-card{width:min(340px,calc(100vw - 28px));padding:20px 16px 16px}.bb-auth-card:before{width:420px;height:430px}.bb-auth-brand{font-size:24px}.bb-auth-quote{font-size:11px;margin-bottom:15px}}
       @media(prefers-reduced-motion:reduce){.bb-auth-overlay:before{animation:none}}
       .bb-user-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
       .bb-user-signout{border:0;border-radius:999px;background:#fff0ef;color:#b42318;padding:8px 11px;font-size:11px;font-weight:900;cursor:pointer}
