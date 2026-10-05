@@ -255,7 +255,7 @@ function shellCss(){return `
     inset:-5%!important;
     z-index:-2!important;
     pointer-events:none!important;
-    background:url("assets/big-brother-angkor-login.png?v=20261005-login14") center/cover no-repeat!important;
+    background:url("assets/big-brother-angkor-login.png?v=20261005-login15") center/cover no-repeat!important;
     filter:blur(16px) brightness(.72) saturate(1.04)!important;
     transform:scale(1.08)!important;
     opacity:.86!important;
@@ -269,7 +269,7 @@ function shellCss(){return `
     pointer-events:none!important;
     background:
       linear-gradient(180deg,rgba(32,18,7,.08),rgba(32,18,7,.04)),
-      url("assets/big-brother-angkor-login.png?v=20261005-login14") center center/100% auto no-repeat!important;
+      url("assets/big-brother-angkor-login.png?v=20261005-login15") center center/100% auto no-repeat!important;
   }
   html[data-bb-theme="premium-light"] .login-card{
     background:transparent!important;
@@ -304,6 +304,35 @@ function shellCss(){return `
   html[data-bb-theme="premium-light"] .login-helper,
   html[data-bb-theme="premium-light"] .desktop-link{color:#684a2e!important}
 
+
+  /* LOGIN V15 — authoritative V10 full-screen background.
+     Must stay after older login theme rules so no contained image layer can win. */
+  html[data-bb-theme="premium-light"] .login-screen{
+    background:#261507 url("assets/big-brother-angkor-login.png?v=20261005-login15") 72% center/cover no-repeat!important;
+    animation:bbMobileAngkorScreenPan 18s ease-in-out infinite alternate!important;
+    overflow:hidden!important;
+    isolation:isolate!important;
+  }
+  html[data-bb-theme="premium-light"] .login-screen::before{
+    content:""!important;
+    position:absolute!important;
+    inset:0!important;
+    z-index:0!important;
+    pointer-events:none!important;
+    background:radial-gradient(circle at 50% 46%,rgba(255,241,204,.10),transparent 34%)!important;
+    filter:none!important;
+    transform:none!important;
+    opacity:1!important;
+    animation:none!important;
+  }
+  html[data-bb-theme="premium-light"] .login-screen::after{
+    content:""!important;
+    position:absolute!important;
+    inset:0!important;
+    z-index:0!important;
+    pointer-events:none!important;
+    background:linear-gradient(180deg,rgba(31,16,5,.03),rgba(31,16,5,.14))!important;
+  }
 
   /* PREMIUM LIGHT — lighter tabs only; original cartoon/emoji icons preserved */
   html[data-bb-theme="premium-light"] .tabs,
