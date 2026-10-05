@@ -243,7 +243,7 @@ function shellCss(){return `
     }
   }
 
-  /* LOGIN V12 — login design is independent from dashboard theme. */
+  /* LOGIN V13 — login design is independent from dashboard theme. */
   html[data-bb-theme="premium-light"] .login-screen{
     background:#2a1809!important;
     overflow:hidden!important;
@@ -255,7 +255,7 @@ function shellCss(){return `
     inset:-5%!important;
     z-index:-2!important;
     pointer-events:none!important;
-    background:url("assets/big-brother-angkor-login.png?v=20261005-login12") center/cover no-repeat!important;
+    background:url("assets/big-brother-angkor-login.png?v=20261005-login13") center/cover no-repeat!important;
     filter:blur(16px) brightness(.72) saturate(1.04)!important;
     transform:scale(1.08)!important;
     opacity:.86!important;
@@ -269,7 +269,7 @@ function shellCss(){return `
     pointer-events:none!important;
     background:
       linear-gradient(180deg,rgba(32,18,7,.08),rgba(32,18,7,.04)),
-      url("assets/big-brother-angkor-login.png?v=20261005-login12") center center/100% auto no-repeat!important;
+      url("assets/big-brother-angkor-login.png?v=20261005-login13") center center/100% auto no-repeat!important;
   }
   html[data-bb-theme="premium-light"] .login-card{
     background:transparent!important;
