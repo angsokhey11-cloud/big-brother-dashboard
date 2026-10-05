@@ -28,7 +28,7 @@ function ensure(){
   '.bb-dialog-card{position:relative;width:min(430px,100%);background:#fff;border:1px solid #d9e4ef;border-radius:17px;padding:24px 22px 20px;color:#17385e;text-align:center;box-shadow:0 25px 70px #0a274555}'+
   '.bb-dialog-icon{width:50px;height:50px;display:grid;place-items:center;margin:0 auto 13px;border-radius:50%;background:#eef5fd;color:#174979;font-size:25px;font-weight:900}'+
   '.bb-dialog-title{font-size:20px;font-weight:900;color:#17457a;margin-bottom:10px}.bb-dialog-message{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.55;color:#465e75;max-height:45vh;overflow:auto}'+
-  '.bb-dialog-actions{display:flex;gap:10px;justify-content:center;margin-top:20px}.bb-dialog-btn{min-width:110px;min-height:43px;border:0;border-radius:10px;padding:10px 16px;font:inherit;font-size:14px;font-weight:800;cursor:pointer}'+
+  '.bb-dialog-input{width:100%;min-height:43px;margin-top:14px;padding:10px 12px;border:1px solid #afc4dd;border-radius:9px;font:inherit;font-size:15px;color:#17385e;outline:none}.bb-dialog-input:focus{border-color:#2f6fed;box-shadow:0 0 0 3px #2f6fed22}.bb-dialog-actions{display:flex;gap:10px;justify-content:center;margin-top:20px}.bb-dialog-btn{min-width:110px;min-height:43px;border:0;border-radius:10px;padding:10px 16px;font:inherit;font-size:14px;font-weight:800;cursor:pointer}'+
   '.bb-dialog-btn-primary{background:#174979;color:#fff}.bb-dialog-btn-secondary{background:#edf2f7;color:#36536f}';
  document.head.appendChild(style);
  document.body.appendChild(root);
@@ -49,21 +49,34 @@ function next(){
  icon.style.background=job.kind==='success'?'#e9f7ef':job.kind==='confirm'?'#fff4df':'#eef5fd';
  icon.style.color=job.kind==='success'?'#187044':job.kind==='confirm'?'#a7670a':'#174979';
  actions.replaceChildren();
+ let input=null;
+ if(job.kind==='prompt'){
+   input=document.createElement('input');
+   input.className='bb-dialog-input';
+   input.type='text';
+   input.value=job.defaultValue||'';
+   input.placeholder=job.placeholder||'';
+   input.autocomplete='off';
+   message.insertAdjacentElement('afterend',input);
+ }
  const close=value=>{
+   input?.remove();
    root.hidden=true;active=false;
    document.removeEventListener('keydown',onKey,true);
    job.resolve(value);
    setTimeout(next,0);
  };
  const onKey=e=>{
-   if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close(job.kind==='confirm'?false:true)}
+   if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close(job.kind==='prompt'?null:job.kind==='confirm'?false:true)}
    if(e.key==='Enter'&&job.kind!=='confirm'){e.preventDefault();e.stopPropagation();close(true)}
  };
  document.addEventListener('keydown',onKey,true);
- if(job.kind==='confirm'){
-   const no=document.createElement('button');no.type='button';no.className='bb-dialog-btn bb-dialog-btn-secondary';no.textContent=job.cancelText||'Cancel';no.onclick=()=>close(false);
-   const yes=document.createElement('button');yes.type='button';yes.className='bb-dialog-btn bb-dialog-btn-primary';yes.textContent=job.okText||'Confirm';yes.onclick=()=>close(true);
-   actions.append(no,yes);yes.focus({preventScroll:true});
+ if(job.kind==='confirm'||job.kind==='prompt'){
+   const no=document.createElement('button');no.type='button';no.className='bb-dialog-btn bb-dialog-btn-secondary';no.textContent=job.cancelText||'Cancel';no.onclick=()=>close(job.kind==='prompt'?null:false);
+   const yes=document.createElement('button');yes.type='button';yes.className='bb-dialog-btn bb-dialog-btn-primary';yes.textContent=job.okText||'Confirm';yes.onclick=()=>close(job.kind==='prompt'?input.value:true);
+   actions.append(no,yes);
+   if(input){input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();yes.click()}});input.focus({preventScroll:true});}
+   else yes.focus({preventScroll:true});
  }else{
    const ok=document.createElement('button');ok.type='button';ok.className='bb-dialog-btn bb-dialog-btn-primary';ok.textContent=job.okText||'OK';ok.onclick=()=>close(true);
    actions.append(ok);ok.focus({preventScroll:true});
@@ -76,12 +89,14 @@ const api={
  alert(message,opts={}){return enqueue(opts.kind||'alert',message,opts)},
  success(message,opts={}){return enqueue('success',message,opts)},
  confirm(message,opts={}){return enqueue('confirm',message,opts)},
+ prompt(message,opts={}){return enqueue('prompt',message,opts)},
  installWindow(target){
    if(!target||target.__bbSystemDialogInstalled)return;
    try{
      target.__bbSystemDialogInstalled=true;
      target.bbAlert=(message,opts)=>api.alert(message,opts);
      target.bbConfirm=(message,opts)=>api.confirm(message,opts);
+     target.bbPrompt=(message,opts)=>api.prompt(message,opts);
      target.alert=(message)=>{void api.alert(message);};
    }catch(_){}
  }
