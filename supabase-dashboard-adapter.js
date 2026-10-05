@@ -2,7 +2,7 @@
    Keeps the current desktop adapter intact, then loads PC-only maintenance extensions. */
 (function(){
   'use strict';
-  document.write('<script src="supabase-dashboard-adapter-core-v1.3.js?v=20261005-angkor-login3"><\/script>');
+  document.write('<script src="supabase-dashboard-adapter-core-v1.3.js?v=20261005-angkor-login5"><\/script>');
   document.write('<script src="desktop-database-cleanup-menu-v1.js?v=20260921-cashreset2"><\/script>');
   document.write('<script src="desktop-telegram-manager-menu-v1.js?v=20260916-1"><\/script>');
 })();
