@@ -255,7 +255,7 @@ function shellCss(){return `
     inset:-5%!important;
     z-index:-2!important;
     pointer-events:none!important;
-    background:url("assets/big-brother-angkor-login.png?v=20261005-login15") center/cover no-repeat!important;
+    background:url("assets/big-brother-angkor-login.png?v=20261005-login16") center/cover no-repeat!important;
     filter:blur(16px) brightness(.72) saturate(1.04)!important;
     transform:scale(1.08)!important;
     opacity:.86!important;
@@ -269,7 +269,7 @@ function shellCss(){return `
     pointer-events:none!important;
     background:
       linear-gradient(180deg,rgba(32,18,7,.08),rgba(32,18,7,.04)),
-      url("assets/big-brother-angkor-login.png?v=20261005-login15") center center/100% auto no-repeat!important;
+      url("assets/big-brother-angkor-login.png?v=20261005-login16") center center/100% auto no-repeat!important;
   }
   html[data-bb-theme="premium-light"] .login-card{
     background:transparent!important;
@@ -308,7 +308,7 @@ function shellCss(){return `
   /* LOGIN V15 — authoritative V10 full-screen background.
      Must stay after older login theme rules so no contained image layer can win. */
   html[data-bb-theme="premium-light"] .login-screen{
-    background:#261507 url("assets/big-brother-angkor-login.png?v=20261005-login15") 72% center/cover no-repeat!important;
+    background:#261507 url("assets/big-brother-angkor-login.png?v=20261005-login16") 72% center/cover no-repeat!important;
     animation:bbMobileAngkorScreenPan 18s ease-in-out infinite alternate!important;
     overflow:hidden!important;
     isolation:isolate!important;
@@ -332,6 +332,23 @@ function shellCss(){return `
     z-index:0!important;
     pointer-events:none!important;
     background:linear-gradient(180deg,rgba(31,16,5,.03),rgba(31,16,5,.14))!important;
+  }
+
+  /* LOGIN V16 — dedicated moving image layer; form must never animate. */
+  html[data-bb-theme="premium-light"] .login-screen{
+    background:#261507!important;
+    animation:none!important;
+  }
+  html[data-bb-theme="premium-light"] .login-bg-pan{
+    background-image:url("assets/big-brother-angkor-login.png?v=20261005-login16")!important;
+    background-repeat:no-repeat!important;
+    background-size:cover!important;
+    background-position:72% center!important;
+    animation:bbLoginBgPanOnly 18s ease-in-out infinite alternate!important;
+  }
+  html[data-bb-theme="premium-light"] .login-card{
+    transform:none!important;
+    animation:none!important;
   }
 
   /* PREMIUM LIGHT — lighter tabs only; original cartoon/emoji icons preserved */
