@@ -15,7 +15,7 @@
   <link rel="manifest" href="manifest.webmanifest?v=20260927-autorotate1">
   <link rel="icon" href="pwa-icon.svg" type="image/svg+xml">
 
-  <link rel="stylesheet" href="mobile.css?v=20261003-khmerfont1">
+  <link rel="stylesheet" href="mobile.css?v=20261005-angkor-login1">
   <link rel="stylesheet" href="mobile-sales-support.css?v=20260921-overviewtap2">
   <link rel="stylesheet" href="pwa-install.css?v=20260920-ios1">
 
@@ -607,15 +607,17 @@
         id="loginForm"
         class="login-card">
 
+        <div class="login-mark" aria-hidden="true"></div>
+
         <div class="login-brand">
           BIG BROTHER
         </div>
 
-        <div class="login-sub">
-          Accounting System · Mobile
+        <div class="login-quote">
+          “From small beginnings to big achievements, we grow with trust, purpose, and vision.”
         </div>
 
-        <label for="loginEmail">
+        <label class="login-field-label" for="loginEmail">
           Email
         </label>
 
@@ -628,10 +630,10 @@
           autocapitalize="none"
           spellcheck="false"
           enterkeyhint="next"
-          placeholder="name@example.com"
+          placeholder="Email"
           required>
 
-        <label for="loginPassword">
+        <label class="login-field-label" for="loginPassword">
           Password
         </label>
 
@@ -658,7 +660,7 @@
         </div>
 
         <div class="login-helper">
-          Your email is remembered on this device. You normally only need to sign in once.
+          Secure access for approved BIG BROTHER accounts.
         </div>
 
         <button
