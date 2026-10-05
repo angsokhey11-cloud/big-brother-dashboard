@@ -179,11 +179,11 @@
     style.textContent=`
       .bb-auth-hidden{display:none!important}
       .bb-auth-version{position:absolute;top:14px;right:16px;z-index:3;padding:7px 10px;border:1px solid rgba(255,255,255,.62);border-radius:999px;background:rgba(46,27,11,.42);color:#fff8ec;font-size:10px;font-weight:900;letter-spacing:.45px;box-shadow:0 5px 18px rgba(0,0,0,.16);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);user-select:none}
-      .bb-auth-overlay{position:fixed;inset:0;z-index:999999;display:flex;align-items:center;justify-content:center;padding:18px;background:#2a1809 url("https://thumb.wikimedia.org/wikipedia/commons/thumb/8/85/Angkor_Wat_sunrise.jpg/1280px-Angkor_Wat_sunrise.jpg") center/cover no-repeat;overflow:hidden;isolation:isolate}
+      .bb-auth-overlay{position:fixed;inset:0;z-index:999999;display:flex;align-items:center;justify-content:center;padding:18px;background:#2a1809 url("assets/big-brother-angkor-login.png?v=20261005-login9") center/cover no-repeat;overflow:hidden;isolation:isolate}
       .bb-auth-overlay:before{content:"";position:absolute;inset:-3%;z-index:-1;pointer-events:none;background:radial-gradient(circle at 50% 46%,rgba(255,244,213,.16),transparent 27%),linear-gradient(180deg,rgba(45,25,8,.01),rgba(42,22,7,.10));animation:bbAngkorBreath 12s ease-in-out infinite alternate}
       @keyframes bbAngkorBreath{from{transform:scale(1);opacity:.82}to{transform:scale(1.012);opacity:1}}
-      .bb-auth-card{position:relative;z-index:1;width:min(350px,calc(100vw - 38px));padding:20px 18px 16px;background:transparent;border:0;border-radius:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;text-align:center;color:#4b2d13}
-      .bb-auth-card:before{content:"";position:absolute;z-index:-1;left:50%;top:50%;width:430px;height:410px;transform:translate(-50%,-50%);pointer-events:none;background:radial-gradient(ellipse at center,rgba(255,244,221,.34) 0%,rgba(255,239,203,.18) 38%,rgba(80,43,12,.05) 60%,transparent 74%);filter:blur(18px)}
+      .bb-auth-card{position:relative;z-index:1;width:min(360px,calc(100vw - 38px));padding:20px 18px 16px;background:transparent;border:0;border-radius:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;text-align:center;color:#3a2512}
+      .bb-auth-card:before{content:"";position:absolute;z-index:-1;left:50%;top:50%;width:430px;height:410px;transform:translate(-50%,-50%);pointer-events:none;background:radial-gradient(ellipse at center,rgba(255,245,222,.30) 0%,rgba(255,239,203,.14) 40%,rgba(54,30,10,.04) 62%,transparent 76%);filter:blur(18px)}
       .bb-auth-mark{width:58px;height:28px;margin:0 auto 8px;position:relative}
       .bb-auth-mark:before{content:"";position:absolute;left:10px;right:10px;bottom:2px;height:2px;background:#9b5c1b;border-radius:99px;box-shadow:0 -6px 0 -1px #9b5c1b}
       .bb-auth-brand{color:#4b2b12;font-size:28px;font-weight:900;letter-spacing:1.5px;text-shadow:0 1px 0 rgba(255,255,255,.65)}
@@ -197,7 +197,6 @@
       .bb-auth-btn:disabled{opacity:.55;cursor:wait;transform:none}
       .bb-auth-error{min-height:18px;margin-top:10px;padding:0 4px;color:#8f211d;font-size:11px;font-weight:800;text-shadow:0 1px 0 rgba(255,255,255,.45)}
       .bb-auth-note{margin-top:7px;color:#684d32;font-size:9px;line-height:1.4;text-shadow:0 1px 0 rgba(255,255,255,.4)}
-      .bb-auth-credit{position:absolute;left:14px;bottom:10px;z-index:3;color:rgba(255,255,255,.78);font-size:8px;text-shadow:0 1px 2px rgba(0,0,0,.45)}
       @media(max-width:620px){.bb-auth-overlay{padding:16px;background-position:72% center}.bb-auth-card{width:min(330px,calc(100vw - 28px));padding:18px 14px 14px}.bb-auth-card:before{width:390px;height:390px}.bb-auth-brand{font-size:24px}.bb-auth-quote{font-size:11px;margin-bottom:15px}}
       @media(prefers-reduced-motion:reduce){.bb-auth-overlay:before{animation:none}}
       .bb-user-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
@@ -216,7 +215,7 @@
   function showLogin(message=''){
     document.getElementById('bbDashboardLogin')?.remove();
     const overlay=document.createElement('div');overlay.id='bbDashboardLogin';overlay.className='bb-auth-overlay';
-    overlay.innerHTML=`<div class="bb-auth-version">LOGIN V8 · 05 OCT 2026</div><form class="bb-auth-card" id="bbDashboardLoginForm">
+    overlay.innerHTML=`<div class="bb-auth-version">LOGIN V9 · 05 OCT 2026</div><form class="bb-auth-card" id="bbDashboardLoginForm">
       <div class="bb-auth-mark" aria-hidden="true"></div>
       <div class="bb-auth-brand">BIG BROTHER</div>
       <div class="bb-auth-quote">“From small beginnings to big achievements, we grow with trust, purpose, and vision.”</div>
@@ -227,7 +226,6 @@
       <button class="bb-auth-btn" id="bbLoginButton" type="submit">Sign In</button>
       <div class="bb-auth-error" id="bbLoginError"></div>
       <div class="bb-auth-note">Secure access for approved BIG BROTHER accounts.</div>
-      <div class="bb-auth-credit">Angkor Wat background: mendhak · CC BY-SA 2.0</div>
     </form>`;
     document.body.appendChild(overlay);
     const err=document.getElementById('bbLoginError');if(message)err.textContent=message;
