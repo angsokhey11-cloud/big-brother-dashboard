@@ -178,6 +178,7 @@
     style.id='bbDashboardAuthStyle';
     style.textContent=`
       .bb-auth-hidden{display:none!important}
+      .bb-auth-version{position:absolute;top:14px;right:16px;z-index:3;padding:7px 10px;border:1px solid rgba(255,255,255,.55);border-radius:999px;background:rgba(38,23,10,.42);color:#fff7e8;font-size:10px;font-weight:900;letter-spacing:.45px;box-shadow:0 5px 18px rgba(0,0,0,.16);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);user-select:none}
       .bb-auth-overlay{position:fixed;inset:0;z-index:999999;display:flex;align-items:center;justify-content:center;padding:18px;background:#2a1809;overflow:hidden;isolation:isolate}
       .bb-auth-overlay:before,.bb-auth-overlay:after{content:"";position:absolute;top:0;bottom:0;width:50.5%;z-index:-2;pointer-events:none;background-image:url("assets/angkor-login-bg-hq.webp?v=20261005-login5");background-repeat:no-repeat;background-size:286% 100%;filter:saturate(1.03) contrast(1.02);animation:bbAngkorBreath 12s ease-in-out infinite alternate}
       .bb-auth-overlay:before{left:0;background-position:left center}
@@ -217,7 +218,7 @@
   function showLogin(message=''){
     document.getElementById('bbDashboardLogin')?.remove();
     const overlay=document.createElement('div');overlay.id='bbDashboardLogin';overlay.className='bb-auth-overlay';
-    overlay.innerHTML=`<form class="bb-auth-card" id="bbDashboardLoginForm">
+    overlay.innerHTML=`<div class="bb-auth-version">LOGIN V6 · 05 OCT 2026</div><form class="bb-auth-card" id="bbDashboardLoginForm">
       <div class="bb-auth-mark" aria-hidden="true"></div>
       <div class="bb-auth-brand">BIG BROTHER</div>
       <div class="bb-auth-quote">“From small beginnings to big achievements, we grow with trust, purpose, and vision.”</div>
