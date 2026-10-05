@@ -178,29 +178,26 @@
     style.id='bbDashboardAuthStyle';
     style.textContent=`
       .bb-auth-hidden{display:none!important}
-      .bb-auth-version{position:absolute;top:14px;right:16px;z-index:3;padding:7px 10px;border:1px solid rgba(255,255,255,.55);border-radius:999px;background:rgba(38,23,10,.42);color:#fff7e8;font-size:10px;font-weight:900;letter-spacing:.45px;box-shadow:0 5px 18px rgba(0,0,0,.16);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);user-select:none}
-      .bb-auth-overlay{position:fixed;inset:0;z-index:999999;display:flex;align-items:center;justify-content:center;padding:18px;background:#2a1809;overflow:hidden;isolation:isolate}
-      .bb-auth-overlay:before,.bb-auth-overlay:after{content:"";position:absolute;top:0;bottom:0;width:50.5%;z-index:-2;pointer-events:none;background-image:url("assets/angkor-login-bg-hq.webp?v=20261005-login5");background-repeat:no-repeat;background-size:286% 100%;filter:saturate(1.03) contrast(1.02);animation:bbAngkorBreath 12s ease-in-out infinite alternate}
-      .bb-auth-overlay:before{left:0;background-position:left center}
-      .bb-auth-overlay:after{right:0;background-position:right center}
-      @keyframes bbAngkorBreath{from{transform:scale(1);opacity:.97}to{transform:scale(1.012);opacity:1}}
-      .bb-auth-card{position:relative;z-index:1;width:min(360px,calc(100vw - 38px));padding:24px 20px 18px;background:transparent;border:0;border-radius:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;text-align:center;color:#3f2c19}
-      .bb-auth-card:before{content:"";position:absolute;z-index:-1;left:50%;top:50%;width:520px;height:480px;transform:translate(-50%,-50%);pointer-events:none;background:radial-gradient(ellipse at center,rgba(255,244,220,.34) 0%,rgba(255,236,197,.16) 38%,rgba(61,34,11,.08) 60%,transparent 74%);filter:blur(18px)}
+      .bb-auth-version{position:absolute;top:14px;right:16px;z-index:3;padding:7px 10px;border:1px solid rgba(255,255,255,.62);border-radius:999px;background:rgba(46,27,11,.42);color:#fff8ec;font-size:10px;font-weight:900;letter-spacing:.45px;box-shadow:0 5px 18px rgba(0,0,0,.16);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);user-select:none}
+      .bb-auth-overlay{position:fixed;inset:0;z-index:999999;display:flex;align-items:center;justify-content:center;padding:18px;background:#2a1809 url("assets/angkor-login-clean-v7.webp?v=20261005-login7") center/cover no-repeat;overflow:hidden;isolation:isolate}
+      .bb-auth-overlay:before{content:"";position:absolute;inset:-3%;z-index:-1;pointer-events:none;background:radial-gradient(circle at 50% 46%,rgba(255,244,213,.16),transparent 27%),linear-gradient(180deg,rgba(45,25,8,.01),rgba(42,22,7,.10));animation:bbAngkorBreath 12s ease-in-out infinite alternate}
+      @keyframes bbAngkorBreath{from{transform:scale(1);opacity:.82}to{transform:scale(1.012);opacity:1}}
+      .bb-auth-card{position:relative;z-index:1;width:min(350px,calc(100vw - 38px));padding:20px 18px 16px;background:transparent;border:0;border-radius:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;text-align:center;color:#4b2d13}
+      .bb-auth-card:before{content:"";position:absolute;z-index:-1;left:50%;top:50%;width:430px;height:410px;transform:translate(-50%,-50%);pointer-events:none;background:radial-gradient(ellipse at center,rgba(255,244,221,.34) 0%,rgba(255,239,203,.18) 38%,rgba(80,43,12,.05) 60%,transparent 74%);filter:blur(18px)}
       .bb-auth-mark{width:58px;height:28px;margin:0 auto 8px;position:relative}
-      .bb-auth-mark:before{content:"";position:absolute;left:10px;right:10px;bottom:2px;height:2px;background:#a86b21;border-radius:99px;box-shadow:0 -6px 0 -1px #a86b21}
-      .bb-auth-brand{color:#4a2d14;font-size:28px;font-weight:900;letter-spacing:1.5px;text-shadow:0 1px 0 rgba(255,255,255,.5)}
-      .bb-auth-quote{max-width:320px;margin:7px auto 18px;color:#684a2e;font-size:12px;line-height:1.5;font-weight:700}
+      .bb-auth-mark:before{content:"";position:absolute;left:10px;right:10px;bottom:2px;height:2px;background:#9b5c1b;border-radius:99px;box-shadow:0 -6px 0 -1px #9b5c1b}
+      .bb-auth-brand{color:#4b2b12;font-size:28px;font-weight:900;letter-spacing:1.5px;text-shadow:0 1px 0 rgba(255,255,255,.65)}
+      .bb-auth-quote{max-width:320px;margin:7px auto 18px;color:#5f4024;font-size:12px;line-height:1.5;font-weight:700;text-shadow:0 1px 0 rgba(255,255,255,.5)}
       .bb-auth-field{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
-      .bb-auth-input{width:100%;min-height:50px;border:1px solid rgba(255,255,255,.78);border-radius:14px;padding:11px 15px;font:inherit;font-size:14px;color:#402b18;background:rgba(255,252,245,.48);box-shadow:inset 0 1px 0 rgba(255,255,255,.52);outline:none;transition:.18s ease}
-      .bb-auth-input+.bb-auth-field,.bb-auth-input{margin-bottom:11px}
+      .bb-auth-input{width:100%;min-height:50px;border:1px solid rgba(255,255,255,.82);border-radius:14px;padding:11px 15px;font:inherit;font-size:14px;color:#402b18;background:rgba(255,250,241,.58);box-shadow:0 7px 18px rgba(79,43,12,.10),inset 0 1px 0 rgba(255,255,255,.65);outline:none;transition:.18s ease;margin-bottom:11px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
       .bb-auth-input::placeholder{color:#755f49}
-      .bb-auth-input:focus{background:rgba(255,255,255,.72);border-color:rgba(145,89,27,.58);box-shadow:0 0 0 3px rgba(173,112,42,.14),inset 0 1px 0 rgba(255,255,255,.7)}
+      .bb-auth-input:focus{background:rgba(255,255,255,.78);border-color:rgba(145,89,27,.58);box-shadow:0 0 0 3px rgba(173,112,42,.14),0 8px 22px rgba(79,43,12,.10)}
       .bb-auth-btn{width:100%;min-height:48px;border:1px solid rgba(85,47,16,.18);border-radius:13px;margin-top:3px;background:linear-gradient(135deg,#6c421d,#a46a28);color:#fff7e8;font-weight:900;letter-spacing:.3px;cursor:pointer;box-shadow:0 8px 20px rgba(88,49,15,.22)}
       .bb-auth-btn:hover{filter:brightness(1.06);transform:translateY(-1px)}
       .bb-auth-btn:disabled{opacity:.55;cursor:wait;transform:none}
       .bb-auth-error{min-height:18px;margin-top:10px;padding:0 4px;color:#8f211d;font-size:11px;font-weight:800;text-shadow:0 1px 0 rgba(255,255,255,.45)}
-      .bb-auth-note{margin-top:7px;color:#735c43;font-size:9px;line-height:1.4}
-      @media(max-width:620px){.bb-auth-overlay{padding:16px;background:#2a1809 url("assets/angkor-login-bg-hq.webp?v=20261005-login5") 78% center/auto 100% no-repeat}.bb-auth-overlay:before,.bb-auth-overlay:after{display:none}.bb-auth-card{width:min(340px,calc(100vw - 28px));padding:20px 16px 16px}.bb-auth-card:before{width:420px;height:430px}.bb-auth-brand{font-size:24px}.bb-auth-quote{font-size:11px;margin-bottom:15px}}
+      .bb-auth-note{margin-top:7px;color:#684d32;font-size:9px;line-height:1.4;text-shadow:0 1px 0 rgba(255,255,255,.4)}
+      @media(max-width:620px){.bb-auth-overlay{padding:16px;background-position:72% center}.bb-auth-card{width:min(330px,calc(100vw - 28px));padding:18px 14px 14px}.bb-auth-card:before{width:390px;height:390px}.bb-auth-brand{font-size:24px}.bb-auth-quote{font-size:11px;margin-bottom:15px}}
       @media(prefers-reduced-motion:reduce){.bb-auth-overlay:before{animation:none}}
       .bb-user-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
       .bb-user-signout{border:0;border-radius:999px;background:#fff0ef;color:#b42318;padding:8px 11px;font-size:11px;font-weight:900;cursor:pointer}
@@ -218,7 +215,7 @@
   function showLogin(message=''){
     document.getElementById('bbDashboardLogin')?.remove();
     const overlay=document.createElement('div');overlay.id='bbDashboardLogin';overlay.className='bb-auth-overlay';
-    overlay.innerHTML=`<div class="bb-auth-version">LOGIN V6 · 05 OCT 2026</div><form class="bb-auth-card" id="bbDashboardLoginForm">
+    overlay.innerHTML=`<div class="bb-auth-version">LOGIN V7 · 05 OCT 2026</div><form class="bb-auth-card" id="bbDashboardLoginForm">
       <div class="bb-auth-mark" aria-hidden="true"></div>
       <div class="bb-auth-brand">BIG BROTHER</div>
       <div class="bb-auth-quote">“From small beginnings to big achievements, we grow with trust, purpose, and vision.”</div>
