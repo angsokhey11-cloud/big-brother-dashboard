@@ -178,16 +178,27 @@
     style.id='bbDashboardAuthStyle';
     style.textContent=`
       .bb-auth-hidden{display:none!important}
-      .bb-auth-overlay{position:fixed;inset:0;z-index:999999;background:#eef3f8;display:flex;align-items:center;justify-content:center;padding:18px}
-      .bb-auth-card{width:min(430px,100%);background:#fff;border:1px solid #d9e2ef;border-radius:18px;padding:24px;box-shadow:0 18px 55px rgba(18,56,97,.16)}
-      .bb-auth-brand{color:#17457a;font-size:24px;font-weight:900;letter-spacing:.5px}
-      .bb-auth-sub{margin:6px 0 20px;color:#667085;font-size:13px;line-height:1.45}
-      .bb-auth-field{display:block;margin:10px 0 5px;color:#445b76;font-size:11px;font-weight:900;text-transform:uppercase}
-      .bb-auth-input{width:100%;min-height:46px;border:1px solid #cbd8e7;border-radius:10px;padding:10px 12px;font:inherit;color:#172b4d;background:#fff}
-      .bb-auth-btn{width:100%;min-height:46px;border:0;border-radius:10px;margin-top:15px;background:#17457a;color:#fff;font-weight:900;cursor:pointer}
-      .bb-auth-btn:disabled{opacity:.55;cursor:wait}
-      .bb-auth-error{min-height:18px;margin-top:10px;color:#b42318;font-size:12px;font-weight:700}
-      .bb-auth-note{margin-top:12px;color:#7a8da1;font-size:10px;line-height:1.45}
+      .bb-auth-overlay{position:fixed;inset:0;z-index:999999;display:flex;align-items:center;justify-content:center;padding:18px;background:#201508 url("assets/angkor-login-bg.webp?v=20261005-login1") center/cover no-repeat;overflow:hidden}
+      .bb-auth-overlay:before{content:"";position:absolute;inset:-4%;pointer-events:none;background:radial-gradient(circle at 50% 42%,rgba(255,243,205,.14),transparent 28%),linear-gradient(180deg,rgba(42,24,8,.03),rgba(31,17,6,.16));animation:bbAngkorBreath 12s ease-in-out infinite alternate}
+      .bb-auth-overlay:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(34,18,6,.15),transparent 28%,transparent 72%,rgba(34,18,6,.12))}
+      @keyframes bbAngkorBreath{from{transform:scale(1);opacity:.72}to{transform:scale(1.018);opacity:1}}
+      .bb-auth-card{position:relative;z-index:1;width:min(390px,calc(100vw - 38px));padding:30px 26px 24px;background:rgba(255,249,236,.18);border:1px solid rgba(255,255,255,.58);border-radius:22px;box-shadow:0 20px 60px rgba(69,38,9,.23),inset 0 1px 0 rgba(255,255,255,.42);backdrop-filter:blur(9px) saturate(112%);-webkit-backdrop-filter:blur(9px) saturate(112%);text-align:center;color:#3f2c19}
+      .bb-auth-mark{width:58px;height:28px;margin:0 auto 8px;position:relative}
+      .bb-auth-mark:before{content:"";position:absolute;left:10px;right:10px;bottom:2px;height:2px;background:#a86b21;border-radius:99px;box-shadow:0 -6px 0 -1px #a86b21}
+      .bb-auth-brand{color:#4a2d14;font-size:28px;font-weight:900;letter-spacing:1.5px;text-shadow:0 1px 0 rgba(255,255,255,.5)}
+      .bb-auth-quote{max-width:320px;margin:7px auto 18px;color:#684a2e;font-size:12px;line-height:1.5;font-weight:700}
+      .bb-auth-field{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+      .bb-auth-input{width:100%;min-height:50px;border:1px solid rgba(255,255,255,.78);border-radius:14px;padding:11px 15px;font:inherit;font-size:14px;color:#402b18;background:rgba(255,252,245,.48);box-shadow:inset 0 1px 0 rgba(255,255,255,.52);outline:none;transition:.18s ease}
+      .bb-auth-input+.bb-auth-field,.bb-auth-input{margin-bottom:11px}
+      .bb-auth-input::placeholder{color:#755f49}
+      .bb-auth-input:focus{background:rgba(255,255,255,.72);border-color:rgba(145,89,27,.58);box-shadow:0 0 0 3px rgba(173,112,42,.14),inset 0 1px 0 rgba(255,255,255,.7)}
+      .bb-auth-btn{width:100%;min-height:48px;border:1px solid rgba(85,47,16,.18);border-radius:13px;margin-top:3px;background:linear-gradient(135deg,#6c421d,#a46a28);color:#fff7e8;font-weight:900;letter-spacing:.3px;cursor:pointer;box-shadow:0 8px 20px rgba(88,49,15,.22)}
+      .bb-auth-btn:hover{filter:brightness(1.06);transform:translateY(-1px)}
+      .bb-auth-btn:disabled{opacity:.55;cursor:wait;transform:none}
+      .bb-auth-error{min-height:18px;margin-top:10px;padding:0 4px;color:#8f211d;font-size:11px;font-weight:800;text-shadow:0 1px 0 rgba(255,255,255,.45)}
+      .bb-auth-note{margin-top:7px;color:#735c43;font-size:9px;line-height:1.4}
+      @media(max-width:620px){.bb-auth-overlay{background-position:54% center;padding:16px}.bb-auth-card{width:min(350px,calc(100vw - 28px));padding:24px 20px 20px;border-radius:20px}.bb-auth-brand{font-size:24px}.bb-auth-quote{font-size:11px;margin-bottom:15px}}
+      @media(prefers-reduced-motion:reduce){.bb-auth-overlay:before{animation:none}}
       .bb-user-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
       .bb-user-signout{border:0;border-radius:999px;background:#fff0ef;color:#b42318;padding:8px 11px;font-size:11px;font-weight:900;cursor:pointer}
       .bb-access-toast{position:fixed;right:18px;bottom:18px;z-index:999998;background:#7a271a;color:#fff;padding:11px 14px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.18);font-size:12px;font-weight:800}
@@ -205,15 +216,16 @@
     document.getElementById('bbDashboardLogin')?.remove();
     const overlay=document.createElement('div');overlay.id='bbDashboardLogin';overlay.className='bb-auth-overlay';
     overlay.innerHTML=`<form class="bb-auth-card" id="bbDashboardLoginForm">
+      <div class="bb-auth-mark" aria-hidden="true"></div>
       <div class="bb-auth-brand">BIG BROTHER</div>
-      <div class="bb-auth-sub">Sign in to the Accounting System with your Supabase user account.</div>
+      <div class="bb-auth-quote">“From small beginnings to big achievements, we grow with trust, purpose, and vision.”</div>
       <label class="bb-auth-field" for="bbLoginEmail">Email</label>
-      <input class="bb-auth-input" id="bbLoginEmail" type="email" autocomplete="username" required>
+      <input class="bb-auth-input" id="bbLoginEmail" type="email" autocomplete="username" placeholder="Email" required>
       <label class="bb-auth-field" for="bbLoginPassword">Password</label>
-      <input class="bb-auth-input" id="bbLoginPassword" type="password" autocomplete="current-password" required>
+      <input class="bb-auth-input" id="bbLoginPassword" type="password" autocomplete="current-password" placeholder="Password" required>
       <button class="bb-auth-btn" id="bbLoginButton" type="submit">Sign In</button>
       <div class="bb-auth-error" id="bbLoginError"></div>
-      <div class="bb-auth-note">Only BIG BROTHER accounts approved in Supabase can access this dashboard.</div>
+      <div class="bb-auth-note">Secure access for approved BIG BROTHER accounts.</div>
     </form>`;
     document.body.appendChild(overlay);
     const err=document.getElementById('bbLoginError');if(message)err.textContent=message;
