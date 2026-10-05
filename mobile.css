@@ -101,7 +101,7 @@ html.bb-bottom-nav-collapsed .bb-bottom-nav-collapse{
    Login shell only — dashboard/function UI is untouched.
    ===================================================== */
 .login-screen{
-  background:#261507 url("assets/angkor-login-bg.webp?v=20261005-login3") 54% center/cover no-repeat !important;
+  background:#261507 url("assets/angkor-login-bg-hq.webp?v=20261005-login5") 78% center/auto 100% no-repeat !important;
   position:fixed;
   isolation:isolate;
 }
@@ -130,13 +130,13 @@ html.bb-bottom-nav-collapsed .bb-bottom-nav-collapse{
 }
 .login-card{
   width:min(100%,360px) !important;
-  background:rgba(255,249,236,.18) !important;
-  border:1px solid rgba(255,255,255,.58) !important;
-  border-radius:22px !important;
-  padding:24px 20px 20px !important;
-  box-shadow:0 20px 58px rgba(65,35,8,.25),inset 0 1px 0 rgba(255,255,255,.42) !important;
-  backdrop-filter:blur(9px) saturate(112%);
-  -webkit-backdrop-filter:blur(9px) saturate(112%);
+  background:transparent !important;
+  border:0 !important;
+  border-radius:0 !important;
+  padding:22px 18px 16px !important;
+  box-shadow:none !important;
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
   color:#432e19;
   text-align:center;
 }
@@ -255,3 +255,18 @@ html.bb-bottom-nav-collapsed .bb-bottom-nav-collapse{
 @media(prefers-reduced-motion:reduce){
   .login-screen::before{animation:none}
 }
+
+.login-card::before{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  left:50%;
+  top:50%;
+  width:430px;
+  height:460px;
+  transform:translate(-50%,-50%);
+  pointer-events:none;
+  background:radial-gradient(ellipse at center,rgba(255,244,220,.34) 0%,rgba(255,236,197,.15) 40%,rgba(57,31,10,.06) 62%,transparent 76%);
+  filter:blur(16px);
+}
+.login-card{position:relative!important;z-index:1}
