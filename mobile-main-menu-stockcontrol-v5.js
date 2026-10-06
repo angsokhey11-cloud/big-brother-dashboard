@@ -9,6 +9,7 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 
 const META={
  'stock-control-allocation':['Stock Control','📦','Stock Allocation'],
+ 'stock-control-batch-transfer':['Stock Control','🔀','Batch Transfer'],
  'stock-control-back-sale':['Stock Control','↩️','Back Sale'],
  'sales-support-calculator':['Sales Support','🧮','Calculator'],
  'sales-support-request-delivery':['Sales Support','🚚','Request Delivery'],
@@ -89,6 +90,7 @@ const META={
 
 const MOBILE={
  'stock-control-allocation':'https://angsokhey11-cloud.github.io/big-brother-stock-allocation/mobile.html?embed=1&v=20261002-mobile1',
+ 'stock-control-batch-transfer':'https://angsokhey11-cloud.github.io/big-brother-stock-allocation/batch-transfer.html?embed=1&mobile=1&v=20261006-1',
  'stock-control-back-sale':'https://angsokhey11-cloud.github.io/big-brother-stock-allocation/back-sale-mobile.html?embed=1&v=20261002-mobile1',
  'invoice':'https://angsokhey11-cloud.github.io/big-brother-invoice-generator/mobile.html?embed=1&v=20261001-scanfix2',
  'history':'https://angsokhey11-cloud.github.io/invoice-history/invoice-history-mobile.html?embed=1&v=20261001-creditdigitalfix4',
