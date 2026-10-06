@@ -90,7 +90,7 @@ const META={
 
 const MOBILE={
  'stock-control-allocation':'https://angsokhey11-cloud.github.io/big-brother-stock-allocation/mobile.html?embed=1&v=20261002-mobile1',
- 'stock-control-batch-transfer':'https://angsokhey11-cloud.github.io/big-brother-stock-allocation/batch-transfer.html?embed=1&mobile=1&v=20261006-1',
+ 'stock-control-batch-transfer':'https://angsokhey11-cloud.github.io/big-brother-stock-allocation/batch-transfer.html?embed=1&mobile=1&v=20261006-3',
  'stock-control-back-sale':'https://angsokhey11-cloud.github.io/big-brother-stock-allocation/back-sale-mobile.html?embed=1&v=20261002-mobile1',
  'invoice':'https://angsokhey11-cloud.github.io/big-brother-invoice-generator/mobile.html?embed=1&v=20261001-scanfix2',
  'history':'https://angsokhey11-cloud.github.io/invoice-history/invoice-history-mobile.html?embed=1&v=20261001-creditdigitalfix4',
@@ -113,7 +113,7 @@ const MOBILE={
  'ar-your':'https://angsokhey11-cloud.github.io/big-brother-ar/your-receivable-mobile.html?embed=1&v=20261001-batchreal3',
  'ar-payment-history':'https://angsokhey11-cloud.github.io/big-brother-payment-history/receivable-mobile.html?embed=1&v=20260915-clean2',
 
- 'stock-keyin':'https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/mobile.html?embed=1&v=20260926-desktopwide2',
+ 'stock-keyin':'https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/mobile.html?embed=1&v=20261006-batchtransfer3',
  'stock-damaged-report':'https://angsokhey11-cloud.github.io/big-brother-stock-report/damage-stock-report-mobile.html?embed=1&v=20260915-3',
  'stock-damaged-cleared':'https://angsokhey11-cloud.github.io/big-brother-stock-report/damaged-stock-cleared-mobile.html?embed=1&v=20260915-2',
  'stock-damaged-accounting':'https://angsokhey11-cloud.github.io/big-brother-damaged-stock/accounting-mobile.html?embed=1&v=20260915-3',
