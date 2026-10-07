@@ -89,7 +89,7 @@ const BASE_ROUTES=new Set([
 
 const MOBILE_URLS={
   'stock-control-allocation':'big-brother-stock-allocation/mobile.html?embed=1&v=20261002-mobile1',
-  'stock-control-batch-transfer':'big-brother-stock-allocation/batch-transfer.html?embed=1&mobile=1&v=20261006-3',
+  'stock-control-batch-transfer':'big-brother-stock-allocation/batch-transfer-mobile.html?embed=1&v=20261008-mobile1',
   'stock-control-back-sale':'big-brother-stock-allocation/back-sale-mobile.html?embed=1&v=20261002-mobile1',
   'real-invoice':'big-brother-real-invoice/?embed=1&v=20261001-photo-buttons3',
   'stock-pending-borrow':'big-brother-stock-managemenet/pending-borrowed-stock.html?embed=1&mobile=1&v=20261001-compactreceipt3',
