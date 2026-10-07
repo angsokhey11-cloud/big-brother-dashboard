@@ -40,6 +40,7 @@
     'cogs-monthly':{module:'expenses',action:'view'},
     'master-expense-categories':{module:'master_data',action:'edit',adminOnly:true},
     'stock-control-allocation':{module:'route.stock-control-allocation',action:'view'},
+    'stock-control-batch-transfer':{module:'route.stock-control-batch-transfer',action:'view'},
     'stock-control-back-sale':{module:'route.stock-control-back-sale',action:'view'},
     'stock-keyin':{module:'Stock Management',action:'view'},
     'stock-pending-borrow':{module:'route.stock-pending-borrow',action:'view'},
