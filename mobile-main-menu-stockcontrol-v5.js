@@ -90,7 +90,7 @@ const META={
 
 const MOBILE={
  'stock-control-allocation':'https://angsokhey11-cloud.github.io/big-brother-stock-allocation/mobile.html?embed=1&v=20261002-mobile1',
- 'stock-control-batch-transfer':'https://angsokhey11-cloud.github.io/big-brother-stock-allocation/batch-transfer.html?embed=1&mobile=1&v=20261006-3',
+ 'stock-control-batch-transfer':'https://angsokhey11-cloud.github.io/big-brother-stock-allocation/batch-transfer-mobile.html?embed=1&v=20261008-mobile1',
  'stock-control-back-sale':'https://angsokhey11-cloud.github.io/big-brother-stock-allocation/back-sale-mobile.html?embed=1&v=20261002-mobile1',
  'invoice':'https://angsokhey11-cloud.github.io/big-brother-invoice-generator/mobile.html?embed=1&v=20261001-scanfix2',
  'history':'https://angsokhey11-cloud.github.io/invoice-history/invoice-history-mobile.html?embed=1&v=20261001-creditdigitalfix4',
