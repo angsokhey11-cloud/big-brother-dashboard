@@ -1242,6 +1242,9 @@ body{
       'big-brother-stock-allocation/?embed=1&v=25',
       'big-brother-stock-allocation/?embed=1&v=20261003-shared-desktop1'
     ).replaceAll(
+      'big-brother-stock-allocation/batch-transfer.html?embed=1&v=20261006-3',
+      'big-brother-stock-allocation/batch-transfer.html?embed=1&v=20261008-dashboard1'
+    ).replaceAll(
       'big-brother-stock-allocation/back-sale.html?embed=1&v=14',
       'big-brother-stock-allocation/back-sale.html?embed=1&v=20261003-shared-desktop1'
     );
@@ -1254,6 +1257,7 @@ body{
     if(dialogBodyClose<0)throw Error('Dashboard body closing tag missing for dialog layer.');
     html=html.slice(0,dialogBodyClose)
       +'<scr'+'ipt>(function(){const install=function(){const f=document.getElementById("moduleFrame");if(!f)return;const apply=function(){try{window.BBSystemDialog?.installWindow(f.contentWindow);}catch(_){}};f.addEventListener("load",()=>setTimeout(apply,50));apply();};if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",install,{once:true});else install();})();</scr'+'ipt>'
+      +'<scr'+'ipt>(function(){const routes=["stock-control-allocation","stock-control-batch-transfer","stock-control-back-sale"];const original=window.setShellActive;if(typeof original!=="function"||original.__bbStockControlPatched)return;const enhanced=function(moduleName){original.call(this,moduleName);const active=routes.includes(moduleName);const sub=document.getElementById("stockControlSubmenu");const btn=document.getElementById("stockControlMenuButton");if(sub)sub.classList.toggle("open",active);if(btn){btn.classList.toggle("open",active);btn.setAttribute("aria-expanded",String(active));const arrow=btn.querySelector(".nav-arrow");if(arrow)arrow.textContent=active?"▲":"▼";}["navStockAllocation","navBatchTransfer","navBackSale"].forEach(id=>document.getElementById(id)?.classList.remove("active"));if(active){document.getElementById("navDashboard")?.classList.remove("active");const id=moduleName==="stock-control-allocation"?"navStockAllocation":moduleName==="stock-control-batch-transfer"?"navBatchTransfer":"navBackSale";document.getElementById(id)?.classList.add("active");}};enhanced.__bbStockControlPatched=true;window.setShellActive=enhanced;})();</scr'+'ipt>'
       +html.slice(dialogBodyClose);
 
     document.open();
