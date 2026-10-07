@@ -25,7 +25,7 @@ const GROUP={
   'ar-all':'Receivable','ar-your':'Receivable','ar-payment-history':'Receivable',
   'ar-daily-receivable-cash':'Receivable',
 
-  'stock-control-allocation':'Stock Control','stock-control-back-sale':'Stock Control',
+  'stock-control-allocation':'Stock Control','stock-control-batch-transfer':'Stock Control','stock-control-back-sale':'Stock Control',
   'stock-keyin':'Stock','stock-damaged':'Stock','stock-damaged-report':'Stock',
   'stock-damaged-cleared':'Stock','stock-damaged-accounting':'Stock','stock-report':'Stock',
   'batch-report':'Stock','closed-batch':'Stock','stock-transactions':'Stock','stock-alerts':'Stock',
