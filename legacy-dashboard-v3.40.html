@@ -2054,13 +2054,34 @@
       !sameModule ||
       invoiceFrameOutdated
     ) {
-      frame.dataset.module = moduleName;
+      const previousModule = frame.dataset.module || '';
       const separator = url.includes('?') ? '&' : '?';
-      frame.src =
-        url +
-        separator +
-        'shellModule=' +
+      const targetUrl = url + separator + 'shellModule=' +
         encodeURIComponent(moduleName);
+      frame.dataset.module = moduleName;
+
+      /*
+       * V3.40 navigation correction:
+       * Switching between two modules must unload the old module first,
+       * just like the already-reliable Module -> Dashboard transition.
+       * Defer loading the replacement until the blank navigation begins.
+       * Token prevents an older queued switch from reopening the wrong app.
+       */
+      const switchToken = String(
+        Number(frame.dataset.bbSwitchToken || 0) + 1
+      );
+      frame.dataset.bbSwitchToken = switchToken;
+      if (previousModule && previousModule !== moduleName) {
+        frame.src = 'about:blank';
+        requestAnimationFrame(() => {
+          if (frame.dataset.bbSwitchToken === switchToken &&
+              frame.dataset.module === moduleName) {
+            frame.src = targetUrl;
+          }
+        });
+      } else {
+        frame.src = targetUrl;
+      }
     }
 
     setShellActive(moduleName);
