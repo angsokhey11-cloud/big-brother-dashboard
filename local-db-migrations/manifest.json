@@ -1,0 +1,13 @@
+{
+  "manifestVersion": 1,
+  "system": "BIG_BROTHER_LOCAL_BRAIN",
+  "sourceRepository": "angsokhey11-cloud/big-brother-dashboard",
+  "migrations": [
+    {
+      "id": "20261015_batch_edit_all_active_staff",
+      "file": "20261015_batch_edit_all_active_staff.sql",
+      "sha256": "E8F6F45A60C512490171724F571C55B629EF8CC75F6FAC370CB4F3B3D0645E04",
+      "description": "Batch Editor Driver 1/2: allow all active staff; preserve other stock and correction safeguards"
+    }
+  ]
+}
