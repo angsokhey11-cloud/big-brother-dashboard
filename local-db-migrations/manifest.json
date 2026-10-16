@@ -12,8 +12,8 @@
     {
       "id": "20261016_bank_manual_transaction_admin_only",
       "file": "20261016_bank_manual_transaction_admin_only.sql",
-      "sha256": "E7DE42D20916280855C8A500B54608B1F6F474E11926D2ABB16964E6F80DCEEC",
-      "description": "Bank Transaction ID: manual entry Admin-only for Invoice and Receivable; preserve optional registered-balance Use and existing safeguards"
+      "sha256": "6192FEABE3E741F516493A3806C41F75EF7071C08E948BFCA8D93EA299B4CBA3",
+      "description": "Safely restrict manually entered bank Transaction IDs to Admin; supports inspected legacy and modern Local guards without changing payment flow"
     },
     {
       "id": "20261016_restore_bank_balance_snapshot_view",
