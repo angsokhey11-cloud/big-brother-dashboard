@@ -12,8 +12,8 @@
     {
       "id": "20261016_bank_manual_transaction_admin_only",
       "file": "20261016_bank_manual_transaction_admin_only.sql",
-      "sha256": "0A4E135F9B6708593063B4133DF2A2A329F4B1ECE6A7147891D008A98909ED16",
-      "description": "Audited Local legacy bank payment guard: Admin-only new bank IDs, preserving existing full-payment logic; modern flow supported too"
+      "sha256": "3C2553DEE4EA5394323BE3627F410B6CE225537AE354F65A0124E2CA4A517ADA",
+      "description": "Audited legacy Local bank security patch with validated PostgreSQL quote-safe signature matching"
     },
     {
       "id": "20261016_restore_bank_balance_snapshot_view",
