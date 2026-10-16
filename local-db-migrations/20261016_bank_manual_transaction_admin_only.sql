@@ -79,7 +79,8 @@ BEGIN
      AND position('update public.bb_verified_bank_transactions set status=''USED''' IN v_guard)>0
      AND position('pg_advisory_xact_lock' IN v_guard)>0
      AND position('bb_bank_balance_allocations' IN v_guard)=0
-     AND position(v_validation_old IN v_validation)>0
+     AND position('select * into reg from public.bb_verified_bank_transactions where upper(trim(transaction_id))=upper(trim(coalesce(p_transaction_id,''))) and status=''AVAILABLE'';' IN v_validation)>0
+     AND position('if not found then return public.bb_is_admin();end if;' IN v_validation)>0
      AND position('bb_bank_balance_allocations' IN v_validation)=0
   THEN
     DECLARE
