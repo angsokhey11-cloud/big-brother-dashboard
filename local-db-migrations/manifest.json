@@ -14,6 +14,12 @@
       "file": "20261016_bank_manual_transaction_admin_only.sql",
       "sha256": "E7DE42D20916280855C8A500B54608B1F6F474E11926D2ABB16964E6F80DCEEC",
       "description": "Bank Transaction ID: manual entry Admin-only for Invoice and Receivable; preserve optional registered-balance Use and existing safeguards"
+    },
+    {
+      "id": "20261016_restore_bank_balance_snapshot_view",
+      "file": "20261016_restore_bank_balance_snapshot_view.sql",
+      "sha256": "650AFD5653EC470E33E4FAE065355942C274C556BDFF2998171975B48F72D2A8",
+      "description": "Restore missing Local bank balance snapshot view for Invoice and Receivable; no business-data changes"
     }
   ]
 }
