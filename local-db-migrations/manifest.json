@@ -12,7 +12,7 @@
     {
       "id": "20261016_bank_manual_transaction_admin_only",
       "file": "20261016_bank_manual_transaction_admin_only.sql",
-      "sha256": "BF124C6F36EA4B3BD6316C1963CC243ED03E47DB937DD287AD7B6EF593A55432",
+      "sha256": "E7DE42D20916280855C8A500B54608B1F6F474E11926D2ABB16964E6F80DCEEC",
       "description": "Bank Transaction ID: manual entry Admin-only for Invoice and Receivable; preserve optional registered-balance Use and existing safeguards"
     }
   ]
