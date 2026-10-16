@@ -12,8 +12,8 @@
     {
       "id": "20261016_bank_manual_transaction_admin_only",
       "file": "20261016_bank_manual_transaction_admin_only.sql",
-      "sha256": "6192FEABE3E741F516493A3806C41F75EF7071C08E948BFCA8D93EA299B4CBA3",
-      "description": "Safely restrict manually entered bank Transaction IDs to Admin; supports inspected legacy and modern Local guards without changing payment flow"
+      "sha256": "F5DF45CC34165869C3C0B2F2E736B1B3B1CFD4D81D7225B1F67A45C02318A063",
+      "description": "Audited Local legacy bank payment guard: Admin-only new bank IDs, preserving existing full-payment logic; modern flow supported too"
     },
     {
       "id": "20261016_restore_bank_balance_snapshot_view",
