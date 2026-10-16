@@ -8,6 +8,12 @@
       "file": "20261015_batch_edit_all_active_staff.sql",
       "sha256": "E8F6F45A60C512490171724F571C55B629EF8CC75F6FAC370CB4F3B3D0645E04",
       "description": "Batch Editor Driver 1/2: allow all active staff; preserve other stock and correction safeguards"
+    },
+    {
+      "id": "20261016_bank_manual_transaction_admin_only",
+      "file": "20261016_bank_manual_transaction_admin_only.sql",
+      "sha256": "BF124C6F36EA4B3BD6316C1963CC243ED03E47DB937DD287AD7B6EF593A55432",
+      "description": "Bank Transaction ID: manual entry Admin-only for Invoice and Receivable; preserve optional registered-balance Use and existing safeguards"
     }
   ]
 }
