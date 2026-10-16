@@ -69,12 +69,19 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'LOCAL BANK LOCK STOPPED: Bank payment trigger missing, disabled or changed';
   END IF;
-  -- Audited 2026-10-16 Local legacy variant, identified by exact source fingerprints
+  -- Audited 2026-10-16 Local legacy variant, identified by verified source structure
   -- obtained from the user's READ-ONLY Local Postgres inspection.
   -- Preserve its existing full-payment bank logic; change ONLY the non-INVOICE
   -- unregistered bank Transaction ID path to Admin-only.
-  IF md5(btrim(v_validation))='b5c68aa92126606995ec7b6c3152d077'
-     AND md5(btrim(v_guard))='464dd31e79b577cb2437ba401e4b34ad' THEN
+  IF position('if upper(trim(coalesce(new.payment_source,'')))=''INVOICE'' then' IN v_guard)>0
+     AND position('if not public.bb_is_admin() then raise exception ''Bank Transaction ID not verified or already used.' IN v_guard)>0
+     AND position('select * into reg from public.bb_verified_bank_transactions where upper(trim(transaction_id))=tid for update;' IN v_guard)>0
+     AND position('update public.bb_verified_bank_transactions set status=''USED''' IN v_guard)>0
+     AND position('pg_advisory_xact_lock' IN v_guard)>0
+     AND position('bb_bank_balance_allocations' IN v_guard)=0
+     AND position(v_validation_old IN v_validation)>0
+     AND position('bb_bank_balance_allocations' IN v_validation)=0
+  THEN
     DECLARE
       v_legacy_before text := $leg_before$if exists(select 1 from public.bb_verified_bank_transactions where upper(trim(transaction_id))=tid) then raise exception 'Transaction ID is reserved for a verified Invoice Generator payment';end if;$leg_before$;
       v_legacy_after text := $leg_after$if exists(select 1 from public.bb_verified_bank_transactions where upper(trim(transaction_id))=tid) then raise exception 'Transaction ID is reserved for a verified Invoice Generator payment';end if;
