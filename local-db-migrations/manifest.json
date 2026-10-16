@@ -12,7 +12,7 @@
     {
       "id": "20261016_bank_manual_transaction_admin_only",
       "file": "20261016_bank_manual_transaction_admin_only.sql",
-      "sha256": "F5DF45CC34165869C3C0B2F2E736B1B3B1CFD4D81D7225B1F67A45C02318A063",
+      "sha256": "0A4E135F9B6708593063B4133DF2A2A329F4B1ECE6A7147891D008A98909ED16",
       "description": "Audited Local legacy bank payment guard: Admin-only new bank IDs, preserving existing full-payment logic; modern flow supported too"
     },
     {
