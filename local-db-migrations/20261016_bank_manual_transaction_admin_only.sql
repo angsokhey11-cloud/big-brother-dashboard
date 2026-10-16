@@ -57,6 +57,18 @@ BEGIN
     INTO v_validation;
   SELECT pg_get_functiondef('private.bb_bank_guard_payment()'::regprocedure)
     INTO v_guard;
+  IF to_regclass('public.payments') IS NULL THEN
+    RAISE EXCEPTION 'LOCAL BANK LOCK STOPPED: payments table missing';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger t
+    WHERE t.tgrelid='public.payments'::regclass
+      AND t.tgname='bb_bank_guard_payment_insert'
+      AND t.tgenabled IN ('O','A')
+      AND t.tgfoid='private.bb_bank_guard_payment()'::regprocedure
+  ) THEN
+    RAISE EXCEPTION 'LOCAL BANK LOCK STOPPED: Bank payment trigger missing, disabled or changed';
+  END IF;
   IF position('bb_bank_balance_allocations' IN v_validation)=0
     OR position('p_customer_id' IN v_validation)=0
     OR position('bb_bank_balance_allocations' IN v_guard)=0
