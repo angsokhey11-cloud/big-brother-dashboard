@@ -73,13 +73,13 @@ BEGIN
   -- obtained from the user's READ-ONLY Local Postgres inspection.
   -- Preserve its existing full-payment bank logic; change ONLY the non-INVOICE
   -- unregistered bank Transaction ID path to Admin-only.
-  IF position('if upper(trim(coalesce(new.payment_source,'')))=''INVOICE'' then' IN v_guard)>0
+  IF position('if upper(trim(coalesce(new.payment_source,'''')))=''INVOICE'' then' IN v_guard)>0
      AND position('if not public.bb_is_admin() then raise exception ''Bank Transaction ID not verified or already used.' IN v_guard)>0
      AND position('select * into reg from public.bb_verified_bank_transactions where upper(trim(transaction_id))=tid for update;' IN v_guard)>0
      AND position('update public.bb_verified_bank_transactions set status=''USED''' IN v_guard)>0
      AND position('pg_advisory_xact_lock' IN v_guard)>0
      AND position('bb_bank_balance_allocations' IN v_guard)=0
-     AND position('select * into reg from public.bb_verified_bank_transactions where upper(trim(transaction_id))=upper(trim(coalesce(p_transaction_id,''))) and status=''AVAILABLE'';' IN v_validation)>0
+     AND position('select * into reg from public.bb_verified_bank_transactions where upper(trim(transaction_id))=upper(trim(coalesce(p_transaction_id,''''))) and status=''AVAILABLE'';' IN v_validation)>0
      AND position('if not found then return public.bb_is_admin();end if;' IN v_validation)>0
      AND position('bb_bank_balance_allocations' IN v_validation)=0
   THEN
