@@ -3,7 +3,7 @@
 'use strict';
 
 const ROUTE='sales-support-your-collection';
-const URL='https://angsokhey11-cloud.github.io/big-brother-daily-cash-collection/your-collection.html?embed=1&v=20260914-1';
+const URL='https://angsokhey11-cloud.github.io/big-brother-daily-cash-collection/your-collection.html?embed=1&v=20261017-crossday-byid1';
 let restoreDone=false;
 
 const key=v=>String(v||'').trim().toLowerCase();
