@@ -32,6 +32,12 @@
       "file": "20261017_borrow_clear_adjustment_out_visibility.sql",
       "sha256": "3E68E844DEECAF43E161ED7A3CB70FDBF6A2CCEE955640FC9A11C7D9AEBECBB7",
       "description": "Expose existing Borrow Clear stock outflows in Your Stock Adjustment OUT/history; preserve stock data"
+    },
+    {
+      "id": "20261017_borrow_in_adjustment_in_visibility",
+      "file": "20261017_borrow_in_adjustment_in_visibility.sql",
+      "sha256": "2FD8D9174FFED9F86DCBC22FBB7BF44FD34E03F815FE66A614A92257E71AEBF2",
+      "description": "Show existing Borrow Stock customer inflows as Adjustment IN in Your Stock/history; preserve batch amounts and COGS"
     }
   ]
 }
