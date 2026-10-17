@@ -228,7 +228,7 @@ begin
     'status','Pending'
   );
 end;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.bb_dcc_mobile_create_request(p_payload jsonb)
  RETURNS jsonb
@@ -381,7 +381,7 @@ begin
     'status','Pending'
   );
 end;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.bb_sales_support_your_collection_create_request(p_payload jsonb)
  RETURNS jsonb
@@ -664,7 +664,7 @@ begin
     'status','Pending'
   );
 end;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.bb_sales_support_your_collection_invoice_detail_by_id(p_invoice_id text)
  RETURNS jsonb
@@ -761,7 +761,7 @@ begin
   v_invoice:=v_invoice || jsonb_build_object('items',v_items,'payments',v_payments,'returns',v_returns);
   return jsonb_build_object('success',true,'revision',public.bb_sales_support_your_collection_revision(),'invoice',v_invoice);
 end;
-$function$
+$function$;
 
 REVOKE ALL ON FUNCTION public.bb_sales_support_your_collection_invoice_detail_by_id(text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.bb_sales_support_your_collection_invoice_detail_by_id(text) TO authenticated;
