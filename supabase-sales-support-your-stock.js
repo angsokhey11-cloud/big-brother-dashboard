@@ -3,7 +3,7 @@
 'use strict';
 
 const ROUTE='sales-support-your-stock';
-const URL='https://angsokhey11-cloud.github.io/big-brother-sales-support/your-stock.html?embed=1&v=20261001-admin-damage3';
+const URL='https://angsokhey11-cloud.github.io/big-brother-sales-support/your-stock.html?embed=1&v=20261017-borrow-clear-out1';
 const LIVE_REFRESH_MS=10000;
 let restoreDone=false;
 let liveTimer=null;
