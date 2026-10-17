@@ -357,6 +357,7 @@ function renderStaff(d){
         </div>
       </div>
     </section>`;
+  window.BBStaffDesktopEnhancer?.enhance?.();
 }
 
 function homeVisible(){
@@ -465,6 +466,13 @@ function ready(){
   if(!p){setTimeout(ready,120);return}
   installed=true;
   styles();
+  if(!document.getElementById('bbDesktopStaffEnhancerScript')){
+    const extra=document.createElement('script');
+    extra.id='bbDesktopStaffEnhancerScript';
+    extra.src='desktop-staff-overview-enhancer-v1.js?v=20261017-1';
+    extra.async=true;
+    document.head.appendChild(extra);
+  }
   if(layout()){
     load();
     installLiveRefresh();
@@ -474,7 +482,8 @@ function ready(){
 window.BBMonthlyOverview={
   openShortcut,
   load,
-  refreshLive
+  refreshLive,
+  staffEarnings:()=>rpc('bb_staff_relation_my_payments',{p_from:null,p_to:null,p_salary_month:null})
 };
 if(document.readyState==='loading')window.addEventListener('DOMContentLoaded',()=>setTimeout(ready,80));else setTimeout(ready,80);
 })();
