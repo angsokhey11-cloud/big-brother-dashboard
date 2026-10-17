@@ -26,6 +26,12 @@
       "file": "20261017_collection_crossday_and_your_detail_by_id.sql",
       "sha256": "2A4B4CFFAAA9B0FF30A660E779637E985B41CA9A19F3443640D6B9E60209852E",
       "description": "Allow cross-day cash close requests for the same location/salesman; provide scoped Invoice-ID product detail in Your Collection"
+    },
+    {
+      "id": "20261017_borrow_clear_adjustment_out_visibility",
+      "file": "20261017_borrow_clear_adjustment_out_visibility.sql",
+      "sha256": "3E68E844DEECAF43E161ED7A3CB70FDBF6A2CCEE955640FC9A11C7D9AEBECBB7",
+      "description": "Expose existing Borrow Clear stock outflows in Your Stock Adjustment OUT/history; preserve stock data"
     }
   ]
 }
