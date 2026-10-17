@@ -24,7 +24,7 @@
     {
       "id": "20261017_collection_crossday_and_your_detail_by_id",
       "file": "20261017_collection_crossday_and_your_detail_by_id.sql",
-      "sha256": "3EF4D78330A38616D8EFEFC7DD571E1DAEA3D2AF41FD09AA0369F481E88FA694",
+      "sha256": "2A4B4CFFAAA9B0FF30A660E779637E985B41CA9A19F3443640D6B9E60209852E",
       "description": "Allow cross-day cash close requests for the same location/salesman; provide scoped Invoice-ID product detail in Your Collection"
     }
   ]
