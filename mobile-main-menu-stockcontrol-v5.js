@@ -155,7 +155,7 @@ const PC={
  'sales-support-successful-delivery':'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=successful-delivery&v=110',
  'daily-cash':'https://angsokhey11-cloud.github.io/big-brother-expenses/daily-cash.html?embed=1&v=20260920-vaultfx1',
  'stock-damaged':'https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=damaged&v=20',
- 'ar-daily-receivable-cash':'https://angsokhey11-cloud.github.io/big-brother-daily-receivable-cash-summary/?embed=1',
+ 'ar-daily-receivable-cash':'https://angsokhey11-cloud.github.io/big-brother-daily-receivable-cash-summary/?embed=1&v=20261018-date1',
  'customers-add':'https://angsokhey11-cloud.github.io/big-brother-customers-editor/?embed=1&view=add&v=21',
  'customers-map':'https://angsokhey11-cloud.github.io/big-brother-customers-editor/?embed=1&view=map&v=21',
  'customers-details':'https://angsokhey11-cloud.github.io/big-brother-customers-editor/?embed=1&view=details&v=21',
