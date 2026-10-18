@@ -1036,7 +1036,7 @@ body{
 
         '"payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=invoice&v=1"',
 
-        '"payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=invoice&v=3"'
+        '"payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=invoice&v=20261018-date1"'
 
       );
 
@@ -1046,7 +1046,7 @@ body{
 
         '"ar-payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=receivable&v=1"',
 
-        '"ar-payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=receivable&v=3"'
+        '"ar-payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=receivable&v=20261018-date1"'
 
       );
 
@@ -1212,7 +1212,7 @@ body{
     const arRouteAnchor='"ar-all": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=all&v=20261001-ar-layout3",';
     if(!html.includes(arRouteAnchor))throw Error('Real Invoice route anchor missing.');
     html=html.replace(arRouteAnchor,
-      arRouteAnchor+'\n    "real-invoice": "https://angsokhey11-cloud.github.io/big-brother-real-invoice/?embed=1&v=20261005-scanner-repair1",');
+      arRouteAnchor+'\n    "real-invoice": "https://angsokhey11-cloud.github.io/big-brother-real-invoice/?embed=1&v=20261018-date1",');
     html=html.replace("      moduleName === 'ar-all' ||",
       "      moduleName === 'real-invoice' ||\n      moduleName === 'ar-all' ||");
     html=html.replace("      const arId =\n        moduleName === 'ar-all'",
