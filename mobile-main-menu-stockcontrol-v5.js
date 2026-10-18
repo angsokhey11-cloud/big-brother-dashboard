@@ -168,7 +168,7 @@ const PC={
  'admin-deposit-history':'https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=deposit-history',
  'admin-staff-request':'https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=staff-request',
  'admin-request':'https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=admin-request',
- 'admin-user-permissions':'https://angsokhey11-cloud.github.io/big-brother-admin-work/user-permissions.html?embed=1',
+ 'admin-user-permissions':'https://angsokhey11-cloud.github.io/big-brother-admin-work/user-permissions.html?embed=1&v=20261018-date1',
  'notification-center':'https://angsokhey11-cloud.github.io/big-brother-admin-work/company-control.html?embed=1&view=notifications&v=1'
 };
 
