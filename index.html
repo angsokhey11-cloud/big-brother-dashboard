@@ -1249,6 +1249,18 @@ body{
       'big-brother-stock-allocation/back-sale.html?embed=1&v=20261003-shared-desktop1'
     );
 
+    /* Display-only October 18 date refresh: preserve route injection anchors above. */
+    [
+      ['big-brother-stock-report/batch-report.html?embed=1&v=20260923-batchedit1','big-brother-stock-report/batch-report.html?embed=1&v=20261018-date1'],
+      ['big-brother-stock-report/closed-batch.html?embed=1&v=20260912-zero-cost-3','big-brother-stock-report/closed-batch.html?embed=1&v=20261018-date1'],
+      ['big-brother-stock-report/transactions.html?embed=1&v=20260912-zero-cost-3','big-brother-stock-report/transactions.html?embed=1&v=20261018-date1'],
+      ['big-brother-stock-managemenet/pending-borrowed-stock.html?embed=1&v=20261001-compactreceipt3','big-brother-stock-managemenet/pending-borrowed-stock.html?embed=1&v=20261018-date1']
+    ].forEach(([before,after])=>{html=html.replaceAll(before,after);});
+    html=html.replaceAll(
+      'big-brother-admin-work/?embed=1&view=',
+      'big-brother-admin-work/?embed=1&view='
+    );
+
     /* =====================================================
        OPEN FINAL DASHBOARD
        ===================================================== */
