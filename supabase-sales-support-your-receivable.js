@@ -3,7 +3,7 @@
 'use strict';
 
 const ROUTE='sales-support-your-receivable';
-const URL='https://angsokhey11-cloud.github.io/big-brother-ar/your-receivable.html?embed=1&view=your&v=20260914-1';
+const URL='https://angsokhey11-cloud.github.io/big-brother-ar/your-receivable.html?embed=1&view=your&v=20261018-ar-date1';
 let restoreDone=false;
 
 const key=v=>String(v||'').trim().toLowerCase();
