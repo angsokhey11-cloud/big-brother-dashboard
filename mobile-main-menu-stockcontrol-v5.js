@@ -96,7 +96,7 @@ const MOBILE={
  'history':'https://angsokhey11-cloud.github.io/invoice-history/invoice-history-mobile.html?embed=1&v=20261001-creditdigitalfix4',
  'sale-return':'https://angsokhey11-cloud.github.io/big-brother-invoice-reversal/mobile.html?embed=1&v=20260924-invoiceid1',
  'reversal-history':'https://angsokhey11-cloud.github.io/big-brother-invoice-reversal/mobile-history.html?embed=1&v=20260915-1',
- 'payment-history':'https://angsokhey11-cloud.github.io/big-brother-payment-history/mobile.html?embed=1&v=20260915-1',
+ 'payment-history':'https://angsokhey11-cloud.github.io/big-brother-payment-history/mobile.html?embed=1&v=20261018-date1',
  'daily-sale-summary':'https://angsokhey11-cloud.github.io/big-brother-daily-sale-summary/mobile.html?embed=1&v=20260915-1',
  'daily-cash-collection':'https://angsokhey11-cloud.github.io/big-brother-daily-cash-collection/mobile.html?embed=1&v=20260915-1',
 
