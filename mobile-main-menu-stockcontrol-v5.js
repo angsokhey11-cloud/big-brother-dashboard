@@ -111,7 +111,7 @@ const MOBILE={
  'real-invoice':'https://angsokhey11-cloud.github.io/big-brother-real-invoice/?embed=1&v=20261018-date1',
  'ar-all':'https://angsokhey11-cloud.github.io/big-brother-ar/all-receivable-mobile.html?embed=1&v=20261018-ar-date1',
  'ar-your':'https://angsokhey11-cloud.github.io/big-brother-ar/your-receivable-mobile.html?embed=1&v=20261018-ar-date1',
- 'ar-payment-history':'https://angsokhey11-cloud.github.io/big-brother-payment-history/receivable-mobile.html?embed=1&v=20260915-clean2',
+ 'ar-payment-history':'https://angsokhey11-cloud.github.io/big-brother-payment-history/receivable-mobile.html?embed=1&v=20261018-receivable-date',
 
  'stock-keyin':'https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/mobile.html?embed=1&v=20261006-batchlocationrequired1',
  'stock-damaged-report':'https://angsokhey11-cloud.github.io/big-brother-stock-report/damage-stock-report-mobile.html?embed=1&v=20260915-3',
