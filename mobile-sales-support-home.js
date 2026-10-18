@@ -92,7 +92,7 @@ const MOBILE_URLS={
   'stock-control-batch-transfer':'big-brother-stock-allocation/batch-transfer-mobile.html?embed=1&v=20261008-mobile1',
   'stock-control-back-sale':'big-brother-stock-allocation/back-sale-mobile.html?embed=1&v=20261002-mobile1',
   'real-invoice':'big-brother-real-invoice/?embed=1&v=20261018-date1',
-  'stock-pending-borrow':'big-brother-stock-managemenet/pending-borrowed-stock.html?embed=1&mobile=1&v=20261001-compactreceipt3',
+  'stock-pending-borrow':'big-brother-stock-managemenet/pending-borrowed-stock.html?embed=1&mobile=1&v=20261018-date1',
   'sales-support-add-customer':'big-brother-sales-support/add-customer-mobile.html?embed=1&v=20260914-2',
   'sales-support-customer-map':'big-brother-customers-editor/sales-support-customer-map-mobile.html?embed=1&v=20260914-2',
   'sales-support-your-stock':'big-brother-sales-support/your-stock-mobile.html?embed=1&v=20261017-date-display1',
