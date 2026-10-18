@@ -38,6 +38,12 @@
       "file": "20261017_borrow_in_adjustment_in_visibility.sql",
       "sha256": "2FD8D9174FFED9F86DCBC22FBB7BF44FD34E03F815FE66A614A92257E71AEBF2",
       "description": "Show existing Borrow Stock customer inflows as Adjustment IN in Your Stock/history; preserve batch amounts and COGS"
+    },
+    {
+      "id": "20261018_staff_assistant_three_tables",
+      "file": "20261018_staff_assistant_three_tables.sql",
+      "sha256": "820D41BAC1EE6E148E8F31E1C134283F0073DAB3B155E52F7E539C75A474DA08",
+      "description": "Local-only guarded 3-table Staff Assistant V3 schema repair; keys, FKs, checks, indexes and RLS; no business-data changes"
     }
   ]
 }
