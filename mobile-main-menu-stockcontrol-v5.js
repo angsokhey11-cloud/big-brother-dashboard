@@ -145,7 +145,7 @@ const MOBILE={
 
  'admin-pending-receivable':'https://angsokhey11-cloud.github.io/big-brother-admin-work/pending-receivable-mobile.html?embed=1&v=20260920-artelegram2',
  'admin-pending-daily-cash':'https://angsokhey11-cloud.github.io/big-brother-admin-work/pending-daily-cash-mobile.html?embed=1&v=20261018-date1',
- 'admin-pending-deposit':'https://angsokhey11-cloud.github.io/big-brother-admin-work/pending-deposit-mobile.html?embed=1&v=20260920-vaultfx1'
+ 'admin-pending-deposit':'https://angsokhey11-cloud.github.io/big-brother-admin-work/pending-deposit-mobile.html?embed=1&v=20261018-date1'
 };
 
 const PC={
