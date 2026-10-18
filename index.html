@@ -1256,10 +1256,10 @@ body{
       ['big-brother-stock-report/transactions.html?embed=1&v=20260912-zero-cost-3','big-brother-stock-report/transactions.html?embed=1&v=20261018-date1'],
       ['big-brother-stock-managemenet/pending-borrowed-stock.html?embed=1&v=20261001-compactreceipt3','big-brother-stock-managemenet/pending-borrowed-stock.html?embed=1&v=20261018-date1']
     ].forEach(([before,after])=>{html=html.replaceAll(before,after);});
-    html=html.replaceAll(
-      'big-brother-admin-work/?embed=1&view=',
-      'big-brother-admin-work/?embed=1&view='
-    );
+    [
+      ['big-brother-admin-work/user-permissions.html?embed=1&v=1','big-brother-admin-work/user-permissions.html?embed=1&v=20261018-date1'],
+      ['big-brother-admin-work/bank-history.html?embed=1','big-brother-admin-work/bank-history.html?embed=1&v=20261018-date1']
+    ].forEach(([before,after])=>{html=html.replaceAll(before,after);});
 
     /* =====================================================
        OPEN FINAL DASHBOARD
