@@ -22,12 +22,6 @@
       "description": "Restore missing Local bank balance snapshot view for Invoice and Receivable; no business-data changes"
     },
     {
-      "id": "20261017_collection_crossday_and_your_detail_by_id",
-      "file": "20261017_collection_crossday_and_your_detail_by_id.sql",
-      "sha256": "2A4B4CFFAAA9B0FF30A660E779637E985B41CA9A19F3443640D6B9E60209852E",
-      "description": "Allow cross-day cash close requests for the same location/salesman; provide scoped Invoice-ID product detail in Your Collection"
-    },
-    {
       "id": "20261017_borrow_clear_adjustment_out_visibility",
       "file": "20261017_borrow_clear_adjustment_out_visibility.sql",
       "sha256": "3E68E844DEECAF43E161ED7A3CB70FDBF6A2CCEE955640FC9A11C7D9AEBECBB7",
@@ -38,6 +32,12 @@
       "file": "20261017_borrow_in_adjustment_in_visibility.sql",
       "sha256": "2FD8D9174FFED9F86DCBC22FBB7BF44FD34E03F815FE66A614A92257E71AEBF2",
       "description": "Show existing Borrow Stock customer inflows as Adjustment IN in Your Stock/history; preserve batch amounts and COGS"
+    },
+    {
+      "id": "20261017_collection_crossday_and_your_detail_by_id",
+      "file": "20261017_collection_crossday_and_your_detail_by_id.sql",
+      "sha256": "2A4B4CFFAAA9B0FF30A660E779637E985B41CA9A19F3443640D6B9E60209852E",
+      "description": "Allow cross-day cash close requests for the same location/salesman; provide scoped Invoice-ID product detail in Your Collection"
     },
     {
       "id": "20261018_staff_assistant_three_tables",
