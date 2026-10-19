@@ -44,6 +44,12 @@
       "file": "20261018_staff_assistant_three_tables.sql",
       "sha256": "820D41BAC1EE6E148E8F31E1C134283F0073DAB3B155E52F7E539C75A474DA08",
       "description": "Local-only guarded 3-table Staff Assistant V3 schema repair; keys, FKs, checks, indexes and RLS; no business-data changes"
+    },
+    {
+      "id": "20261019_unlock_driver_edits_after_batch_usage",
+      "file": "20261019_unlock_driver_edits_after_batch_usage.sql",
+      "sha256": "6C78C23A853508A312A71C79C408263AD48CD355083C4465B0C3CE26C6DDD0EF",
+      "description": "Unlock Driver 1/2 corrections for used OPEN batches; preserve Salesman/Location restrictions, audit trail and stock/invoice data"
     }
   ]
 }
