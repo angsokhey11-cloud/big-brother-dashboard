@@ -51,6 +51,14 @@ BEGIN
     RAISE EXCEPTION 'BORROW VISIBILITY SAFE STOP: missing audited source fragment 2';
   END IF;
   v_def := replace(v_def,v_old,v_new);
+  v_old := $bb_old7$where sa.batch_id=p_batch_id and upper(coalesce(sa.movement_type,''))='BATCH_EDIT'
+      and sa.product_code is not null$bb_old7$;
+  v_new := $bb_new7$where sa.batch_id=p_batch_id and upper(coalesce(sa.movement_type,'')) in ('BATCH_EDIT','CUSTOMER_BORROW_CLEAR')
+      and sa.product_code is not null$bb_new7$;
+  IF position(v_old IN v_def)=0 THEN
+    RAISE EXCEPTION 'BORROW VISIBILITY SAFE STOP: missing audited source fragment 7';
+  END IF;
+  v_def := replace(v_def,v_old,v_new);
   v_old := $bb_old3$and upper(coalesce(sa.movement_type,''))='BATCH_EDIT'
       and sa.product_code is not null$bb_old3$;
   v_new := $bb_new3$and upper(coalesce(sa.movement_type,'')) in ('BATCH_EDIT','CUSTOMER_BORROW_CLEAR')
@@ -96,14 +104,6 @@ BEGIN
             else 0 end)::numeric adjustment_out_qty$bb_new6$;
   IF position(v_old IN v_def)=0 THEN
     RAISE EXCEPTION 'BORROW VISIBILITY SAFE STOP: missing audited source fragment 6';
-  END IF;
-  v_def := replace(v_def,v_old,v_new);
-  v_old := $bb_old7$where sa.batch_id=p_batch_id and upper(coalesce(sa.movement_type,''))='BATCH_EDIT'
-      and sa.product_code is not null$bb_old7$;
-  v_new := $bb_new7$where sa.batch_id=p_batch_id and upper(coalesce(sa.movement_type,'')) in ('BATCH_EDIT','CUSTOMER_BORROW_CLEAR')
-      and sa.product_code is not null$bb_new7$;
-  IF position(v_old IN v_def)=0 THEN
-    RAISE EXCEPTION 'BORROW VISIBILITY SAFE STOP: missing audited source fragment 7';
   END IF;
   v_def := replace(v_def,v_old,v_new);
   EXECUTE v_def;
