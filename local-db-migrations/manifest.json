@@ -24,7 +24,7 @@
     {
       "id": "20261017_borrow_clear_adjustment_out_visibility",
       "file": "20261017_borrow_clear_adjustment_out_visibility.sql",
-      "sha256": "3E68E844DEECAF43E161ED7A3CB70FDBF6A2CCEE955640FC9A11C7D9AEBECBB7",
+      "sha256": "83F02D4391F32C60EEB61708AC38533DB5D6870E478FA6888A0DF906073D4E29",
       "description": "Expose existing Borrow Clear stock outflows in Your Stock Adjustment OUT/history; preserve stock data"
     },
     {
