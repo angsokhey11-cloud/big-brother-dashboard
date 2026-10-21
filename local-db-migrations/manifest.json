@@ -56,6 +56,12 @@
       "file": "20261021_invoice_reversal_search_v2.sql",
       "sha256": "6C79AD3C44B85DD6D4F761748AF134DDE14EC700C8BD43AA022B800921A42780",
       "description": "Authenticated, location-scoped search across all historical invoices in Invoice Reversal; read-only, duplicate-ID-safe, no business data changes"
+    },
+    {
+      "id": "20261021_postclose_reversal_per_product_v1",
+      "file": "20261021_postclose_reversal_per_product_v1.sql",
+      "sha256": "28C19B0A9904C7AC32C72911DD850597DE8D352B97542DC54EDDC6C6DAEC67EE",
+      "description": "Closed-batch invoice reversal with per-product Warehouse/Open Batch routing, signed source-cost COGS, protected return route ledger, and batch reconciliation"
     }
   ]
 }
