@@ -50,6 +50,12 @@
       "file": "20261019_unlock_driver_edits_after_batch_usage.sql",
       "sha256": "6C78C23A853508A312A71C79C408263AD48CD355083C4465B0C3CE26C6DDD0EF",
       "description": "Unlock Driver 1/2 corrections for used OPEN batches; preserve Salesman/Location restrictions, audit trail and stock/invoice data"
+    },
+    {
+      "id": "20261021_invoice_reversal_search_v2",
+      "file": "20261021_invoice_reversal_search_v2.sql",
+      "sha256": "6C79AD3C44B85DD6D4F761748AF134DDE14EC700C8BD43AA022B800921A42780",
+      "description": "Authenticated, location-scoped search across all historical invoices in Invoice Reversal; read-only, duplicate-ID-safe, no business data changes"
     }
   ]
 }
