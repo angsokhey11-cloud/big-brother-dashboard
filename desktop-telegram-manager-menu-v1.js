@@ -1,7 +1,8 @@
-/* BIG BROTHER — PC Telegram Manager Menu Extension V1.0
-   Desktop only. Adds Admin Work > Telegram Manager.
-   Notification Center remains in its own repository and is loaded inside the Dashboard workspace.
-   Uses the existing BIG BROTHER Supabase session and exposes the menu to admins only. */
+/* BIG BROTHER — Desktop Telegram Manager Menu V1.1
+   Keep Telegram Manager and LIVE Notification Center as separate menu entries.
+   Use a single owned click handler and the dashboard iframe switch token to
+   prevent a stale first-click navigation from reopening Notification Center.
+   Menu remains admin-only; no Telegram/billing/database writes here. */
 (function(){
   'use strict';
   if(/mobile\.html/i.test(location.pathname))return;
@@ -18,6 +19,10 @@
   }
 
   async function adminAccess(){
+    // Dashboard already has an authenticated access profile after login.
+    // Avoid a redundant permissions RPC on every menu-install retry.
+    const profile=window.BBDashboardAdapter?.getProfile?.();
+    if(profile?.user)return {ready:true,allowed:profile.user.isAdmin===true};
     const s=session();
     if(!s?.access_token)return {ready:false,allowed:false};
     try{
@@ -36,9 +41,12 @@
   }
 
   function existingButton(submenu){
+    // The original extension *renamed* the live Notification Center button,
+    // but its inline BBCompanyFeatures.open('notification-center') survived.
+    // Never repurpose that button; Telegram Manager gets a separate button.
     const matches=[...submenu.querySelectorAll('button')].filter(btn=>{
-      const text=(btn.textContent||'').replace(/\s+/g,' ').trim().toLowerCase();
-      return btn.id==='navTelegramManager'||text.includes('telegram manager')||text.includes('notification center');
+      const label=(btn.textContent||'').replace(/\s+/g,' ').trim().toLowerCase();
+      return btn.id==='navTelegramManager'||label.includes('telegram manager');
     });
     if(!matches.length)return null;
     const keep=matches.find(x=>x.id==='navTelegramManager')||matches[0];
@@ -70,7 +78,34 @@
 
     home.hidden=true;
     workspace.hidden=false;
-    frame.src=TELEGRAM_MANAGER_URL;
+
+    // Cooperate with the V3.40 Dashboard's existing module-switch token.
+    // A previous loadWorkspace('notification-center') may still have a
+    // requestAnimationFrame callback queued; invalidate it before navigation.
+    const sameModule=frame.dataset.module==='telegram-manager'&&
+      String(frame.src||'').includes('/big-brother-notification-center/');
+    if(!sameModule){
+      const token=String(Number(frame.dataset.bbSwitchToken||0)+1);
+      frame.dataset.bbSwitchToken=token;
+      frame.dataset.module='telegram-manager';
+      frame.src='about:blank';
+      requestAnimationFrame(()=>{
+        if(frame.dataset.bbSwitchToken===token&&
+           frame.dataset.module==='telegram-manager'&&
+           !workspace.hidden){
+          frame.src=TELEGRAM_MANAGER_URL;
+        }
+      });
+    }
+
+    // An old notification-center URL must not restore the wrong page
+    // when the dashboard is refreshed after opening Telegram Manager.
+    try{
+      const url=new URL(location.href);
+      url.searchParams.delete('module');
+      url.searchParams.delete('autoload');
+      history.replaceState(null,'',url.pathname+url.search+url.hash);
+    }catch(_){}
     setActive(button);
   }
 
@@ -79,34 +114,45 @@
     button.id='navTelegramManager';
     button.textContent='📨 Telegram Manager';
     button.title='Manage BIG BROTHER Telegram notification routing, rules and delivery logs';
+    // Defensive cleanup for any preexisting Telegram button with an old
+    // inline Notification Center route. No double-click/double-navigation.
+    button.removeAttribute('onclick');
+    button.onclick=null;
     if(button.__bbTelegramManagerBound)return;
     button.__bbTelegramManagerBound=true;
     button.addEventListener('click',event=>{
       event.preventDefault();
+      event.stopImmediatePropagation(); // own this action, including the first click
       openTelegramManager(button);
-    });
+    },true);
   }
 
   async function install(){
     const submenu=document.getElementById('adminWorkSubmenu');
     if(!submenu)return false;
 
-    const existing=existingButton(submenu);
-    if(existing){bind(existing);return true;}
-
     const check=await adminAccess();
     if(!check.ready)return false;
-    if(!check.allowed)return true;
+    const existing=existingButton(submenu);
+    if(!check.allowed){
+      if(existing)existing.remove();
+      return true;
+    }
+    if(existing){bind(existing);return true;}
+
+    // The timer and DOMContentLoaded install calls can overlap while login
+    // is resolving. Recheck after awaited access to prevent duplicate menus.
+    const again=existingButton(submenu);
+    if(again){bind(again);return true;}
 
     const button=document.createElement('button');
     bind(button);
-
+    const notification=document.getElementById('navNotificationCenter');
     const permissions=document.getElementById('navAdminUserPermissions');
-    if(permissions&&permissions.parentElement===submenu){
-      permissions.insertAdjacentElement('afterend',button);
-    }else{
-      submenu.appendChild(button);
-    }
+    const anchor=notification?.parentElement===submenu?notification:
+      permissions?.parentElement===submenu?permissions:null;
+    if(anchor)anchor.insertAdjacentElement('afterend',button);
+    else submenu.appendChild(button);
     return true;
   }
 
