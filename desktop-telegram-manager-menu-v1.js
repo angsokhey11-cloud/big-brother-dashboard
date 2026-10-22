@@ -12,7 +12,7 @@
   const SB='https://sjfhlaclgmkwwofzstok.supabase.co';
   const KEY='sb_publishable_w762jR65CWwlO30fKQsYOw_6L9grx8S';
   const SESSION_KEY='BB_SUPABASE_DEV_SESSION_V1';
-  const TELEGRAM_MANAGER_URL='https://angsokhey11-cloud.github.io/big-brother-notification-center/?embed=1&v=20260916-1';
+  const TELEGRAM_MANAGER_URL='https://angsokhey11-cloud.github.io/big-brother-notification-center/?embed=1&v=20261022-workspace-tools1';
 
   function session(){
     try{return JSON.parse(localStorage.getItem(SESSION_KEY)||'null')}catch(_){return null}
