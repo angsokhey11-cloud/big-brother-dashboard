@@ -72,7 +72,7 @@
     {
       "id": "20261022_historical_ar_header_correction_v1",
       "file": "20261022_historical_ar_header_correction_v1.sql",
-      "sha256": "66554A3175377FD963F72343427D0014ECEC100C8F3166A1917BEA280EB8CD6B",
+      "sha256": "DABF491A39B1A3A9141B13A0A24B7C02F64AAB910FCAD18ADCBC2BC106E86837",
       "description": "Admin-only correction of imported historical A/R invoice number/date by permanent ID with duplicate guard and audit; preserve customer, due date, balances, payments and photo"
     }
   ]
