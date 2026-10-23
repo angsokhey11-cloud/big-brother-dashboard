@@ -74,6 +74,12 @@
       "file": "20261022_historical_ar_header_correction_v1.sql",
       "sha256": "DABF491A39B1A3A9141B13A0A24B7C02F64AAB910FCAD18ADCBC2BC106E86837",
       "description": "Admin-only correction of imported historical A/R invoice number/date by permanent ID with duplicate guard and audit; preserve customer, due date, balances, payments and photo"
+    },
+    {
+      "id": "20261023_stock_batch_date_correction_v1",
+      "file": "20261023_stock_batch_date_correction_v1.sql",
+      "sha256": "C259589CC5F1067D031157591E22537F77CF2C96FFBB1E9E8A805ABB293F7E07",
+      "description": "Audited open Batch Date correction through existing Batch Editor; respects invoice/stock usage locks, staff/location permissions and stock revision, no business-data edits"
     }
   ]
 }
