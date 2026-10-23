@@ -52,6 +52,12 @@
       "description": "Unlock Driver 1/2 corrections for used OPEN batches; preserve Salesman/Location restrictions, audit trail and stock/invoice data"
     },
     {
+      "id": "20261021_ar_partial_paid_outstanding_v1",
+      "file": "20261021_ar_partial_paid_outstanding_v1.sql",
+      "sha256": "80D69325AC8306DF5D939EB4DFE8E576C70F75D4937145C65D1B6CC019B80F88",
+      "description": "Include remaining outstanding invoices initially Partially Paid in Cash/Bank in Your/All Receivable and salesman Direct Requests; preserve existing paid amounts and permissions"
+    },
+    {
       "id": "20261021_invoice_reversal_search_v2",
       "file": "20261021_invoice_reversal_search_v2.sql",
       "sha256": "6C79AD3C44B85DD6D4F761748AF134DDE14EC700C8BD43AA022B800921A42780",
@@ -62,12 +68,6 @@
       "file": "20261021_postclose_reversal_per_product_v1.sql",
       "sha256": "28C19B0A9904C7AC32C72911DD850597DE8D352B97542DC54EDDC6C6DAEC67EE",
       "description": "Closed-batch invoice reversal with per-product Warehouse/Open Batch routing, signed source-cost COGS, protected return route ledger, and batch reconciliation"
-    },
-    {
-      "id": "20261021_ar_partial_paid_outstanding_v1",
-      "file": "20261021_ar_partial_paid_outstanding_v1.sql",
-      "sha256": "80D69325AC8306DF5D939EB4DFE8E576C70F75D4937145C65D1B6CC019B80F88",
-      "description": "Include remaining outstanding invoices initially Partially Paid in Cash/Bank in Your/All Receivable and salesman Direct Requests; preserve existing paid amounts and permissions"
     },
     {
       "id": "20261022_historical_ar_header_correction_v1",
