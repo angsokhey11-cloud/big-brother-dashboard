@@ -1,5 +1,5 @@
 /* BIG BROTHER Mobile PWA service worker V1.9 */
-const CACHE='bb-mobile-shell-v82';
+const CACHE='bb-mobile-shell-v83';
 const MOBILE_FILES=new Set([
   'mobile.html','mobile.css','mobile-sales-support.css','pwa-install.css','mobile.js','mobile-user-overview.js',
   'mobile-sales-support-home.js','pwa-install.js','mobile-main-menu-v3.js','mobile-main-menu-stockcontrol-v5.js','mobile-ui-policy-v1.js',
@@ -35,11 +35,11 @@ const PRECACHE=[
   './pwa-install.css?v=20260920-ios1',
   './mobile.js?v=20261024-mobileperf3',
   './mobile-main-menu-stockcontrol-v5.js?v=20261024-mobileperf3',
-  './mobile-user-overview.js?v=20260920-liveoverview2',
+  './mobile-user-overview.js?v=20261024-firstpaint-v4',
   './mobile-navigation-v5.js?v=20261008-batchtransfer-mobile1',
   './mobile-ios-decimal-v1.js?v=20260920-iosdecimal3',
   './mobile-theme-v1.js?v=20261005-angkor-login16',
-  './mobile-sales-support-home.js?v=20261018-stockadmin-date2',
+  './mobile-sales-support-home.js?v=20261024-firstpaint-v4',
   './pwa-install.js?v=20261024-mobileperf1',
   './mobile-module-transition-v3.js?v=20261024-module-transition1',
   './mobile-ui-policy-v1.js?v=20260915-2',
