@@ -709,6 +709,9 @@ function injectCss(){
 
   `;
   document.head.appendChild(style);
+  // Keep the separately cached V5 theme after the legacy home rules.
+  const theme=document.getElementById('bbMobileHomeThemeV5');
+  if(theme&&theme.parentNode)document.head.appendChild(theme);
 }
 
 function ensureHiddenStaffMeta(){
@@ -1177,7 +1180,7 @@ function renderOverview(){
         ? `type="button" data-overview-action="${action}"`
         : '';
     const symbol=window.BBMobileFunctionIconsV1?.named?.(icon)||icon;
-    return `<${tag} class="sales-kpi ${clickable?'clickable':'locked'}" ${attrs}><span class="kpi-icon">${symbol}</span><small>${esc(label)}</small><strong>${esc(value)}</strong><em>${esc(sub)}</em>${clickable?'<span class="kpi-arrow">›</span>':''}</${tag}>`;
+    return `<${tag} class="sales-kpi ${clickable?'clickable':'locked'}" data-kpi-type="${esc(String(label).toLowerCase().replace(/[^a-z0-9]+/g,'-'))}" ${attrs}><span class="kpi-icon">${symbol}</span><small>${esc(label)}</small><strong>${esc(value)}</strong><em>${esc(sub)}</em>${clickable?'<span class="kpi-arrow">›</span>':''}</${tag}>`;
   };
 
   const receivableRoute=canRoute('sales-support-your-receivable')?'sales-support-your-receivable':canRoute('ar-all')?'ar-all':canRoute('ar-your')?'ar-your':'';
