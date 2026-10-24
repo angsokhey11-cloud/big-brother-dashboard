@@ -762,7 +762,7 @@ function renderPicker(){
   host.innerHTML=items.map(([route,group,icon,label])=>{
     const selected=pickerMode==='quick'?quick.includes(route):pages[pickerSlot]===route;
     return `<button type="button" class="bb-picker-row ${selected?'selected':''}" data-pick-route="${route}">
-      <span class="bb-picker-icon">${icon}</span><span><b>${esc(label)}</b><small>${esc(group)}</small></span>
+      <span class="bb-picker-icon">${window.BBMobileFunctionIconsV1?.route?.(route)||icon}</span><span><b>${esc(label)}</b><small>${esc(group)}</small></span>
       <span class="bb-picker-state">${selected?(pickerMode==='quick'?'Added':'Selected'):(pickerMode==='quick'?'+ Add':'Choose')}</span>
     </button>`;
   }).join('')||'<div class="menu-empty">No permitted functions found.</div>';
@@ -866,7 +866,7 @@ function renderQuick(){
   quick=normalizeQuick(quick);
   host.innerHTML=quick.length?quick.map(route=>{
     const item=ROUTES[route];
-    return `<button type="button" class="quick-btn" data-sales-route="${route}"><div class="quick-icon">${item.icon}</div><span>${esc(item.label)}</span></button>`;
+    return `<button type="button" class="quick-btn" data-sales-route="${route}"><div class="quick-icon">${window.BBMobileFunctionIconsV1?.route?.(route)||item.icon}</div><span>${esc(item.label)}</span></button>`;
   }).join(''):'<div class="menu-empty">Tap ＋ Add above to choose your Quick Actions.</div>';
   host.querySelectorAll('[data-sales-route]').forEach(button=>button.onclick=()=>openRoute(button.dataset.salesRoute));
   if($('quickCount'))$('quickCount').textContent=quick.length?quick.length+' selected':'Choose your shortcuts';
@@ -883,13 +883,13 @@ window.BBMobileQuickActionsV1={
 function navPageButton(slotIndex,active){
   const route=pages[slotIndex];const item=ROUTES[route];
   if(!item)return `<button type="button" class="nav-btn bb-page-empty ${active==='page'+slotIndex?'active':''}" data-bb-page="${slotIndex}"><b>＋</b><span class="bb-nav-label">Page ${slotIndex+1}</span></button>`;
-  return `<button type="button" class="nav-btn ${active==='page'+slotIndex?'active':''}" data-bb-page="${slotIndex}" title="Hold to change"><b>${item.icon}</b><span class="bb-nav-label">${esc(item.label)}</span></button>`;
+  return `<button type="button" class="nav-btn ${active==='page'+slotIndex?'active':''}" data-bb-page="${slotIndex}" title="Hold to change"><b>${window.BBMobileFunctionIconsV1?.route?.(route)||item.icon}</b><span class="bb-nav-label">${esc(item.label)}</span></button>`;
 }
 function renderNav(active='home'){
   pages=normalizePages(pages);
-  const html=`<button type="button" class="nav-btn ${active==='home'?'active':''}" data-bb-nav="home"><b>⌂</b><span class="bb-nav-label">Home</span></button>`+
+  const html=`<button type="button" class="nav-btn ${active==='home'?'active':''}" data-bb-nav="home"><b>${window.BBMobileFunctionIconsV1?.named?.('home')||'⌂'}</b><span class="bb-nav-label">Home</span></button>`+
     navPageButton(0,active)+navPageButton(1,active)+
-    `<button type="button" class="nav-btn ${active==='menu'?'active':''}" data-bb-nav="menu"><b>☰</b><span class="bb-nav-label">Menu</span></button>`;
+    `<button type="button" class="nav-btn ${active==='menu'?'active':''}" data-bb-nav="menu"><b>${window.BBMobileFunctionIconsV1?.named?.('menu')||'☰'}</b><span class="bb-nav-label">Menu</span></button>`;
   ['bottomNav','menuBottomNav','moduleBottomNav'].forEach(id=>{
     const host=$(id);if(!host)return;host.innerHTML=html;wireNavHost(host);
   });
@@ -954,7 +954,7 @@ function renderMainMenu(){
   host.innerHTML=groups.map(group=>{
     const rows=allowed.filter(x=>x[1]===group);
     return `<div class="bb-menu-group" style="grid-column:1/-1"><div style="font-size:9px;font-weight:900;color:#72849a;margin:5px 2px 2px">${esc(group)}</div></div>`+
-      rows.map(([route,,icon,label])=>`<button type="button" class="menu-card" data-menu-route="${route}"><b>${icon}</b><strong>${esc(label)}</strong><small>Open function</small></button>`).join('');
+      rows.map(([route,,icon,label])=>`<button type="button" class="menu-card" data-menu-route="${route}"><b>${window.BBMobileFunctionIconsV1?.route?.(route)||icon}</b><strong>${esc(label)}</strong><small>Open function</small></button>`).join('');
   }).join('')||'<div class="menu-empty">No functions assigned.</div>';
   host.querySelectorAll('[data-menu-route]').forEach(button=>button.onclick=()=>openRoute(button.dataset.menuRoute));
 }
