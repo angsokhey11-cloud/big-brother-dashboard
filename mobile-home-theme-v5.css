@@ -787,3 +787,33 @@
 @media(prefers-reduced-motion:reduce){
   #mobileHome #quickActions button.quick-btn:active{transform:none}
 }
+
+
+/* BIG BROTHER Mobile Home V5.5 — Quick Action Icon Size
+   A small optical size adjustment only. Keep colorful action tiles,
+   button/touch target dimensions, labels and all routing unchanged. */
+#mobileHome #quickActions button.quick-btn .quick-icon{
+  width:34px!important;
+  height:34px!important;
+  min-width:34px!important;
+  min-height:34px!important;
+  border-radius:10px!important;
+  flex:none!important;
+}
+#mobileHome #quickActions button.quick-btn .quick-icon .bb-function-svg{
+  width:17px!important;
+  height:17px!important;
+}
+@media(max-width:380px){
+  #mobileHome #quickActions button.quick-btn .quick-icon{
+    width:32px!important;
+    height:32px!important;
+    min-width:32px!important;
+    min-height:32px!important;
+    border-radius:9px!important;
+  }
+  #mobileHome #quickActions button.quick-btn .quick-icon .bb-function-svg{
+    width:16px!important;
+    height:16px!important;
+  }
+}
