@@ -1176,7 +1176,8 @@ function renderOverview(){
       : actionClickable
         ? `type="button" data-overview-action="${action}"`
         : '';
-    return `<${tag} class="sales-kpi ${clickable?'clickable':'locked'}" ${attrs}><span class="kpi-icon">${icon}</span><small>${esc(label)}</small><strong>${esc(value)}</strong><em>${esc(sub)}</em>${clickable?'<span class="kpi-arrow">›</span>':''}</${tag}>`;
+    const symbol=window.BBMobileFunctionIconsV1?.named?.(icon)||icon;
+    return `<${tag} class="sales-kpi ${clickable?'clickable':'locked'}" ${attrs}><span class="kpi-icon">${symbol}</span><small>${esc(label)}</small><strong>${esc(value)}</strong><em>${esc(sub)}</em>${clickable?'<span class="kpi-arrow">›</span>':''}</${tag}>`;
   };
 
   const receivableRoute=canRoute('sales-support-your-receivable')?'sales-support-your-receivable':canRoute('ar-all')?'ar-all':canRoute('ar-your')?'ar-your':'';
@@ -1186,22 +1187,22 @@ function renderOverview(){
 
   if(isAdmin()){
     $('kpiGrid').innerHTML=
-      card('📊','Monthly Sales',money(sales.netUSD),salesSub,'','location')+
-      card('💰','Receivable',money(ar.equivalentUSD),Math.round(num(ar.count))+' open',receivableRoute)+
+      card('chart-line','Monthly Sales',money(sales.netUSD),salesSub,'','location')+
+      card('wallet','Receivable',money(ar.equivalentUSD),Math.round(num(ar.count))+' open',receivableRoute)+
       card(
-        '📦',
+        'warehouse',
         'Stock Value',
         money(stockReport?.totals?.warehouseValue ?? stock.valueUSD),
         'Warehouse · '+qty(stockReport?.totals?.warehousePhysicalQty ?? stock.physicalQty)+' qty',
         stockRoute
       )+
-      card('⏳','Pending Tasks',String(Math.round(num(overview.pendingStaffRequests))),'Staff requests');
+      card('clipboard-list','Pending Tasks',String(Math.round(num(overview.pendingStaffRequests))),'Staff requests');
   }else{
     $('kpiGrid').innerHTML=
-      card('📊','Monthly Sales',money(sales.netUSD),salesSub,'','location')+
-      card('💰','Receivable',money(ar.equivalentUSD),Math.round(num(ar.count))+' open',receivableRoute)+
-      card('📦','Stock Qty',qty(stock.physicalQty),Math.round(num(stock.openBatchCount))+' open batches',stockRoute)+
-      card('👛','Your Earning',money(usd),available.length+' available',canRoute('staff-relation')?'staff-relation':'');
+      card('chart-line','Monthly Sales',money(sales.netUSD),salesSub,'','location')+
+      card('wallet','Receivable',money(ar.equivalentUSD),Math.round(num(ar.count))+' open',receivableRoute)+
+      card('package','Stock Qty',qty(stock.physicalQty),Math.round(num(stock.openBatchCount))+' open batches',stockRoute)+
+      card('wallet','Your Earning',money(usd),available.length+' available',canRoute('staff-relation')?'staff-relation':'');
   }
 
   $('kpiGrid').querySelectorAll('[data-kpi-route]').forEach(button=>button.onclick=()=>openRoute(button.dataset.kpiRoute));
@@ -1291,16 +1292,16 @@ function renderAttention(){
   const row=(type,icon,name,sub,count,side,route='')=>{
     const clickable=!!route;const tag=clickable?'button':'div';
     return `<${tag} ${clickable?'type="button" data-att-route="'+route+'"':''} data-att-type="${type}" class="recent-row bb-att-row ${count?'':'bb-clear'}">
-      <div class="recent-icon">${icon}</div>
+      <div class="recent-icon">${window.BBMobileFunctionIconsV1?.named?.(icon)||icon}</div>
       <div class="recent-main"><strong>${esc(name)}</strong><span>${esc(sub)}</span></div>
       <div class="recent-side"><strong>${esc(String(count))}</strong><span>${esc(side)}</span></div>
     </${tag}>`;
   };
 
   host.innerHTML=
-    row('receivable','💳','Receivable Alert',arSub,arCount,arCount?money(ar.equivalentUSD)+' overdue':'All clear',attentionRoute('receivable'))+
-    row('stock','🚨','Stock Alert',stockSub,stockCount,stockCount?(Math.round(num(stock.criticalCount))+' critical'):'All clear',attentionRoute('stock'))+
-    row('pending','⏳','Pending Requests',pendingSub,pendingCount,pendingCount?'waiting':'All clear','');
+    row('receivable','wallet','Receivable Alert',arSub,arCount,arCount?money(ar.equivalentUSD)+' overdue':'All clear',attentionRoute('receivable'))+
+    row('stock','alert-triangle','Stock Alert',stockSub,stockCount,stockCount?(Math.round(num(stock.criticalCount))+' critical'):'All clear',attentionRoute('stock'))+
+    row('pending','clipboard-list','Pending Requests',pendingSub,pendingCount,pendingCount?'waiting':'All clear','');
 
   host.querySelectorAll('[data-att-route]').forEach(button=>button.onclick=()=>openRoute(button.dataset.attRoute));
 }
