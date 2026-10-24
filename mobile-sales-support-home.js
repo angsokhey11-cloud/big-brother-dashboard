@@ -861,6 +861,7 @@ function renderQuick(){
   // Until access is verified, never turn placeholders into unauthorized
   // shortcuts. A first-use device waits for its saved preferences.
   if(!profile||!quickPreferencesReady)return;
+  host.removeAttribute('aria-busy');
   quick=normalizeQuick(quick);
   host.innerHTML=quick.length?quick.map(route=>{
     const item=ROUTES[route];
@@ -1154,6 +1155,7 @@ function ensureOverviewHeader(){
 function renderOverview(){
   ensureOverviewHeader();
   if(!overview||!$('kpiGrid'))return;
+  $('kpiGrid').removeAttribute('aria-busy');
 
   const sales=overview.monthlySales||{};
   const ar=overview.receivable||{};
@@ -1403,6 +1405,7 @@ async function load(){
     }else{
       const grid=$('kpiGrid');
       if(grid && !overview){
+        grid.removeAttribute('aria-busy');
         grid.innerHTML='<div class="bb-home-data-note">Overview unavailable. Refresh when connected.</div>';
       }
     }
