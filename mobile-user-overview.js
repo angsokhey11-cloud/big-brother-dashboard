@@ -80,6 +80,7 @@ function applyOverview(data,payment){
   if(!data||!homeVisible())return;
   const grid=$('kpiGrid');
   if(!grid)return;
+  grid.removeAttribute('aria-busy');
 
   const locations=Array.isArray(data.saleLocations)?data.saleLocations:[];
   const locationNames=locations.map(x=>x.locationName||x.locationCode).filter(Boolean);
