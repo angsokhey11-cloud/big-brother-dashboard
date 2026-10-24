@@ -178,6 +178,8 @@ function routeLabel(route){return META[route]?.[2]||route}
 function replaceFrameUrl(frame,url){
  try{
    if(!frame?.parentNode)return;
+   // Reopening the already-active function must not reload forms or data.
+   if(frame.getAttribute('src')===url)return frame;
    const fresh=frame.cloneNode(false);
    fresh.removeAttribute('src');
    fresh.removeAttribute('data-bb-theme-bound');
