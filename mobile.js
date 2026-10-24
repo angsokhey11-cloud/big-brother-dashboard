@@ -242,14 +242,14 @@ function setUrlRoute(route=''){
   try{const u=new URL(location.href);if(route){u.searchParams.set('module',route)}else{u.searchParams.delete('module')}history.replaceState({},'',u.pathname+u.search+u.hash)}catch(_){}
 }
 
-function navHtml(active){return NAV.map(x=>`<button class="nav-btn ${active===x[0]?'active':''}" type="button" data-nav="${x[0]}"><b>${x[1]}</b>${x[2]}</button>`).join('')}
+function navHtml(active){return NAV.map(x=>`<button class="nav-btn ${active===x[0]?'active':''}" type="button" data-nav="${x[0]}"><b>${window.BBMobileFunctionIconsV1?.named?.(({home:'home',sales:'receipt',stock:'warehouse',reports:'chart-column',more:'menu'})[x[0]])||x[1]}</b>${x[2]}</button>`).join('')}
 function bindNav(host){host.querySelectorAll('[data-nav]').forEach(btn=>btn.onclick=()=>navigate(btn.dataset.nav))}
 function refreshNav(active){['bottomNav','menuBottomNav','moduleBottomNav'].forEach(id=>{const el=$(id);el.innerHTML=navHtml(active);bindNav(el)})}
 
 function quickHtml(){
   const items=QUICK.filter(canRoute);
   $('quickCount').textContent=items.length+' available';
-  return items.map(route=>{const x=ROUTES[route];return `<button type="button" class="quick-btn" data-route="${route}"><div class="quick-icon">${x.icon}</div><span>${esc(x.label)}</span></button>`}).join('')||'<div class="menu-empty">No quick actions assigned.</div>';
+  return items.map(route=>{const x=ROUTES[route];return `<button type="button" class="quick-btn" data-route="${route}"><div class="quick-icon">${window.BBMobileFunctionIconsV1?.route?.(route)||x.icon}</div><span>${esc(x.label)}</span></button>`}).join('')||'<div class="menu-empty">No quick actions assigned.</div>';
 }
 function renderKpis(){
   if(window.BBMobileOverviewV1?.render){
@@ -344,7 +344,7 @@ function showMenu(tab,clearRoute=true){
   }
   const names={sales:'Sales',stock:'Stock',reports:'Reports',more:'More'};const items=permittedRoutes(tab);
   $('menuTitle').textContent=names[tab]||'Workspace';$('menuSubtitle').textContent=items.length+' available functions';
-  $('menuGrid').innerHTML=items.length?(tab==='stock'?'<div style="grid-column:1/-1;font-weight:800;font-size:17px;padding:12px 2px 4px">📦 Stock Control</div>':'')+items.map(([route,x],i)=>`${tab==='stock'&&route==='stock-keyin'?'<div style="grid-column:1/-1;font-weight:800;font-size:17px;padding:12px 2px 4px">📋 Stock Management</div>':''}<button type="button" class="menu-card" data-route="${route}"><b>${x.icon}</b><strong>${esc(x.label)}</strong><small>Open function</small></button>`).join(''):'<div class="menu-empty">No functions assigned in this section.</div>';
+  $('menuGrid').innerHTML=items.length?(tab==='stock'?'<div style="grid-column:1/-1;font-weight:800;font-size:17px;padding:12px 2px 4px">📦 Stock Control</div>':'')+items.map(([route,x],i)=>`${tab==='stock'&&route==='stock-keyin'?'<div style="grid-column:1/-1;font-weight:800;font-size:17px;padding:12px 2px 4px">📋 Stock Management</div>':''}<button type="button" class="menu-card" data-route="${route}"><b>${window.BBMobileFunctionIconsV1?.route?.(route)||x.icon}</b><strong>${esc(x.label)}</strong><small>Open function</small></button>`).join(''):'<div class="menu-empty">No functions assigned in this section.</div>';
   bindRouteButtons($('menuGrid'));refreshNav(tab);$('menuGrid').scrollTop=0;
 }
 function openModule(route,updateUrl=true){
