@@ -472,3 +472,33 @@
     width:19px!important;height:19px!important;
   }
 }
+
+
+/* BIG BROTHER Mobile Home V5.2 — Centered Overview
+   Keep route arrows in their existing column. Only center the label,
+   full untruncated numeric value, and subtitle within each card. */
+#mobileHome #kpiGrid .sales-kpi{
+  text-align:center!important;
+  justify-items:center!important;
+}
+#mobileHome #kpiGrid .sales-kpi .kpi-icon{
+  justify-self:start!important;
+}
+#mobileHome #kpiGrid .sales-kpi .kpi-arrow{
+  justify-self:end!important;
+}
+#mobileHome #kpiGrid .sales-kpi small{
+  width:100%!important;
+  text-align:center!important;
+  justify-self:center!important;
+}
+#mobileHome #kpiGrid .sales-kpi strong{
+  width:100%!important;
+  text-align:center!important;
+  justify-self:center!important;
+}
+#mobileHome #kpiGrid .sales-kpi em{
+  width:100%!important;
+  text-align:center!important;
+  justify-self:center!important;
+}
