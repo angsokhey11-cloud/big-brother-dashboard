@@ -49,19 +49,27 @@
     'upload':'<path d="M12 16V3M7 8l5-5 5 5M4 17v4h16v-4"/>',
     'database':'<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/>',
     'file-box':'<path d="M14 2H5a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9l-7-7ZM14 2v7h7M7 14h10M7 18h6"/>',
-    'circle-dollar':'<circle cx="12" cy="12" r="9"/><path d="M15 8c-1.2-1-5-1.2-6.3.5-1.7 2.4 2 3.2 3.3 3.5 2.2.5 4 1.1 3 3.5-1 2-4.7 2.5-7 .5M12 5v14"/>'
+    'circle-dollar':'<circle cx="12" cy="12" r="9"/><path d="M15 8c-1.2-1-5-1.2-6.3.5-1.7 2.4 2 3.2 3.3 3.5 2.2.5 4 1.1 3 3.5-1 2-4.7 2.5-7 .5M12 5v14"/>',
+    /* Receivable: one pending record going into a collection tray. */
+    'receivable-one':'<rect x="3" y="3" width="12" height="8" rx="1.6"/><path d="M6 6h6M6 8.5h3M18 5v6m-2-2 2 2 2-2M4 15h16l1 5H3l1-5ZM10 17.5h4"/>',
+    /* All receivables: stacked records with a single organized tray. */
+    'receivable-all':'<path d="M6 2h11v7M4 5h11v8H4zM7 8h5M7 10.5h3M18 9v5m-2-2 2 2 2-2M3 16h18v5H3zM10 18.5h4"/>',
+    /* Collection: a single coin received into an open hand. */
+    'collection-hand':'<circle cx="15.5" cy="5" r="3"/><path d="M15.5 3.5v3m-1.3-2.2h2.3M3 14h3l2.2-1.8c.6-.5 1.2-.7 2-.7h4.4c1.1 0 1.8.6 1.8 1.5s-.7 1.5-1.8 1.5H12M3 19h3l3.7 2h6c.8 0 1.6-.3 2.1-.8L21 17c1.1-1.2-.7-3.1-2-2l-3 2"/>',
+    /* Daily collection: a coin deposited into a cash box. */
+    'collection-daily':'<circle cx="12" cy="5" r="3"/><path d="M12 3.5v3m-1.3-2.2h2.3M12 9v2m-2-2 2 2 2-2M4 14h16v7H4zM3 14l2-3h14l2 3M9 17.5h6"/>'
   };
 
   const routeIcons={
     'invoice':'file-plus','history':'history','sale-return':'rotate-ccw','reversal-history':'history',
-    'payment-history':'credit-card','daily-sale-summary':'chart-column','daily-cash-collection':'banknote',
-    'real-invoice':'scan-line','ar-all':'clipboard-list','ar-your':'wallet',
+    'payment-history':'credit-card','daily-sale-summary':'chart-column','daily-cash-collection':'collection-daily',
+    'real-invoice':'scan-line','ar-all':'receivable-all','ar-your':'receivable-one',
     'ar-payment-history':'credit-card','ar-daily-receivable-cash':'banknote',
     'sales-support-calculator':'calculator','sales-support-request-delivery':'truck',
     'sales-support-your-customer':'users','sales-support-add-customer':'user-plus',
     'sales-support-customer-map':'map-pin','sales-support-your-stock':'packages',
-    'sales-support-batch-selling-tracker':'search','sales-support-your-collection':'banknote',
-    'sales-support-your-invoices':'receipt','sales-support-your-receivable':'wallet',
+    'sales-support-batch-selling-tracker':'search','sales-support-your-collection':'collection-hand',
+    'sales-support-your-invoices':'receipt','sales-support-your-receivable':'receivable-one',
     'sales-support-successful-delivery':'circle-check',
     'stock-control-allocation':'packages','stock-control-batch-transfer':'arrow-left-right',
     'stock-control-back-sale':'rotate-ccw','stock-keyin':'package','stock-damaged':'alert-triangle',
