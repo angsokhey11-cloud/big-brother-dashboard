@@ -258,7 +258,7 @@ function rebuildMenu(){
  host.classList.add('bb-dropdown-menu');
  host.innerHTML=groups.map((g,gi)=>{
    const rs=routes.filter(r=>(META[r]?.[0]||'Other')===g);
-   return `<details class="bb-dd-group"${gi===0?' open':''}><summary><span class="bb-dd-left"><b>${GROUP_ICON[g]||'📁'}</b><span>${esc(g)}</span></span><span class="bb-dd-arrow">▼</span></summary><div class="bb-dd-items">${rs.map(r=>{const m=META[r]||['Other','•',r];const mobile=!!MOBILE[r];return `<button type="button" class="bb-dd-item" data-bb-route="${esc(r)}"><span class="bb-dd-icon">${m[1]}</span><span class="bb-dd-copy"><strong>${esc(m[2])}</strong><small>${mobile?'Mobile version':'PC version'}</small></span><span class="bb-dd-tag ${mobile?'mobile':'pc'}">${mobile?'MOBILE':'PC'}</span></button>`}).join('')}</div></details>`;
+   return `<details class="bb-dd-group"${gi===0?' open':''}><summary><span class="bb-dd-left"><b>${window.BBMobileFunctionIconsV1?.group?.(g)||GROUP_ICON[g]||'📁'}</b><span>${esc(g)}</span></span><span class="bb-dd-arrow">▼</span></summary><div class="bb-dd-items">${rs.map(r=>{const m=META[r]||['Other','•',r];const mobile=!!MOBILE[r];return `<button type="button" class="bb-dd-item" data-bb-route="${esc(r)}"><span class="bb-dd-icon">${window.BBMobileFunctionIconsV1?.route?.(r)||m[1]}</span><span class="bb-dd-copy"><strong>${esc(m[2])}</strong><small>${mobile?'Mobile version':'PC version'}</small></span><span class="bb-dd-tag ${mobile?'mobile':'pc'}">${mobile?'MOBILE':'PC'}</span></button>`}).join('')}</div></details>`;
  }).join('');
  host.querySelectorAll('[data-bb-route]').forEach(btn=>btn.onclick=e=>{e.preventDefault();e.stopImmediatePropagation();openDirect(btn.dataset.bbRoute,true)});
  rebuilding=false;
