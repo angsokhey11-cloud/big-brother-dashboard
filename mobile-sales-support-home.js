@@ -1251,6 +1251,10 @@ function attentionRoute(type){
 }
 function renderAttention(){
   const host=$('recentList');if(!host)return;
+  if(!attention){
+    host.innerHTML='<div class="bb-home-data-note">Checking live alerts…</div>';
+    return;
+  }
   const panel=host.closest('.panel');
   if(panel)panel.classList.add('bb-attention-panel');
   const title=panel?.querySelector('.section-head strong');
@@ -1354,7 +1358,6 @@ async function load(){
   renderHome();
   renderNav(currentNavState());
   watchNavReplacement();
-  installPreferenceSync();
 
   new MutationObserver(()=>{
     if(!$('mobileHome')?.hidden){renderHome();refreshOverview(true);refreshAttention(false)}
@@ -1396,6 +1399,8 @@ async function load(){
     writeLocal(pageKeyName,pages);
     renderQuick();
     renderNav(currentNavState());
+    // Begin periodic cross-device preference checks after initial load.
+    installPreferenceSync();
   });
 
   const overviewPromise=safeRpc('bb_mobile_overview_filtered',overviewArgs()).then(data=>{
