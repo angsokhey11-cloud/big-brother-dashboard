@@ -92,6 +92,15 @@ window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();def
 window.addEventListener('appinstalled',()=>{deferredPrompt=null;dismissed=true;render();toast('BIG BROTHER installed successfully ✓')});
 
 let bbSwReloading=false;
+let bbSwReloadPending=false;
+function reloadWhenSafe(){
+  if(!bbSwReloadPending||bbSwReloading||document.visibilityState==='hidden')return;
+  // Never discard an in-progress invoice, payment, stock entry or login.
+  if($('loginScreen')&&!$('loginScreen').hidden)return;
+  if($('moduleScreen')&&!$('moduleScreen').hidden)return;
+  bbSwReloading=true;
+  location.reload();
+}
 function registerWorker(){
   if(!('serviceWorker' in navigator))return;
 
@@ -105,20 +114,15 @@ function registerWorker(){
 
     navigator.serviceWorker.addEventListener('controllerchange',()=>{
       if(!hadController)return;
-
-      // Never interrupt credentials being entered on the login screen.
-      const login=$('loginScreen');
-      if(login&&!login.hidden)return;
-
-      if(bbSwReloading)return;
-      bbSwReloading=true;
-      location.reload();
+      bbSwReloadPending=true;
+      reloadWhenSafe();
     });
 
     const foregroundCheck=()=>{
       if(document.visibilityState==='visible')check();
     };
     document.addEventListener('visibilitychange',foregroundCheck);
+    document.addEventListener('visibilitychange',reloadWhenSafe);
     window.addEventListener('focus',check);
   }).catch(error=>console.warn('BIG BROTHER service worker:',error));
 }
