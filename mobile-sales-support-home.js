@@ -132,6 +132,7 @@ let preferenceSyncTimer=null;
 let payment=null;
 let stockReport=null;
 let attention=null;
+let attentionLoaded=false;
 let lastAttentionFetch=0;
 let pickerMode='quick';
 let pickerSlot=0;
@@ -1252,7 +1253,7 @@ function attentionRoute(type){
 function renderAttention(){
   const host=$('recentList');if(!host)return;
   if(!attention){
-    host.innerHTML='<div class="bb-home-data-note">Checking live alerts…</div>';
+    host.innerHTML='<div class="bb-home-data-note">'+(attentionLoaded?'Live alerts unavailable. Refresh when connected.':'Checking live alerts…')+'</div>';
     return;
   }
   const panel=host.closest('.panel');
@@ -1426,8 +1427,9 @@ async function load(){
 
   const attentionPromise=safeRpc('bb_mobile_my_attention').then(data=>{
     attention=data?.success?data:null;
+    attentionLoaded=true;
     lastAttentionFetch=Date.now();
-    if(attention)renderAttention();
+    renderAttention();
   });
 
   const stockPromise=(isAdmin()?safeRpc('bb_stock_report_fast'):Promise.resolve(null)).then(data=>{
