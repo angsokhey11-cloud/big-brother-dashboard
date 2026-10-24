@@ -259,14 +259,14 @@ function renderKpis(){
   if(isAdmin()&&overview){
     const m=overview.monthly||{},s=overview.currentSnapshot||{};
     const data=[
-      ['📊','Monthly Sales',money(m.grossSalesUSD),overview.periodLabel||currentPeriod()],
-      ['💰','Receivable',money(s.receivableUSD),'Current outstanding'],
-      ['📦','Stock Value',money(s.stockValueUSD),'Current inventory'],
-      ['⏳','Pending Tasks',String(num(s.pendingStaffRequests)),'Staff requests']
+      ['chart-line','Monthly Sales',money(m.grossSalesUSD),overview.periodLabel||currentPeriod()],
+      ['wallet','Receivable',money(s.receivableUSD),'Current outstanding'],
+      ['warehouse','Stock Value',money(s.stockValueUSD),'Current inventory'],
+      ['clipboard-list','Pending Tasks',String(num(s.pendingStaffRequests)),'Staff requests']
     ];
     grid.innerHTML=data.map(x=>`
       <div class="sales-kpi locked">
-        <span class="kpi-icon">${esc(x[0])}</span>
+        <span class="kpi-icon">${window.BBMobileFunctionIconsV1?.named?.(x[0])||esc(x[0])}</span>
         <small>${esc(x[1])}</small>
         <strong>${esc(x[2])}</strong>
         <em>${esc(x[3])}</em>
@@ -297,7 +297,7 @@ function renderRecent(){
 }
 function bindRouteButtons(host){host.querySelectorAll('[data-route]').forEach(btn=>btn.onclick=()=>openModule(btn.dataset.route,true))}
 function renderHome(){
-  $('greeting').textContent=greeting();$('userName').textContent=displayName();$('locationChip').textContent='📍 '+locationText();$('dateChip').textContent=dateText();
+  $('greeting').textContent=greeting();$('userName').textContent=displayName();const chip=$('locationChip');const pin=window.BBMobileFunctionIconsV1?.named?.('map-pin');if(pin){chip.innerHTML=pin;chip.appendChild(document.createTextNode(locationText()))}else{chip.textContent='📍 '+locationText();}$('dateChip').textContent=dateText();
   renderKpis();
 
   /*
