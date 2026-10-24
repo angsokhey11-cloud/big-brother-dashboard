@@ -623,3 +623,167 @@
     height:14px!important;
   }
 }
+
+
+/* BIG BROTHER Mobile Home V5.4 — Colorful Cards
+   Separate each functional section with a richer pastel surface.
+   Keep the V5.3 icon/label/amount/arrow grid unchanged.
+   Pure CSS: no effect on permissions, amounts, routing or database access. */
+#mobileHome{
+  background:#dfeaf8!important;
+}
+#mobileHome .mobile-scroll{
+  background:linear-gradient(180deg,#dfebfa 0%,#e8f0fc 48%,#e8eafa 100%)!important;
+}
+#mobileHome .content>.panel{
+  border-width:1px!important;
+  box-shadow:0 7px 20px rgba(25,57,105,.09)!important;
+}
+#mobileHome .content>.panel.overview-panel{
+  background:linear-gradient(145deg,#d7eaff 0%,#e4f1ff 62%,#edf6ff 100%)!important;
+  border-color:#b8d3f2!important;
+}
+#mobileHome .content>.panel.quick-panel{
+  background:linear-gradient(145deg,#e1e6ff 0%,#e8eaff 56%,#eff3ff 100%)!important;
+  border-color:#ccd5f6!important;
+}
+#mobileHome .content>.panel.bb-attention-panel{
+  background:linear-gradient(145deg,#d7f2ed 0%,#e4f5f1 58%,#edf9f6 100%)!important;
+  border-color:#bcded5!important;
+}
+/* Additional Home cards use a colored surface too, not plain white. */
+#mobileHome .content>.panel:not(.overview-panel):not(.quick-panel):not(.bb-attention-panel){
+  background:linear-gradient(145deg,#e9efff 0%,#f2f4ff 100%)!important;
+  border-color:#d5def2!important;
+}
+#mobileHome .overview-panel .section-head strong{color:#1d548d!important}
+#mobileHome .quick-panel .section-head strong{color:#3b438d!important}
+#mobileHome .bb-attention-panel .section-head strong{color:#17675f!important}
+#mobileHome .section-head>span{color:#586e8a!important}
+
+/* Four distinct readable KPI backgrounds, including My Earning. */
+#mobileHome #kpiGrid .sales-kpi:nth-child(1){
+  background:linear-gradient(145deg,#cce6ff,#e2f2ff)!important;
+  border-color:#a8d0f4!important;
+  box-shadow:inset 3px 0 0 #2378cb,0 3px 10px rgba(32,86,146,.08)!important;
+}
+#mobileHome #kpiGrid .sales-kpi:nth-child(2){
+  background:linear-gradient(145deg,#c9eee7,#e1f8f3)!important;
+  border-color:#aae0d3!important;
+  box-shadow:inset 3px 0 0 #0a8d8b,0 3px 10px rgba(24,111,102,.07)!important;
+}
+#mobileHome #kpiGrid .sales-kpi:nth-child(3){
+  background:linear-gradient(145deg,#dadfff,#eceeff)!important;
+  border-color:#c5cdf6!important;
+  box-shadow:inset 3px 0 0 #535fc0,0 3px 10px rgba(73,82,151,.07)!important;
+}
+#mobileHome #kpiGrid .sales-kpi:nth-child(4){
+  background:linear-gradient(145deg,#ffe3b8,#fff0d8)!important;
+  border-color:#efd5aa!important;
+  box-shadow:inset 3px 0 0 #bb791f,0 3px 10px rgba(133,94,41,.07)!important;
+}
+#mobileHome #kpiGrid .sales-kpi[data-kpi-type="your-earning"]{
+  background:linear-gradient(145deg,#e2d5ff,#f1eaff)!important;
+  border-color:#d5c4f3!important;
+  box-shadow:inset 3px 0 0 #805cb6,0 3px 10px rgba(103,78,154,.07)!important;
+}
+#mobileHome #kpiGrid .sales-kpi small{color:#3e5771!important}
+#mobileHome #kpiGrid .sales-kpi strong{color:#132f50!important}
+#mobileHome #kpiGrid .sales-kpi em{color:#526a84!important}
+
+/* Color the complete Quick Action tile, not only the small icon badge. */
+#mobileHome #quickActions{
+  gap:8px!important;
+}
+#mobileHome #quickActions button.quick-btn{
+  --bb-tile-bg:#d3e9ff;
+  --bb-tile-edge:#bcdafa;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:4px!important;
+  min-width:0!important;
+  min-height:85px!important;
+  padding:9px 4px!important;
+  border-radius:15px!important;
+  border:1px solid var(--bb-tile-edge)!important;
+  background:linear-gradient(155deg,var(--bb-tile-bg),rgba(255,255,255,.78))!important;
+  box-shadow:0 3px 10px rgba(29,71,124,.055)!important;
+}
+#mobileHome #quickActions button.quick-btn:has(.bb-ficon-teal){
+  --bb-tile-bg:#c9efe8;--bb-tile-edge:#aee0d5;
+}
+#mobileHome #quickActions button.quick-btn:has(.bb-ficon-indigo){
+  --bb-tile-bg:#dce1ff;--bb-tile-edge:#c5cef7;
+}
+#mobileHome #quickActions button.quick-btn:has(.bb-ficon-violet){
+  --bb-tile-bg:#e9dcff;--bb-tile-edge:#d8c9f4;
+}
+#mobileHome #quickActions button.quick-btn:has(.bb-ficon-cyan){
+  --bb-tile-bg:#d4f0f9;--bb-tile-edge:#b6e0ed;
+}
+#mobileHome #quickActions button.quick-btn:has(.bb-ficon-amber){
+  --bb-tile-bg:#ffebce;--bb-tile-edge:#ecd4aa;
+}
+#mobileHome #quickActions button.quick-btn .quick-icon{
+  margin:0!important;
+  background:rgba(255,255,255,.45)!important;
+  border-color:rgba(255,255,255,.66)!important;
+  box-shadow:none!important;
+}
+#mobileHome #quickActions button.quick-btn .quick-icon:has(.bb-ficon-teal),
+#mobileHome #quickActions button.quick-btn .quick-icon:has(.bb-ficon-indigo),
+#mobileHome #quickActions button.quick-btn .quick-icon:has(.bb-ficon-violet),
+#mobileHome #quickActions button.quick-btn .quick-icon:has(.bb-ficon-cyan),
+#mobileHome #quickActions button.quick-btn .quick-icon:has(.bb-ficon-amber){
+  background:rgba(255,255,255,.45)!important;
+  border-color:rgba(255,255,255,.66)!important;
+}
+#mobileHome #quickActions button.quick-btn>span{
+  display:block!important;
+  max-width:100%!important;
+  color:#263e59!important;
+  font-weight:800!important;
+  line-height:1.18!important;
+  text-align:center!important;
+  overflow-wrap:break-word;
+}
+#mobileHome #quickActions button.quick-btn:active{
+  transform:scale(.975);
+}
+
+/* Alerts should read as distinct status cards even when there is no issue. */
+#mobileHome #recentList .bb-att-row[data-att-type="receivable"]{
+  background:linear-gradient(145deg,#c9eee7,#e4f7f2)!important;
+  border-color:#b1dfd4!important;
+  box-shadow:inset 3px 0 0 #0b9490,0 2px 8px rgba(26,111,99,.05)!important;
+}
+#mobileHome #recentList .bb-att-row[data-att-type="stock"]{
+  background:linear-gradient(145deg,#dfe5ff,#f0f1ff)!important;
+  border-color:#cad2f5!important;
+  box-shadow:inset 3px 0 0 #5261bc,0 2px 8px rgba(73,82,151,.05)!important;
+}
+#mobileHome #recentList .bb-att-row[data-att-type="pending"]{
+  background:linear-gradient(145deg,#ffebc9,#fff5e5)!important;
+  border-color:#efdcb6!important;
+  box-shadow:inset 3px 0 0 #c38731,0 2px 8px rgba(133,94,41,.05)!important;
+}
+/* A resolved alert should still be distinguishable, but not look urgent. */
+#mobileHome #recentList .bb-att-row.bb-clear{
+  background:linear-gradient(145deg,#e5f1f5,#f0f6fb)!important;
+  border-color:#d2e0eb!important;
+  box-shadow:inset 3px 0 0 #9eb9cc!important;
+}
+#mobileHome #recentList .bb-att-row .recent-main strong{color:#203d5b!important}
+#mobileHome #recentList .bb-att-row .recent-main span{color:#536e88!important}
+@media(max-width:380px){
+  #mobileHome #quickActions button.quick-btn{
+    min-height:80px!important;
+    padding:8px 3px!important;
+    border-radius:12px!important;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  #mobileHome #quickActions button.quick-btn:active{transform:none}
+}
