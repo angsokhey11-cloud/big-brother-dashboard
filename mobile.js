@@ -432,9 +432,11 @@ async function activate(){
   // Direct module links need authentication and permissions, not a blocking Home overview.
   // The unified Home controller still loads independently; returning Home refreshes live data.
   if(requested&&ROUTES[requested]&&canRoute(requested)){openModule(requested,false);return}
-  await loadOverview(true);
-  // The first overview was just loaded above. Do not immediately request it twice.
+  // Display the authenticated shell immediately after access is verified.
+  // The live overview can refresh without holding the entire mobile app on
+  // its loading screen. Server-side permissions and all writes remain live.
   showHome(!requested,true);
+  void loadOverview(true);
 }
 async function boot(){
   hideAll();$('bootScreen').hidden=false;
