@@ -561,6 +561,54 @@
 
   
 </style>
+
+<style id="bb-mobile-home-first-paint-v4">
+  /* First-paint placeholders contain no accounting data or permissions. */
+  .bb-home-skeleton-card{
+    min-height:104px;
+    padding:14px 12px;
+    border:1px solid #e4edf6;
+    border-radius:13px;
+    background:#fff;
+    display:flex;flex-direction:column;justify-content:space-between;
+    gap:9px;
+  }
+  .bb-home-skeleton-quick{
+    height:82px;
+    border-radius:14px;
+    background:#f2f6fb;
+    padding:10px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;
+  }
+  .bb-home-skeleton-bar{
+    display:block;
+    height:10px;
+    width:78%;
+    border-radius:99px;
+    background:linear-gradient(90deg,#e7eff7,#f5f9fd,#e7eff7);
+    background-size:200% 100%;
+    animation:bb-home-skeleton-pulse 1.4s ease-in-out infinite;
+  }
+  .bb-home-skeleton-bar.short{width:43%}
+  .bb-home-skeleton-bar.value{width:60%;height:18px}
+  .bb-home-skeleton-dot{
+    width:35px;height:35px;border-radius:11px;
+    background:#e7eff7;
+    animation:bb-home-skeleton-fade 1.4s ease-in-out infinite alternate;
+  }
+  .bb-home-data-note{
+    grid-column:1/-1;
+    padding:22px 12px;
+    color:#667b91;
+    text-align:center;
+    font:700 12px/1.5 Arial,sans-serif;
+  }
+  @keyframes bb-home-skeleton-pulse{to{background-position:-200% 0}}
+  @keyframes bb-home-skeleton-fade{to{opacity:.55}}
+  @media(prefers-reduced-motion:reduce){
+    .bb-home-skeleton-bar,.bb-home-skeleton-dot{animation:none}
+  }
+</style>
 </head>
 
 
@@ -804,7 +852,12 @@
 
             <div
               id="kpiGrid"
-              class="kpi-grid">
+              class="kpi-grid"
+              aria-busy="true">
+              <div class="bb-home-skeleton-card" aria-hidden="true"><i class="bb-home-skeleton-bar short"></i><i class="bb-home-skeleton-bar value"></i><i class="bb-home-skeleton-bar"></i></div>
+              <div class="bb-home-skeleton-card" aria-hidden="true"><i class="bb-home-skeleton-bar short"></i><i class="bb-home-skeleton-bar value"></i><i class="bb-home-skeleton-bar"></i></div>
+              <div class="bb-home-skeleton-card" aria-hidden="true"><i class="bb-home-skeleton-bar short"></i><i class="bb-home-skeleton-bar value"></i><i class="bb-home-skeleton-bar"></i></div>
+              <div class="bb-home-skeleton-card" aria-hidden="true"><i class="bb-home-skeleton-bar short"></i><i class="bb-home-skeleton-bar value"></i><i class="bb-home-skeleton-bar"></i></div>
             </div>
 
           </section>
@@ -829,7 +882,12 @@
 
             <div
               id="quickActions"
-              class="quick-grid">
+              class="quick-grid"
+              aria-busy="true">
+              <div class="bb-home-skeleton-quick" aria-hidden="true"><i class="bb-home-skeleton-dot"></i><i class="bb-home-skeleton-bar short"></i></div>
+              <div class="bb-home-skeleton-quick" aria-hidden="true"><i class="bb-home-skeleton-dot"></i><i class="bb-home-skeleton-bar short"></i></div>
+              <div class="bb-home-skeleton-quick" aria-hidden="true"><i class="bb-home-skeleton-dot"></i><i class="bb-home-skeleton-bar short"></i></div>
+              <div class="bb-home-skeleton-quick" aria-hidden="true"><i class="bb-home-skeleton-dot"></i><i class="bb-home-skeleton-bar short"></i></div>
             </div>
 
           </section>
@@ -1142,7 +1200,7 @@
 
   <script data-bb-theme-v1 src="mobile-theme-v1.js?v=20261005-angkor-login16"></script>
 
-  <script src="mobile-sales-support-home.js?v=20261018-stockadmin-date2"></script>
+  <script src="mobile-sales-support-home.js?v=20261024-firstpaint-v4"></script>
 
   <script src="pwa-install.js?v=20261024-mobileperf1"></script>
   <script src="mobile-module-transition-v3.js?v=20261024-module-transition1"></script>
