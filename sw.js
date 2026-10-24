@@ -1,5 +1,5 @@
 /* BIG BROTHER Mobile PWA service worker V1.9 */
-const CACHE='bb-mobile-shell-v87';
+const CACHE='bb-mobile-shell-v88';
 const MOBILE_FILES=new Set([
   'mobile.html','mobile-function-icons-v1.js','mobile-home-theme-v5.css','mobile.css','mobile-sales-support.css','pwa-install.css','mobile.js','mobile-user-overview.js',
   'mobile-sales-support-home.js','pwa-install.js','mobile-main-menu-v3.js','mobile-main-menu-stockcontrol-v5.js','mobile-ui-policy-v1.js',
@@ -31,7 +31,7 @@ const SHELL_URL=new URL('./mobile.html',self.registration.scope).href;
 const PRECACHE=[
   './mobile.html',
   './mobile.css?v=20261006-login17',
-  './mobile-home-theme-v5.css?v=20261025-home-center-v5-2',
+  './mobile-home-theme-v5.css?v=20261025-inline-overview-v5-3',
   './mobile-sales-support.css?v=20260921-overviewtap2',
   './pwa-install.css?v=20260920-ios1',
   './mobile-function-icons-v1.js?v=20261025-receivable-collection-v2',
