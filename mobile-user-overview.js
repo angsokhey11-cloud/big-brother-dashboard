@@ -102,11 +102,12 @@ function applyOverview(data,payment){
   let earningSub=earning.count+' earning'+(earning.count===1?'':'s')+' available in Your Payment';
   if(earning.khr>0)earningSub+=' · KHR '+khr(earning.khr);
 
+  const drawIcon=name=>window.BBMobileFunctionIconsV1?.named?.(name)||({ 'chart-line':'📊',wallet:'💰',package:'📦' })[name]||'';
   const cards=[
-    ['📊','Monthly Sales',money(sales.netUSD),salesSub],
-    ['💰','Receivable',money(ar.equivalentUSD),'USD '+money(ar.USD)+' · KHR '+khr(ar.KHR)],
-    ['📦','Stock Qty',String(Math.round(num(stock.physicalQty)*100)/100),openBatches+' assigned open batch'+(openBatches===1?'':'es')],
-    ['👛','Your Earning',money(earning.usd),earningSub]
+    ['chart-line','Monthly Sales',money(sales.netUSD),salesSub],
+    ['wallet','Receivable',money(ar.equivalentUSD),'USD '+money(ar.USD)+' · KHR '+khr(ar.KHR)],
+    ['package','Stock Qty',String(Math.round(num(stock.physicalQty)*100)/100),openBatches+' assigned open batch'+(openBatches===1?'':'es')],
+    ['wallet','Your Earning',money(earning.usd),earningSub]
   ];
 
   const existing=[...grid.querySelectorAll('.sales-kpi')];
@@ -123,7 +124,7 @@ function applyOverview(data,payment){
       const value=card.querySelector('strong');
       const sub=card.querySelector('em');
 
-      if(icon)icon.textContent=values[0];
+      if(icon)icon.innerHTML=drawIcon(values[0]);
       if(label)label.textContent=values[1];
       if(value)value.textContent=values[2];
       if(sub)sub.textContent=values[3];
@@ -132,7 +133,7 @@ function applyOverview(data,payment){
     /* Fallback if the decorated home renderer has not run yet. */
     grid.innerHTML=cards.map(x=>
       '<div class="sales-kpi locked">'+
-        '<span class="kpi-icon">'+esc(x[0])+'</span>'+
+        '<span class="kpi-icon">'+drawIcon(x[0])+'</span>'+
         '<small>'+esc(x[1])+'</small>'+
         '<strong>'+esc(x[2])+'</strong>'+
         '<em>'+esc(x[3])+'</em>'+
