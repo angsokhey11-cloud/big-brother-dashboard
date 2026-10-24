@@ -121,6 +121,7 @@ const ROUTES=Object.fromEntries(ROUTE_ROWS.map(([route,group,icon,label])=>[rout
 let profile=null;
 let quick=[];
 let pages=[];
+let quickPreferencesReady=false;
 let overview=null;
 let overviewLoading=false;
 let overviewFilter={locationCode:'',year:0,month:0};
@@ -857,6 +858,9 @@ function installPreferenceSync(){
 
 function renderQuick(){
   const host=$('quickActions');if(!host)return;
+  // Until access is verified, never turn placeholders into unauthorized
+  // shortcuts. A first-use device waits for its saved preferences.
+  if(!profile||!quickPreferencesReady)return;
   quick=normalizeQuick(quick);
   host.innerHTML=quick.length?quick.map(route=>{
     const item=ROUTES[route];
@@ -1330,33 +1334,25 @@ function watchNavReplacement(){
 }
 
 async function load(){
+  // Permission verification is always live; shortcuts are not permission
+  // caches. Only routes allowed by the fresh access profile may be shown.
   profile=await rpc('bb_current_access_profile');
   overviewFilter=loadOverviewFilter();
 
-  const [prefs,overviewData,staffPayment,myAttention,stockReportData]=await Promise.all([
-    safeRpc('bb_mobile_get_preferences'),
-    safeRpc('bb_mobile_overview_filtered',overviewArgs()),
-    canRoute('staff-relation')?safeRpc('bb_staff_relation_my_payments',{p_from:null,p_to:null,p_salary_month:null}):null,
-    safeRpc('bb_mobile_my_attention'),
-    isAdmin()?safeRpc('bb_stock_report_fast'):null
-  ]);
-  overview=overviewData?.success?overviewData:null;
-  payment=staffPayment;
-  stockReport=stockReportData?.success?stockReportData:null;
-  attention=myAttention?.success?myAttention:null;
-  lastAttentionFetch=Date.now();
+  const quickKeyName=quickKey();
+  const pageKeyName=pageKey();
+  let localQuickSaved=false;
+  try{localQuickSaved=localStorage.getItem(quickKeyName)!==null}catch(_){}
+  quick=normalizeQuick(readLocal(quickKeyName));
+  pages=normalizePages(readLocal(pageKeyName));
+  quickPreferencesReady=localQuickSaved;
 
-  if(prefs?.updatedAt){
-    quick=normalizeQuick(prefs.quickActionOrder);
-    pages=normalizePages(prefs.pinnedPages);
-    preferenceUpdatedAt=clean(prefs.updatedAt);
-  }else{
-    quick=normalizeQuick(readLocal(quickKey()));
-    pages=normalizePages(readLocal(pageKey()));
-  }
-  writeLocal(quickKey(),quick);writeLocal(pageKey(),pages);
-
-  renderHome();renderNav(currentNavState());watchNavReplacement();installPreferenceSync();
+  // Render locally available, permission-filtered shortcuts immediately.
+  // No dashboard, inventory, earnings or payment data is read from storage.
+  renderHome();
+  renderNav(currentNavState());
+  watchNavReplacement();
+  installPreferenceSync();
 
   new MutationObserver(()=>{
     if(!$('mobileHome')?.hidden){renderHome();refreshOverview(true);refreshAttention(false)}
@@ -1381,6 +1377,57 @@ async function load(){
       renderQuick();
     }
   },900);
+
+  // Server requests begin together, but each section updates on its own:
+  // a slower stock/attention report cannot delay Quick Actions or Sales.
+  const prefsPromise=safeRpc('bb_mobile_get_preferences').then(prefs=>{
+    const localStillMatches=
+      sameArray(quick,normalizeQuick(readLocal(quickKeyName))) &&
+      sameArray(pages,normalizePages(readLocal(pageKeyName)));
+    if(prefs?.updatedAt && preferenceWriteCount===0 && localStillMatches){
+      quick=normalizeQuick(prefs.quickActionOrder);
+      pages=normalizePages(prefs.pinnedPages);
+      preferenceUpdatedAt=clean(prefs.updatedAt);
+    }
+    quickPreferencesReady=true;
+    writeLocal(quickKeyName,quick);
+    writeLocal(pageKeyName,pages);
+    renderQuick();
+    renderNav(currentNavState());
+  });
+
+  const overviewPromise=safeRpc('bb_mobile_overview_filtered',overviewArgs()).then(data=>{
+    if(data?.success){
+      overview=data;
+      renderOverview();
+    }else{
+      const grid=$('kpiGrid');
+      if(grid && !overview){
+        grid.innerHTML='<div class="bb-home-data-note">Overview unavailable. Refresh when connected.</div>';
+      }
+    }
+  });
+
+  const paymentPromise=(canRoute('staff-relation')
+    ?safeRpc('bb_staff_relation_my_payments',{p_from:null,p_to:null,p_salary_month:null})
+    :Promise.resolve(null)
+  ).then(data=>{
+    payment=data;
+    if(overview)renderOverview();
+  });
+
+  const attentionPromise=safeRpc('bb_mobile_my_attention').then(data=>{
+    attention=data?.success?data:null;
+    lastAttentionFetch=Date.now();
+    if(attention)renderAttention();
+  });
+
+  const stockPromise=(isAdmin()?safeRpc('bb_stock_report_fast'):Promise.resolve(null)).then(data=>{
+    stockReport=data?.success?data:null;
+    if(overview)renderOverview();
+  });
+
+  await Promise.allSettled([prefsPromise,overviewPromise,paymentPromise,attentionPromise,stockPromise]);
 }
 
 function start(){
