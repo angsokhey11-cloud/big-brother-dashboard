@@ -154,7 +154,7 @@ body{
       +
       '<scr'
       +
-      'ipt src="supabase-dashboard-adapter.js?v=20261025-tokenlock1"></scr'
+      'ipt src="supabase-dashboard-adapter.js?v=20261025-webpush-v1"></scr'
       +
       'ipt>\n'
       +
@@ -1276,6 +1276,8 @@ body{
     // Telegram Manager must load as an independent admin menu AFTER the
     // original Notification Center and all Dashboard feature integrations.
     html=html.replace('</body>', '<scr'+'ipt src="desktop-telegram-manager-menu-v1.js?v=20261022-workspace-tools1"></scr'+'ipt></body>');
+    // Web Push uses an explicit click permission request, never background polling.
+    html=html.replace('</body>', '<scr'+'ipt src="bb-web-push-client-v1.js?v=20261025-webpush-v1"></scr'+'ipt></body>');
 
     document.open();
 
