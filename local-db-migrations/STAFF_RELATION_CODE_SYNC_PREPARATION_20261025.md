@@ -148,3 +148,29 @@ Safe order:
 5. Preserve Local-only rows and backups. Never bypass rollback rehearsal or exact identity/audit safety checks.
 
 Known blockers still dependent on local verification: `V34-PRE-SYNC-SCHEMA-GUARD.ps1`, `08B-PREPARE-CLOUD-STAGE-V1.2.sql`, and the check-only semantics of `V34-LOCAL-APPROVED-SQL-CODE-GATE.ps1` were not supplied. Their true behavior cannot be certified from the uploaded 08 and 08C files.
+
+
+## 2026-10-25 23:11 — Next Cloud→Local blocker resolved in Code Sync
+
+After previous 4A Schema Guard repair, the latest screenshot shows staging import failure:
+`psql:/tmp/08B-cloud-stage-data-v1.2.sql:3037: ERROR: duplicate key value violates unique constraint "payments_lower_idx"`
+`Key (lower(TRIM(BOTH FROM transaction_id)))=(179195231042684) already exists.`
+`CONTEXT: COPY payments, line 643`.
+
+Thus Step 6 staging COPY aborted; Step 7A rollback rehearsal and Step 7B real merge did NOT run. No successful SYNC-REPORT.txt is expected. Staging is partial only. Re-run a **fresh** Cloud→Local after Code Sync; do not resume old staging.
+
+Read-only Cloud verification:
+- Cloud `public.payments` uses `idx_payments_normalized_transaction_lookup` **non-unique**, partial normalization; payment_id primary key remains unique.
+- Cloud contains 3 payment rows for transaction_id `179195231042684`: PAY-0560, PAY-1110, PAY-1178 (same customer, separate invoices).
+- Cloud also reuses `179092673997751` twice and `179091405727617` twice. Seven total rows across those three bank references. Their accounting correctness is an **independent audit question**; DO NOT drop/delete/alter any such payment to make staging pass.
+- Stage `payments_lower_idx` is **UNIQUE**, unlike Cloud. The stale Local index is the likely source if 08B creates staging via `LIKE public.payments INCLUDING INDEXES`; 08B source has not been provided, so verify this during the next Local run.
+
+**Code Sync fix (schema-only, versioned and SHA-256 manifest-registered):**
+- `local-db-migrations/20261025_payment_transaction_index_cloud_parity_v1.sql`.
+- Fail-closed verifies local public.payments, the exact legacy UNIQUE normalized transaction index, non-unique Cloud-compatible index expression, primary key and foreign keys.
+- Removes only `public.payments_lower_idx` if its verified definition matches the legacy normalized transaction expression; creates/validates `idx_payments_normalized_transaction_lookup` as NON-UNIQUE.
+- No data row writes and no changes to Bank Register uniqueness rules. Does not alter payment primary keys.
+
+Run normal Code Sync and confirm migration applied in `CODE-SQL-MIGRATION-REPORT`, then run **fresh** Cloud→Local. If staging still creates a UNIQUE payments_lower_idx, stop and inspect `08B-PREPARE-CLOUD-STAGE-V1.2.sql`; that SQL is currently unavailable and may explicitly recreate the obsolete unique index independently of Local.
+
+Once merge completes, verify SID-008 Staff Payment Request #22 PAID and EXP-000024 / EXP-000025, plus reused transaction IDs and their distinct `payment_id` records. Do not manually recreate CHEA KIMSUN salary expenses.
