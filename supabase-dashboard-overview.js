@@ -8,10 +8,7 @@ const SESSION_KEY='BB_SUPABASE_DEV_SESSION_V1';
 const COLORS=['#2f6fed','#22a06b','#ff9f1c','#ef5350','#7c4dce','#27a9c7','#f4c20d','#7f8c8d'];
 let installed=false;
 let loading=false;
-let liveTimer=null;
 let homeObserver=null;
-let lastRefreshAt=0;
-const LIVE_REFRESH_MS=20000;
 
 const $=id=>document.getElementById(id);
 const num=v=>Number(v||0)||0;
@@ -402,7 +399,6 @@ async function load(options={}){
 
     if(isAdmin())renderAdmin(d);
     else renderStaff(d);
-    lastRefreshAt=Date.now();
     e.hidden=true;
     e.textContent='';
   }catch(err){
@@ -426,38 +422,15 @@ function refreshLive(){
 }
 
 function installLiveRefresh(){
-  if(liveTimer)return;
-
+  // One load on entry (ready), and one when navigating back to Overview.
+  // No timer, browser-focus, or tab-visibility polling.
+  if(homeObserver)return;
   const home=$('dashboardHome');
-
-  if(home&&!homeObserver){
-    homeObserver=new MutationObserver(()=>{
-      if(!home.hidden){
-        /* Refresh immediately whenever the user returns from a module. */
-        setTimeout(refreshLive,60);
-      }
-    });
-
-    homeObserver.observe(home,{
-      attributes:true,
-      attributeFilter:['hidden']
-    });
-  }
-
-  window.addEventListener('focus',refreshLive);
-
-  document.addEventListener('visibilitychange',()=>{
-    if(document.visibilityState==='visible')refreshLive();
+  if(!home)return;
+  homeObserver=new MutationObserver(()=>{
+    if(!home.hidden)refreshLive();
   });
-
-  liveTimer=setInterval(()=>{
-    if(
-      homeVisible() &&
-      Date.now()-lastRefreshAt>=LIVE_REFRESH_MS-1000
-    ){
-      refreshLive();
-    }
-  },LIVE_REFRESH_MS);
+  homeObserver.observe(home,{attributes:true,attributeFilter:['hidden']});
 }
 
 function ready(){
