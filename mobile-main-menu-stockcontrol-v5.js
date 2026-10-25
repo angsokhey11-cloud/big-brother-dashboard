@@ -141,7 +141,7 @@ const MOBILE={
  'daily-cash':'https://angsokhey11-cloud.github.io/big-brother-expenses/daily-cash.html?embed=1&v=20260920-vaultfx1',
  'expense-history':'https://angsokhey11-cloud.github.io/big-brother-expenses/mobile-history.html?embed=1&v=20260915-1',
 
- 'staff-relation':'https://angsokhey11-cloud.github.io/big-brother-staff-relation/mobile.html?embed=1&v=20261025-payment-history-v4',
+ 'staff-relation':'https://angsokhey11-cloud.github.io/big-brother-staff-relation/mobile.html?embed=1&v=20261025-admin-select-v5',
 
  'admin-pending-receivable':'https://angsokhey11-cloud.github.io/big-brother-admin-work/pending-receivable-mobile.html?embed=1&v=20260920-artelegram2',
  'admin-pending-daily-cash':'https://angsokhey11-cloud.github.io/big-brother-admin-work/pending-daily-cash-mobile.html?embed=1&v=20261018-date1',
