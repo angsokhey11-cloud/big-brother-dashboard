@@ -86,6 +86,12 @@
       "file": "20261025_staff_relation_sync_schema_v1.sql",
       "sha256": "0D8E4DC01B913C322D090ABF26B8DB8EB648F90D5A1531AEF28655A8F7D95337",
       "description": "Code Sync: Staff Relation Admin-on-behalf request columns and Cloud notification/push structure parity; block old all-public merge with ALWAYS replay guard; no business data changes"
+    },
+    {
+      "id": "20261025_payment_transaction_index_cloud_parity_v1",
+      "file": "20261025_payment_transaction_index_cloud_parity_v1.sql",
+      "sha256": "DE3B4AE9657FEDB876305F31A15259625B123840DD95487EAE4369D719CC710C",
+      "description": "Code Sync schema-only: align Local payments transaction_id expression index with Cloud nonunique partial-bank allocation behavior; preserve payment_id PK, all bank/payments/expenses rows, and duplicate-register safeguards."
     }
   ]
 }
