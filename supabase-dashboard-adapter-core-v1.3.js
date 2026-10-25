@@ -165,6 +165,7 @@
   }
 
   async function signOut(){
+    try{await window.BBPush?.disable({silent:true})}catch(_){}
     const current=readSession();
     try{
       if(current?.access_token){
