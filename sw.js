@@ -1,5 +1,5 @@
-/* BIG BROTHER Mobile PWA service worker V1.9 */
-const CACHE='bb-mobile-shell-v90';
+/* BIG BROTHER Mobile + Desktop PWA service worker V2.0 — Web Push */
+const CACHE='bb-mobile-shell-v91';
 const MOBILE_FILES=new Set([
   'mobile.html','mobile-function-icons-v1.js','mobile-home-theme-v5.css','mobile.css','mobile-sales-support.css','pwa-install.css','mobile.js','mobile-user-overview.js',
   'mobile-sales-support-home.js','pwa-install.js','mobile-main-menu-v3.js','mobile-main-menu-stockcontrol-v5.js','mobile-ui-policy-v1.js',
@@ -126,5 +126,51 @@ self.addEventListener('fetch',event=>{
       if(offlineCopy)return offlineCopy;
       throw error;
     }
+  })());
+});
+
+
+/* BIG BROTHER Web Push V1: visible notifications only, with no polling. */
+self.addEventListener('push',event=>{
+  event.waitUntil((async()=>{
+    let msg={};
+    try{msg=event.data?.json()||{}}catch(_){msg={}}
+    const data=msg?.data&&typeof msg.data==='object'?msg.data:{};
+    const route=typeof data.route==='string'&&/^[a-z0-9-]{2,70}$/.test(data.route)?data.route:'notification-center';
+    await self.registration.showNotification('BIG BROTHER',{
+      body:String(msg.body||'New important business activity').slice(0,220),
+      icon:new URL('./pwa-icon.svg',self.registration.scope).href,
+      badge:new URL('./pwa-icon.svg',self.registration.scope).href,
+      tag:String(msg.tag||route).slice(0,180),
+      renotify:false,
+      data:{
+        route,
+        entityId:String(data.entityId||'').slice(0,160),
+        eventKey:String(data.eventKey||'').slice(0,250)
+      }
+    });
+  })());
+});
+
+self.addEventListener('notificationclick',event=>{
+  event.notification.close();
+  event.waitUntil((async()=>{
+    const payload=event.notification.data||{};
+    const route=/^[a-z0-9-]{2,70}$/.test(String(payload.route||''))?payload.route:'notification-center';
+    const clientsOnOrigin=await self.clients.matchAll({type:'window',includeUncontrolled:true});
+    const home=(clientsOnOrigin.find(c=>new URL(c.url).pathname.endsWith('/mobile.html'))||
+      clientsOnOrigin.find(c=>new URL(c.url).pathname.endsWith('/index.html')));
+    const ua=String(self.navigator?.userAgent||'');
+    const mobile=home ? new URL(home.url).pathname.endsWith('/mobile.html')
+      : /Android|iPhone|iPad|iPod|Mobile/i.test(ua);
+    const target=new URL(mobile?'./mobile.html':'./index.html',self.registration.scope);
+    target.searchParams.set('module',route);
+    target.searchParams.set('autoload','1');
+    if(payload.eventKey)target.searchParams.set('bb_notice',String(payload.eventKey));
+    if(payload.entityId)target.searchParams.set('bb_entity',String(payload.entityId));
+    if(home){
+      try{await home.navigate(target.href);await home.focus();return}catch(_){}
+    }
+    await self.clients.openWindow(target.href);
   })());
 });
