@@ -197,3 +197,38 @@ New **Code Sync only** SQL migration registered after normalized payment-index c
 Includes guards against unfamiliar Local bank functions and missing tables/columns/view/triggers; snapshots no business data and never manually creates payment/expense/balance rows. Installs seven exact Cloud function definitions and checks payment wallet-edit guards and authenticated-only RPCs. Read-only Cloud migration preflight and postflight have passed. **Local execution is NOT YET CONFIRMED**. If a guard rejects a different Local code version, inspect Code SQL Migration report rather than bypass or weakening rules.
 
 Order: Code Sync first (index migration, then bank partial-use migration), then fresh Cloud → Local business data sync. Verify prior payment/expense reconciliation and make a separate controlled test of bank allocation across more than one invoice on Local only after reviewing current real balances. Do not create real accounting test payments without authorization.
+
+
+## 2026-10-25 23:49 — Same Stage 6 payments_lower_idx error after prior migrations
+
+A new screenshot confirms a repeat of the **same Step 6 COPY staging error**:
+- \`psql:/tmp/08B-cloud-stage-data-v1.2.sql:3037\` rejected duplicate normalized transaction_id \`179195231042684\`.
+- Cloud staging was created, \`COPY payments\` failed on line 643.
+- 08C did not start, no committed merge and no successful SYNC-REPORT.txt.
+
+**Diagnostic distinction:** the index migration fixes \`public.payments\`, but the COPY uses
+\`bb_cloud_stage.payments\`, which can still have a separately created/cloned
+UNIQUE \`payments_lower_idx\`. A successful Code Sync migration must be verified
+on Local; the screenshot alone does not prove it was applied.
+
+**Safe supplemental fix committed:**
+
+- \`local-db-migrations/08D-CHECK-STAGE-PAYMENTS-INDEX-V1.sql\` is **staging-only** SQL, NOT a permanent app-schema migration. Do NOT register in \`manifest.json\` or run manually. The Cloud→Local controller invokes it after 08B staging creation, before COPY.
+- It checks \`public.payments\` PK and NON-UNIQUE lookup index READ-ONLY, and the partial-use wallet guard from Code Sync. If Local Code Sync did not succeed, it stops with \`BANK_STAGE_STOP\` and instructs the operator to fix Code Sync.
+- Only a verified obsolete UNIQUE \`lower(trim(transaction_id))\` **temporary stage index** is removed; it does not drop the Local payment index or edit business records, payment IDs, wallet allocations or bank registration constraints.
+- Unknown indexes, constraint-backed indexes or absent prerequisites fail closed before COPY.
+
+**Windows controller installer V2:**
+- \`local-db-migrations/V34-INSTALL-STAGE-PAYMENTS-PARITY-V2.ps1\` verifies stage SQL SHA-256, locates precisely one 08 controller, backs up before patching, and installs a one-time Step 6 stage-helper invocation.
+- If the controller is exactly the original V1.2 SHA, the installer first calls the Code-Synced V1 business-only/read-only updater, then installs V2. If the controller is unexpectedly modified, it stops rather than overwriting.
+- Existing \`local-db-migrations/INSTALL-BUSINESS-ONLY-STAGING.cmd\` now calls V2. **Still a one-time Windows installer, not SQL manually executed**; Code Sync copies source but does not automatically write to a separate Local Windows controller folder.
+- The installer itself runs **no SQL, no Cloud→Local merge and no business-data changes**.
+
+**Safe execution sequence**:
+1. Code Sync: confirm successful application of \`20261025_payment_transaction_index_cloud_parity_v1\` and \`20261025_bank_partial_use_cloud_parity_v1\` in the SQL migration report.
+2. Run synced \`INSTALL-BUSINESS-ONLY-STAGING.cmd\` once. Verify it prints \`Stage 6 payment-index compatibility check INSTALLED\` and a controller backup path.
+3. Run a **fresh** Cloud→Local (old staging was a failed partial import), not a resume.
+4. Step 6A reports \`BANK_STAGE_PARITY_OK\` before \`COPY payments\`. If \`BANK_STAGE_STOP\` occurs, do not bypass; collect report.
+5. Only a committed Step 8 SYNC-REPORT means the business merge succeeded. Then reconcile CHEA KIMSUN request #22 and expenses EXP-000024 / EXP-000025 and inspect reused bank reference allocations.
+
+**Deployment status:** GitHub source updated. Local Windows controller, Code Sync application, Step 6A result and 08C merge have NOT been verified; no accounting records touched by this preparation. The exact 08B source is still unavailable, so the stage-only guard uses index definition checks instead of unverified blind 08B text replacement.
