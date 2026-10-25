@@ -121,3 +121,30 @@ Actual report:
 - `V34-LOCAL-APPROVED-SQL-CODE-GATE.ps1` (optional for a complete Code Sync integration review)
 
 DO NOT alter original 08C identity safety exceptions, disable Schema Guard, or run Cloud → Local until the agreed business-only table scope and Staff Relation Code Sync schema migrations are in place. Code Sync remains separate from Cloud → Local.
+
+
+## 2026-10-25 follow-up — Code Sync repair prepared and registered
+
+GitHub migration:
+- `local-db-migrations/20261025_staff_relation_sync_schema_v1.sql` registered in `local-db-migrations/manifest.json` with checked SHA-256.
+- Adds only Staff Relation submission metadata and four Notification/Web Push TABLE STRUCTURES; no business records or device-push secrets copied.
+- Four `ENABLE ALWAYS` infrastructure triggers fail closed if legacy 08C attempts to import notification/push rows during `session_replication_role=replica`.
+
+Windows controller one-time updater (Code Sync DOWNLOADS these source files; Code SQL Migration does NOT automatically execute PowerShell):
+- `local-db-migrations/V34-INSTALL-BUSINESS-ONLY-STAGING-V1.ps1`
+- `local-db-migrations/INSTALL-BUSINESS-ONLY-STAGING.cmd`
+- The updater backs up exactly the approved uploaded `08-SYNC-LIVE-TO-LOCAL-PERMANENT-V1.2.ps1`, refuses SHA mismatch/multiple copies, and excludes four infra data payloads from staging while retaining COPY headers.
+- Also makes SQL code gate **CheckOnly** on every Cloud→Local run and makes permanent-ID foundation **READ ONLY**, preserving Code Sync vs business sync separation. The actual `08C` SQL and Schema Guard are unchanged.
+- Download source through normal **Code Sync**, then run the one-time installer from the Code Sources directory. This is a controller-file update, NOT a manual SQL execution.
+- **Not yet installed or tested on the user's Windows Local Brain**. The old Schema Guard may still reject unexpected dependencies; do not assert a successful merge before Local verification.
+
+Offline synthetic staged-COPY test: PASS — all four push/notification payloads removed; Staff Payment and Expense rows preserved; sequence setval skipped. Windows PowerShell/native PostgreSQL test: NOT RUN.
+
+Safe order:
+1. Normal Code Sync; confirm `20261025_staff_relation_sync_schema_v1` in the Code SQL Migration report as applied/verified.
+2. From synced `Code Sources\big-brother-dashboard\local-db-migrations`, double-click `INSTALL-BUSINESS-ONLY-STAGING.cmd`. It backs up the old 08 controller and patches staging only after validation; it does not execute SQL or merge business records.
+3. Run Cloud→Local preflight using the same old Schema Guard and SQL gate in read-only modes; stop on any failure.
+4. Then run existing Cloud→Local to synchronize business data. Confirm SYNC-REPORT.txt shows committed. Reconcile SID-008 payment request #22 ($240 PAID) and expenses EXP-000024 ($220) / EXP-000025 ($20).
+5. Preserve Local-only rows and backups. Never bypass rollback rehearsal or exact identity/audit safety checks.
+
+Known blockers still dependent on local verification: `V34-PRE-SYNC-SCHEMA-GUARD.ps1`, `08B-PREPARE-CLOUD-STAGE-V1.2.sql`, and the check-only semantics of `V34-LOCAL-APPROVED-SQL-CODE-GATE.ps1` were not supplied. Their true behavior cannot be certified from the uploaded 08 and 08C files.
