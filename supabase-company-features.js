@@ -14,7 +14,7 @@ const EXTRA={
   'purchase-order-report':{adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-report/purchase-order-report.html?embed=1&v=20260913-4',button:'navPurchaseOrderReport'},
   'management-control-center':{module:'management_control_center',adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-admin-work/company-control.html?embed=1&view=management&v=1',button:'navManagementControl'},
   'system-activity':{module:'system_activity',adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-admin-work/company-control.html?embed=1&view=activity&v=1',button:'navSystemActivity'},
-  'notification-center':{module:'notification_center',url:'https://angsokhey11-cloud.github.io/big-brother-admin-work/company-control.html?embed=1&view=notifications&v=1',button:'navNotificationCenter'}
+  'notification-center':{module:'notification_center',url:'https://angsokhey11-cloud.github.io/big-brother-admin-work/company-control.html?embed=1&view=notifications&v=20261025-event-v2',button:'navNotificationCenter'}
 };
 let baseLoad=window.loadWorkspace,baseInitial=window.openInitialWorkspace,badgeTimer=null,guardedLoad=null;
 const key=v=>String(v||'').trim().toLowerCase();
@@ -105,9 +105,9 @@ function open(route,updateUrl=true){if(!can(route)){alert('Access denied for thi
 function routeAwareLoad(route,updateUrl=true){if(EXTRA[route])return open(route,updateUrl);return guardedLoad?guardedLoad.call(window,route,updateUrl):baseLoad(route,updateUrl)}
 function installRouteBridge(){if(window.loadWorkspace===routeAwareLoad)return;guardedLoad=window.loadWorkspace;window.loadWorkspace=routeAwareLoad}
 function refreshVisibility(){Object.keys(EXTRA).forEach(r=>{const b=document.getElementById(EXTRA[r].button);if(b)b.hidden=!can(r)});const g=document.getElementById('mainReportsNavGroup');if(g)g.hidden=!(can('monthly-sales-report')||can('income-statement-report')||can('purchase-order-report'));installBell();installMobileSwitch()}
-async function unread(){try{const s=JSON.parse(localStorage.getItem('BB_SUPABASE_DEV_SESSION_V1')||'null');if(!s?.access_token||!can('notification-center'))return 0;const r=await fetch('https://sjfhlaclgmkwwofzstok.supabase.co/rest/v1/rpc/bb_notification_unread_count',{method:'POST',headers:{apikey:'sb_publishable_w762jR65CWwlO30fKQsYOw_6L9grx8S',Authorization:'Bearer '+s.access_token,'Content-Type':'application/json'},body:'{}',cache:'no-store'});if(!r.ok)return 0;return Number(await r.json()||0)}catch(_){return 0}}
-async function refreshBell(){const b=document.getElementById('bbNotificationQuick');if(!b)return;const n=await unread();b.dataset.count=String(n);b.textContent=n>0?'🔔 '+n:'🔔 Notifications'}
-function installBell(){const top=document.querySelector('#dashboardHome .topbar'),tools=document.getElementById('bbUserTools');if(!top||!can('notification-center'))return;let b=document.getElementById('bbNotificationQuick');if(!b){b=document.createElement('button');b.id='bbNotificationQuick';b.className='bb-notify-quick';b.type='button';b.onclick=()=>open('notification-center');(tools||top).prepend(b)}refreshBell();if(!badgeTimer)badgeTimer=setInterval(refreshBell,60000)}
+// No periodic polling: notifications are fetched only when their screen is opened or manually refreshed.
+async function refreshBell(){const b=document.getElementById('bbNotificationQuick');if(b)b.textContent='🔔 Notifications'}
+function installBell(){const top=document.querySelector('#dashboardHome .topbar'),tools=document.getElementById('bbUserTools');if(!top||!can('notification-center'))return;let b=document.getElementById('bbNotificationQuick');if(!b){b=document.createElement('button');b.id='bbNotificationQuick';b.className='bb-notify-quick';b.type='button';b.onclick=()=>open('notification-center');(tools||top).prepend(b)}refreshBell()}
 window.openInitialWorkspace=function(){refreshVisibility();const q=new URLSearchParams(location.search),m=q.get('module')||'';if(EXTRA[m]&&q.get('autoload')==='1'&&can(m)){open(m,false);return}return baseInitial.apply(window,arguments)};
 window.BBCompanyFeatures={open,can,refreshVisibility,refreshBell,installRouteBridge,toggleReports,installMobileSwitch};
 install();
