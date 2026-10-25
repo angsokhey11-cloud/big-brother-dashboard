@@ -232,3 +232,20 @@ on Local; the screenshot alone does not prove it was applied.
 5. Only a committed Step 8 SYNC-REPORT means the business merge succeeded. Then reconcile CHEA KIMSUN request #22 and expenses EXP-000024 / EXP-000025 and inspect reused bank reference allocations.
 
 **Deployment status:** GitHub source updated. Local Windows controller, Code Sync application, Step 6A result and 08C merge have NOT been verified; no accounting records touched by this preparation. The exact 08B source is still unavailable, so the stage-only guard uses index definition checks instead of unverified blind 08B text replacement.
+
+## 2026-10-26 00:20 — ACTUAL Local diagnostic: deployment gap proven
+
+Uploaded report `LOCAL-STAGE-PAYMENT-DIAGNOSTIC-20261026-002012.txt` establishes facts from Windows/Docker, not guesses:
+
+- **11** copies of `08-SYNC-LIVE-TO-LOCAL-PERMANENT-V1.2.ps1` in LocalBrainRoot. Verified actual V3.4 active helper is `3.4 Controller\\BIG_BROTHER_V34_DEVELOPER\\helpers\\08-SYNC-LIVE-TO-LOCAL-PERMANENT-V1.2.ps1`, SHA-256 `A2073E47A898391F166C7867CBEFC0B70FAD58BA5686EB13CCF1F59F33DB674E` (original, **not patched**). Zero copies show the Step 6A business-only controller markers.
+- Neither `08D-CHECK-STAGE-PAYMENTS-INDEX-V1.sql` nor `V34-INSTALL-STAGE-PAYMENTS-PARITY-V2.ps1` exists anywhere under the LocalBrainRoot examined in the report.
+- Three recent Code SQL Migration reports (00:16:45, 00:04:09 and 23:40:27) show **NO matches** for the new payment transaction-index and bank partial-use migration IDs. Need full `CODE-SQL-MIGRATION-REPORT.txt` to determine whether Code Sync was pointed at another manifest/path, stalled, or was not applying these packages. Do not assume applying merely because GitHub manifest changed.
+- Local permanent `public.payments` carries TWO non-primary UNIQUE normalized transaction ID indexes, `uq_payments_transaction_id_normalized` and `ux_payments_transaction_id_ci`, NOT the old guessed `public.payments_lower_idx`. Public payment PK remains unique. Stage `bb_cloud_stage.payments` carries BOTH `payments_lower_idx` AND `payments_lower_idx1` unique indexes cloned from the Local definitions. The 08B staging copy fails on reused bank transaction IDs.
+- Local `private.bb_bank_guard_payment()` **does NOT reference** `bb_bank_balance_allocations`: Local still uses full-use legacy bank logic. `bb_bank_balance_allocations` table is present but functions are not upgraded.
+- This proves the Cloud→Local merge did NOT fail because of Cloud paid records; it failed from incompatible local code / indexes plus an OLD ACTIVE CONTROLLER. Do not change Cloud payments or reapprove any salary or expense.
+
+**Source fixes now committed:**
+1. `20261025_payment_transaction_index_dual_legacy_v0.sql` registered BEFORE existing index V1 in `manifest.json`; verifies and removes exactly the TWO diagnosed UNIQUE public payment-reference index definitions, keeps payment primary key and Bank Register verified-transaction uniqueness. Schema only, no business rows.
+2. `V34-INSTALL-STAGE-PAYMENTS-PARITY-V2.ps1` now targets EXACT active V3.4 helper location. It no longer expects a unique filename from scanning 11 archives. The already existing Step 6 staging index helper handles multiple matching stage indexes after Code Sync resolves permanent Local indexes.
+
+**HOLD** any Cloud→Local retry until Code SQL Migration report proves index-v0/index-v1/bank partial-use migrations installed AND the V3.4 active controller hash/markers verify the new controller installation. Obtain the *full* report at `brain-backups\\code-sql-migrations\\20261026-001645\\CODE-SQL-MIGRATION-REPORT.txt` next; diagnostic only logged that no migration IDs occurred, not why.
