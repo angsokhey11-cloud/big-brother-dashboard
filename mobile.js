@@ -154,6 +154,7 @@ async function signIn(email,password){
   const next=await parse(r);saveSession(next);return next;
 }
 async function signOut(){
+  try{await window.BBPush?.disable({silent:true})}catch(_){}
   const current=readSession();
   try{if(current?.access_token)await fetch(SUPABASE_URL+'/auth/v1/logout',{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+current.access_token},cache:'no-store'})}catch(_){}
   saveSession(null);profile=null;overview=null;showLogin('');
