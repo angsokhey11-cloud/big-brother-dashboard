@@ -24,7 +24,7 @@ $source = [System.IO.File]::ReadAllText($SyncScript,[System.Text.Encoding]::UTF8
 if($source.Contains('BUSINESS_ONLY_STAGE: 4 device infrastructure tables') -and
    $source.Contains('CODE_SYNC_GATE_CHECK_ONLY') -and
    $source.Contains('LOCAL_FOUNDATION_READ_ONLY')){
-  Write-Host 'Already updated: business-only staging and read-only code gates present.' -ForegroundColor Green
+  Write-Host 'Already updated: business-only stage and read-only code gates present.' -ForegroundColor Green
   exit 0
 }
 $sha=(Get-FileHash -LiteralPath $SyncScript -Algorithm SHA256).Hash.ToUpperInvariant()
@@ -91,46 +91,13 @@ $m=[regex]::Matches($source,$pattern)
 if($m.Count -ne 1){throw "CONTROLLER_UPDATE_STOP: cannot isolate existing stage function safely (matches $($m.Count))."}
 $replacement=$func + [Environment]::NewLine
 $patched=$source.Substring(0,$m[0].Index)+$replacement+$source.Substring($m[0].Index+$m[0].Length)
-# Cloud -> Local is strictly business-data-only; no Code SQL migrations run here.
-$gateOld="if("+ '
-$backup=$SyncScript+'.before-business-only-'+(Get-Date -Format 'yyyyMMdd-HHmmss')+'.bak'
-Copy-Item -LiteralPath $SyncScript -Destination $backup -ErrorAction Stop
-try {
-  # BOM allows Windows PowerShell 5.1 to decode original and replacement safely.
-  [System.IO.File]::WriteAllText($SyncScript,$patched,(New-Object System.Text.UTF8Encoding($true)))
-  if(-not ([System.IO.File]::ReadAllText($SyncScript,[System.Text.Encoding]::UTF8)).Contains('BUSINESS_ONLY_STAGE: 4 device infrastructure tables')){
-    throw 'Write verification failed'
-  }
-}catch{
-  Copy-Item -LiteralPath $backup -Destination $SyncScript -Force
-  throw
-}
-Write-Host 'BIG BROTHER Cloud -> Local controller: BUSINESS-ONLY stage filter INSTALLED.' -ForegroundColor Green
-Write-Host ('Controller backup: '+$backup)
-Write-Host 'Schema Guard and exact 08C rollback rehearsal remain unchanged. SQL Gate/foundation are READ-ONLY.' -ForegroundColor Cyan
- +"PreflightOnly){"+ '
-$backup=$SyncScript+'.before-business-only-'+(Get-Date -Format 'yyyyMMdd-HHmmss')+'.bak'
-Copy-Item -LiteralPath $SyncScript -Destination $backup -ErrorAction Stop
-try {
-  # BOM allows Windows PowerShell 5.1 to decode original and replacement safely.
-  [System.IO.File]::WriteAllText($SyncScript,$patched,(New-Object System.Text.UTF8Encoding($true)))
-  if(-not ([System.IO.File]::ReadAllText($SyncScript,[System.Text.Encoding]::UTF8)).Contains('BUSINESS_ONLY_STAGE: 4 device infrastructure tables')){
-    throw 'Write verification failed'
-  }
-}catch{
-  Copy-Item -LiteralPath $backup -Destination $SyncScript -Force
-  throw
-}
-Write-Host 'BIG BROTHER Cloud -> Local controller: BUSINESS-ONLY stage filter INSTALLED.' -ForegroundColor Green
-Write-Host ('Controller backup: '+$backup)
-Write-Host 'Schema Guard, SQL Code Gate, exact rollback rehearsal and 08C remain unchanged.' -ForegroundColor Cyan
- +"sqlGateArgs+='-CheckOnly'}"
+$gateOld='if($PreflightOnly){$sqlGateArgs+=''-CheckOnly''}'
 $gateNew=@'
 # CODE_SYNC_GATE_CHECK_ONLY: only verify Code Sync state; never apply SQL code here.
 $sqlGateArgs+='-CheckOnly'
 '@
 if($patched.IndexOf($gateOld) -lt 0 -or $patched.IndexOf($gateOld) -ne $patched.LastIndexOf($gateOld)){
-  throw 'CONTROLLER_UPDATE_STOP: unable to locate approved SQL code gate for read-only mode.'
+  throw 'CONTROLLER_UPDATE_STOP: unable to locate SQL code gate for read-only mode.'
 }
 $patched=$patched.Replace($gateOld,$gateNew)
 $foundationOld=@'
@@ -170,4 +137,4 @@ try {
 }
 Write-Host 'BIG BROTHER Cloud -> Local controller: BUSINESS-ONLY stage filter INSTALLED.' -ForegroundColor Green
 Write-Host ('Controller backup: '+$backup)
-Write-Host 'Schema Guard, SQL Code Gate, exact rollback rehearsal and 08C remain unchanged.' -ForegroundColor Cyan
+Write-Host 'Schema Guard and exact 08C rollback rehearsal remain unchanged. SQL Gate/foundation are READ-ONLY.' -ForegroundColor Cyan
