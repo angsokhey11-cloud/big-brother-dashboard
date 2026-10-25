@@ -24,7 +24,7 @@ const ROUTES={
   'payment-history':{tab:'sales',icon:'💳',label:'Payment History',url:'https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=invoice&v=1'},
   'daily-sale-summary':{tab:'sales',icon:'📊',label:'Daily Sale Summary',url:'https://angsokhey11-cloud.github.io/big-brother-daily-sale-summary/?embed=1&v=1'},
   'daily-cash-collection':{tab:'sales',icon:'💵',label:'Cash Collection',url:'https://angsokhey11-cloud.github.io/big-brother-daily-cash-collection/?embed=1&v=1'},
-  'ar-your':{tab:'sales',icon:'💰',label:'My Receivables',url:'https://angsokhey11-cloud.github.io/big-brother-ar/your-receivable-mobile.html?embed=1&v=20261018-ar-date1'},
+  'ar-your':{tab:'sales',icon:'💰',label:'My Receivables',url:'https://angsokhey11-cloud.github.io/big-brother-ar/your-receivable-mobile.html?embed=1&v=20261025-ar-notif-focus1'},
 
   'stock-control-allocation':{tab:'stock',icon:'📦',label:'Stock Allocation',url:'https://angsokhey11-cloud.github.io/big-brother-stock-allocation/mobile.html?embed=1&v=20261003-tightlines1'},
   'stock-control-batch-transfer':{tab:'stock',icon:'🔀',label:'Batch Transfer',url:'https://angsokhey11-cloud.github.io/big-brother-stock-allocation/batch-transfer-mobile.html?embed=1&v=20261008-mobile1'},
@@ -54,7 +54,7 @@ const ROUTES={
   'daily-cash':{tab:'more',icon:'💵',label:'Daily Cash',url:'https://angsokhey11-cloud.github.io/big-brother-expenses/daily-cash.html?embed=1&v=20260920-vaultfx1'},
   'expense-history':{tab:'more',icon:'🧾',label:'Expense History',url:'https://angsokhey11-cloud.github.io/big-brother-expenses/?embed=1&view=expense-history&v=17'},
   'real-invoice':{tab:'more',icon:'📷',label:'Real Invoice Scanner',url:'https://angsokhey11-cloud.github.io/big-brother-real-invoice/?embed=1&v=20261018-date1'},
-  'ar-all':{tab:'more',icon:'📋',label:'All Receivables',url:'https://angsokhey11-cloud.github.io/big-brother-ar/all-receivable-mobile.html?embed=1&v=20261018-ar-date1'},
+  'ar-all':{tab:'more',icon:'📋',label:'All Receivables',url:'https://angsokhey11-cloud.github.io/big-brother-ar/all-receivable-mobile.html?embed=1&v=20261025-ar-notif-focus1'},
   'ar-payment-history':{tab:'more',icon:'🧾',label:'Receivable Payments',url:'https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=receivable&v=1'},
   'ar-daily-receivable-cash':{tab:'more',icon:'💵',label:'Daily Receivable Cash',url:'https://angsokhey11-cloud.github.io/big-brother-daily-receivable-cash-summary/?embed=1'},
   'customers-add':{tab:'more',icon:'👤',label:'Add Customer',url:'https://angsokhey11-cloud.github.io/big-brother-customers-editor/?embed=1&view=add&v=20260920-1'},
@@ -358,6 +358,12 @@ function openModule(route,updateUrl=true){
   }
   refreshNav('');return true;
 }
+// Notification Center is embedded on this same origin; keep staff inside
+// the mobile shell when they open a linked business record.
+window.BBMobileOpenNotificationV1=function(route){
+  if(typeof route!=='string'||!ROUTES[route]||!canRoute(route))return false;
+  return openModule(route,true);
+};
 function navigate(tab){
   if(tab==='home')showHome(true);else showMenu(tab,true);
 }
