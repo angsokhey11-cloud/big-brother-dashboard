@@ -1,5 +1,5 @@
 /* BIG BROTHER Mobile + Desktop PWA service worker V2.0 — Web Push */
-const CACHE='bb-mobile-shell-v96';
+const CACHE='bb-mobile-shell-v97';
 const MOBILE_FILES=new Set([
   'mobile.html','mobile-function-icons-v1.js','mobile-home-theme-v5.css','mobile.css','mobile-sales-support.css','pwa-install.css','mobile.js','mobile-user-overview.js',
   'mobile-sales-support-home.js','pwa-install.js','mobile-main-menu-v3.js','mobile-main-menu-stockcontrol-v5.js','mobile-ui-policy-v1.js',
@@ -35,8 +35,8 @@ const PRECACHE=[
   './mobile-sales-support.css?v=20260921-overviewtap2',
   './pwa-install.css?v=20260920-ios1',
   './mobile-function-icons-v1.js?v=20261025-receivable-collection-v2',
-  './mobile.js?v=20261025-admin-select-v5',
-  './mobile-main-menu-stockcontrol-v5.js?v=20261025-admin-select-v5',
+  './mobile.js?v=20261025-staff-picker-v6',
+  './mobile-main-menu-stockcontrol-v5.js?v=20261025-staff-picker-v6',
   './mobile-user-overview.js?v=20261024-home-v5',
   './mobile-navigation-v5.js?v=20261008-batchtransfer-mobile1',
   './mobile-ios-decimal-v1.js?v=20260920-iosdecimal3',
