@@ -12,11 +12,23 @@ $stageName='08D-CHECK-STAGE-PAYMENTS-INDEX-V1.sql'
 $stageSource=Join-Path $PSScriptRoot $stageName
 $stageHash='6A46BB1F021AF82E930B0E8E6E300E7E1CD453395225BE92B904FFD9FADF6E40'
 $originalSha='A2073E47A898391F166C7867CBEFC0B70FAD58BA5686EB13CCF1F59F33DB674E'
+function Get-BBTextSha256([string]$Path){
+    # Hash normalized UTF-8 source content: Windows checkout may add CRLF
+    # without changing this Code Synced SQL file's semantics.
+    $text=[System.IO.File]::ReadAllText($Path,[System.Text.Encoding]::UTF8)
+    $text=$text.TrimStart([char]0xFEFF).Replace("`r`n","`n")
+    $utf8=New-Object System.Text.UTF8Encoding($false)
+    $sha=[System.Security.Cryptography.SHA256]::Create()
+    try {
+        $digest=$sha.ComputeHash($utf8.GetBytes($text))
+        return [System.BitConverter]::ToString($digest).Replace('-','').ToUpperInvariant()
+    }finally{$sha.Dispose()}
+}
 
 if(!(Test-Path -LiteralPath $stageSource -PathType Leaf)){
     throw "BANK_STAGE_INSTALL_STOP: $stageName was not downloaded by Code Sync."
 }
-if((Get-FileHash -LiteralPath $stageSource -Algorithm SHA256).Hash.ToUpperInvariant() -ne $stageHash){
+if((Get-BBTextSha256 $stageSource) -ne $stageHash){
     throw "BANK_STAGE_INSTALL_STOP: stage helper checksum mismatch. Do not install."
 }
 
@@ -56,7 +68,7 @@ if(-not($source.Contains('BUSINESS_ONLY_STAGE: 4 device infrastructure tables') 
 
 $stageTarget=Join-Path (Split-Path -Parent $SyncScript) $stageName
 if(Test-Path -LiteralPath $stageTarget -PathType Leaf){
-    if((Get-FileHash -LiteralPath $stageTarget -Algorithm SHA256).Hash.ToUpperInvariant() -ne $stageHash){
+    if((Get-BBTextSha256 $stageTarget) -ne $stageHash){
         throw 'BANK_STAGE_INSTALL_STOP: an unrecognized stage SQL helper exists beside controller. No overwrite.'
     }
 }
@@ -100,7 +112,7 @@ try{
         Copy-Item -LiteralPath $stageSource -Destination $stageTarget -ErrorAction Stop
         $copiedStage=$true
     }
-    if((Get-FileHash -LiteralPath $stageTarget -Algorithm SHA256).Hash.ToUpperInvariant() -ne $stageHash){
+    if((Get-BBTextSha256 $stageTarget) -ne $stageHash){
         throw 'Stage SQL helper verification failed after copy'
     }
     # UTF-8 BOM is compatible with the existing Windows PowerShell 5.1 controller.
