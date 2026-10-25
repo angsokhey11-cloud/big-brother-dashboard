@@ -129,7 +129,7 @@ $gateNew=@'
 # CODE_SYNC_GATE_CHECK_ONLY: only verify Code Sync state; never apply SQL code here.
 $sqlGateArgs+='-CheckOnly'
 '@
-if($patched.Split(@($gateOld),[System.StringSplitOptions]::None).Length -ne 2){
+if($patched.IndexOf($gateOld) -lt 0 -or $patched.IndexOf($gateOld) -ne $patched.LastIndexOf($gateOld)){
   throw 'CONTROLLER_UPDATE_STOP: unable to locate approved SQL code gate for read-only mode.'
 }
 $patched=$patched.Replace($gateOld,$gateNew)
@@ -146,7 +146,7 @@ if($LASTEXITCODE -ne 0 -or (($ready -join "`n").Trim() -ne 'READY')){
   Fail 'Local permanent-ID foundation not ready. Run Code Sync first.'
 }
 '@
-if($patched.Split(@($foundationOld),[System.StringSplitOptions]::None).Length -ne 2){
+if($patched.IndexOf($foundationOld) -lt 0 -or $patched.IndexOf($foundationOld) -ne $patched.LastIndexOf($foundationOld)){
   throw 'CONTROLLER_UPDATE_STOP: unable to locate existing foundation installation step.'
 }
 $patched=$patched.Replace($foundationOld,$foundationNew)
