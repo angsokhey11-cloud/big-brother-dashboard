@@ -6,6 +6,18 @@ const URL='https://sjfhlaclgmkwwofzstok.supabase.co';
 const API_KEY='sb_publishable_w762jR65CWwlO30fKQsYOw_6L9grx8S';
 const SESSION_KEY='BB_SUPABASE_DEV_SESSION_V1';
 const DEVICE_KEY='BB_PUSH_DEVICE_USER_V1';
+/* Carry the source reference into the authenticated app for deep-link-capable modules. */
+try{
+  const p=new URLSearchParams(location.search);
+  const route=p.get('module')||'';
+  const eventKey=p.get('bb_notice')||'';
+  const entityId=p.get('bb_entity')||'';
+  if(eventKey&&/^[a-z0-9-]{2,70}$/.test(route)){
+    sessionStorage.setItem('BB_NOTIFICATION_TARGET_V2',
+      JSON.stringify({route,entityId,notificationKey:eventKey}));
+  }
+}catch(_){}
+
 const VAPID_PUBLIC_KEY='BHNsQrD_joKfgxW38CT8wzh6fhiJpvDANTulzQULA84LRXJnoxKpE2zSq3LJ7OYTbjDuQsgXWQgvcoXnhwLZZOc';
 const supported=()=>window.isSecureContext&&'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;
 const mobile=()=>/\/mobile\.html$/i.test(location.pathname);
