@@ -88,6 +88,12 @@
       "description": "Code Sync: Staff Relation Admin-on-behalf request columns and Cloud notification/push structure parity; block old all-public merge with ALWAYS replay guard; no business data changes"
     },
     {
+      "id": "20261025_payment_transaction_index_dual_legacy_v0",
+      "file": "20261025_payment_transaction_index_dual_legacy_v0.sql",
+      "sha256": "2AB1532D4A766314FD77DC18C483E96A5465A27483D3C964CC43E6F148ED925C",
+      "description": "Observed 2026-10-26 Local diagnostic: replace only the two verified legacy UNIQUE payment transaction reference indexes (uq_payments_transaction_id_normalized and ux_payments_transaction_id_ci) with nonunique lookup, before bank partial-use migration; preserve payment PK and Bank Register guard; no business rows changed."
+    },
+    {
       "id": "20261025_payment_transaction_index_cloud_parity_v1",
       "file": "20261025_payment_transaction_index_cloud_parity_v1.sql",
       "sha256": "DE3B4AE9657FEDB876305F31A15259625B123840DD95487EAE4369D719CC710C",
