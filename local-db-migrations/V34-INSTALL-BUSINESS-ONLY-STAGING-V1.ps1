@@ -21,8 +21,10 @@ if(-not (Test-Path -LiteralPath $SyncScript)){
   throw "CONTROLLER_UPDATE_STOP: controller missing: $SyncScript"
 }
 $source = [System.IO.File]::ReadAllText($SyncScript,[System.Text.Encoding]::UTF8)
-if($source.Contains('BUSINESS_ONLY_STAGE: 4 device infrastructure tables')){
-  Write-Host 'Already updated: business-only staging controller present. No file changed.' -ForegroundColor Green
+if($source.Contains('BUSINESS_ONLY_STAGE: 4 device infrastructure tables') -and
+   $source.Contains('CODE_SYNC_GATE_CHECK_ONLY') -and
+   $source.Contains('LOCAL_FOUNDATION_READ_ONLY')){
+  Write-Host 'Already updated: business-only staging and read-only code gates present.' -ForegroundColor Green
   exit 0
 }
 $sha=(Get-FileHash -LiteralPath $SyncScript -Algorithm SHA256).Hash.ToUpperInvariant()
@@ -89,8 +91,70 @@ $m=[regex]::Matches($source,$pattern)
 if($m.Count -ne 1){throw "CONTROLLER_UPDATE_STOP: cannot isolate existing stage function safely (matches $($m.Count))."}
 $replacement=$func + [Environment]::NewLine
 $patched=$source.Substring(0,$m[0].Index)+$replacement+$source.Substring($m[0].Index+$m[0].Length)
-if(-not $patched.Contains('BUSINESS_ONLY_STAGE: 4 device infrastructure tables')){
-  throw 'CONTROLLER_UPDATE_STOP: replacement validation failed.'
+# Cloud -> Local is strictly business-data-only; no Code SQL migrations run here.
+$gateOld="if("+ '
+$backup=$SyncScript+'.before-business-only-'+(Get-Date -Format 'yyyyMMdd-HHmmss')+'.bak'
+Copy-Item -LiteralPath $SyncScript -Destination $backup -ErrorAction Stop
+try {
+  # BOM allows Windows PowerShell 5.1 to decode original and replacement safely.
+  [System.IO.File]::WriteAllText($SyncScript,$patched,(New-Object System.Text.UTF8Encoding($true)))
+  if(-not ([System.IO.File]::ReadAllText($SyncScript,[System.Text.Encoding]::UTF8)).Contains('BUSINESS_ONLY_STAGE: 4 device infrastructure tables')){
+    throw 'Write verification failed'
+  }
+}catch{
+  Copy-Item -LiteralPath $backup -Destination $SyncScript -Force
+  throw
+}
+Write-Host 'BIG BROTHER Cloud -> Local controller: BUSINESS-ONLY stage filter INSTALLED.' -ForegroundColor Green
+Write-Host ('Controller backup: '+$backup)
+Write-Host 'Schema Guard and exact 08C rollback rehearsal remain unchanged. SQL Gate/foundation are READ-ONLY.' -ForegroundColor Cyan
+ +"PreflightOnly){"+ '
+$backup=$SyncScript+'.before-business-only-'+(Get-Date -Format 'yyyyMMdd-HHmmss')+'.bak'
+Copy-Item -LiteralPath $SyncScript -Destination $backup -ErrorAction Stop
+try {
+  # BOM allows Windows PowerShell 5.1 to decode original and replacement safely.
+  [System.IO.File]::WriteAllText($SyncScript,$patched,(New-Object System.Text.UTF8Encoding($true)))
+  if(-not ([System.IO.File]::ReadAllText($SyncScript,[System.Text.Encoding]::UTF8)).Contains('BUSINESS_ONLY_STAGE: 4 device infrastructure tables')){
+    throw 'Write verification failed'
+  }
+}catch{
+  Copy-Item -LiteralPath $backup -Destination $SyncScript -Force
+  throw
+}
+Write-Host 'BIG BROTHER Cloud -> Local controller: BUSINESS-ONLY stage filter INSTALLED.' -ForegroundColor Green
+Write-Host ('Controller backup: '+$backup)
+Write-Host 'Schema Guard, SQL Code Gate, exact rollback rehearsal and 08C remain unchanged.' -ForegroundColor Cyan
+ +"sqlGateArgs+='-CheckOnly'}"
+$gateNew=@'
+# CODE_SYNC_GATE_CHECK_ONLY: only verify Code Sync state; never apply SQL code here.
+$sqlGateArgs+='-CheckOnly'
+'@
+if($patched.Split(@($gateOld),[System.StringSplitOptions]::None).Length -ne 2){
+  throw 'CONTROLLER_UPDATE_STOP: unable to locate approved SQL code gate for read-only mode.'
+}
+$patched=$patched.Replace($gateOld,$gateNew)
+$foundationOld=@'
+Write-Step "5/8 Install/verify Local permanent-ID foundation"
+Invoke-PsqlFile $dbContainer $foundationSql "/tmp/08A-foundation-v1.2.sql"
+'@
+$foundationNew=@'
+Write-Step "5/8 Verify Local permanent-ID foundation (READ ONLY)"
+# LOCAL_FOUNDATION_READ_ONLY: Code Sync installs the foundation, not business sync.
+$readinessSql="select case when to_regclass('public.bb_id_counters') is not null and to_regclass('public.bb_permanent_id_registry') is not null then 'READY' else 'MISSING' end;"
+$ready=& docker exec $dbContainer psql -U postgres -d postgres -At -v ON_ERROR_STOP=1 -c $readinessSql
+if($LASTEXITCODE -ne 0 -or (($ready -join "`n").Trim() -ne 'READY')){
+  Fail 'Local permanent-ID foundation not ready. Run Code Sync first.'
+}
+'@
+if($patched.Split(@($foundationOld),[System.StringSplitOptions]::None).Length -ne 2){
+  throw 'CONTROLLER_UPDATE_STOP: unable to locate existing foundation installation step.'
+}
+$patched=$patched.Replace($foundationOld,$foundationNew)
+$patched=$patched.Replace("Write-Step '4B/8 Verify approved Local SQL code updates'","Write-Step '4B/8 Verify Code Sync SQL state (READ ONLY)'")
+if(-not ($patched.Contains('BUSINESS_ONLY_STAGE: 4 device infrastructure tables') -and
+         $patched.Contains('CODE_SYNC_GATE_CHECK_ONLY') -and
+         $patched.Contains('LOCAL_FOUNDATION_READ_ONLY'))){
+  throw 'CONTROLLER_UPDATE_STOP: business-only / no-SQL-write validation failed.'
 }
 $backup=$SyncScript+'.before-business-only-'+(Get-Date -Format 'yyyyMMdd-HHmmss')+'.bak'
 Copy-Item -LiteralPath $SyncScript -Destination $backup -ErrorAction Stop
