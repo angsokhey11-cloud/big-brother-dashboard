@@ -17,6 +17,7 @@ DECLARE
   fp_expr text;
   fp_pred text;
   matched integer:=0;
+  v_lookup_index regclass;
 BEGIN
   IF t IS NULL THEN
     RAISE EXCEPTION 'DUAL_BANK_INDEX_STOP: public.payments missing';
@@ -78,22 +79,31 @@ BEGIN
     RAISE EXCEPTION 'DUAL_BANK_INDEX_STOP: unexpected multiple UNIQUE reference indexes';
   END IF;
 
-  IF to_regclass('public.idx_payments_normalized_transaction_lookup') IS NOT NULL
-     AND NOT EXISTS(SELECT 1 FROM pg_index i WHERE
-         i.indexrelid='public.idx_payments_normalized_transaction_lookup'::regclass
-         AND i.indrelid=t AND NOT i.indisunique AND i.indisvalid
-         AND i.indisready AND i.indexprs IS NOT NULL
-         AND pg_get_expr(i.indexprs,i.indrelid) ILIKE '%transaction_id%') THEN
-    RAISE EXCEPTION 'DUAL_BANK_INDEX_STOP: existing lookup index definition incompatible';
+  -- Never cast a possibly absent index name to ::regclass. PostgreSQL may
+  -- resolve constant casts while planning even in a short-circuit IF branch.
+  -- Resolve safely with to_regclass() and use its OID throughout.
+  v_lookup_index:=to_regclass('public.idx_payments_normalized_transaction_lookup');
+  IF v_lookup_index IS NOT NULL THEN
+    IF NOT EXISTS(
+      SELECT 1 FROM pg_index i WHERE i.indexrelid=v_lookup_index
+        AND i.indrelid=t AND NOT i.indisunique AND i.indisvalid
+        AND i.indisready AND i.indexprs IS NOT NULL
+        AND pg_get_expr(i.indexprs,i.indrelid) ILIKE '%transaction_id%'
+    ) THEN
+      RAISE EXCEPTION 'DUAL_BANK_INDEX_STOP: existing lookup index definition incompatible';
+    END IF;
   END IF;
 
   EXECUTE 'CREATE INDEX IF NOT EXISTS idx_payments_normalized_transaction_lookup
     ON public.payments USING btree (lower(trim(transaction_id)))
     WHERE nullif(trim(coalesce(transaction_id, '''')), '''') IS NOT NULL';
 
-  IF NOT EXISTS(SELECT 1 FROM pg_index i WHERE
-      i.indexrelid='public.idx_payments_normalized_transaction_lookup'::regclass
-      AND i.indrelid=t AND NOT i.indisunique AND i.indisvalid) THEN
+  v_lookup_index:=to_regclass('public.idx_payments_normalized_transaction_lookup');
+  IF v_lookup_index IS NULL OR NOT EXISTS(
+    SELECT 1 FROM pg_index i WHERE i.indexrelid=v_lookup_index
+      AND i.indrelid=t AND NOT i.indisunique AND i.indisvalid
+      AND i.indisready
+  ) THEN
     RAISE EXCEPTION 'DUAL_BANK_INDEX_STOP: non-unique lookup not available';
   END IF;
 
