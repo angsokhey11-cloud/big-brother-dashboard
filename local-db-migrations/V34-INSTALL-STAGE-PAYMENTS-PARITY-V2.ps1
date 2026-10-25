@@ -33,12 +33,15 @@ if((Get-BBTextSha256 $stageSource) -ne $stageHash){
 }
 
 if(-not $SyncScript){
-    $candidates=@(Get-ChildItem -LiteralPath $LocalBrainRoot -Filter $scriptName -Recurse -File -ErrorAction Stop)
-    if($candidates.Count -ne 1){
-        throw "BANK_STAGE_INSTALL_STOP: found $($candidates.Count) controllers named $scriptName. Select the exact controller with -SyncScript."
+    # Verified from actual LOCAL-STAGE-PAYMENT-DIAGNOSTIC-20261026-002012.
+    # There are 11 archive/legacy copies; NEVER pick one by recursive search.
+    $activeFolder=Join-Path $LocalBrainRoot '3.4 Controller\BIG_BROTHER_V34_DEVELOPER\helpers'
+    $SyncScript=Join-Path $activeFolder $scriptName
+    if(-not (Test-Path -LiteralPath $SyncScript -PathType Leaf)){
+        throw "BANK_STAGE_INSTALL_STOP: expected active V3.4 controller not found at $SyncScript. No archive or legacy copy will be modified."
     }
-    $SyncScript=$candidates[0].FullName
 }
+Write-Host ('Target ACTIVE V3.4 controller: '+$SyncScript) -ForegroundColor Cyan
 if(!(Test-Path -LiteralPath $SyncScript -PathType Leaf)){
     throw "BANK_STAGE_INSTALL_STOP: cannot find controller: $SyncScript"
 }
