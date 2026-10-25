@@ -4,7 +4,7 @@
 const EXTRA={
   'customer-credit-control':{module:'customer_credit_control',url:'https://angsokhey11-cloud.github.io/big-brother-admin-work/company-control.html?embed=1&view=credit&v=1',button:'navCustomerCredit'},
   'stock-alerts':{module:'stock_alerts',url:'https://angsokhey11-cloud.github.io/big-brother-admin-work/company-control.html?embed=1&view=stock-alerts&v=1',button:'navStockAlerts'},
-  'staff-relation':{personal:true,url:'https://angsokhey11-cloud.github.io/big-brother-staff-relation/?embed=1&v=20261025-admin-onbehalf2',button:'navStaffRelation'},
+  'staff-relation':{personal:true,url:'https://angsokhey11-cloud.github.io/big-brother-staff-relation/?embed=1&v=20261025-desktop-workspace-v1',button:'navStaffRelation'},
   'staff-management':{adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-master-data/staff-management.html?embed=1&v=20260913-1',button:'navStaffManagement'},
   'staff-payment-settings':{adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-master-data/staff-payment-settings.html?embed=1&v=20261025-salary-delete-v3',button:'navStaffPaymentSettings'},
   'company-setup-master':{adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-master-data/company-setup.html?embed=1&v=20260913-1',button:'navCompanySetupMaster'},
