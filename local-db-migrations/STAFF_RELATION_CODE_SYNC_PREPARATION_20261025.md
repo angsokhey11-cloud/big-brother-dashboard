@@ -174,3 +174,26 @@ Read-only Cloud verification:
 Run normal Code Sync and confirm migration applied in `CODE-SQL-MIGRATION-REPORT`, then run **fresh** Cloud→Local. If staging still creates a UNIQUE payments_lower_idx, stop and inspect `08B-PREPARE-CLOUD-STAGE-V1.2.sql`; that SQL is currently unavailable and may explicitly recreate the obsolete unique index independently of Local.
 
 Once merge completes, verify SID-008 Staff Payment Request #22 PAID and EXP-000024 / EXP-000025, plus reused transaction IDs and their distinct `payment_id` records. Do not manually recreate CHEA KIMSUN salary expenses.
+
+
+## 2026-10-25 late-night addition — Multi-use Registered Bank Wallet missed by earlier Local patch
+
+User correctly identified that the Cloud's new bank balance multiple-use feature had not been brought into Local Brain through Code Sync. Verified in migration history: `20261016_bank_manual_transaction_admin_only` contains an explicit LOCAL LEGACY path that preserves full-payment status=USED behavior and does not enable `bb_bank_balance_allocations` partial debit logic.
+
+Cloud read-only evidence:
+- Real bank wallet allocations: multiple payments may reference one registered bank transfer.
+- `bb_bank_balance_snapshot` derives `used_amount` from `bb_bank_balance_allocations` and `remaining_amount = original - active allocations`.
+- `private.bb_bank_guard_payment()` atomically locks transfer ID, requires AVAILABLE status/customer match, validates currency/rate/bank, checks remaining amount, writes allocation, and marks USED only when exhausted.
+- `public.bb_bank_validate_invoice_input()` validates remaining balance and approved exchange rate.
+- `public.bb_invoice_bank_bulk_sync()` returns remaining amounts to manual Sync Bank.
+- `public.bb_customer_bank_balance_list_v2(text)` returns remaining balance for Invoice/A-R staff.
+- Bank Register transaction itself remains UNIQUE even though payments may share the ID. Admin-only manual/unregistered transfer rule remains.
+- Read-only Cloud balance summary at preparation: 9 partially used AVAILABLE wallets; 76 available wallets; 124 USED; 0 negative remaining. Allocation ledger: 118 rows across 114 transaction IDs.
+- Confirmed duplicate reference `179195231042684` has 3 allocation rows; two other references have 2 rows each.
+
+New **Code Sync only** SQL migration registered after normalized payment-index compatibility:
+`local-db-migrations/20261025_bank_partial_use_cloud_parity_v1.sql`
+
+Includes guards against unfamiliar Local bank functions and missing tables/columns/view/triggers; snapshots no business data and never manually creates payment/expense/balance rows. Installs seven exact Cloud function definitions and checks payment wallet-edit guards and authenticated-only RPCs. Read-only Cloud migration preflight and postflight have passed. **Local execution is NOT YET CONFIRMED**. If a guard rejects a different Local code version, inspect Code SQL Migration report rather than bypass or weakening rules.
+
+Order: Code Sync first (index migration, then bank partial-use migration), then fresh Cloud → Local business data sync. Verify prior payment/expense reconciliation and make a separate controlled test of bank allocation across more than one invoice on Local only after reviewing current real balances. Do not create real accounting test payments without authorization.
