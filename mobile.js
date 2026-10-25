@@ -66,7 +66,7 @@ const ROUTES={
   'products-details':{tab:'more',icon:'📦',label:'Product Details',url:'https://angsokhey11-cloud.github.io/big-brother-products-editor/?embed=1&view=details&v=10'},
   'master-expense-categories':{tab:'more',icon:'💸',label:'Expense Categories',url:'https://angsokhey11-cloud.github.io/big-brother-master-data/expense-categories.html?embed=1&v=21'},
   'master-audit-center':{tab:'more',icon:'🛡️',label:'Audit & Correction Center',url:'https://angsokhey11-cloud.github.io/big-brother-master-data/audit-center.html?embed=1&v=20260927-2'},
-  'staff-relation':{tab:'more',icon:'🤝',label:'Staff Relation',url:'https://angsokhey11-cloud.github.io/big-brother-staff-relation/?embed=1&v=20260913-1'},
+  'staff-relation':{tab:'more',icon:'🤝',label:'Staff Relation',url:'https://angsokhey11-cloud.github.io/big-brother-staff-relation/mobile.html?embed=1&v=20261025-compact-v2'},
   'notification-center':{tab:'more',icon:'🔔',label:'Notifications',url:'https://angsokhey11-cloud.github.io/big-brother-admin-work/company-control.html?embed=1&view=notifications&v=1'}
 };
 
