@@ -92,6 +92,12 @@
       "file": "20261025_payment_transaction_index_cloud_parity_v1.sql",
       "sha256": "DE3B4AE9657FEDB876305F31A15259625B123840DD95487EAE4369D719CC710C",
       "description": "Code Sync schema-only: align Local payments transaction_id expression index with Cloud nonunique partial-bank allocation behavior; preserve payment_id PK, all bank/payments/expenses rows, and duplicate-register safeguards."
+    },
+    {
+      "id": "20261025_bank_partial_use_cloud_parity_v1",
+      "file": "20261025_bank_partial_use_cloud_parity_v1.sql",
+      "sha256": "E340EC1AF4A066C31F8C5D974747BADD7B801A874BE8533717097D37EE01A24F",
+      "description": "Code Sync: Local Bank Register multi-use/partial allocation parity for Invoice Generator and Receivable; account for remaining wallet balance, manual Sync Bank, rates and audited edit protection. No business data modified."
     }
   ]
 }
