@@ -101,6 +101,40 @@ BEGIN
      OR position('Invoice Generator access required' IN def)=0 THEN
     RAISE EXCEPTION 'CODE_SYNC_WALLET_STOP: invoice bank validator unexpectedly changed';
   END IF;
+  -- List/bulk RPCs may already exist. Preserve the correct permission boundary
+  -- and refuse to overwrite unfamiliar local customizations.
+  IF to_regprocedure('public.bb_customer_bank_balance_list_v2(text)') IS NOT NULL THEN
+    SELECT pg_get_functiondef('public.bb_customer_bank_balance_list_v2(text)'::regprocedure) INTO def;
+    IF position('bb_bank_balance_snapshot' IN def)=0
+      OR position('bb_has_location_access' IN def)=0
+      OR position('Bank balance access denied' IN def)=0 THEN
+      RAISE EXCEPTION 'CODE_SYNC_WALLET_STOP: unexpected customer balance list RPC';
+    END IF;
+  END IF;
+  IF to_regprocedure('public.bb_invoice_bank_bulk_sync()') IS NOT NULL THEN
+    SELECT pg_get_functiondef('public.bb_invoice_bank_bulk_sync()'::regprocedure) INTO def;
+    IF position('bb_bank_balance_snapshot' IN def)=0
+       OR position('bb_has_module_access' IN def)=0
+       OR position('Invoice Generator access required' IN def)=0 THEN
+      RAISE EXCEPTION 'CODE_SYNC_WALLET_STOP: unexpected bulk Sync Bank RPC';
+    END IF;
+  END IF;
+  -- The verified Bank Register keeps unique transaction registration, whereas
+  -- several PAYMENTS can consume one registered balance.
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_indexes
+    WHERE schemaname='public' AND tablename='bb_verified_bank_transactions'
+      AND indexname='bb_bank_tx_normalized'
+      AND indexdef ILIKE 'CREATE UNIQUE INDEX%'
+  ) AND NOT EXISTS(
+    SELECT 1 FROM pg_indexes
+    WHERE schemaname='public' AND tablename='bb_verified_bank_transactions'
+      AND indexname='bb_verified_bank_tx_normalized'
+      AND indexdef ILIKE 'CREATE UNIQUE INDEX%'
+  ) THEN
+    RAISE EXCEPTION 'CODE_SYNC_WALLET_STOP: verified bank registration duplicate guard missing';
+  END IF;
+
   -- Existing protection functions may already be installed: never overwrite an
   -- unknown local customization without first reviewing it.
   IF to_regprocedure('private.bb_bank_guard_wallet_payment_changes()') IS NOT NULL THEN
