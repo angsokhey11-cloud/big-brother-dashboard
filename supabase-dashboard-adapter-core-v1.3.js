@@ -95,19 +95,44 @@
     let data={};
     try{data=text?JSON.parse(text):{}}catch(_){data={message:text}}
     if(!response.ok){
-      throw new Error(data.message||data.error_description||data.error||('Supabase request failed ('+response.status+')'));
+      throw new Error(data.message||data.msg||data.error_description||data.error||data.error_code||('Supabase request failed ('+response.status+')'));
     }
     return data;
   }
 
+  let sharedAuthRefresh=null;
   async function refreshSession(){
-    const current=readSession();
-    if(!current?.refresh_token)throw new Error('Please sign in to BIG BROTHER.');
-    const response=await fetch(SUPABASE_URL+'/auth/v1/token?grant_type=refresh_token',{
-      method:'POST',headers:{apikey:SUPABASE_KEY,'Content-Type':'application/json'},
-      body:JSON.stringify({refresh_token:current.refresh_token}),cache:'no-store'
-    });
-    const next=await parse(response);saveSession(next);return next;
+    if(sharedAuthRefresh)return sharedAuthRefresh;
+    const rotate=async()=>{
+      const current=readSession();
+      if(!current?.refresh_token)throw new Error('Please sign in to BIG BROTHER.');
+      const now=Math.floor(Date.now()/1000);
+      // Another BIG BROTHER view may already have refreshed our shared session.
+      if(Number(current.expires_at||0)>now+60){session=current;return current;}
+      const response=await fetch(SUPABASE_URL+'/auth/v1/token?grant_type=refresh_token',{
+        method:'POST',headers:{apikey:SUPABASE_KEY,'Content-Type':'application/json'},
+        body:JSON.stringify({refresh_token:current.refresh_token}),cache:'no-store'
+      });
+      if(!response.ok){
+        let detail={};try{detail=await response.json()}catch(_){}
+        const newest=readSession();
+        if(newest?.access_token&&newest.refresh_token!==current.refresh_token&&
+           Number(newest.expires_at||0)>Math.floor(Date.now()/1000)+30){
+          session=newest;return newest;
+        }
+        if(['refresh_token_not_found','refresh_token_already_used'].includes(String(detail.error_code||''))||
+           String(detail.msg||'').toLowerCase().includes('refresh token')){
+          throw new Error('Sign-in session expired. Please sign in again.');
+        }
+        throw new Error(detail.message||detail.msg||detail.error_description||detail.error||('Session refresh failed ('+response.status+')'));
+      }
+      const next=await parse(response);saveSession(next);return next;
+    };
+    const task=()=>navigator.locks?.request
+      ? navigator.locks.request('BB_SUPABASE_DEV_SESSION_REFRESH_V1',rotate)
+      : rotate();
+    sharedAuthRefresh=task();
+    try{return await sharedAuthRefresh}finally{sharedAuthRefresh=null}
   }
 
   async function ensureSession(){
@@ -115,6 +140,7 @@
     if(!session?.access_token)throw new Error('Please sign in to BIG BROTHER.');
     const now=Math.floor(Date.now()/1000);
     if(session.expires_at&&Number(session.expires_at)<now+45)await refreshSession();
+    session=readSession()||session;
     return session;
   }
 
@@ -126,7 +152,7 @@
       body:JSON.stringify(args||{}),cache:'no-store'
     });
     let response=await request();
-    if(response.status===401){await refreshSession();response=await request()}
+    if(response.status===401){await refreshSession();session=readSession()||session;response=await request()}
     return parse(response);
   }
 
