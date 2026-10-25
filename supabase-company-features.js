@@ -6,7 +6,7 @@ const EXTRA={
   'stock-alerts':{module:'stock_alerts',url:'https://angsokhey11-cloud.github.io/big-brother-admin-work/company-control.html?embed=1&view=stock-alerts&v=1',button:'navStockAlerts'},
   'staff-relation':{personal:true,url:'https://angsokhey11-cloud.github.io/big-brother-staff-relation/?embed=1&v=20261025-admin-onbehalf2',button:'navStaffRelation'},
   'staff-management':{adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-master-data/staff-management.html?embed=1&v=20260913-1',button:'navStaffManagement'},
-  'staff-payment-settings':{adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-master-data/staff-payment-settings.html?embed=1&v=20260913-1',button:'navStaffPaymentSettings'},
+  'staff-payment-settings':{adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-master-data/staff-payment-settings.html?embed=1&v=20261025-salary-edit-v2',button:'navStaffPaymentSettings'},
   'company-setup-master':{adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-master-data/company-setup.html?embed=1&v=20260913-1',button:'navCompanySetupMaster'},
   'reversal-history':{module:'invoice_reversal',url:'https://angsokhey11-cloud.github.io/big-brother-invoice-reversal/history.html?embed=1&v=20260914-1',button:'navReversalHistory'},
   'monthly-sales-report':{adminOnly:true,url:'https://angsokhey11-cloud.github.io/big-brother-report/monthly-sales.html?embed=1&v=20260913-4',button:'navMonthlySalesReport'},
