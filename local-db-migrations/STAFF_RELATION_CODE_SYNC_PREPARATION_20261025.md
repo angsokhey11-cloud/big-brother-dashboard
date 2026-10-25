@@ -90,3 +90,34 @@ The new SQL requirements are:
 ## Current status / deployment hold
 
 This document is a preflight inventory, NOT a migration. No executable SQL files or new manifest entries are authorized as safe until the Local Schema Guard report is examined. Do not run Cloud→Local to try to deploy these functions.
+
+## VERIFIED 2026-10-25 21:44 SCHEMA GUARD FAILURE (uploaded Windows scripts)
+
+Received and inspected:
+- `08-SYNC-LIVE-TO-LOCAL-PERMANENT-V1.2.ps1` (352 lines)
+- `08C-MERGE-CLOUD-STAGE-PERMANENT-V1.2.sql` (595 lines)
+- `SCHEMA-GUARD-REPORT` dated 2026-10-25 21:44:19
+
+**Confirmed failure site:** PowerShell step 4A invokes `V34-PRE-SYNC-SCHEMA-GUARD.ps1` as a separate process and **aborts on nonzero exit** before step 4B / 5 / 6 / 7. Cloud dump and Local backup succeeded. **08C never ran**, so no normal `SYNC-REPORT.txt` was generated. The existing script produces `V34-FAILURE-SUMMARY.txt` on failure.
+
+Actual report:
+- `MISSING TABLE public.bb_notification_events_v2`
+- `MISSING TABLE public.bb_push_config_v1`
+- `MISSING TABLE public.bb_push_deliveries_v1`
+- `MISSING TABLE public.bb_push_subscriptions_v1`
+- Three `submission_channel text NOT NULL DEFAULT 'STAFF'` columns missing/need review in staff_payment_requests, staff_leave_requests, staff_salary_advance_requests.
+- Three `submitted_by_user_id uuid` columns are safe-additive.
+- Fresh Cloud public tables 139, Local public tables 136, hence not a simple total-count equality.
+
+**New verified security concern:** The sync controller runs `supabase db dump --data-only --use-copy --schema public` and then rewrites **all** public COPY targets into isolated Cloud staging. The existing 08C merge iterates every table present in `bb_cloud_stage` with a matching public name. **Device push subscriptions, Web Push auth secrets, config and delivery telemetry are infrastructure, not business data** and must NOT be blindly copied Cloud → Local. A business-data scope must be enforced consistently in the Cloud capture/COPY, Schema Guard, staging SQL, merge plan, and verification. Do not merely waive these four blockers in Schema Guard while still staging them.
+
+**Verified merge behavior:** 08C uses primary-key `INSERT ... ON CONFLICT DO UPDATE` for matching records; preserves Local-only rows; does not check `source_updated_at` or other timestamps before upsert. 08C also contains historical hardcoded assumptions: one app_users alias and exactly three missing-Auth audit targets; these must remain subject to a fresh **read-only** preflight and cannot be silently loosened because Auth remains local-only.
+
+**Cloud reconciliation target after repair:** CHEA KIMSUN / SID-008 request #22, $240 PAID. Expenses EXP-000024 ($220 September salary) and EXP-000025 ($20 Special Allowance), both PAID via ABA; staff earning IDs 793 and 901 marked PAID and request item IDs 38 and 40 associated with request #22. These must be checked in Local after successful **business-data** sync. Never recreate or approve the same expenses manually.
+
+**Files still needed to implement and safely validate a patch:**
+- `V34-PRE-SYNC-SCHEMA-GUARD.ps1` (actual failing checker)
+- `08B-PREPARE-CLOUD-STAGE-V1.2.sql` (staging table creation and staging scope)
+- `V34-LOCAL-APPROVED-SQL-CODE-GATE.ps1` (optional for a complete Code Sync integration review)
+
+DO NOT alter original 08C identity safety exceptions, disable Schema Guard, or run Cloud → Local until the agreed business-only table scope and Staff Relation Code Sync schema migrations are in place. Code Sync remains separate from Cloud → Local.
