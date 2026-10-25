@@ -66,7 +66,7 @@ async function updateButtons(){
   const subscription=await currentSubscription().catch(()=>null);
   const currentOwner=userFromToken();
   const wasOwner=localStorage.getItem(DEVICE_KEY)||'';
-  const enabled=!!subscription&&Notification.permission==='granted'&&(!wasOwner||wasOwner===currentOwner);
+  const enabled=!!subscription&&Notification.permission==='granted'&&!!wasOwner&&wasOwner===currentOwner;
   btn.dataset.enabled=enabled?'true':'false';
   const title=btn.querySelector('[data-push-title]');
   if(title)title.textContent=enabled?'Disable Device Alerts':'Enable Device Alerts';
@@ -75,6 +75,11 @@ async function updateButtons(){
 async function enable(){
   if(!supported())throw Error('System notifications are not supported on this device.');
   if(!readSession()?.access_token)throw Error('Please sign in to BIG BROTHER first.');
+  const ios=/iPhone|iPad|iPod/i.test(navigator.userAgent)||
+    (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  if(ios&&!window.matchMedia('(display-mode: standalone)').matches&&!navigator.standalone){
+    throw Error('On iPhone or iPad, add BIG BROTHER to your Home Screen first.');
+  }
   // MUST happen directly in the user's click handler for iOS/iPadOS.
   const permission=Notification.permission==='granted'
     ? 'granted' : await Notification.requestPermission();
