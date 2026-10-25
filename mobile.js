@@ -362,6 +362,10 @@ function openModule(route,updateUrl=true){
 // the mobile shell when they open a linked business record.
 window.BBMobileOpenNotificationV1=function(route){
   if(typeof route!=='string'||!ROUTES[route]||!canRoute(route))return false;
+  // Use the same mobile history/router as normal menu taps.
+  const nav=window.BBMobileHistoryV7||window.BBMobileHistoryV6;
+  if(nav&&typeof nav.openModule==='function')return nav.openModule(route,true)!==false;
+  if(window.BBMobileRouteV4?.open)return window.BBMobileRouteV4.open(route,true)!==false;
   return openModule(route,true);
 };
 function navigate(tab){
