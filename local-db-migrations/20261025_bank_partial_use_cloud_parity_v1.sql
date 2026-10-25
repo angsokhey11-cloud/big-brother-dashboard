@@ -9,7 +9,7 @@
 DO $bb_local_wallet_preflight$
 DECLARE
   obj text;
-  column_name text;
+  v_col_name text;
   target text;
   def text;
   viewdef text;
@@ -38,7 +38,7 @@ BEGIN
     END IF;
   END LOOP;
 
-  FOR target,column_name IN SELECT v.tab,v.col FROM (VALUES
+  FOR target,v_col_name IN SELECT v.tab,v.col FROM (VALUES
      ('payments','payment_id'),('payments','payment_source'),
      ('payments','actual_bank_amount'),('payments','actual_bank_currency'),
      ('payments','approved_bank_rate'),('payments','transaction_id'),
@@ -61,9 +61,9 @@ BEGIN
     IF NOT EXISTS(
        SELECT 1 FROM information_schema.columns c
        WHERE c.table_schema='public' AND c.table_name=target
-         AND c.column_name=column_name
+         AND c.column_name=v_col_name
     ) THEN
-      RAISE EXCEPTION 'CODE_SYNC_WALLET_STOP: missing column %.%',target,column_name;
+      RAISE EXCEPTION 'CODE_SYNC_WALLET_STOP: missing column %.%',target,v_col_name;
     END IF;
   END LOOP;
 
