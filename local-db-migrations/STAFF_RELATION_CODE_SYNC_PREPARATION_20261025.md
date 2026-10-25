@@ -249,3 +249,27 @@ Uploaded report `LOCAL-STAGE-PAYMENT-DIAGNOSTIC-20261026-002012.txt` establishes
 2. `V34-INSTALL-STAGE-PAYMENTS-PARITY-V2.ps1` now targets EXACT active V3.4 helper location. It no longer expects a unique filename from scanning 11 archives. The already existing Step 6 staging index helper handles multiple matching stage indexes after Code Sync resolves permanent Local indexes.
 
 **HOLD** any Cloud→Local retry until Code SQL Migration report proves index-v0/index-v1/bank partial-use migrations installed AND the V3.4 active controller hash/markers verify the new controller installation. Obtain the *full* report at `brain-backups\\code-sql-migrations\\20261026-001645\\CODE-SQL-MIGRATION-REPORT.txt` next; diagnostic only logged that no migration IDs occurred, not why.
+
+
+## 2026-10-26 00:33 — Code SQL migration manifest order BLOCKER fixed
+
+Uploaded readout `CODE-SQL-MIGRATION-REPORT(20261025-173453).txt`:
+- Git commit at failure `c94808624110a7c019aa05da27da9244ed684ede`.
+- `MODE: APPLY LOCAL ONLY`; `STATUS: FAILED - BLOCKED`.
+- Exact blocker: **Manifest must be ordered by migration ID**.
+- `PENDING: 0`, `APPLIED: 0`, `LOCAL BACKUP: NOT REQUIRED`: report indicates the manifest validator stopped the Code SQL Sync before any new migrations were applied.
+- Code Sync accepts only strictly alphabetically sorted IDs. The previous manifest ordered bank/payment migrations by desired logical dependency but IDs were not sorted; that was the actual installer failure, not a Local SQL error.
+
+**Fixed in GitHub commit `79ceb7a727864962802da9b4ae0f8cddef4dfe2f`:**
+
+Strict new manifest order, preserving SQL content/checksums:
+1. `20261025_a_payment_transaction_index_dual_legacy_v0.sql`: observed Local two-UNIQUE-index compatibility.
+2. `20261025_b_payment_transaction_index_cloud_parity_v1.sql`: nonunique normalized lookup and PK checks.
+3. `20261025_c_bank_partial_use_cloud_parity_v1.sql`: wallet allocation and remaining-balance functions.
+4. `20261025_staff_relation_sync_schema_v1.sql`: staff request metadata and notification structures.
+
+Previous IDs/files for the three payment migrations were never applied (per report). Their new ID stems match the new filenames, while the SQL **byte contents and SHA-256 hashes remain unchanged**. All 13 earlier migration entries are unchanged.
+
+**Verified:** all **17/17** manifest SQL files exist, their SHA-256 checksums match, and every ID is strictly ordered and equals the filename stem. This is a **GitHub only** repair; it has not executed against Windows Local Brain.
+
+Safe next action: RUN CODE SYNC again, check its fresh `CODE-SQL-MIGRATION-REPORT.txt` for `APPLIED` and **not** `FAILED - BLOCKED`. Do NOT rerun Cloud→Local until SQL migration success and active Windows controller stage helper installation are independently verified.
