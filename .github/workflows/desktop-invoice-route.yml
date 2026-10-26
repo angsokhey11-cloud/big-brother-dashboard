@@ -1,0 +1,27 @@
+name: Desktop Invoice route checks
+on:
+  push:
+    paths:
+      - 'index.html'
+      - 'legacy-dashboard-v3.40.html'
+      - 'tests/desktop-invoice-route.test.cjs'
+      - '.github/workflows/desktop-invoice-route.yml'
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'legacy-dashboard-v3.40.html'
+      - 'tests/desktop-invoice-route.test.cjs'
+      - '.github/workflows/desktop-invoice-route.yml'
+permissions:
+  contents: read
+jobs:
+  route-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate latest desktop Invoice route and admin restriction
+        run: node tests/desktop-invoice-route.test.cjs
