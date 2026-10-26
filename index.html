@@ -88,7 +88,7 @@ body{
 
     const response =
       await fetch(
-        "legacy-dashboard-v3.40.html?v=20261011-sidebar-expand1",
+        "legacy-dashboard-v3.40.html?v=20261027-invoice-admin-route1",
         {
           cache:"no-store"
         }
@@ -847,10 +847,46 @@ body{
 
         'invoice: "https://angsokhey11-cloud.github.io/big-brother-invoice-generator/?embed=1&v=20260924-cashbank1"',
 
-        'invoice: "https://angsokhey11-cloud.github.io/big-brother-invoice-generator/?embed=1&v=20261020-bank-header-refresh1"'
+        'invoice: "https://angsokhey11-cloud.github.io/big-brother-invoice-generator/?embed=1&v=20261027-multi-bank-verified1"'
 
       );
 
+
+
+    /* =====================================================
+       DESKTOP INVOICE ADMIN PILOT ROUTING
+       - Keep all users on the latest verified Invoice Generator.
+       - Only admins get the multi-bank pilot flag in its iframe URL.
+       - Server-side SQL independently checks the signed-in admin role.
+       - Reopen outdated invoice frames without touching other modules.
+       ===================================================== */
+    mustReplace(
+      "Desktop Invoice pilot route",
+      "    const url = MODULE_URLS[moduleName];",
+      [
+        "    const url = moduleName === 'invoice' ? (() => {",
+        "      const next = new URL(MODULE_URLS.invoice);",
+        "      const isAdmin = window.BBDashboardAdapter?.getProfile?.()?.user?.isAdmin === true;",
+        "      if (isAdmin) next.searchParams.set('bbMultiBankPilot', '1');",
+        "      else next.searchParams.delete('bbMultiBankPilot');",
+        "      return next.toString();",
+        "    })() : MODULE_URLS[moduleName];"
+      ].join("\n")
+    );
+
+    mustReplace(
+      "Desktop Invoice build marker",
+      "      '20260924-hide-source-no-zero1';",
+      "      '20260924-invoiceseq1';"
+    );
+
+    mustReplace(
+      "Desktop Invoice iframe refresh rule",
+      "          frame.contentWindow?.BB_INVOICE_GENERATOR_BUILD !==\n          expectedInvoiceBuild;",
+      "          frame.contentWindow?.BB_INVOICE_GENERATOR_BUILD !==\n          expectedInvoiceBuild ||\n"+
+      "          new URL(frame.src).searchParams.get('v') !==\n          new URL(url).searchParams.get('v') ||\n"+
+      "          new URL(frame.src).searchParams.get('bbMultiBankPilot') !==\n          new URL(url).searchParams.get('bbMultiBankPilot');"
+    );
 
     /* =====================================================
        INVOICE HISTORY — ADD PRODUCT EDITOR
