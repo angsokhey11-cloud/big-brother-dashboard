@@ -1,0 +1,35 @@
+name: Local Brain multi-bank migration safety
+on:
+  push:
+    paths:
+      - 'local-db-migrations/20261027_multi_bank_admin_pilot_local_v1.sql'
+      - 'local-db-migrations/manifest.json'
+      - 'tests/local-multi-bank-migration.test.cjs'
+      - '.github/workflows/local-multi-bank-migration.yml'
+  pull_request:
+    paths:
+      - 'local-db-migrations/20261027_multi_bank_admin_pilot_local_v1.sql'
+      - 'local-db-migrations/manifest.json'
+      - 'tests/local-multi-bank-migration.test.cjs'
+      - '.github/workflows/local-multi-bank-migration.yml'
+permissions:
+  contents: read
+jobs:
+  sql-guard-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify registered migration checksum and safety checks
+        run: node tests/local-multi-bank-migration.test.cjs
+      - name: Parse SQL migration using PostgreSQL grammar
+        run: |
+          python3 -m pip install --user 'pglast>=6,<8'
+          python3 - <<'PY'
+          from pathlib import Path
+          from pglast import parse_sql
+          sql = Path("local-db-migrations/20261027_multi_bank_admin_pilot_local_v1.sql").read_text()
+          parsed = parse_sql(sql)
+          assert len(parsed) >= 5, len(parsed)
+          print(f"PASS Postgres SQL grammar: {len(parsed)} statements parsed")
+          PY
