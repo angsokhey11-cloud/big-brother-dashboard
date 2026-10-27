@@ -48,8 +48,8 @@ for(const statement of [
 // authorized admin later completes an invoice — never at Code Sync time.
 const beforeRpc=sql.split('create or replace function public.bb_sales_save_invoice_multi_bank_v1')[0];
 const afterRpc=sql.split('end $fn$;').slice(1).join('end $fn$;');
-assert.doesNotMatch(beforeRpc+afterRpc,/\\bINSERT\\s+INTO\\s+public\\.(?:invoices|payments|bb_verified_bank_transactions)\\b/i);
-assert.match(sql,/insert into public\\.payments \\(/i,'Authorized admin RPC must create one payment per bank source');
+assert.doesNotMatch(beforeRpc+afterRpc,/\bINSERT\s+INTO\s+public\.(?:invoices|payments|bb_verified_bank_transactions)\b/i);
+assert.match(sql,/insert into public\.payments \(/i,'Authorized admin RPC must create one payment per bank source');
 const dashboard=fs.readFileSync(path.resolve(__dirname,'../index.html'),'utf8');
 assert.match(dashboard,/20261027-multi-bank-verified1/,'Desktop route should remain current');
 assert.match(dashboard,/getProfile\?\.\(\)\?\.user\?\.isAdmin === true/,'Pilot routing must use logged-in admin profile');
