@@ -104,6 +104,12 @@
       "file": "20261025_staff_relation_sync_schema_v1.sql",
       "sha256": "0D8E4DC01B913C322D090ABF26B8DB8EB648F90D5A1531AEF28655A8F7D95337",
       "description": "Code Sync: Staff Relation Admin-on-behalf request columns and Cloud notification/push structure parity; block old all-public merge with ALWAYS replay guard; no business data changes"
+    },
+    {
+      "id": "20261027_multi_bank_admin_pilot_local_v1",
+      "file": "20261027_multi_bank_admin_pilot_local_v1.sql",
+      "sha256": "C68918CFE74A12BDB4EF73DCF7CB14FF1AC2FEB9E099A38417A9E8DD90709423",
+      "description": "Local Brain V5/V6 admin-only atomic 2+ registered-bank invoice settlements; SQL schema/RPC only, verified bank guard, ledger RLS, safe rollback and Local-only data preservation; fail closed on missing parity."
     }
   ]
 }
