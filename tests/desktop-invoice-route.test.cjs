@@ -5,7 +5,7 @@ const fs=require('node:fs');
 const source=fs.readFileSync('index.html','utf8');
 const legacy=fs.readFileSync('legacy-dashboard-v3.40.html','utf8');
 const invoiceRoot='https://angsokhey11-cloud.github.io/big-brother-invoice-generator/';
-const version='20261027-wallet-customer-isolation1';
+const version='20261027-bank-equivalent-reset1';
 const required=[
  ['latest desktop URL',source.includes(invoiceRoot+'?embed=1&v='+version)],
  ['legacy Invoice URL matched',legacy.includes('invoice: "'+invoiceRoot+'?embed=1&v=20260924-cashbank1"')],
