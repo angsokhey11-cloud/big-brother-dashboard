@@ -11,7 +11,7 @@ let loading=false;
 let lastLoad=0;
 let liveTimer=null;
 let disabledForAdmin=false;
-const LIVE_REFRESH_MS=20000;
+const LIVE_REFRESH_MS=120000;
 
 const $=id=>document.getElementById(id);
 const num=v=>Number(v||0)||0;
@@ -145,7 +145,8 @@ function applyOverview(data,payment){
 }
 
 async function refresh(force=false){
-  if(disabledForAdmin||loading||!homeVisible()||!readSession()?.access_token)return;
+  if(disabledForAdmin||loading||!homeVisible()||!readSession()?.access_token||window.BBMobileOfflineWorkspaceV1?.canUseNetwork()===false)return;
+  if(lastLoad&&Date.now()-lastLoad<LIVE_REFRESH_MS)return;
 
   /*
    * Viewer Overview is always refreshed from Supabase when requested.
@@ -179,6 +180,7 @@ async function refresh(force=false){
     }
 
     cached={overview,payment};
+    void window.BBMobileOfflineWorkspaceV1?.write('staff-overview',cached);
     lastLoad=Date.now();
     applyOverview(overview,payment);
   }catch(error){
@@ -192,6 +194,9 @@ async function refresh(force=false){
 }
 
 function start(){
+  void window.BBMobileOfflineWorkspaceV1?.read('staff-overview').then(snapshot=>{
+    if(snapshot?.value){cached=snapshot.value;lastLoad=Number(snapshot.syncedAt)||0;if(homeVisible())applyOverview(cached.overview,cached.payment)}
+  });
   const home=$('mobileHome');
   if(!home){setTimeout(start,100);return}
 
