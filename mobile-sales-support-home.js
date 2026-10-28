@@ -268,6 +268,10 @@ function replaceFrameUrl(frame,url){
    if(!frame?.parentNode)return;
    const fresh=frame.cloneNode(false);
    fresh.removeAttribute('src');
+   fresh.removeAttribute('srcdoc');
+   fresh.removeAttribute('sandbox');
+   fresh.removeAttribute('aria-hidden');
+   fresh.inert=false;
    fresh.removeAttribute('data-bb-theme-bound');
    frame.replaceWith(fresh);
    fresh.addEventListener('load',()=>{
