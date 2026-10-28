@@ -285,7 +285,7 @@
       event.preventDefault();const btn=document.getElementById('bbLoginButton');err.textContent='';btn.disabled=true;btn.textContent='Signing in…';
       try{
         await signIn(document.getElementById('bbLoginEmail').value,document.getElementById('bbLoginPassword').value);
-        profile=await rpc('bb_current_access_profile');overlay.remove();activateDashboard();
+        profile=await rpc('bb_current_access_profile');overlay.remove();if(bbDesktopLoginDateTimer!==null){window.clearInterval(bbDesktopLoginDateTimer);bbDesktopLoginDateTimer=null;}activateDashboard();
       }catch(error){err.textContent=error?.message||String(error);btn.disabled=false;btn.textContent='Sign In'}
     });
   }
