@@ -18,7 +18,7 @@ const mapRoutes={
   'stock-report':'offline-stock-report',
   'sales-support-calculator':'offline-calc-bootstrap'
 };
-let host=null,route='',dataset=null,calcCustomer=null,calcPrices=null,calcLines=[],calcCurrency='USD',calcRate=4100,calcDiscount=0;
+let host=null,route='',dataset=null,datasetSyncedAt=0,selectedReceivables=new Set(),calcCustomer=null,calcPrices=null,calcLines=[],calcCurrency='USD',calcRate=4100,calcDiscount=0;
 function currentId(){return offline()?.currentUserId()||''}
 function historyKey(){return 'bb_sales_support_calc_history_v2_'+currentId()}
 function currentKey(){return 'bb_sales_support_calc_current_v2_'+currentId()}
@@ -37,9 +37,25 @@ function createHost(){
   if(host)return host;
   host=document.createElement('div');
   host.id='bbOfflineModulesScreen';
-  host.style.cssText='position:fixed;inset:0;z-index:999999;background:#edf3fa;display:none;overflow:auto;color:#173e66;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;';
+  host.style.cssText='position:absolute;top:0;bottom:calc(68px + env(safe-area-inset-bottom));left:0;right:0;z-index:3;background:#edf3fa;display:none;overflow:auto;color:#173e66;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;';
   const style=document.createElement('style');
   style.textContent=`
+    /* Offline and online use the same mobile module shell and bottom navigation.
+       The duplicate offline header is intentionally removed. */
+    #moduleScreen.bb-offline-native .module-header{display:none!important}
+    #moduleScreen.bb-offline-native .module-frame{top:0!important;bottom:calc(68px + env(safe-area-inset-bottom))!important;
+      height:calc(100dvh - 68px - env(safe-area-inset-bottom))!important}
+    @media print{
+      body.bb-offline-summary-print>*:not(#bbOfflineSummaryPrint){display:none!important}
+      body.bb-offline-summary-print{background:#fff!important;margin:0!important;padding:0!important}
+      #bbOfflineSummaryPrint{position:static!important;width:auto!important;height:auto!important;overflow:visible!important;
+        background:#fff!important;padding:0!important}
+      #bbOfflineSummaryPrint .bb-summary-actions{display:none!important}
+      #bbOfflineSummaryPrint .bb-summary-sheet{width:100%!important;min-height:0!important;padding:11mm!important;
+        margin:0!important;border:0!important;box-shadow:none!important}
+      #bbOfflineSummaryPrint table{font-size:9px!important}
+      @page{size:A4;margin:0}
+    }
     #bbOfflineModulesScreen .bb-off-header{position:sticky;top:0;z-index:3;padding:12px;background:#14528b;color:#fff;display:flex;gap:10px;align-items:center}
     #bbOfflineModulesScreen button,#bbOfflineModulesScreen select,#bbOfflineModulesScreen input{font:inherit}
     #bbOfflineModulesScreen button{cursor:pointer}
@@ -57,6 +73,49 @@ function createHost(){
     #bbOfflineModulesScreen .bb-off-primary{background:#1267af;color:#fff;border:0;border-radius:9px;padding:11px;font-weight:700}
     #bbOfflineModulesScreen .bb-off-muted{background:#ecf2fa;color:#23496d;border:1px solid #d2e0eb;border-radius:9px;padding:9px}
     #bbOfflineModulesScreen .bb-off-scroll{max-height:56vh;overflow:auto}
+
+    #bbOfflineModulesScreen .bb-ar-card .check input{height:20px;width:20px;accent-color:#2368bd;cursor:pointer}
+    #bbOfflineModulesScreen .bb-ar-toolbar .bb-off-primary:disabled{opacity:.45;cursor:not-allowed}
+    #bbOfflineSummaryPrint{position:fixed;inset:0;z-index:1000002;overflow:auto;background:#e8eef6;
+      font-family:Arial,"Noto Sans Khmer",sans-serif;color:#17304f}
+    #bbOfflineSummaryPrint .bb-summary-actions{position:sticky;top:0;z-index:3;background:#fff;padding:10px;
+      border-bottom:1px solid #d4dfeb;display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:8px}
+    #bbOfflineSummaryPrint .bb-summary-actions strong{margin-right:auto;color:#123f73}
+    #bbOfflineSummaryPrint .bb-summary-actions button{font:800 12px Arial;border-radius:8px;min-height:38px;padding:8px 12px;cursor:pointer}
+    #bbOfflineSummaryPrint .bb-off-primary{border:0;background:#2468bd;color:#fff}
+    #bbOfflineSummaryPrint .bb-off-muted{border:1px solid #d5e0ec;background:#f5f8fc;color:#254e78}
+    #bbOfflineSummaryPrint .bb-summary-sheet{width:min(100%,794px);min-height:1123px;box-sizing:border-box;
+      margin:14px auto;padding:34px;background:#fff;box-shadow:0 6px 25px #1b476622}
+    #bbOfflineSummaryPrint .bb-summary-top{display:flex;justify-content:space-between;gap:20px;border-bottom:2px solid #1f5fbf;padding-bottom:13px}
+    #bbOfflineSummaryPrint h1{margin:0;font-size:28px;color:#173f77;line-height:1.1}
+    #bbOfflineSummaryPrint .bb-summary-top p{font-size:10px;color:#758599;margin:5px 0}
+    #bbOfflineSummaryPrint .bb-summary-meta{text-align:right;font-size:9px;line-height:1.5;min-width:126px}
+    #bbOfflineSummaryPrint .bb-summary-meta p{font-size:9px;margin:3px 0}
+    #bbOfflineSummaryPrint h2{font-size:17px;letter-spacing:.4px;text-align:center;margin:20px 0;color:#173f77}
+    #bbOfflineSummaryPrint .bb-summary-customer{background:#f2f7fd;border:1px solid #dce5ef;border-radius:10px;padding:14px;margin:10px 0}
+    #bbOfflineSummaryPrint .bb-summary-customer strong{display:block;font-size:10px;color:#56708b}
+    #bbOfflineSummaryPrint .bb-summary-customer div{font-weight:900;font-size:18px;margin:5px 0;color:#173f77}
+    #bbOfflineSummaryPrint .bb-summary-customer small{display:block;color:#60758c;font-size:10px}
+    #bbOfflineSummaryPrint .bb-summary-warning{padding:10px;background:#fff4e5;border:1px solid #edc78e;
+      border-radius:8px;font-weight:800;font-size:10px;line-height:1.5;color:#885508;margin:10px 0}
+    #bbOfflineSummaryPrint .bb-summary-period{font-size:10px;color:#60758c;margin:12px 0}
+    #bbOfflineSummaryPrint table{width:100%;border-collapse:collapse;font-size:10px;table-layout:auto}
+    #bbOfflineSummaryPrint th{background:#173f77;color:#fff;text-align:left;font-weight:800;padding:9px 5px}
+    #bbOfflineSummaryPrint td{padding:8px 5px;border-bottom:1px solid #e1e7ef;overflow-wrap:anywhere}
+    #bbOfflineSummaryPrint tr{break-inside:avoid}
+    #bbOfflineSummaryPrint .bb-summary-totals{margin-top:14px;display:grid;gap:6px}
+    #bbOfflineSummaryPrint .bb-summary-totals div{display:flex;justify-content:space-between;gap:10px;
+      padding:11px;background:#e8f2ff;color:#15487b;font-weight:800;font-size:12px}
+    #bbOfflineSummaryPrint footer{margin-top:35px;border-top:1px solid #dae4ed;padding-top:9px;
+      font-size:10px;color:#687b8d;text-align:center}
+    @media(max-width:560px){
+      #bbOfflineSummaryPrint .bb-summary-sheet{margin:0;padding:16px;min-height:100vh}
+      #bbOfflineSummaryPrint .bb-summary-top{gap:8px}
+      #bbOfflineSummaryPrint h1{font-size:21px}
+      #bbOfflineSummaryPrint table{font-size:7px}
+      #bbOfflineSummaryPrint th,#bbOfflineSummaryPrint td{padding:6px 3px}
+    }
+
 
     /* Receivable cards follow the same grid and amount-box design as the online mobile A/R. */
     #bbOfflineModulesScreen .bb-ar-toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
@@ -104,78 +163,244 @@ function createHost(){
     #bbOfflineModulesScreen .bb-stock-line .metric.value{color:#123f73}
   `;
   document.head.appendChild(style);
-  host.innerHTML='<header class="bb-off-header"><button type="button" class="bb-back" id="bbOffClose">‹ Back</button><strong id="bbOffTitle">Saved Data</strong></header><main class="bb-off-main"><div class="bb-off-note" id="bbOffNote"></div><div id="bbOffBody"></div></main>';
-  document.body.appendChild(host);
-  host.querySelector('#bbOffClose').addEventListener('click',close);
+  host.innerHTML='<main class="bb-off-main"><div class="bb-off-note" id="bbOffNote"></div><div id="bbOffBody"></div></main>';
+  const screen=$('moduleScreen');
+  if(!screen)throw new Error('BIG BROTHER mobile module shell unavailable.');
+  screen.appendChild(host);
+  // Hardware Back or bottom-nav changes still use the real navigation stack.
+  // Close a summary modal whenever navigation leaves the module.
+  new MutationObserver(()=>{
+    if(screen.hidden)closeReceivableSummary();
+  }).observe(screen,{attributes:true,attributeFilter:['hidden']});
   return host;
 }
 function close(){
+  closeReceivableSummary();
   if(host)host.style.display='none';
+  const screen=$('moduleScreen');
+  if(screen)screen.classList.remove('bb-offline-native');
+  const frame=$('moduleFrame');if(frame)frame.style.display='';
+  const back=$('moduleBack');if(back)back.hidden=false;
   route='';dataset=null;
+}
+function openNativeRoute(name,useLocalFrame=false,skipRecord=false){
+  const screen=$('moduleScreen'),frame=$('moduleFrame');
+  if(!screen||!frame)return false;
+  // Reuse the EXACT native history stack and bottom navigation as an online module.
+  ['mobileHome','menuScreen','loginScreen','bootScreen'].forEach(id=>{
+    const element=$(id);if(element)element.hidden=true;
+  });
+  screen.hidden=false;
+  screen.classList.add('bb-offline-native');
+  const back=$('moduleBack');
+  // Keep native Back wiring installed by mobile.js; no second back handler.
+  if(back)back.hidden=true;
+  const bottom=$('moduleBottomNav');
+  if(bottom)bottom.hidden=false;
+  const nav=window.BBMobileHistoryV7||window.BBMobileHistoryV6;
+  if(nav&&!skipRecord&&!nav.isRestoring?.())nav.recordModule(name,true);
+  if(!useLocalFrame){
+    frame.style.display='none';
+    if(host)host.style.display='block';
+  }else{
+    if(host)host.style.display='none';
+    frame.style.display='';
+  }
+  return true;
 }
 function notice(message){const note=$('bbOffNote');if(note)note.textContent=message}
 async function open(name){
-  if(!canOpen(name))return false;
-  // A local screen can open only for a permitted route whose snapshot was saved.
+  if(!canOpen(name)||!currentId())return false;
+  const restoringAtStart=(window.BBMobileHistoryV7||window.BBMobileHistoryV6)?.isRestoring?.()===true;
   const rec=await offline()?.read(mapRoutes[name]);
   if(!rec?.value)return false;
   route=name;
   dataset=rec.value;
-  createHost().style.display='block';
-  $('bbOffTitle').textContent=name.includes('receivable')||name.startsWith('ar-')?'Receivable · Offline':name.includes('calculator')?'Calculator · Offline':'Stock Report · Offline';
+  datasetSyncedAt=rec.syncedAt;
+  selectedReceivables.clear();
+  createHost();
   const date=new Date(rec.syncedAt).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
-  notice('Saved snapshot: '+date+' · Cloud transactions cannot be created, cleared or edited offline.');
-  if(name==='sales-support-calculator'){
-    // The exact online Calculator UI is loaded from an offline-cached copy.
-    // It uses the same responsive markup, controls, layout and local history.
-    $('bbOffBody').innerHTML='<iframe title="BIG BROTHER Calculator" src="./mobile-offline-calculator.html?mobile=1&view=calculator" style="width:100%;height:calc(100dvh - 104px);min-height:560px;border:0;background:#eef4fa;border-radius:10px"></iframe>';
+  notice('Saved '+date+' · Read-only snapshot, not a live financial balance.');
+  const frame=$('moduleFrame');
+  if(name==='sales-support-calculator'||name==='stock-report'){
+    const full=name==='stock-report'?await offline()?.read('offline-stock-report-full'):null;
+    if(name==='sales-support-calculator'||full?.value?.success){
+      const url=name==='sales-support-calculator'
+        ?'./mobile-offline-calculator.html?mobile=1&view=calculator&v=20261028-unified1'
+        :'./mobile-offline-stock.html?embed=1&v=20261028-unified1';
+      if(!openNativeRoute(name,true,restoringAtStart))return false;
+      if(frame.getAttribute('src')!==url){
+        // Replace the frame rather than pushing its internal navigation history.
+        // Android Back should navigate the parent BIG BROTHER app, not an iframe.
+        const fresh=frame.cloneNode(false);
+        fresh.removeAttribute('src');
+        frame.replaceWith(fresh);
+        fresh.setAttribute('src',url);
+      }
+      return true;
+    }
   }
-  else if(name.includes('receivable')||name.startsWith('ar-'))renderReceivables();
-  else {
-    const full=await offline()?.read('offline-stock-report-full');
-    if(full?.value?.success){
-      $('bbOffBody').innerHTML='<iframe title="BIG BROTHER Stock Report" src="./mobile-offline-stock.html?embed=1" style="width:100%;height:calc(100dvh - 104px);min-height:560px;border:0;background:#eef3f8;border-radius:10px"></iframe>';
-    }else renderStock();
-  }
-  host.scrollTop=0;
+  if(!openNativeRoute(name,false,restoringAtStart))return false;
+  if(name.includes('receivable')||name.startsWith('ar-'))renderReceivables();
+  else renderStock();
+  if(host)host.scrollTop=0;
   return true;
 }
 
+
+function invoiceIdentity(r){return clean(r.invoiceId)||[clean(r.invoiceNo),clean(r.customerId),clean(r.locationCode)].join('|')}
+function invoiceIsoDate(value){
+  const raw=clean(value);
+  if(/^\d{4}-\d{2}-\d{2}/.test(raw))return raw.slice(0,10);
+  const match=raw.match(/^(\d{1,2})[-\/]([a-z]{3}|\d{1,2})[-\/](\d{4})/i);
+  if(match){
+    const months=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+    const m=/^\d+$/.test(match[2])?Number(match[2]):months.indexOf(match[2].toLowerCase())+1;
+    if(m>=1&&m<=12)return match[3]+'-'+String(m).padStart(2,'0')+'-'+match[1].padStart(2,'0');
+  }
+  return '';
+}
+function receivableDate(value){
+  if(!value)return '—';
+  const raw=clean(value);
+  const match=raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  const parsed=match?new Date(Number(match[1]),Number(match[2])-1,Number(match[3])):new Date(raw);
+  if(Number.isNaN(parsed.getTime()))return raw;
+  return parsed.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).replace(/ /g,'-');
+}
 function renderReceivables(){
   const rows=Array.isArray(dataset?.receivables)?dataset.receivables:[];
   const locations=[...new Set(rows.map(r=>clean(r.locationName||r.locationCode)).filter(Boolean))].sort();
   const wrap=$('bbOffBody');
   wrap.innerHTML=
-    '<div class="bb-ar-toolbar"><strong class="bb-ar-total">'+rows.length+' outstanding invoices</strong><small>Saved read-only</small></div>'+
+    '<div class="bb-ar-toolbar"><strong class="bb-ar-total">'+rows.length+' Outstanding Invoices</strong>'+
+    '<button type="button" class="bb-off-primary" id="bbOffSummaryBtn" disabled>🧾 Summary Invoice (0)</button></div>'+
     '<div class="bb-off-form" style="margin-bottom:8px">'+
     '<input id="bbOffSearch" class="wide" placeholder="Search customer / invoice" type="search" aria-label="Search saved receivables">'+
     '<select id="bbOffLocation" aria-label="Filter location"><option value="">All assigned locations</option>'+
       locations.map(loc=>'<option value="'+esc(loc)+'">'+esc(loc)+'</option>').join('')+'</select>'+
     '<select id="bbOffStatus" aria-label="Filter status"><option value="">All statuses</option><option>Outstanding</option><option>Overdue</option><option>Processing</option></select>'+
-    '</div><div id="bbOffRows" class="bb-ar-list"></div><div id="bbOffCount" class="bb-off-note"></div>';
+    '<details class="wide" style="background:#fff;border:1px solid #d9e3ee;border-radius:10px;padding:7px 10px">'+
+      '<summary style="font-size:12px;font-weight:800;color:#244f7b">📅 Date & Outstanding Amount</summary>'+
+      '<div class="bb-off-form" style="padding-top:10px"><label>From<input id="bbOffDateFrom" type="date"></label>'+
+      '<label>To<input id="bbOffDateTo" type="date"></label>'+
+      '<label>Minimum Outstanding<input id="bbOffMin" type="number" min="0" step="0.01" inputmode="decimal"></label>'+
+      '<label>Maximum Outstanding<input id="bbOffMax" type="number" min="0" step="0.01" inputmode="decimal"></label></div>'+
+    '</details></div>'+
+    '<div class="bb-ar-toolbar"><button type="button" class="bb-off-muted" id="bbOffSelectAll">Select matching</button>'+
+    '<button type="button" class="bb-off-muted" id="bbOffClearSelected">Clear selection</button></div>'+
+    '<div id="bbOffRows" class="bb-ar-list"></div><div id="bbOffCount" class="bb-off-note"></div>';
   const fmt=(v,c)=>v==null?'—':money(v,c);
-  function draw(){
+  const getFiltered=()=>{
     const q=clean($('bbOffSearch').value).toLowerCase(),loc=$('bbOffLocation').value,status=$('bbOffStatus').value;
-    const filtered=rows.filter(r=>(!loc||clean(r.locationName||r.locationCode)===loc)&&(!status||clean(r.arStatus)===status)
-      &&[r.customer,r.invoiceNo,r.locationName,r.locationCode].some(x=>clean(x).toLowerCase().includes(q)));
-    $('bbOffRows').innerHTML=filtered.slice(0,500).map(r=>
-      '<article class="bb-ar-card">'+
-        '<div class="check">◻</div>'+
+    const from=$('bbOffDateFrom').value,to=$('bbOffDateTo').value;
+    const min=clean($('bbOffMin').value),max=clean($('bbOffMax').value);
+    return rows.filter(r=>{
+      const day=invoiceIsoDate(r.invoiceDate);
+      return (!loc||clean(r.locationName||r.locationCode)===loc)&&(!status||clean(r.arStatus)===status)
+        &&[r.customer,r.invoiceNo,r.locationName,r.locationCode].some(x=>clean(x).toLowerCase().includes(q))
+        &&(!from||day>=from)&&(!to||day<=to)
+        &&(min===''||num(r.outstanding)>=num(min))&&(max===''||num(r.outstanding)<=num(max));
+    });
+  };
+  function draw(){
+    const filtered=getFiltered();
+    $('bbOffRows').innerHTML=filtered.slice(0,500).map(r=>{
+      const id=invoiceIdentity(r),enabled=num(r.outstanding)>0&&clean(r.arStatus).toLowerCase()!=='processing';
+      return '<article class="bb-ar-card">'+
+        '<label class="check"><input type="checkbox" data-ar-select="'+esc(id)+'" aria-label="Select '+esc(r.invoiceNo)+'"'+
+        (selectedReceivables.has(id)?' checked':'')+(enabled?'':' disabled')+'></label>'+
         '<div class="invoice">'+esc(r.invoiceNo)+'</div>'+
         '<div class="customer">'+esc(r.customer||'Unknown customer')+'</div>'+
         '<div class="status">'+esc(r.arStatus||'Outstanding')+'</div>'+
-        '<div class="invoice-date">Invoice: '+esc(r.invoiceDate||'—')+'</div>'+
-        '<div class="due-date">Due: '+esc(r.dueDate||'—')+'</div>'+
+        '<div class="invoice-date">Invoice: '+esc(receivableDate(r.invoiceDate))+'</div>'+
+        '<div class="due-date">Due: '+esc(receivableDate(r.dueDate))+'</div>'+
         '<div class="location">📍 '+esc(r.locationName||r.locationCode||'—')+'</div>'+
         '<div class="amt total" data-label="Total">'+esc(fmt(r.grandTotal,r.currency))+'</div>'+
         '<div class="amt paid" data-label="Paid">'+esc(fmt(r.amountPaid,r.currency))+'</div>'+
         '<div class="amt outstanding" data-label="Outstanding">'+esc(fmt(r.outstanding,r.currency))+'</div>'+
-      '</article>'
-    ).join('')||'<div class="bb-off-card">No matching saved invoices.</div>';
+      '</article>';
+    }).join('')||'<div class="bb-off-card">No matching saved invoices.</div>';
+    $('bbOffRows').querySelectorAll('input[data-ar-select]').forEach(checkbox=>checkbox.addEventListener('change',()=>{
+      if(checkbox.checked)selectedReceivables.add(checkbox.dataset.arSelect);
+      else selectedReceivables.delete(checkbox.dataset.arSelect);
+      summaryButton();
+    }));
     $('bbOffCount').textContent='Showing '+Math.min(500,filtered.length)+' of '+filtered.length+' matched invoices · saved snapshot only';
+    summaryButton();
   }
-  ['bbOffSearch','bbOffLocation','bbOffStatus'].forEach(id=>$(id).addEventListener(id==='bbOffSearch'?'input':'change',draw));
+  function summaryButton(){
+    const count=rows.filter(r=>selectedReceivables.has(invoiceIdentity(r))&&num(r.outstanding)>0&&clean(r.arStatus).toLowerCase()!=='processing').length;
+    $('bbOffSummaryBtn').textContent='🧾 Summary Invoice ('+count+')';
+    $('bbOffSummaryBtn').disabled=count===0;
+  }
+  ['bbOffSearch','bbOffLocation','bbOffStatus','bbOffDateFrom','bbOffDateTo','bbOffMin','bbOffMax'].forEach(id=>
+    $(id).addEventListener(['bbOffSearch','bbOffMin','bbOffMax'].includes(id)?'input':'change',draw));
+  $('bbOffSelectAll').onclick=()=>{
+    getFiltered().filter(r=>num(r.outstanding)>0&&clean(r.arStatus).toLowerCase()!=='processing').forEach(r=>selectedReceivables.add(invoiceIdentity(r)));
+    draw();
+  };
+  $('bbOffClearSelected').onclick=()=>{selectedReceivables.clear();draw()};
+  $('bbOffSummaryBtn').onclick=()=>openReceivableSummary(rows.filter(r=>selectedReceivables.has(invoiceIdentity(r))));
   draw();
+}
+function closeReceivableSummary(){
+  document.body.classList.remove('bb-offline-summary-print');
+  const overlay=$('bbOfflineSummaryPrint');
+  if(overlay)overlay.remove();
+}
+function openReceivableSummary(input){
+  const picked=input.filter(r=>num(r.outstanding)>0&&clean(r.arStatus).toLowerCase()!=='processing')
+    .slice().sort((a,b)=>invoiceIsoDate(a.invoiceDate).localeCompare(invoiceIsoDate(b.invoiceDate)));
+  if(!picked.length)return;
+  closeReceivableSummary();
+  // Never convert KHR to USD using an arbitrary or stale exchange rate.
+  const currencies=[...new Set(picked.map(r=>clean(r.currency).toUpperCase()||'USD'))];
+  const totals=Object.fromEntries(currencies.map(c=>[c,picked.filter(r=>(clean(r.currency).toUpperCase()||'USD')===c)
+    .reduce((sum,r)=>sum+num(r.outstanding),0)]));
+  const names=[...new Set(picked.map(r=>clean(r.customer)).filter(Boolean))];
+  const synced=datasetSyncedAt?new Date(datasetSyncedAt).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'unknown';
+  const dates=picked.map(r=>invoiceIsoDate(r.invoiceDate)).filter(Boolean).sort();
+  const label=names.length===1?names[0]:names.length+' Selected Customers';
+  const now=new Date(),summaryDay=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+  const modal=document.createElement('div');
+  modal.id='bbOfflineSummaryPrint';
+  modal.innerHTML='<div class="bb-summary-actions">'+
+    '<strong>Customer Invoice Summary</strong>'+
+    '<button type="button" id="bbSummaryClose" class="bb-off-muted">✕ Close</button>'+
+    '<button type="button" id="bbSummaryPrint" class="bb-off-primary">Print / Save PDF</button></div>'+
+    '<div class="bb-summary-sheet">'+
+      '<div class="bb-summary-top"><div><h1>BIG BROTHER</h1><p>Ready to be your partner</p>'+
+      '<small>Phnom Penh, Cambodia</small></div><div class="bb-summary-meta">'+
+      '<b>Summary Date:</b> '+esc(receivableDate(summaryDay))+
+      '<p><b>Selected Invoices:</b> '+picked.length+'</p>'+
+      '<p><b>Saved Data:</b> '+esc(synced)+'</p></div></div>'+
+      '<h2>CUSTOMER INVOICE SUMMARY</h2>'+
+      '<div class="bb-summary-customer"><strong>Customer</strong><div>'+esc(label)+'</div>'+
+      (names.length>1?'<small>'+names.map(esc).join(' · ')+'</small>':'')+'</div>'+
+      '<div class="bb-summary-warning">OFFLINE COPY — Balances saved '+esc(synced)+'. Not verified against live payments or adjustments. No original invoice photos are included.</div>'+
+      '<div class="bb-summary-period">Invoice range: '+esc(receivableDate(dates[0]))+' to '+esc(receivableDate(dates[dates.length-1]))+'</div>'+
+      '<table><thead><tr><th>#</th>'+(names.length>1?'<th>Customer</th>':'')+
+      '<th>Invoice</th><th>Date</th><th>Due</th><th>Total</th><th>Paid</th><th>Outstanding</th></tr></thead><tbody>'+
+      picked.map((r,i)=>'<tr><td>'+(i+1)+'</td>'+(names.length>1?'<td>'+esc(r.customer)+'</td>':'')+
+        '<td><b>'+esc(r.invoiceNo)+'</b></td>'+
+        '<td>'+esc(receivableDate(r.invoiceDate))+'</td>'+
+        '<td>'+esc(receivableDate(r.dueDate))+'</td>'+
+        '<td>'+esc(r.grandTotal==null?'—':money(r.grandTotal,r.currency))+'</td>'+
+        '<td>'+esc(r.amountPaid==null?'—':money(r.amountPaid,r.currency))+'</td>'+
+        '<td><b>'+esc(money(r.outstanding,r.currency))+'</b></td></tr>').join('')+
+      '</tbody></table>'+
+      '<div class="bb-summary-totals">'+currencies.map(c=>
+        '<div><span>TOTAL OUTSTANDING ('+esc(c)+')</span><strong>'+esc(money(totals[c],c))+'</strong></div>').join('')+'</div>'+
+      '<footer>Invoice Summary includes selected saved outstanding balances only. • BIG BROTHER</footer>'+
+    '</div>';
+  document.body.appendChild(modal);
+  document.body.classList.add('bb-offline-summary-print');
+  modal.querySelector('#bbSummaryClose').onclick=closeReceivableSummary;
+  modal.querySelector('#bbSummaryPrint').onclick=()=>{
+    // Printing a cached summary is allowed, but a permanent stale-data label stays on the document.
+    window.print();
+  };
 }
 function renderStock(){
   const rows=Array.isArray(dataset?.products)?dataset.products:[];
@@ -347,6 +572,11 @@ function snapshotFor(key,data){
       totalGood:r.totalGood,damaged:r.damaged,averageCost:r.averageCost,totalValue:r.totalValue
     })),totals:{warehouseValue:data?.totals?.warehouseValue||0}};
   }
+  if(key==='offline-calc-batch-scope'){
+    const items=Array.isArray(data.items)?data.items:[];
+    return {success:true,openBatchCount:num(data.openBatchCount),
+      items:items.map(item=>({code:clean(item.code||item.productCode||item.product_code)})).filter(item=>item.code)};
+  }
   if(key==='offline-calc-bootstrap'){
     return {success:true,locations:(Array.isArray(data.locations)?data.locations:[]).map(l=>({
       locationCode:l.locationCode,locationName:l.locationName,salespersonName:l.salespersonName
@@ -361,7 +591,7 @@ function snapshotFor(key,data){
 let syncing=false;
 async function sync(safeRpc,canRoute,force=false){
   const api=offline();if(!api?.canUseNetwork()||!currentId()||syncing)return;
-  const last=await api.read('offline-modules-last-sync-v4');
+  const last=await api.read('offline-modules-last-sync-v5');
   if(!force&&last?.value?.at&&Date.now()-last.value.at<30*60*1000)return;
   syncing=true;
   const jobs=[];
@@ -370,7 +600,10 @@ async function sync(safeRpc,canRoute,force=false){
   }
   if(canRoute('ar-all'))jobs.push(['offline-ar-all','bb_ar_list_all']);
   if(canRoute('stock-report'))jobs.push(['offline-stock-report','bb_stock_report_fast']);
-  if(canRoute('sales-support-calculator'))jobs.push(['offline-calc-bootstrap','bb_sales_support_bootstrap']);
+  if(canRoute('sales-support-calculator')){
+    jobs.push(['offline-calc-bootstrap','bb_sales_support_bootstrap']);
+    jobs.push(['offline-calc-batch-scope','bb_sales_support_calculator_batch_scope']);
+  }
   let allOK=true;
   try{
     // Make at most two concurrent read-only requests.
@@ -389,7 +622,7 @@ async function sync(safeRpc,canRoute,force=false){
         }else allOK=false;
       }
     }
-    if(api.canUseNetwork())await api.write('offline-modules-last-sync-v4',{at:Date.now(),allOK});
+    if(api.canUseNetwork())await api.write('offline-modules-last-sync-v5',{at:Date.now(),allOK});
   }finally{syncing=false}
 }
 window.BBMobileOfflineModulesV1={open,canOpen,available,sync,close};

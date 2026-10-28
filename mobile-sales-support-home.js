@@ -976,12 +976,15 @@ function openRoute(route,navState=''){
   if(offline&&!offline.canUseNetwork()){
     if(window.BBMobileOfflineModulesV1?.canOpen(route)){
       void window.BBMobileOfflineModulesV1.open(route).then(ok=>{
-        if(!ok)toast('This function has no synced offline data yet. Open online once.');
+        if(!ok)return toast('This function has no synced offline data yet. Open online once.');
+        currentRoute=route;fallbackRoute='';closePicker();
+        renderNav(navState||currentNavState());
       });
       return;
     }
     return toast('Online required for this function.');
   }
+  window.BBMobileOfflineModulesV1?.close();
   closePicker();currentRoute=route;fallbackRoute='';
   if(BASE_ROUTES.has(route)&&window.BBMobile?.open){
     try{
