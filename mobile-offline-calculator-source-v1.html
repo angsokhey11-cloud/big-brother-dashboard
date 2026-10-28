@@ -1891,15 +1891,22 @@
 (() => {
   "use strict";
 
+  const offlineAccountId=(()=>{
+    try{return String(JSON.parse(localStorage.getItem('BB_SUPABASE_DEV_SESSION_V1')||'null')?.user?.id||'').trim()}
+    catch(_){return ''}
+  })();
+  // Each signed-in user sees only their own previously synchronized data.
+  if(!offlineAccountId)throw new Error('Sign in online and sync the Calculator first.');
+
   const MASTER_API =
     "https://script.google.com/macros/s/AKfycbzIjs-cNehMxWTZs3ZPAosseGUu1nqACTPo3S4-onLLEYnEgqP6AUK7p3jwb6MaFr7H0w/exec";
 
   const DELIVERY_API =
     "https://script.google.com/macros/s/AKfycbzPn1d264aLYDgf-tPU7r1QRC7AfFh9epAjxDEQ0aGmTuvakp0ci516zz2Q3kyoFLZ9Bg/exec";
 
-  const PRODUCTS_CACHE_KEY = "bb_sales_support_products_v1";
-  const CUSTOMERS_CACHE_PREFIX = "bb_sales_support_customers_v1_";
-  const PRICE_CACHE_PREFIX = "bb_sales_support_prices_v1_";
+  const PRODUCTS_CACHE_KEY = "bb_mobile_original_calc_offline_products_v1_"+offlineAccountId;
+  const CUSTOMERS_CACHE_PREFIX = "bb_mobile_original_calc_offline_customers_v1_"+offlineAccountId+"_";
+  const PRICE_CACHE_PREFIX = "bb_mobile_original_calc_offline_prices_v1_"+offlineAccountId+"_";
   const CACHE_AGE_PRODUCTS = 12 * 60 * 60 * 1000;
   const CACHE_AGE_CUSTOMERS = 60 * 60 * 1000;
   const CACHE_AGE_PRICES = 6 * 60 * 60 * 1000;
@@ -1907,7 +1914,7 @@
   const CALC_CURRENT_MEMORY_KEY = "bb_sales_support_calc_current_v1";
   const CALC_HISTORY_MEMORY_KEY = "bb_sales_support_calc_history_v1";
   const CALC_HISTORY_MAX_ITEMS = 100;
-  const PUBLIC_LOCATIONS_CACHE_KEY = "bb_sales_support_public_locations_v1";
+  const PUBLIC_LOCATIONS_CACHE_KEY = "bb_mobile_original_calc_offline_locations_v1_"+offlineAccountId;
 
   const $ = id => document.getElementById(id);
   const clean = value => String(value == null ? "" : value).trim();
