@@ -433,7 +433,7 @@ async function open(name){
         :name==='monthly-sales-report'?'./mobile-offline-monthly-sales-v1.html?embed=1&v=20261028-monthly1'
         :name==='sales-support-your-stock'?'./mobile-offline-your-stock-v12.html?embed=1&v=20261028-v12'
         :name==='sales-support-batch-selling-tracker'?'./mobile-offline-tracker-v12.html?embed=1&v=20261028-v12'
-        :name==='daily-sale-summary'?'./mobile-offline-daily-sale-v1.html?embed=1&v=20261028-v12'
+        :name==='daily-sale-summary'?'./mobile-offline-daily-sale-v1.html?embed=1&v=20261028-v12-fast1'
         :'./mobile-offline-stock.html?embed=1&v=20261028-seamless1';
       if(!openNativeRoute(name,true,restoringAtStart))return false;
       if(frame.getAttribute('src')!==url){
