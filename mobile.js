@@ -160,7 +160,6 @@ async function signOut(){
   try{await window.BBMobileOfflineWorkspaceV1?.clearUser(current?.user?.id)}catch(_){}
   saveSession(null);profile=null;overview=null;
   void window.BBMobileOfflineWorkspaceV1?.init();
-  window.BBMobileOfflineWorkspaceV1?.updateControls();
   showLogin('');
 }
 
@@ -466,7 +465,7 @@ async function boot(){
   const offline=window.BBMobileOfflineWorkspaceV1;
   const saved=readSession();
   let openedFromCache=false;
-  // Show the last signed-in account's verified workspace BEFORE requesting cloud data.
+  // Every open: render the last saved authorized workspace before calling Supabase.
   if(saved?.access_token&&offline?.currentUserId()){
     const [savedProfile,savedOverview]=await Promise.all([
       offline.read('access-profile'),offline.read('admin-overview')
@@ -479,10 +478,9 @@ async function boot(){
       openedFromCache=true;
     }
   }
-  if(offline?.isTestMode?.()&&openedFromCache)return;
   try{
     await ensureSession();
-    await activate(); // refresh profile/permissions and data without blocking the cached screen
+    await activate(); // automatically refresh profile and data behind the cached Home
   }catch(error){
     if(isSessionAuthError(error)){
       try{await offline?.clearUser(saved?.user?.id)}catch(_){}
@@ -514,7 +512,6 @@ $('loginForm').addEventListener('submit',async event=>{
     rememberEmail(email);
     password.value='';
     void window.BBMobileOfflineWorkspaceV1?.init();
-    window.BBMobileOfflineWorkspaceV1?.updateControls();
     await activate();
   }catch(error){
     $('loginError').textContent=error?.message||String(error);
