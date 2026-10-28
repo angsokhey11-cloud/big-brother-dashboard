@@ -190,6 +190,7 @@ function close(){
   discardLivePreload();
   openEpoch++;
   closeReceivableSummary();
+  closeOfflineInvoicePhoto();
   if(host)host.style.display='none';
   const screen=$('moduleScreen');
   if(screen)screen.classList.remove('bb-offline-native');
@@ -580,6 +581,68 @@ function receivableDate(value){
   if(Number.isNaN(parsed.getTime()))return raw;
   return parsed.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).replace(/ /g,'-');
 }
+// Original paper invoices: cache-only in offline A/R, never Storage/network.
+let offlinePhotoUrl='',offlinePhotoDraw=0;
+function closeOfflineInvoicePhoto(){
+ const panel=$('bbOfflinePhotoOverlay');
+ if(panel)panel.remove();
+ if(offlinePhotoUrl){URL.revokeObjectURL(offlinePhotoUrl);offlinePhotoUrl=''}
+}
+async function showOfflineInvoicePhoto(row){
+ const id=clean(row?.invoiceId),user=currentId();
+ if(!id||!user||!Array.isArray(dataset?.receivables)||
+    !dataset.receivables.some(r=>clean(r.invoiceId)===id))return;
+ const cache=window.BBAROriginalPhotoCacheV1;
+ if(!cache||cache.currentUserId()!==user)return;
+ closeOfflineInvoicePhoto();
+ const panel=document.createElement('div');
+ panel.id='bbOfflinePhotoOverlay';
+ panel.style.cssText='position:fixed;inset:0;z-index:99999;background:#092b47c7;padding:12px;display:flex;align-items:center;justify-content:center';
+ panel.innerHTML='<div role="dialog" aria-modal="true" aria-label="Saved original invoice" style="width:min(900px,100%);height:min(92dvh,950px);border-radius:14px;background:#fff;display:flex;flex-direction:column;overflow:hidden">'+
+   '<div style="padding:12px;display:flex;justify-content:space-between;align-items:center;gap:8px;background:#eaf3fc;color:#164772">'+
+   '<strong id="bbOfflinePhotoLabel" style="overflow-wrap:anywhere"></strong><button type="button" id="bbOfflinePhotoClose" style="border:0;padding:8px 13px;border-radius:8px;background:#1a609a;color:#fff">Close ✕</button></div>'+
+   '<div id="bbOfflinePhotoBody" style="overflow:auto;min-height:0;flex:1;text-align:center;background:#f2f5f9;padding:8px">Loading saved photo…</div>'+
+   '<small style="padding:9px;color:#4a657e">Saved original invoice · device copy · no internet required</small></div>';
+ document.body.appendChild(panel);
+ panel.querySelector('#bbOfflinePhotoLabel').textContent='Original: '+clean(row.invoiceNo)+' · '+clean(row.customer);
+ panel.querySelector('#bbOfflinePhotoClose').onclick=closeOfflineInvoicePhoto;
+ panel.addEventListener('click',e=>{if(e.target===panel)closeOfflineInvoicePhoto()});
+ const item=await cache.get(id);
+ if(!panel.isConnected||currentId()!==user)return;
+ const body=panel.querySelector('#bbOfflinePhotoBody');
+ if(!item){body.textContent='This original photo is no longer saved on this device. Open the invoice online to download it again.';return}
+ offlinePhotoUrl=URL.createObjectURL(item.blob);
+ body.replaceChildren();
+ if(/\.pdf$/i.test(item.path)||item.blob.type==='application/pdf'){
+  const frame=document.createElement('iframe');
+  frame.src=offlinePhotoUrl;frame.title='Saved original invoice PDF';
+  frame.style.cssText='display:block;width:100%;height:100%;border:0;background:#fff';
+  body.appendChild(frame);
+ }else{
+  const img=document.createElement('img');
+  img.src=offlinePhotoUrl;img.alt='Saved original invoice';
+  img.style.cssText='display:block;max-width:100%;height:auto;margin:auto';
+  body.appendChild(img);
+ }
+}
+async function decorateOfflineInvoicePhotos(filtered){
+ const seq=++offlinePhotoDraw,cache=window.BBAROriginalPhotoCacheV1,user=currentId();
+ const box=$('bbOffRows');
+ if(!box||!cache||!user)return;
+ const ids=filtered.map(r=>clean(r.invoiceId)).filter(Boolean);
+ const saved=await cache.list(ids);
+ if(seq!==offlinePhotoDraw||currentId()!==user||box!==$('bbOffRows'))return;
+ const cards=[...box.querySelectorAll('article.bb-ar-card')];
+ filtered.forEach((row,index)=>{
+  if(!saved.has(clean(row.invoiceId))||!cards[index])return;
+  const button=document.createElement('button');
+  button.type='button';button.className='bb-off-muted';
+  button.style.cssText='grid-column:1/-1;grid-row:auto;width:100%;margin-top:6px;text-align:center;font-weight:800;color:#135a96';
+  button.textContent='📎 View Saved Real Invoice';
+  button.onclick=()=>void showOfflineInvoicePhoto(row);
+  cards[index].appendChild(button);
+ });
+}
 function renderReceivables(){
   const rows=Array.isArray(dataset?.receivables)?dataset.receivables:[];
   const locations=[...new Set(rows.map(r=>clean(r.locationName||r.locationCode)).filter(Boolean))].sort();
@@ -639,6 +702,7 @@ function renderReceivables(){
       summaryButton();
     }));
     $('bbOffCount').textContent='Showing '+Math.min(500,filtered.length)+' of '+filtered.length+' matched invoices · saved snapshot only';
+    void decorateOfflineInvoicePhotos(filtered.slice(0,500));
     summaryButton();
   }
   function summaryButton(){
