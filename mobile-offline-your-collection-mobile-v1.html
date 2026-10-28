@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>BIG BROTHER — Your Collection Mobile</title>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif}
+#collectionFrame{display:block;width:100%;height:100%;border:0;background:#f4f7fb}
+#boot{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#f4f7fb;color:#17457a;font-weight:800;font-size:13px;z-index:20}
+#boot.hide{display:none}
+</style>
+</head>
+<body>
+<div id="boot">Loading Your Collection…</div>
+<iframe id="collectionFrame" src="mobile-offline-your-collection-original-v1.html?embed=1&mobileSkin=1&v=20261028-collection1" title="Your Collection"></iframe>
+<script>
+(function(){
+'use strict';
+
+const frame=document.getElementById('collectionFrame');
+const boot=document.getElementById('boot');
+const CACHE_KEY='bb_collection_mobile_offline_skin_v1_20261028';
+let timer=null;
+let tries=0;
+
+const HEADER_FILTER_CSS=`
+:root{--bbc-blue:#1768d5;--bbc-navy:#123f78;--bbc-line:#dce6f1;--bbc-muted:#708196}
+.wrap{padding-top:8px!important}
+.topbar{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:center!important;gap:8px!important;margin:0 0 8px!important;padding:10px 11px!important;border-radius:14px!important;background:linear-gradient(135deg,var(--bbc-navy),#1769b8 70%,#2080c8)!important;box-shadow:0 4px 12px rgba(18,63,120,.12)!important}
+.topbar>div:first-child{min-width:0!important}.topbar h1{margin:0 0 2px!important;color:#fff!important;font-size:18px!important;line-height:1.08!important;font-weight:900!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}.topbar .subtitle{margin:0!important;color:rgba(255,255,255,.78)!important;font-size:9px!important;line-height:1.25!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}.topbar .pill{display:inline-flex!important;max-width:116px!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;padding:6px 8px!important;border:1px solid rgba(255,255,255,.28)!important;background:rgba(255,255,255,.10)!important;color:#fff!important;font-size:8.5px!important}
+.cards{grid-template-columns:1fr 1fr!important;gap:6px!important;margin-bottom:8px!important}.card{min-height:54px!important;padding:7px 8px 7px 35px!important;border-radius:11px!important}.card::before{left:8px!important;top:9px!important;width:21px!important;height:21px!important;font-size:11px!important}.card small{margin:0 0 2px!important;font-size:7.8px!important;line-height:1.05!important}.card strong{font-size:13px!important;line-height:1.05!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+.bb-collection-actionbar{display:grid!important;grid-template-columns:78px minmax(0,1fr) 38px!important;gap:6px!important;margin:0 0 8px!important}.bb-collection-actionbar .btn,.bb-collection-filter-toggle,.bb-collection-refresh{min-width:0!important;min-height:38px!important;padding:6px 5px!important;border-radius:10px!important;font-size:8.8px!important;line-height:1.12!important;font-weight:900!important;white-space:normal!important}.bb-collection-filter-toggle{border:1px solid #cfe0f4!important;background:#eef6ff!important;color:#1763be!important}.bb-collection-filter-toggle.active{border-color:#1768d5!important;background:#1768d5!important;color:#fff!important}.bb-collection-actionbar #dailyCashSummaryBtn{background:#173f77!important;color:#fff!important}.bb-collection-actionbar .btn:disabled{opacity:.48!important}.bb-collection-refresh{border:1px solid #d8e1eb!important;background:#fff!important;color:#50657c!important}.summary-toolbar{display:none!important}
+.bb-collection-filter-backdrop{position:fixed!important;inset:0!important;z-index:8998!important;background:rgba(8,25,45,.38)!important;opacity:0!important;pointer-events:none!important;transition:opacity .18s ease!important}.bb-collection-filter-backdrop.open{opacity:1!important;pointer-events:auto!important}
+.filters.bb-collection-filter-panel{position:fixed!important;left:0!important;right:0!important;bottom:0!important;z-index:8999!important;display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;margin:0!important;padding:14px 12px calc(14px + env(safe-area-inset-bottom))!important;border:0!important;border-radius:20px 20px 0 0!important;background:#fff!important;box-shadow:0 -16px 42px rgba(8,31,56,.22)!important;transform:translateY(105%)!important;transition:transform .20s ease!important}.filters.bb-collection-filter-panel.open{transform:translateY(0)!important}.filters.bb-collection-filter-panel .bb-collection-filter-head{grid-column:1/-1!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;margin-bottom:1px!important}.bb-collection-filter-head strong{font-size:15px!important;color:#123f78!important}.bb-collection-filter-head span{font-size:9px!important;color:#7a899a!important}.bb-collection-filter-close{width:32px!important;height:32px!important;min-height:32px!important;border:0!important;border-radius:50%!important;background:#edf2f7!important;color:#53687f!important;font-size:16px!important}.filters.bb-collection-filter-panel .bb-mobile-filter-field{min-width:0!important}.filters.bb-collection-filter-panel .bb-mobile-filter-field label{display:block!important;margin:0 0 4px!important;font-size:8.5px!important;font-weight:900!important;text-transform:uppercase!important;color:#526b84!important}.filters.bb-collection-filter-panel input,.filters.bb-collection-filter-panel select{min-width:0!important;width:100%!important;min-height:42px!important;height:42px!important;padding:8px 9px!important;border-radius:10px!important;font-size:11px!important}.filters.bb-collection-filter-panel .bb-filter-actions{grid-column:1/-1!important;display:grid!important;grid-template-columns:1fr!important;gap:7px!important}.filters.bb-collection-filter-panel .bb-filter-actions .btn{width:100%!important;min-height:40px!important;border-radius:10px!important;font-size:10px!important}
+@media(max-width:390px){.topbar{padding:9px 10px!important}.topbar h1{font-size:17px!important}.topbar .pill{max-width:96px!important}.card{min-height:50px!important;padding:6px 7px 6px 33px!important}.card::before{left:7px!important;top:8px!important;width:20px!important;height:20px!important}.card strong{font-size:12px!important}.bb-collection-actionbar{grid-template-columns:72px minmax(0,1fr) 36px!important;gap:5px!important}.bb-collection-actionbar .btn,.bb-collection-filter-toggle,.bb-collection-refresh{font-size:8.2px!important;padding:5px 4px!important}.filters.bb-collection-filter-panel{grid-template-columns:1fr!important}.filters.bb-collection-filter-panel .bb-mobile-filter-field,.filters.bb-collection-filter-panel .bb-filter-actions,.filters.bb-collection-filter-panel .bb-collection-filter-head{grid-column:1!important}}
+`;
+
+function extractPreservedSkin(text){
+  const cssMarker='const MOBILE_CSS=`';
+  const scriptMarker='const MOBILE_SCRIPT=`';
+  const cssStart=text.indexOf(cssMarker);
+  const scriptStart=text.indexOf(scriptMarker);
+  if(cssStart<0||scriptStart<0)return{css:'',script:''};
+  const cssBody=cssStart+cssMarker.length;
+  const cssEnd=text.lastIndexOf('`;',scriptStart);
+  const scriptBody=scriptStart+scriptMarker.length;
+  const injectPos=text.indexOf('function inject()',scriptBody);
+  const scriptEnd=injectPos>scriptBody?text.lastIndexOf('`;',injectPos):text.lastIndexOf('`;');
+  return{
+    css:cssEnd>cssBody?text.slice(cssBody,cssEnd):'',
+    script:scriptEnd>scriptBody?text.slice(scriptBody,scriptEnd):''
+  };
+}
+
+async function loadSkin(){
+  try{
+    const cached=JSON.parse(localStorage.getItem(CACHE_KEY)||'null');
+    if(cached?.css&&cached?.script)return cached;
+  }catch(_){ }
+  const res=await fetch('mobile-offline-your-collection-skin-v1.html?v=20261028-collection1',{cache:'force-cache'});
+  if(!res.ok)throw new Error('Preserved mobile skin could not be loaded.');
+  const skin=extractPreservedSkin(await res.text());
+  if(!skin.css||!skin.script)throw new Error('Preserved mobile skin is incomplete.');
+  try{localStorage.setItem(CACHE_KEY,JSON.stringify(skin))}catch(_){ }
+  return skin;
+}
+
+const skinPromise=loadSkin().catch(error=>{
+  console.warn('BIG BROTHER Your Collection mobile skin:',error);
+  return{css:'',script:''};
+});
+
+function activeFilterCount(doc){
+  return ['dateFrom','locationFilter','bbCustomerSearch','bbStatusFilter'].map(id=>doc.getElementById(id)).filter(el=>el&&String(el.value||'').trim()).length;
+}
+
+function installHeaderFilter(doc){
+  if(doc.getElementById('bbCollectionFilterToggle'))return true;
+  const filters=doc.querySelector('.filters');
+  const summary=doc.getElementById('dailyCashSummaryBtn');
+  const refresh=doc.getElementById('refreshBtn');
+  const customer=doc.getElementById('bbCustomerSearch');
+  const status=doc.getElementById('bbStatusFilter');
+  if(!filters||!summary||!refresh||!customer||!status)return false;
+
+  const bar=doc.createElement('div');
+  bar.className='bb-collection-actionbar';
+  const toggle=doc.createElement('button');
+  toggle.id='bbCollectionFilterToggle';
+  toggle.type='button';
+  toggle.className='bb-collection-filter-toggle';
+  refresh.classList.add('bb-collection-refresh');
+  refresh.textContent='↻';
+  refresh.setAttribute('aria-label','Refresh collection');
+  filters.parentNode.insertBefore(bar,filters);
+  bar.append(toggle,summary,refresh);
+  filters.classList.add('bb-collection-filter-panel');
+
+  const head=doc.createElement('div');
+  head.className='bb-collection-filter-head';
+  head.innerHTML='<div><strong>Filters</strong><br><span>Date · Location · Customer · Status</span></div><button type="button" class="bb-collection-filter-close" aria-label="Close filters">×</button>';
+  filters.prepend(head);
+  const backdrop=doc.createElement('div');
+  backdrop.className='bb-collection-filter-backdrop';
+  doc.body.appendChild(backdrop);
+
+  const sync=()=>{const n=activeFilterCount(doc);toggle.textContent=n?'⚙ Filters · '+n:'⚙ Filters';toggle.classList.toggle('active',n>0)};
+  const open=()=>{filters.classList.add('open');backdrop.classList.add('open')};
+  const close=()=>{filters.classList.remove('open');backdrop.classList.remove('open')};
+  toggle.addEventListener('click',open);
+  backdrop.addEventListener('click',close);
+  head.querySelector('.bb-collection-filter-close').addEventListener('click',close);
+  ['dateFrom','locationFilter','bbStatusFilter'].forEach(id=>{const el=doc.getElementById(id);if(el)el.addEventListener('change',()=>{sync();setTimeout(close,120)})});
+  customer.addEventListener('input',sync);
+  customer.addEventListener('change',()=>{sync();setTimeout(close,120)});
+  customer.addEventListener('keydown',event=>{if(event.key==='Enter'){sync();close();try{customer.blur()}catch(_){}}});
+  const clear=filters.querySelector('.bb-filter-actions .btn.secondary');
+  if(clear)clear.addEventListener('click',()=>setTimeout(()=>{sync();close()},40));
+  sync();
+  return true;
+}
+
+async function enhance(){
+  let doc;
+  try{doc=frame.contentDocument||frame.contentWindow.document}catch(_){return false}
+  if(!doc?.head||!doc?.body)return false;
+
+  /* Wait for the REAL collection workspace, not the temporary source loader. */
+  if(!doc.getElementById('summaryBody')||!doc.querySelector('.filters'))return false;
+
+  const skin=await skinPromise;
+  let baseStyle=doc.getElementById('bb-mobile-collection-skin');
+  if(!baseStyle){baseStyle=doc.createElement('style');baseStyle.id='bb-mobile-collection-skin';doc.head.appendChild(baseStyle)}
+  if(skin.css&&!baseStyle.textContent)baseStyle.textContent=skin.css;
+
+  let extra=doc.getElementById('bb-mobile-collection-header-v2');
+  if(!extra){extra=doc.createElement('style');extra.id='bb-mobile-collection-header-v2';doc.head.appendChild(extra)}
+  extra.textContent=HEADER_FILTER_CSS;
+
+  if(skin.script&&!doc.getElementById('bb-mobile-collection-script')){
+    const script=doc.createElement('script');
+    script.id='bb-mobile-collection-script';
+    script.textContent=skin.script;
+    doc.body.appendChild(script);
+  }
+
+  /* Never block the real Collection data behind our wrapper loader. */
+  boot.classList.add('hide');
+  return installHeaderFilter(doc);
+}
+
+function stopPolling(){if(timer){clearInterval(timer);timer=null}}
+function startPolling(){
+  stopPolling();
+  tries=0;
+  const run=async()=>{
+    tries++;
+    const done=await enhance();
+    if(done){stopPolling();return}
+    if(tries>=600){
+      stopPolling();
+      boot.classList.add('hide');
+      console.warn('Your Collection mobile enhancement timed out; base Collection remains available.');
+    }
+  };
+  run();
+  timer=setInterval(run,100);
+}
+
+frame.addEventListener('load',startPolling);
+setTimeout(startPolling,120);
+})();
+</script>
+</body>
+</html>
