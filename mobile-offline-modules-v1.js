@@ -165,18 +165,6 @@ function createHost(){
   const screen=$('moduleScreen');
   if(!screen)throw new Error('BIG BROTHER mobile module shell unavailable.');
   screen.appendChild(host);
-  const live=document.createElement('button');
-  live.type='button';
-  live.id='bbOfflineLiveActions';
-  live.textContent='Live Actions';
-  live.title='Open the connected version for cloud-changing actions';
-  live.style.cssText='position:absolute;z-index:22;right:8px;top:8px;padding:6px 9px;border:1px solid #a8c8e6;border-radius:8px;background:#eef6ff;color:#235680;font:700 10px system-ui;box-shadow:0 2px 5px #164b7615';
-  live.hidden=true;
-  live.addEventListener('click',()=>{
-    if(!offline()?.canUseNetwork()||!route)return;
-    window.dispatchEvent(new CustomEvent('bb:offline-open-online',{detail:{route}}));
-  });
-  screen.appendChild(live);
   // Hardware Back or bottom-nav changes still use the real navigation stack.
   // Close a summary modal whenever navigation leaves the module.
   new MutationObserver(()=>{
@@ -192,7 +180,6 @@ function close(){
   if(screen)screen.classList.remove('bb-offline-native');
   const frame=$('moduleFrame');if(frame)frame.style.display='';
   const back=$('moduleBack');if(back)back.hidden=false;
-  const live=$('bbOfflineLiveActions');if(live)live.hidden=true;
   route='';dataset=null;
 }
 function openNativeRoute(name,useLocalFrame=false,skipRecord=false){
@@ -221,13 +208,18 @@ function openNativeRoute(name,useLocalFrame=false,skipRecord=false){
   return true;
 }
 function notice(message){const note=$('bbOffNote');if(note)note.textContent=message}
-function showLiveActions(){
-  const button=$('bbOfflineLiveActions');
-  if(button)button.hidden=!route||offline()?.canUseNetwork()!==true;
-}
 function announceOpen(name){
-  showLiveActions();
-  if(offline()?.canUseNetwork())window.dispatchEvent(new CustomEvent('bb:cached-route-opened',{detail:{route:name}}));
+  if(offline()?.canUseNetwork()){
+    window.dispatchEvent(new CustomEvent('bb:cached-route-opened',{detail:{route:name}}));
+  }
+}
+function showRefreshTime(){
+  if(!route)return;
+  const savedAt=datasetSyncedAt
+    ?new Date(datasetSyncedAt).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})
+    :'not synchronized';
+  // A quiet status inside the same screen; never open a separate "live" page.
+  notice('Data as of '+savedAt);
 }
 async function open(name){
   if(!canOpen(name)||!currentId())return false;
@@ -241,7 +233,7 @@ async function open(name){
   selectedReceivables.clear();
   createHost();
   const date=new Date(rec.syncedAt).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
-  notice('Saved '+date+' · Read-only snapshot, not a live financial balance.');
+  showRefreshTime();
   const frame=$('moduleFrame');
   if(name==='sales-support-calculator'||name==='stock-report'){
     const full=name==='stock-report'?await offline()?.read('offline-stock-report-full'):null;
@@ -665,11 +657,17 @@ const routeRpcs={
   ]
 };
 function updateVisibleDataset(key,value){
-  if(!route||mapRoutes[route]!==key||$('moduleScreen')?.hidden)return;
+  if(!route||$('moduleScreen')?.hidden)return;
+  if(route==='sales-support-calculator'&&(key==='offline-calc-bootstrap'||key==='offline-calc-batch-scope')){
+    try{$('moduleFrame')?.contentWindow?.postMessage({type:'bb:calc-snapshot-refreshed',key},location.origin)}catch(_){}
+    return;
+  }
+  if(mapRoutes[route]!==key)return;
   // A displayed summary must remain a stable historical selection while printing.
   if($('bbOfflineSummaryPrint'))return;
   dataset=value;
   datasetSyncedAt=Date.now();
+  showRefreshTime();
   if(key==='offline-ar-your'||key==='offline-ar-all'){
     const ids=['bbOffSearch','bbOffLocation','bbOffStatus','bbOffDateFrom','bbOffDateTo','bbOffMin','bbOffMax'];
     const selection=Object.fromEntries(ids.map(id=>[id,$(id)?.value]));
@@ -696,8 +694,6 @@ async function refreshRoute(name,safeRpc,canRoute){
     const user=currentId();
     for(const [storeKey,rpcName] of jobs){
       if(!api.canUseNetwork()||currentId()!==user)return any;
-      const existing=await api.read(storeKey);
-      if(existing?.syncedAt&&Date.now()-existing.syncedAt<60000)continue;
       // These are read-only permission-checked RPCs; don't block cached rendering.
       let response;
       try{response=await safeRpc(rpcName)}catch(_){response=null}
@@ -715,8 +711,6 @@ async function refreshRoute(name,safeRpc,canRoute){
   refreshPending.set(key,request);
   try{return await request}finally{refreshPending.delete(key)}
 }
-window.addEventListener('online',()=>showLiveActions());
-window.addEventListener('offline',()=>showLiveActions());
 
 window.BBMobileOfflineModulesV1={open,canOpen,available,sync,refreshRoute,close};
 })();
