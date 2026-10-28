@@ -1,5 +1,5 @@
 <#
-BIG BROTHER Control Center V3.4 HTTPS Caddy helper.
+BIG BROTHER Control Center V3.4 HTTPS Caddy helper V2 (native stderr fix).
 Use -Action Doctor, Start, Status, Stop.
 Run Start after V6 starts, and Stop before V6 closes.
 This file does not alter Docker, V5, V6, firewall or certificates.
@@ -51,10 +51,22 @@ switch($Action){
         }
         if(-not (Test-Path -LiteralPath $config)){throw "Missing Caddyfile: $config"}
         $caddy=Get-Caddy
-        & $caddy validate --config $config --adapter caddyfile
-        if($LASTEXITCODE -ne 0){throw 'Caddyfile validation failed, HTTPS NOT started'}
+        # Caddy emits informational JSON on stderr even on successful validation.
+        # Under Windows PowerShell's ErrorActionPreference=Stop, calling it with &
+        # can be mistaken for a fatal exception. Inspect its real process EXIT CODE.
+        $logDir=Join-Path $env:LOCALAPPDATA 'BIG_BROTHER_HTTPS'
+        if(-not (Test-Path -LiteralPath $logDir)){New-Item -Path $logDir -ItemType Directory -Force | Out-Null}
+        $stdout=Join-Path $logDir 'caddy-validate.out.log'
+        $stderr=Join-Path $logDir 'caddy-validate.err.log'
+        $validation=Start-Process -FilePath $caddy -ArgumentList @('validate','--config',('"'+$config+'"'),'--adapter','caddyfile') -WorkingDirectory $folder -Wait -PassThru -WindowStyle Hidden -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+        if($validation.ExitCode -ne 0){
+            $detail=(Get-Content -LiteralPath $stderr -Tail 5 -ErrorAction SilentlyContinue) -join ' | '
+            throw ('Caddyfile validation failed (exit '+$validation.ExitCode+'). '+$detail)
+        }
         $arguments=@('run','--config',('"'+$config+'"'),'--adapter','caddyfile')
-        $process=Start-Process -FilePath $caddy -ArgumentList $arguments -WorkingDirectory $folder -PassThru -WindowStyle Hidden
+        $runOut=Join-Path $logDir 'caddy-run.out.log'
+        $runErr=Join-Path $logDir 'caddy-run.err.log'
+        $process=Start-Process -FilePath $caddy -ArgumentList $arguments -WorkingDirectory $folder -PassThru -WindowStyle Hidden -RedirectStandardOutput $runOut -RedirectStandardError $runErr
         Set-Content -LiteralPath $pidPath -Value $process.Id -Encoding ascii
         $ready=$false
         for($i=0;$i -lt 30;$i++){
@@ -62,7 +74,11 @@ switch($Action){
             if(Is-Listening 8443){$ready=$true;break}
             if($process.HasExited){break}
         }
-        if(-not $ready){throw 'Caddy did not listen on HTTPS 8443; check logs; no V6 changes made'}
+        if(-not $ready){
+            Remove-Item -LiteralPath $pidPath -ErrorAction SilentlyContinue
+            $detail=(Get-Content -LiteralPath $runErr -Tail 5 -ErrorAction SilentlyContinue) -join ' | '
+            throw ('Caddy failed to listen on HTTPS 8443. '+$detail)
+        }
         Write-Host ('BIG BROTHER HTTPS started: PID '+$process.Id)
         Show-Status
         break
