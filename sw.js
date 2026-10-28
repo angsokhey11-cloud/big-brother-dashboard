@@ -44,12 +44,12 @@ const PRECACHE=[
   './mobile-theme-v1.js?v=20261005-angkor-login16',
   './mobile-sales-support-home.js?v=20261028-unified1',
   './mobile-offline-modules-v1.js?v=20261028-unified1',
-  './mobile-offline-stock.html?v=20261028-sameui1',
+  './mobile-offline-stock.html?embed=1&v=20261028-unified1',
   './mobile-offline-stock-source-v1.html?v=20261028-sameui1',
-  './mobile-offline-calculator.html?v=20261028-unified1',
+  './mobile-offline-calculator.html?mobile=1&view=calculator&v=20261028-unified1',
   './mobile-offline-calculator-source-v1.html?v=20261028-sameui1',
   './mobile-offline-calculator-dual-currency-v1.js?v=20261028-sameui1',
-  './mobile-offline-calculator-adapter-v1.js?v=20261028-sameui1',
+  './mobile-offline-calculator-adapter-v1.js?v=20261028-unified1',
   './pwa-install.js?v=20261024-mobileperf1',
   './mobile-module-transition-v3.js?v=20261024-module-transition1',
   './bb-web-push-client-v1.js?v=20261025-webpush-v1',
@@ -85,12 +85,12 @@ self.addEventListener('install',event=>{
       './mobile-sales-support-home.js?v=20261028-unified1',
       './mobile-user-overview.js?v=20261028-auto-offline3',
       './mobile-offline-modules-v1.js?v=20261028-unified1',
-      './mobile-offline-stock.html?v=20261028-sameui1',
+      './mobile-offline-stock.html?embed=1&v=20261028-unified1',
       './mobile-offline-stock-source-v1.html?v=20261028-sameui1',
-      './mobile-offline-calculator.html?v=20261028-unified1',
+      './mobile-offline-calculator.html?mobile=1&view=calculator&v=20261028-unified1',
       './mobile-offline-calculator-source-v1.html?v=20261028-sameui1',
       './mobile-offline-calculator-dual-currency-v1.js?v=20261028-sameui1',
-      './mobile-offline-calculator-adapter-v1.js?v=20261028-sameui1'
+      './mobile-offline-calculator-adapter-v1.js?v=20261028-unified1'
     ]);
     await Promise.all([...critical].map(path=>
       cache.add(new Request(new URL(path,self.registration.scope),{cache:'reload'}))
