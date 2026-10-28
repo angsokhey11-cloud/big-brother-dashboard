@@ -18,7 +18,7 @@ const mapRoutes={
   'stock-report':'offline-stock-report',
   'sales-support-calculator':'offline-calc-bootstrap'
 };
-let host=null,route='',dataset=null,calcCustomer=null,calcPrices=null,calcLines=[],calcCurrency='USD',calcRate=4100,calcDiscount=0;
+let host=null,route='',dataset=null,datasetSyncedAt=0,selectedReceivables=new Set(),calcCustomer=null,calcPrices=null,calcLines=[],calcCurrency='USD',calcRate=4100,calcDiscount=0;
 function currentId(){return offline()?.currentUserId()||''}
 function historyKey(){return 'bb_sales_support_calc_history_v2_'+currentId()}
 function currentKey(){return 'bb_sales_support_calc_current_v2_'+currentId()}
@@ -159,6 +159,8 @@ async function open(name){
   if(!rec?.value)return false;
   route=name;
   dataset=rec.value;
+  datasetSyncedAt=rec.syncedAt;
+  selectedReceivables.clear();
   createHost();
   const date=new Date(rec.syncedAt).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
   notice('Saved '+date+' · Read-only snapshot, not a live financial balance.');
@@ -181,41 +183,146 @@ async function open(name){
   return true;
 }
 
+
+function invoiceIdentity(r){return clean(r.invoiceId)||[clean(r.invoiceNo),clean(r.customerId),clean(r.locationCode)].join('|')}
+function receivableDate(value){
+  if(!value)return '—';
+  const raw=clean(value);
+  const match=raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  const parsed=match?new Date(Number(match[1]),Number(match[2])-1,Number(match[3])):new Date(raw);
+  if(Number.isNaN(parsed.getTime()))return raw;
+  return parsed.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).replace(/ /g,'-');
+}
 function renderReceivables(){
   const rows=Array.isArray(dataset?.receivables)?dataset.receivables:[];
   const locations=[...new Set(rows.map(r=>clean(r.locationName||r.locationCode)).filter(Boolean))].sort();
   const wrap=$('bbOffBody');
   wrap.innerHTML=
-    '<div class="bb-ar-toolbar"><strong class="bb-ar-total">'+rows.length+' outstanding invoices</strong><small>Saved read-only</small></div>'+
+    '<div class="bb-ar-toolbar"><strong class="bb-ar-total">'+rows.length+' Outstanding Invoices</strong>'+
+    '<button type="button" class="bb-off-primary" id="bbOffSummaryBtn" disabled>🧾 Summary Invoice (0)</button></div>'+
     '<div class="bb-off-form" style="margin-bottom:8px">'+
     '<input id="bbOffSearch" class="wide" placeholder="Search customer / invoice" type="search" aria-label="Search saved receivables">'+
     '<select id="bbOffLocation" aria-label="Filter location"><option value="">All assigned locations</option>'+
       locations.map(loc=>'<option value="'+esc(loc)+'">'+esc(loc)+'</option>').join('')+'</select>'+
     '<select id="bbOffStatus" aria-label="Filter status"><option value="">All statuses</option><option>Outstanding</option><option>Overdue</option><option>Processing</option></select>'+
-    '</div><div id="bbOffRows" class="bb-ar-list"></div><div id="bbOffCount" class="bb-off-note"></div>';
+    '<details class="wide" style="background:#fff;border:1px solid #d9e3ee;border-radius:10px;padding:7px 10px">'+
+      '<summary style="font-size:12px;font-weight:800;color:#244f7b">📅 Date & Outstanding Amount</summary>'+
+      '<div class="bb-off-form" style="padding-top:10px"><label>From<input id="bbOffDateFrom" type="date"></label>'+
+      '<label>To<input id="bbOffDateTo" type="date"></label>'+
+      '<label>Minimum Outstanding<input id="bbOffMin" type="number" min="0" step="0.01" inputmode="decimal"></label>'+
+      '<label>Maximum Outstanding<input id="bbOffMax" type="number" min="0" step="0.01" inputmode="decimal"></label></div>'+
+    '</details></div>'+
+    '<div class="bb-ar-toolbar"><button type="button" class="bb-off-muted" id="bbOffSelectAll">Select matching</button>'+
+    '<button type="button" class="bb-off-muted" id="bbOffClearSelected">Clear selection</button></div>'+
+    '<div id="bbOffRows" class="bb-ar-list"></div><div id="bbOffCount" class="bb-off-note"></div>';
   const fmt=(v,c)=>v==null?'—':money(v,c);
-  function draw(){
+  const getFiltered=()=>{
     const q=clean($('bbOffSearch').value).toLowerCase(),loc=$('bbOffLocation').value,status=$('bbOffStatus').value;
-    const filtered=rows.filter(r=>(!loc||clean(r.locationName||r.locationCode)===loc)&&(!status||clean(r.arStatus)===status)
-      &&[r.customer,r.invoiceNo,r.locationName,r.locationCode].some(x=>clean(x).toLowerCase().includes(q)));
-    $('bbOffRows').innerHTML=filtered.slice(0,500).map(r=>
-      '<article class="bb-ar-card">'+
-        '<div class="check">◻</div>'+
+    const from=$('bbOffDateFrom').value,to=$('bbOffDateTo').value;
+    const min=clean($('bbOffMin').value),max=clean($('bbOffMax').value);
+    return rows.filter(r=>{
+      const day=clean(r.invoiceDate).slice(0,10);
+      return (!loc||clean(r.locationName||r.locationCode)===loc)&&(!status||clean(r.arStatus)===status)
+        &&[r.customer,r.invoiceNo,r.locationName,r.locationCode].some(x=>clean(x).toLowerCase().includes(q))
+        &&(!from||day>=from)&&(!to||day<=to)
+        &&(min===''||num(r.outstanding)>=num(min))&&(max===''||num(r.outstanding)<=num(max));
+    });
+  };
+  function draw(){
+    const filtered=getFiltered();
+    $('bbOffRows').innerHTML=filtered.slice(0,500).map(r=>{
+      const id=invoiceIdentity(r),enabled=num(r.outstanding)>0&&clean(r.arStatus).toLowerCase()!=='processing';
+      return '<article class="bb-ar-card">'+
+        '<label class="check"><input type="checkbox" data-ar-select="'+esc(id)+'" aria-label="Select '+esc(r.invoiceNo)+'"'+
+        (selectedReceivables.has(id)?' checked':'')+(enabled?'':' disabled')+'></label>'+
         '<div class="invoice">'+esc(r.invoiceNo)+'</div>'+
         '<div class="customer">'+esc(r.customer||'Unknown customer')+'</div>'+
         '<div class="status">'+esc(r.arStatus||'Outstanding')+'</div>'+
-        '<div class="invoice-date">Invoice: '+esc(r.invoiceDate||'—')+'</div>'+
-        '<div class="due-date">Due: '+esc(r.dueDate||'—')+'</div>'+
+        '<div class="invoice-date">Invoice: '+esc(receivableDate(r.invoiceDate))+'</div>'+
+        '<div class="due-date">Due: '+esc(receivableDate(r.dueDate))+'</div>'+
         '<div class="location">📍 '+esc(r.locationName||r.locationCode||'—')+'</div>'+
         '<div class="amt total" data-label="Total">'+esc(fmt(r.grandTotal,r.currency))+'</div>'+
         '<div class="amt paid" data-label="Paid">'+esc(fmt(r.amountPaid,r.currency))+'</div>'+
         '<div class="amt outstanding" data-label="Outstanding">'+esc(fmt(r.outstanding,r.currency))+'</div>'+
-      '</article>'
-    ).join('')||'<div class="bb-off-card">No matching saved invoices.</div>';
+      '</article>';
+    }).join('')||'<div class="bb-off-card">No matching saved invoices.</div>';
+    $('bbOffRows').querySelectorAll('input[data-ar-select]').forEach(checkbox=>checkbox.addEventListener('change',()=>{
+      if(checkbox.checked)selectedReceivables.add(checkbox.dataset.arSelect);
+      else selectedReceivables.delete(checkbox.dataset.arSelect);
+      summaryButton();
+    }));
     $('bbOffCount').textContent='Showing '+Math.min(500,filtered.length)+' of '+filtered.length+' matched invoices · saved snapshot only';
+    summaryButton();
   }
-  ['bbOffSearch','bbOffLocation','bbOffStatus'].forEach(id=>$(id).addEventListener(id==='bbOffSearch'?'input':'change',draw));
+  function summaryButton(){
+    const count=rows.filter(r=>selectedReceivables.has(invoiceIdentity(r))&&num(r.outstanding)>0&&clean(r.arStatus).toLowerCase()!=='processing').length;
+    $('bbOffSummaryBtn').textContent='🧾 Summary Invoice ('+count+')';
+    $('bbOffSummaryBtn').disabled=count===0;
+  }
+  ['bbOffSearch','bbOffLocation','bbOffStatus','bbOffDateFrom','bbOffDateTo','bbOffMin','bbOffMax'].forEach(id=>
+    $(id).addEventListener(['bbOffSearch','bbOffMin','bbOffMax'].includes(id)?'input':'change',draw));
+  $('bbOffSelectAll').onclick=()=>{
+    getFiltered().filter(r=>num(r.outstanding)>0&&clean(r.arStatus).toLowerCase()!=='processing').forEach(r=>selectedReceivables.add(invoiceIdentity(r)));
+    draw();
+  };
+  $('bbOffClearSelected').onclick=()=>{selectedReceivables.clear();draw()};
+  $('bbOffSummaryBtn').onclick=()=>openReceivableSummary(rows.filter(r=>selectedReceivables.has(invoiceIdentity(r))));
   draw();
+}
+function closeReceivableSummary(){
+  const overlay=$('bbOfflineSummaryPrint');
+  if(overlay)overlay.remove();
+}
+function openReceivableSummary(input){
+  const picked=input.filter(r=>num(r.outstanding)>0&&clean(r.arStatus).toLowerCase()!=='processing')
+    .slice().sort((a,b)=>clean(a.invoiceDate).localeCompare(clean(b.invoiceDate)));
+  if(!picked.length)return;
+  closeReceivableSummary();
+  // Never convert KHR to USD using an arbitrary or stale exchange rate.
+  const currencies=[...new Set(picked.map(r=>clean(r.currency).toUpperCase()||'USD'))];
+  const totals=Object.fromEntries(currencies.map(c=>[c,picked.filter(r=>(clean(r.currency).toUpperCase()||'USD')===c)
+    .reduce((sum,r)=>sum+num(r.outstanding),0)]));
+  const names=[...new Set(picked.map(r=>clean(r.customer)).filter(Boolean))];
+  const synced=datasetSyncedAt?new Date(datasetSyncedAt).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'unknown';
+  const dates=picked.map(r=>clean(r.invoiceDate)).filter(Boolean).sort();
+  const label=names.length===1?names[0]:names.length+' Selected Customers';
+  const modal=document.createElement('div');
+  modal.id='bbOfflineSummaryPrint';
+  modal.innerHTML='<div class="bb-summary-actions">'+
+    '<strong>Customer Invoice Summary</strong>'+
+    '<button type="button" id="bbSummaryClose" class="bb-off-muted">✕ Close</button>'+
+    '<button type="button" id="bbSummaryPrint" class="bb-off-primary">Print / Save PDF</button></div>'+
+    '<div class="bb-summary-sheet">'+
+      '<div class="bb-summary-top"><div><h1>BIG BROTHER</h1><p>Ready to be your partner</p>'+
+      '<small>Phnom Penh, Cambodia</small></div><div class="bb-summary-meta">'+
+      '<b>Summary Date:</b> '+esc(receivableDate(new Date().toISOString().slice(0,10)))+
+      '<p><b>Selected Invoices:</b> '+picked.length+'</p>'+
+      '<p><b>Saved Data:</b> '+esc(synced)+'</p></div></div>'+
+      '<h2>CUSTOMER INVOICE SUMMARY</h2>'+
+      '<div class="bb-summary-customer"><strong>Customer</strong><div>'+esc(label)+'</div>'+
+      (names.length>1?'<small>'+names.map(esc).join(' · ')+'</small>':'')+'</div>'+
+      '<div class="bb-summary-warning">OFFLINE COPY — Balances saved '+esc(synced)+'. Not verified against live payments or adjustments. No original invoice photos are included.</div>'+
+      '<div class="bb-summary-period">Invoice range: '+esc(receivableDate(dates[0]))+' to '+esc(receivableDate(dates[dates.length-1]))+'</div>'+
+      '<table><thead><tr><th>#</th>'+(names.length>1?'<th>Customer</th>':'')+
+      '<th>Invoice</th><th>Date</th><th>Due</th><th>Total</th><th>Paid</th><th>Outstanding</th></tr></thead><tbody>'+
+      picked.map((r,i)=>'<tr><td>'+(i+1)+'</td>'+(names.length>1?'<td>'+esc(r.customer)+'</td>':'')+
+        '<td><b>'+esc(r.invoiceNo)+'</b></td>'+
+        '<td>'+esc(receivableDate(r.invoiceDate))+'</td>'+
+        '<td>'+esc(receivableDate(r.dueDate))+'</td>'+
+        '<td>'+esc(r.grandTotal==null?'—':money(r.grandTotal,r.currency))+'</td>'+
+        '<td>'+esc(r.amountPaid==null?'—':money(r.amountPaid,r.currency))+'</td>'+
+        '<td><b>'+esc(money(r.outstanding,r.currency))+'</b></td></tr>').join('')+
+      '</tbody></table>'+
+      '<div class="bb-summary-totals">'+currencies.map(c=>
+        '<div><span>TOTAL OUTSTANDING ('+esc(c)+')</span><strong>'+esc(money(totals[c],c))+'</strong></div>').join('')+'</div>'+
+      '<footer>Invoice Summary includes selected saved outstanding balances only. • BIG BROTHER</footer>'+
+    '</div>';
+  document.body.appendChild(modal);
+  modal.querySelector('#bbSummaryClose').onclick=closeReceivableSummary;
+  modal.querySelector('#bbSummaryPrint').onclick=()=>{
+    // Printing a cached summary is allowed, but a permanent stale-data label stays on the document.
+    window.print();
+  };
 }
 function renderStock(){
   const rows=Array.isArray(dataset?.products)?dataset.products:[];
