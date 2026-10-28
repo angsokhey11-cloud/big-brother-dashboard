@@ -41,7 +41,12 @@ async function jsonp(_url,params={}){
   }
 }
 async function apiPost(){throw Error('Cloud changes and delivery requests are disabled offline.')}
-async function rpc(){throw Error('Live transactions are unavailable offline.')}
+async function rpc(name){
+  if(name!=='bb_sales_support_calculator_batch_scope')throw Error('Live transactions are unavailable offline.');
+  const record=await parentApi().read('offline-calc-batch-scope');
+  if(!record?.value?.success)throw Error('Batch product list has not been synced. Open Calculator online once.');
+  return record.value;
+}
 window.BBSalesSupportAdapter={
   bootstrap,jsonp,apiPost,rpc,
   ensureSession:async()=>{parentApi();return {user:{id:accountId()}}},
