@@ -1721,6 +1721,17 @@ html,body{margin:0;min-height:100%;background:#eef3f8;font-family:Arial,sans-ser
         html.slice(db);
     }
 
+    // The offline version keeps the original Calculator markup and interaction.
+    // Only cloud-dependent buttons are suppressed.
+    html=html.replace('</head>',
+      '<style id="bb-original-offline-safety">'+
+      '#bbCalcShareTelegram,#bbDeliveryYes,#submitDeliveryBtn,'+
+      '[data-view="request-delivery"],[data-view="your-customer"],'+
+      '[data-view="successful-delivery"]{display:none!important}'+
+      'body::after{content:"OFFLINE · SAVED DATA";position:fixed;top:5px;right:6px;'+
+      'z-index:900;font:800 9px Arial;background:#e3f4eb;border:1px solid #b7dfc9;'+
+      'color:#166746;padding:5px 7px;border-radius:7px;pointer-events:none}'+
+      '</style></head>');
     document.open();
     document.write(html);
     document.close();
