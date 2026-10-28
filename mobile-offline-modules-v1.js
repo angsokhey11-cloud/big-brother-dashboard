@@ -303,6 +303,9 @@ function stageLivePage(name){
   staged.title='BIG BROTHER loading live module';
   staged.setAttribute('aria-hidden','true');
   staged.setAttribute('tabindex','-1');
+  // A background auth redirect must never navigate the top-level PWA.
+  // Manual, user-activated navigation remains possible after handoff.
+  staged.setAttribute('sandbox','allow-scripts allow-same-origin allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-downloads allow-top-navigation-by-user-activation');
   staged.inert=true;
   staged.style.cssText='position:absolute!important;top:0!important;left:0!important;right:0!important;'+
     'bottom:calc(68px + env(safe-area-inset-bottom))!important;width:100%!important;'+
