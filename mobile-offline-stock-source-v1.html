@@ -1895,115 +1895,11 @@ async function parseResponse(
 
 
 async function refreshSession(){
-
-  const current =
-    readSession();
-
-
-  if(
-    !current?.refresh_token
-  ){
-
-    throw new Error(
-      'Please sign in to BIG BROTHER first.'
-    );
-
-  }
-
-
-  const response =
-    await fetch(
-
-      URL
-      +
-      '/auth/v1/token?grant_type=refresh_token',
-
-      {
-
-        method:'POST',
-
-        headers:{
-
-          apikey:KEY,
-
-          'Content-Type':
-            'application/json'
-
-        },
-
-        body:
-          JSON.stringify(
-            {
-              refresh_token:
-                current.refresh_token
-            }
-          )
-
-      }
-
-    );
-
-
-  const next =
-    await parseResponse(
-      response
-    );
-
-
-  saveSession(
-    next
-  );
-
-
-  return next;
-
+  throw new Error('Cloud session refresh is disabled in saved Stock Report.');
 }
-
-
-
 async function ensureSession(){
-
-  session =
-    readSession();
-
-
-  if(
-    !session?.access_token
-  ){
-
-    throw new Error(
-      'Please sign in to BIG BROTHER first.'
-    );
-
-  }
-
-
-  const now =
-    Math.floor(
-      Date.now()/1000
-    );
-
-
-  if(
-    session.expires_at
-    &&
-    Number(
-      session.expires_at
-    )
-    <
-    now + 30
-  ){
-
-    await refreshSession();
-
-  }
-
-
-  return session;
-
+  return readSession();
 }
-
-
 
 async function rpc(functionName,args={}){
   if(functionName!=='bb_stock_report_fast')throw new Error('This function requires online access.');
