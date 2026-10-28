@@ -23,12 +23,58 @@ async function read(route,batchId){
   if(!result?.value?.success)throw Error('This batch has not been synchronized yet. Open the function online first.');
   return result.value;
 }
+function stockSync(){
+  // Only the authenticated dashboard can request permission-checked cloud RPCs.
+  return window.parent?.BBMobileStaffReportsV12||window.parent?.parent?.BBMobileStaffReportsV12||null;
+}
+async function readStock(route,batch,force=false){
+  const api=store();
+  let record=await api.read(key(route,batch));
+  if((force||!record?.value?.success)&&api.canUseNetwork()&&stockSync()?.syncStock){
+    // User-initiated batch changes / Refresh must not be trapped in an old
+    // offline snapshot merely because the device is already connected.
+    const fresh=await stockSync().syncStock(batch,true);
+    if(fresh?.success)record=await api.read(key(route,batch));
+    else if(force)throw Error('Could not refresh this batch from the live system. Try again.');
+  }
+  if(!record?.value?.success){
+    throw Error(api.canUseNetwork()
+      ? 'This stock batch could not be synchronized. Try again.'
+      : 'This batch is not saved on this device for offline use.');
+  }
+  // Never show another batch's products under the requested batch ID.
+  if(batch&&String(record.value.selectedBatch?.batchId||'').trim()!==batch){
+    throw Error('The selected batch is no longer available or assigned to you.');
+  }
+  return record.value;
+}
+async function readStockBase(){
+  try{return await read('stock-base')}
+  catch(error){
+    const api=store();
+    if(!api.canUseNetwork()||!stockSync()?.syncStock)throw error;
+    const fresh=await stockSync().syncStock('',true);
+    if(!fresh?.success)throw Error('Your Stock could not be synchronized from the live system.');
+    return read('stock-base');
+  }
+}
+async function readStockAdjustment(batch){
+  try{return await read('stock-adjust',batch)}
+  catch(error){
+    const api=store();
+    if(!api.canUseNetwork()||!stockSync()?.syncStock)throw error;
+    const fresh=await stockSync().syncStock(batch,true);
+    if(!fresh?.success)throw Error('Batch adjustments could not be synchronized.');
+    return read('stock-adjust',batch);
+  }
+}
 async function rpc(name,args={}){
   const batch=String(args.p_batch_id||'').trim();
-  if(name==='bb_sales_support_your_stock')return read('stock-base');
-  if(name==='bb_sales_support_my_stock')return read('stock-my',batch);
-  if(name==='bb_sales_support_admin_your_stock')return read('stock-admin',batch);
-  if(name==='bb_sales_support_batch_adjustment_totals')return read('stock-adjust',batch);
+  const force=args.bb_force_live===true;
+  if(name==='bb_sales_support_your_stock')return readStockBase();
+  if(name==='bb_sales_support_my_stock')return readStock('stock-my',batch,force);
+  if(name==='bb_sales_support_admin_your_stock')return readStock('stock-admin',batch,force);
+  if(name==='bb_sales_support_batch_adjustment_totals')return readStockAdjustment(batch);
   if(name==='bb_sales_support_batch_selling_tracker')return read('tracker',batch);
   throw Error('Only synchronized read-only reports can run offline.');
 }
