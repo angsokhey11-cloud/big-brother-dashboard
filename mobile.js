@@ -154,11 +154,14 @@ async function signIn(email,password){
   const next=await parse(r);saveSession(next);return next;
 }
 async function signOut(){
-  try{await window.BBPush?.disable({silent:true})}catch(_){}
+  if(window.BBMobileOfflineWorkspaceV1?.canUseNetwork()!==false){try{await window.BBPush?.disable({silent:true})}catch(_){}}
   const current=readSession();
   try{if(current?.access_token&&window.BBMobileOfflineWorkspaceV1?.canUseNetwork()!==false)await fetch(SUPABASE_URL+'/auth/v1/logout',{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+current.access_token},cache:'no-store'})}catch(_){}
   try{await window.BBMobileOfflineWorkspaceV1?.clearUser(current?.user?.id)}catch(_){}
-  saveSession(null);profile=null;overview=null;showLogin('');
+  saveSession(null);profile=null;overview=null;
+  void window.BBMobileOfflineWorkspaceV1?.init();
+  window.BBMobileOfflineWorkspaceV1?.updateControls();
+  showLogin('');
 }
 
 function isAdmin(){return profile?.user?.isAdmin===true}
@@ -379,6 +382,7 @@ function openSettings(){$('settingsSheet').hidden=false}
 function closeSettings(){$('settingsSheet').hidden=true}
 
 async function loadOverview(force=false){
+  if(window.BBMobileOfflineWorkspaceV1?.canUseNetwork()===false)return;
   if(window.BBMobileOverviewV1?.refresh){
     try{
       await window.BBMobileOverviewV1.refresh(force);
@@ -442,6 +446,7 @@ function installAdminOverviewLive(){
 }
 
 async function activate(){
+  if(window.BBMobileOfflineWorkspaceV1?.canUseNetwork()===false)return;
   profile=await rpc('bb_current_access_profile');
   const offline=window.BBMobileOfflineWorkspaceV1;
   if(offline){void offline.write('access-profile',profile);offline.setConnection(true)}
@@ -449,7 +454,7 @@ async function activate(){
   const requested=new URLSearchParams(location.search).get('module')||'';
   // Direct module links need authentication and permissions, not a blocking Home overview.
   // The unified Home controller still loads independently; returning Home refreshes live data.
-  if(requested&&ROUTES[requested]&&canRoute(requested)){openModule(requested,false);return}
+  if(requested&&ROUTES[requested]&&canRoute(requested)&&openModule(requested,false))return;
   // Display the authenticated shell immediately after access is verified.
   // The live overview can refresh without holding the entire mobile app on
   // its loading screen. Server-side permissions and all writes remain live.
@@ -474,6 +479,7 @@ async function boot(){
       openedFromCache=true;
     }
   }
+  if(offline?.isTestMode?.()&&openedFromCache)return;
   try{
     await ensureSession();
     await activate(); // refresh profile/permissions and data without blocking the cached screen
@@ -491,6 +497,7 @@ async function boot(){
 }
 // Retry cloud synchronization when a connection returns, while the app is open.
 window.addEventListener('bb:mobile-reconnected',()=>{
+  if(window.BBMobileOfflineWorkspaceV1?.canUseNetwork()===false)return;
   if(readSession()?.access_token)void activate().catch(()=>window.BBMobileOfflineWorkspaceV1?.setConnection(false));
 });
 
@@ -506,6 +513,8 @@ $('loginForm').addEventListener('submit',async event=>{
     await signIn(email,password.value);
     rememberEmail(email);
     password.value='';
+    void window.BBMobileOfflineWorkspaceV1?.init();
+    window.BBMobileOfflineWorkspaceV1?.updateControls();
     await activate();
   }catch(error){
     $('loginError').textContent=error?.message||String(error);
