@@ -409,7 +409,7 @@ async function open(name){
     if(name==='sales-support-calculator'||name==='history'||name==='monthly-sales-report'||full?.value?.success){
       const url=name==='sales-support-calculator'
         ?'./mobile-offline-calculator.html?mobile=1&view=calculator&v=20261028-seamless1'
-        :name==='history'?'./mobile-offline-history-original-v1.html?embed=1&mobileSkin=1&v=20261028-realhistory1'
+        :name==='history'?'./mobile-offline-history-mobile-v1.html?embed=1&v=20261028-realhistory1'
         :name==='monthly-sales-report'?'./mobile-offline-monthly-sales-v1.html?embed=1&v=20261028-monthly1'
         :'./mobile-offline-stock.html?embed=1&v=20261028-seamless1';
       if(!openNativeRoute(name,true,restoringAtStart))return false;
