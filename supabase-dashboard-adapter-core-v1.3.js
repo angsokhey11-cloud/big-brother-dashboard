@@ -240,10 +240,30 @@
     setTimeout(()=>el.remove(),2600);
   }
 
+  /* Live Cambodia date for desktop sign-in (no Supabase reads). */
+  const bbDesktopLoginDateFormatter=new Intl.DateTimeFormat('en-GB',{
+    day:'2-digit',month:'short',year:'numeric',timeZone:'Asia/Phnom_Penh'
+  });
+  let bbDesktopLoginDateTimer=null;
+  function refreshDesktopLoginDate(){
+    const el=document.getElementById('bbDesktopLoginLiveDate');
+    if(!el)return;
+    const parts={};
+    for(const item of bbDesktopLoginDateFormatter.formatToParts(new Date())){
+      if(item.type==='day'||item.type==='month'||item.type==='year')parts[item.type]=item.value;
+    }
+    const label='LOGIN V9 · '+parts.day+'-'+parts.month+'-'+parts.year;
+    if(el.textContent!==label)el.textContent=label;
+  }
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='visible')refreshDesktopLoginDate();
+  });
+  window.addEventListener('focus',refreshDesktopLoginDate);
+
   function showLogin(message=''){
     document.getElementById('bbDashboardLogin')?.remove();
     const overlay=document.createElement('div');overlay.id='bbDashboardLogin';overlay.className='bb-auth-overlay';
-    overlay.innerHTML=`<div class="bb-auth-version">LOGIN V9 · 05 OCT 2026</div><form class="bb-auth-card" id="bbDashboardLoginForm">
+    overlay.innerHTML=`<div class="bb-auth-version" id="bbDesktopLoginLiveDate">LOGIN V9 · —</div><form class="bb-auth-card" id="bbDashboardLoginForm">
       <div class="bb-auth-mark" aria-hidden="true"></div>
       <div class="bb-auth-brand">BIG BROTHER</div>
       <div class="bb-auth-quote">“From small beginnings to big achievements, we grow with trust, purpose, and vision.”</div>
@@ -256,6 +276,10 @@
       <div class="bb-auth-note">Secure access for approved BIG BROTHER accounts.</div>
     </form>`;
     document.body.appendChild(overlay);
+    refreshDesktopLoginDate();
+    if(bbDesktopLoginDateTimer===null){
+      bbDesktopLoginDateTimer=window.setInterval(refreshDesktopLoginDate,60000);
+    }
     const err=document.getElementById('bbLoginError');if(message)err.textContent=message;
     document.getElementById('bbDashboardLoginForm').addEventListener('submit',async event=>{
       event.preventDefault();const btn=document.getElementById('bbLoginButton');err.textContent='';btn.disabled=true;btn.textContent='Signing in…';
