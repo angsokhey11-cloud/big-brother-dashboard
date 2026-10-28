@@ -1389,8 +1389,7 @@ async function load(){
   pages=normalizePages(readLocal(pageKeyName));
   quickPreferencesReady=localQuickSaved;
 
-  // Render locally available, permission-filtered shortcuts immediately.
-  // No dashboard, inventory, earnings or payment data is read from storage.
+  // Render cached overview, attention, earnings and permitted Quick Actions immediately.
   renderHome();
   renderNav(currentNavState());
   watchNavReplacement();
@@ -1419,7 +1418,7 @@ async function load(){
     }
   },900);
 
-  // Network verification and fresh data start AFTER the cached home is visible.
+  // Automatically update from Supabase AFTER the cached Home is visible.
   const liveProfilePromise=offline?.canUseNetwork()===false?Promise.resolve():safeRpc('bb_current_access_profile').then(next=>{
     if(next){profile=next;void offline?.write('access-profile',next);renderHome();renderMainMenu()}
   });
@@ -1487,20 +1486,6 @@ async function load(){
 }
 
 function start(){
-  window.addEventListener('bb:mobile-offline-mode-changed',()=>{
-    if(!window.BBMobileOfflineWorkspaceV1?.isTestMode?.())return;
-    // Freeze the visible values to the most recent completed snapshot.
-    const offline=window.BBMobileOfflineWorkspaceV1;
-    void Promise.all([offline.read('home-overview'),offline.read('home-attention'),
-      offline.read('home-payment'),offline.read('home-stock')]).then(([savedOverview,savedAttention,savedPayment,savedStock])=>{
-      if(!offline.isTestMode())return;
-      if(savedOverview?.value?.data&&JSON.stringify(savedOverview.value.args)===JSON.stringify(overviewArgs()))overview=savedOverview.value.data;
-      if(savedAttention?.value)attention=savedAttention.value;
-      if(savedPayment?.value)payment=savedPayment.value;
-      if(savedStock?.value)stockReport=savedStock.value;
-      renderHome();
-    });
-  });
   window.addEventListener('bb:mobile-reconnected',()=>{
     if(!profile)return;
     void refreshOverview(true);
