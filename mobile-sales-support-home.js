@@ -990,7 +990,7 @@ function openRoute(route,navState='',forceLive=false){
   if(offline&&!offline.canUseNetwork())return toast('Online required for this function.');
   window.BBMobileOfflineModulesV1?.close();
   closePicker();currentRoute=route;fallbackRoute='';
-  if(BASE_ROUTES.has(route)&&window.BBMobile?.open){
+  if(!forceLive&&BASE_ROUTES.has(route)&&window.BBMobile?.open){
     try{
       const result=window.BBMobile.open(route,true);
       if(result!==false){setTimeout(()=>renderNav(navState||currentNavState()),0);return}
