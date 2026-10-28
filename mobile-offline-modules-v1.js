@@ -160,7 +160,7 @@ function renderCalculator(){
       <button class="bb-off-primary wide" id="bbCalcSave" type="button">Save to Device History</button>
     </div>
     <div class="bb-off-card"><strong>Saved History</strong><div id="bbCalcHistory"></div></div>`;
-  $('bbCalcCustomer').value=clean(state.customerKey);
+  $('bbCalcCustomer').value=clean(state.customerKey).replace(/^id:/,'');
   $('bbCalcCurrency').value=calcCurrency;
   $('bbCalcCustomerSearch').addEventListener('input',()=>{
     const q=clean($('bbCalcCustomerSearch').value).toLowerCase();
@@ -195,7 +195,7 @@ function calcState(){
   const customer=(dataset?.customers||[]).find(c=>clean(c.customerId)===clean($('bbCalcCustomer')?.value));
   return {savedAt:Date.now(),currency:calcCurrency,rate:Math.max(1,num($('bbCalcRate')?.value)||4100),
     discountUSD:Math.max(0,num($('bbCalcDiscount')?.value)),
-    locationCode:clean(customer?.locationCode),customerKey:clean(customer?.customerId),customerName:clean(customer?.name),
+    locationCode:clean(customer?.locationCode),customerKey:customer?.customerId?'id:'+clean(customer.customerId):'',customerName:clean(customer?.name),
     customerMapUrl:clean(customer?.googleMapsLink),lines:calcLines.map(x=>({...x}))};
 }
 function drawCalc(){
@@ -211,7 +211,7 @@ function drawCalc(){
   $('bbCalcHistory').querySelectorAll('[data-load-history]').forEach(btn=>btn.onclick=()=>{
     const entry=history().find(h=>h.id===btn.dataset.loadHistory);if(!entry)return;
     calcLines=Array.isArray(entry.lines)?entry.lines.map(x=>({...x})):[];
-    $('bbCalcCustomer').value=clean(entry.customerKey);
+    $('bbCalcCustomer').value=clean(entry.customerKey).replace(/^id:/,'');
     $('bbCalcCurrency').value=calcCurrency=entry.currency==='KHR'?'KHR':'USD';
     $('bbCalcRate').value=entry.rate||4100;
     $('bbCalcDiscount').value=entry.discountUSD||0;
