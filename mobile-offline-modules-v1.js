@@ -135,31 +135,86 @@ async function open(name){
   host.scrollTop=0;
   return true;
 }
+
 function renderReceivables(){
   const rows=Array.isArray(dataset?.receivables)?dataset.receivables:[];
+  const locations=[...new Set(rows.map(r=>clean(r.locationName||r.locationCode)).filter(Boolean))].sort();
   const wrap=$('bbOffBody');
-  wrap.innerHTML='<div class="bb-off-card"><strong>'+rows.length+' outstanding invoices</strong><small>Saved values may have changed since synchronization</small></div>'+
-    '<input id="bbOffSearch" placeholder="Search customer / invoice / location" type="search" aria-label="Search saved receivable">'+
-    '<div id="bbOffRows" class="bb-off-scroll"></div>';
+  wrap.innerHTML=
+    '<div class="bb-ar-toolbar"><strong class="bb-ar-total">'+rows.length+' outstanding invoices</strong><small>Saved read-only</small></div>'+
+    '<div class="bb-off-form" style="margin-bottom:8px">'+
+    '<input id="bbOffSearch" class="wide" placeholder="Search customer / invoice" type="search" aria-label="Search saved receivables">'+
+    '<select id="bbOffLocation" aria-label="Filter location"><option value="">All assigned locations</option>'+
+      locations.map(loc=>'<option value="'+esc(loc)+'">'+esc(loc)+'</option>').join('')+'</select>'+
+    '<select id="bbOffStatus" aria-label="Filter status"><option value="">All statuses</option><option>Outstanding</option><option>Overdue</option><option>Processing</option></select>'+
+    '</div><div id="bbOffRows" class="bb-ar-list"></div><div id="bbOffCount" class="bb-off-note"></div>';
+  const fmt=(v,c)=>v==null?'—':money(v,c);
   function draw(){
-    const q=clean($('bbOffSearch').value).toLowerCase();
-    const found=rows.filter(r=>[r.customer,r.invoiceNo,r.locationName,r.locationCode].some(x=>clean(x).toLowerCase().includes(q)));
-    $('bbOffRows').innerHTML=found.slice(0,500).map(r=>`<div class="bb-off-card bb-off-data"><div><strong>${esc(r.customer||'Unknown customer')}</strong><small>${esc(r.invoiceNo)} · ${esc(r.invoiceDate)} · ${esc(r.locationName||r.locationCode)} · ${esc(r.arStatus)}</small></div><b>${esc(money(r.outstanding,r.currency))}</b></div>`).join('')||'<div class="bb-off-card">No matching records in saved data.</div>';
+    const q=clean($('bbOffSearch').value).toLowerCase(),loc=$('bbOffLocation').value,status=$('bbOffStatus').value;
+    const filtered=rows.filter(r=>(!loc||clean(r.locationName||r.locationCode)===loc)&&(!status||clean(r.arStatus)===status)
+      &&[r.customer,r.invoiceNo,r.locationName,r.locationCode].some(x=>clean(x).toLowerCase().includes(q)));
+    $('bbOffRows').innerHTML=filtered.slice(0,500).map(r=>
+      '<article class="bb-ar-card">'+
+        '<div class="check">◻</div>'+
+        '<div class="invoice">'+esc(r.invoiceNo)+'</div>'+
+        '<div class="customer">'+esc(r.customer||'Unknown customer')+'</div>'+
+        '<div class="status">'+esc(r.arStatus||'Outstanding')+'</div>'+
+        '<div class="invoice-date">Invoice: '+esc(r.invoiceDate||'—')+'</div>'+
+        '<div class="due-date">Due: '+esc(r.dueDate||'—')+'</div>'+
+        '<div class="location">📍 '+esc(r.locationName||r.locationCode||'—')+'</div>'+
+        '<div class="amt total" data-label="Total">'+esc(fmt(r.grandTotal,r.currency))+'</div>'+
+        '<div class="amt paid" data-label="Paid">'+esc(fmt(r.amountPaid,r.currency))+'</div>'+
+        '<div class="amt outstanding" data-label="Outstanding">'+esc(fmt(r.outstanding,r.currency))+'</div>'+
+      '</article>'
+    ).join('')||'<div class="bb-off-card">No matching saved invoices.</div>';
+    $('bbOffCount').textContent='Showing '+Math.min(500,filtered.length)+' of '+filtered.length+' matched invoices · saved snapshot only';
   }
-  $('bbOffSearch').addEventListener('input',draw);draw();
+  ['bbOffSearch','bbOffLocation','bbOffStatus'].forEach(id=>$(id).addEventListener(id==='bbOffSearch'?'input':'change',draw));
+  draw();
 }
 function renderStock(){
   const rows=Array.isArray(dataset?.products)?dataset.products:[];
   const wrap=$('bbOffBody'),total=dataset?.totals||{};
-  wrap.innerHTML='<div class="bb-off-card"><strong>'+rows.length+' products</strong><small>Warehouse: '+esc(money(total.warehouseValue))+' · Saved stock snapshot</small></div>'+
-    '<input id="bbOffSearch" placeholder="Search product / code" type="search" aria-label="Search saved stock">'+
-    '<div id="bbOffRows" class="bb-off-scroll"></div>';
+  const aggregate=field=>rows.reduce((sum,row)=>sum+num(row[field]),0);
+  const fmt=v=>v==null?'—':num(v).toLocaleString('en-US',{maximumFractionDigits:2});
+  const categories=[...new Set(rows.map(r=>clean(r.category)).filter(Boolean))].sort();
+  const summary=[
+    ['Purchased WH',aggregate('warehousePurchased')],
+    ['Zero-cost WH',aggregate('warehouseZeroCost')],
+    ['Purchased Batch',aggregate('batchPurchased')],
+    ['Zero-cost Batch',aggregate('batchZeroCost')],
+    ['Total Good',aggregate('totalGood')],
+    ['Stock Value',money(total.warehouseValue||0)]
+  ];
+  wrap.innerHTML=
+    '<div class="bb-stock-summary">'+summary.map(([label,value],index)=>'<div class="summary-card"><small>'+esc(label)+'</small><strong>'+
+      esc(index===5?value:fmt(value))+'</strong></div>').join('')+'</div>'+
+    '<div class="bb-stock-toolbar">'+
+      '<input id="bbOffSearch" placeholder="Search product / code" type="search" aria-label="Search saved stock">'+
+      '<div class="bb-chips" id="bbOffChips" style="display:flex;gap:5px;overflow-x:auto;white-space:nowrap"></div>'+
+    '</div><div id="bbOffRows"></div>';
+  let category='';
+  $('bbOffChips').innerHTML=['',...categories].map(c=>'<button class="bb-off-muted" type="button" data-cat="'+esc(c)+'">'+esc(c||'All Products')+'</button>').join('');
   function draw(){
     const q=clean($('bbOffSearch').value).toLowerCase();
-    const filtered=rows.filter(r=>[r.productName,r.productCode].some(x=>clean(x).toLowerCase().includes(q)));
-    $('bbOffRows').innerHTML=filtered.map(r=>`<div class="bb-off-card"><strong>${esc(r.productName)}</strong><small>${esc(r.productCode)} · ${esc(r.unit)}</small><div class="bb-off-data"><span>Warehouse ${esc(num(r.warehousePhysical))} · Batch ${esc(num(r.batchPhysical))} · Damaged ${esc(num(r.damaged))}</span><b>${esc(money(r.totalValue))}</b></div></div>`).join('')||'<div class="bb-off-card">No matching products.</div>';
+    const selected=rows.filter(r=>(!category||clean(r.category)===category)&&[r.productName,r.productCode].some(x=>clean(x).toLowerCase().includes(q)));
+    const cell=(name,value,variant='')=>'<div class="metric '+variant+'" data-label="'+esc(name)+'">'+esc(value==null?'—':fmt(value))+'</div>';
+    $('bbOffRows').innerHTML=selected.map(r=>
+      '<article class="bb-stock-line">'+
+        '<div class="product"><b>'+esc(r.productName)+'</b><small>'+esc(r.productCode)+' · '+esc(r.unit)+'</small></div>'+
+        cell('Purchased WH',r.warehousePurchased)+cell('Zero-Cost WH',r.warehouseZeroCost,'purple')+
+        cell('Purchased Batch',r.batchPurchased,'amber')+cell('Zero-Cost Batch',r.batchZeroCost,'purple')+
+        cell('Total Good',r.totalGood,'green')+cell('Damaged',r.damaged,'red')+
+        cell('Avg Cost',r.averageCost)+cell('Total Value',r.totalValue,'value')+
+      '</article>'
+    ).join('')||'<div class="bb-off-card">No matching saved products.</div>';
   }
-  $('bbOffSearch').addEventListener('input',draw);draw();
+  $('bbOffSearch').addEventListener('input',draw);
+  $('bbOffChips').querySelectorAll('[data-cat]').forEach(btn=>btn.addEventListener('click',()=>{
+    category=btn.dataset.cat;draw();
+    $('bbOffChips').querySelectorAll('button').forEach(item=>item.style.background=item.dataset.cat===category?'#d9eafd':'#ecf2fa');
+  }));
+  draw();
 }
 function selectCustomer(){
   const id=clean($('bbCalcCustomer').value);
