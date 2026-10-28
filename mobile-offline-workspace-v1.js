@@ -6,7 +6,12 @@
 'use strict';
 const DB_NAME='BB_MOBILE_OFFLINE_WORKSPACE_V1', STORE='snapshots';
 const SESSION_KEY='BB_SUPABASE_DEV_SESSION_V1';
-const MAX_AGE_MS=7*24*60*60*1000; // require a successful sync at least weekly
+const MAX_AGE_MS=7*24*60*60*1000; // Require re-sync after seven days for sensitive snapshots.
+const TEST_KEY_PREFIX='bb_mobile_offline_test_v1::';
+function testKey(){const id=currentUserId();return id?TEST_KEY_PREFIX+id:''}
+function isTestMode(){
+  try{const k=testKey();return !!k&&localStorage.getItem(k)==='1'}catch(_){return false}
+}
 let connection=typeof navigator.onLine==='boolean'?navigator.onLine:true;
 let latestSync=0;
 let dbPromise=null;
@@ -59,6 +64,7 @@ async function write(name,value){
   });
 }
 async function clearUser(userId=currentUserId()){
+  if(userId){try{localStorage.removeItem(TEST_KEY_PREFIX+userId)}catch(_){}}
   const db=await openDb();if(!userId||!db)return;
   return new Promise(resolve=>{
     try{
@@ -70,7 +76,7 @@ async function clearUser(userId=currentUserId()){
     }catch(_){resolve()}
   });
 }
-function canUseNetwork(){return connection&&navigator.onLine!==false}
+function canUseNetwork(){return !isTestMode()&&connection&&navigator.onLine!==false}
 function setConnection(ok){
   connection=!!ok;
   updateIndicator();
@@ -91,24 +97,99 @@ function indicator(){
 function updateIndicator(){
   const el=indicator();if(!el)return;
   const stamp=latestSync?new Date(latestSync).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'not yet synced';
-  el.textContent=(canUseNetwork()?'Online · saved dashboard':'Offline · saved read-only dashboard')+' · Dashboard synced: '+stamp;
+  const mode=isTestMode()?'OFFLINE TEST · saved dashboard':canUseNetwork()?'Online · cached dashboard':'Offline · saved dashboard (read-only)';
+  el.textContent=mode+' · Last sync: '+stamp;
+  el.style.background=isTestMode()?'#fff1de':canUseNetwork()?'#ecf4ff':'#e9f7f0';
+  el.style.color=isTestMode()?'#87500e':'#215b87';
 }
 async function init(){
+  latestSync=0;
   const record=await read('last-sync');
   if(record)latestSync=Number(record.value)||0;
   updateIndicator();
 }
 async function success(){
-  setConnection(true);
-  await write('last-sync',Date.now());
+  // Completing a successful fetch does not override a user's test-mode choice.
+  setConnection(navigator.onLine!==false);
+  if(!isTestMode())await write('last-sync',Date.now());
 }
-window.addEventListener('offline',()=>setConnection(false));
-window.addEventListener('online',()=>{setConnection(true);window.dispatchEvent(new Event('bb:mobile-reconnected'))});
+function setNote(message){
+  const el=document.getElementById('bbOfflineTestNote');
+  if(el)el.textContent=String(message||'');
+}
+function updateControls(){
+  const toggle=document.getElementById('bbOfflineTestToggle');
+  const sync=document.getElementById('bbOfflineSyncNow');
+  const active=isTestMode();
+  if(toggle){
+    toggle.setAttribute('aria-pressed',active?'true':'false');
+    toggle.textContent=active?'ON · Return Online':'OFF · Test Offline';
+    toggle.style.background=active?'#b96c11':'#176eb6';
+  }
+  if(sync)sync.disabled=active||navigator.onLine===false;
+  setNote(active?
+    'Offline Test is ON. Saved dashboard only; live modules are blocked. Turn OFF to resume automatic cloud refresh.':
+    'Test the cached dashboard without switching off Wi-Fi. Sync runs while the app is open and online.');
+}
+async function toggleTest(){
+  const id=currentUserId();
+  if(!id){setNote('Please sign in once while online first.');return}
+  const active=isTestMode();
+  if(!active){
+    // Never hide a live transaction form behind a simulated disconnected screen.
+    if(document.getElementById('mobileHome')?.hidden){
+      setNote('Return to Home before enabling Offline Test, to protect unsaved work.');
+      return;
+    }
+    const snapshots=await Promise.all([read('home-overview'),read('staff-overview'),read('admin-overview')]);
+    if(!snapshots.some(x=>x?.value)){
+      setNote('No saved dashboard yet. Tap Sync Now while online before starting this test.');
+      return;
+    }
+  }
+  try{
+    const k=testKey();
+    if(active)localStorage.removeItem(k);
+    else localStorage.setItem(k,'1');
+  }catch(_){setNote('Device storage is unavailable. Test mode could not be changed.');return}
+  updateIndicator();updateControls();
+  window.dispatchEvent(new Event('bb:mobile-offline-mode-changed'));
+  // Explicitly trigger cloud refresh when returning to Normal Mode.
+  if(active&&canUseNetwork())window.dispatchEvent(new Event('bb:mobile-reconnected'));
+}
+function installControls(){
+  const sheet=document.querySelector('#settingsSheet .sheet-card');
+  if(!sheet||document.getElementById('bbOfflineTestPanel'))return;
+  const panel=document.createElement('div');
+  panel.id='bbOfflineTestPanel';
+  panel.style.cssText='padding:13px 12px;margin:12px 0;border:1px solid #cbdceb;border-radius:14px;background:#f3f8fd;display:grid;gap:8px;';
+  panel.innerHTML=
+    '<strong style="font-size:13px;color:#173f69">Offline Workspace</strong>'+
+    '<small id="bbOfflineTestNote" style="font-size:11px;color:#48647e;line-height:1.5"></small>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+    '<button type="button" id="bbOfflineTestToggle" aria-pressed="false" style="flex:1;border:0;border-radius:10px;color:#fff;padding:11px;font-weight:800;min-width:130px"></button>'+
+    '<button type="button" id="bbOfflineSyncNow" style="flex:1;border:1px solid #b8d1e6;border-radius:10px;background:#fff;color:#1761a1;padding:11px;font-weight:800;min-width:100px">Sync Now</button>'+
+    '</div>';
+  const install=document.getElementById('installAppBtn');
+  if(install?.parentNode===sheet)install.insertAdjacentElement('afterend',panel);
+  else sheet.insertBefore(panel,sheet.lastElementChild);
+  panel.querySelector('#bbOfflineTestToggle').addEventListener('click',()=>void toggleTest());
+  panel.querySelector('#bbOfflineSyncNow').addEventListener('click',()=>{
+    if(!canUseNetwork()){setNote('Internet required. Turn OFF Offline Test first.');return}
+    setNote('Sync requested. The timestamp updates after data is saved.');
+    window.dispatchEvent(new Event('bb:mobile-reconnected'));
+  });
+  updateControls();
+}
+
+window.addEventListener('offline',()=>{setConnection(false);updateControls()});
+window.addEventListener('online',()=>{setConnection(true);updateControls();if(canUseNetwork())window.dispatchEvent(new Event('bb:mobile-reconnected'))});
 window.BBMobileOfflineWorkspaceV1={
-  read,write,clearUser,currentUserId,canUseNetwork,setConnection,success,init,updateIndicator,
+  read,write,clearUser,currentUserId,canUseNetwork,isTestMode,setConnection,success,init,updateIndicator,updateControls,
   // Other repo modules need separate offline-safe implementation before being enabled.
   offlineRouteAllowed:()=>false
 };
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
-else void init();
+function start(){installControls();void init()}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});
+else start();
 })();
