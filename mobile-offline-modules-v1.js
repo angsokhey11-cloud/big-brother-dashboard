@@ -211,9 +211,11 @@ function openNativeRoute(name,useLocalFrame=false,skipRecord=false){
 function notice(message){const note=$('bbOffNote');if(note)note.textContent=message}
 function announceOpen(name){
   if(offline()?.canUseNetwork()){
-    // Prepare the full live function invisibly; the saved screen stays usable.
-    stageLivePage(name);
-    window.dispatchEvent(new CustomEvent('bb:cached-route-opened',{detail:{route:name}}));
+    // One live-page load per click; don't also issue duplicate Supabase RPCs.
+    // If this preload can't start or is abandoned, fall back to read-only
+    // in-place refresh, keeping the saved view usable.
+    if(!stageLivePage(name))
+      window.dispatchEvent(new CustomEvent('bb:cached-route-opened',{detail:{route:name}}));
   }
 }
 
@@ -222,12 +224,17 @@ function announceOpen(name){
  * a user's selected invoice, report filter or in-progress calculation.
  */
 let livePreload=null;
-function discardLivePreload(){
+function discardLivePreload(fallback=false){
   const entry=livePreload;
   if(!entry)return;
   livePreload=null;
   try{clearInterval(entry.interval);clearTimeout(entry.timeout)}catch(_){}
   try{entry.frame?.remove()}catch(_){}
+  if(fallback&&route===entry.route&&offline()?.canUseNetwork()&&!$('moduleScreen')?.hidden){
+    // The full live page was abandoned (e.g. salesman began editing).
+    // Update only this cached view in place, without loading a second full page.
+    window.dispatchEvent(new CustomEvent('bb:cached-route-opened',{detail:{route:entry.route}}));
+  }
 }
 function livePageReady(name,frame){
   try{
@@ -317,7 +324,7 @@ function stageLivePage(name){
   const mark=event=>{
     if(livePreload!==entry||event?.isTrusted===false)return;
     entry.interacted=true;
-    discardLivePreload();
+    discardLivePreload(true);
   };
   if(host&&host.style.display!=='none'){
     ['pointerdown','keydown','input','change'].forEach(event=>host.addEventListener(event,mark,{once:true}));
@@ -343,9 +350,10 @@ function stageLivePage(name){
   screen.appendChild(staged);
   staged.addEventListener('load',check);
   entry.interval=setInterval(check,180);
-  entry.timeout=setTimeout(()=>{if(livePreload===entry)discardLivePreload()},90000);
+  entry.timeout=setTimeout(()=>{if(livePreload===entry)discardLivePreload(true)},90000);
   // Start after the cached screen has already appeared. No await or spinner.
   staged.src=url.toString();
+  return true;
 }
 
 function showRefreshTime(){
