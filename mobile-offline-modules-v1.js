@@ -313,7 +313,8 @@ function commitLivePreload(entry){
   clearInterval(entry.interval);clearTimeout(entry.timeout);
   const original=entry.frame;
   try{
-    const label=window.BBMobileLiveRoutesV1?.label(entry.route)||'BIG BROTHER';
+    const label=window.BBMobileLiveRoutesV1?.label(entry.route)||
+      window.BBMobileHomeRouteAccessV1?.label(entry.route)||'BIG BROTHER';
     close(); // close saved view without adding another navigation history entry
     old.replaceWith(original);
     original.id='moduleFrame';
@@ -332,7 +333,10 @@ function commitLivePreload(entry){
 function stageLivePage(name){
   discardLivePreload();
   if(!offline()?.canUseNetwork()||!currentId())return;
-  const raw=window.BBMobileLiveRoutesV1?.url(name);
+  // Sales Support extras (including Your Receivable) live in the authorized
+  // unified Home registry, not the core mobile ROUTES table.
+  const raw=window.BBMobileLiveRoutesV1?.url(name)||
+    window.BBMobileHomeRouteAccessV1?.url(name);
   if(!raw)return;
   let url;
   try{
