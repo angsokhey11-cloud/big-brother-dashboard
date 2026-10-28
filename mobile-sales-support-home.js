@@ -992,7 +992,7 @@ function openRoute(route,navState='',forceLive=false){
     return;
   }
   const universal=window.BBMobileUniversalReadOnlyV1;
-  if(!forceLive&&universal&&!['history','monthly-sales-report'].includes(route)){
+  if(!forceLive&&universal&&!['history','monthly-sales-report','sales-support-your-stock','sales-support-batch-selling-tracker','daily-sale-summary'].includes(route)){
     void universal.open(route).then(ok=>{
       if(!ok){
         if(offline?.canUseNetwork())openRoute(route,navState,true);
@@ -1613,6 +1613,7 @@ async function load(){
   // Nonblocking background sync of permitted offline datasets.
   setTimeout(()=>{void window.BBMobileOfflineModulesV1?.sync(safeRpc,canRoute)},1500);
   setTimeout(()=>{void window.BBMobileReportSyncV1?.warm()},2100);
+  setTimeout(()=>{void window.BBMobileStaffReportsV12?.warm()},4500);
   await Promise.allSettled([liveProfilePromise,prefsPromise,overviewPromise,paymentPromise,attentionPromise,stockPromise]);
 }
 
@@ -1702,6 +1703,105 @@ window.BBMobileReportSyncV1=Object.freeze({
   }
 });
 
+
+/* V12: Real, read-only offline Stock/Tracker/Daily Sale reports.
+ * All RPC calls use the signed-in user's existing permission-checked safeRpc.
+ * No scheduled polling: 45-minute per-route throttle protects Supabase logs.
+ */
+const staffReportFlights=new Map();
+function staffCacheKey(name,batch){return 'offline-staff-v12::'+name+'::'+(clean(batch)||'DEFAULT')}
+async function staffFetch(route,storeName,rpcName,args={},batch='',force=false){
+  const api=window.BBMobileOfflineWorkspaceV1;
+  if(!api?.canUseNetwork()||!canRoute(route))return null;
+  const user=api.currentUserId(),key=staffCacheKey(storeName,batch);
+  if(!user)return null;
+  if(!force){
+    const found=await api.read(key);
+    if(found?.value?.success&&Date.now()-found.syncedAt<45*60*1000)return found.value;
+  }
+  const flight=user+'::'+key;
+  if(staffReportFlights.has(flight))return staffReportFlights.get(flight);
+  const work=(async()=>{
+    const raw=await safeRpc(rpcName,args);
+    if(!raw?.success||api.currentUserId()!==user||!api.canUseNetwork()||!canRoute(route))return null;
+    await api.write(key,raw);
+    return raw;
+  })();
+  staffReportFlights.set(flight,work);
+  try{return await work}finally{staffReportFlights.delete(flight)}
+}
+window.BBMobileStaffReportsV12=Object.freeze({
+  async syncTracker(batchId='',force=false){
+    const base=await staffFetch('sales-support-batch-selling-tracker','tracker',
+      'bb_sales_support_batch_selling_tracker',{p_batch_id:batchId||null},batchId,force);
+    if(base?.success&&base?.selectedBatch?.batchId&&base.selectedBatch.batchId!==batchId){
+      const api=window.BBMobileOfflineWorkspaceV1;
+      await api?.write(staffCacheKey('tracker',base.selectedBatch.batchId),base);
+    }
+    return base;
+  },
+  async syncStock(batchId='',force=false){
+    const route='sales-support-your-stock';
+    const base=await staffFetch(route,'stock-base','bb_sales_support_your_stock',{},'',force);
+    if(!base?.success)return null;
+    const admin=!!base.isAdmin,kind=admin?'stock-admin':'stock-my';
+    const result=await staffFetch(route,kind,
+      admin?'bb_sales_support_admin_your_stock':'bb_sales_support_my_stock',
+      {p_batch_id:batchId||null},batchId,force);
+    const selected=clean(result?.selectedBatch?.batchId);
+    if(result?.success){
+      const api=window.BBMobileOfflineWorkspaceV1;
+      if(selected&&selected!==batchId)await api?.write(staffCacheKey(kind,selected),result);
+      const adjustment=selected?await staffFetch(route,'stock-adjust','bb_sales_support_batch_adjustment_totals',
+        {p_batch_id:selected},selected,force):{success:true};
+      if(adjustment?.success)await api?.write(staffCacheKey('stock-ready',''),{success:true});
+    }
+    return result;
+  },
+  async syncDaily(force=false){
+    const data=await staffFetch('daily-sale-summary','daily-invoices','bb_sales_history_list',{
+      p_invoice_no:'',p_customer:'',p_date_from:null,p_date_to:null,p_invoice_type:''
+    },'',force);
+    if(!Array.isArray(data?.invoices))return null;
+    const ids=data.invoices.filter(x=>!clean(x.invoiceId).startsWith('AR-MIG-'))
+      .map(x=>clean(x.invoiceId)).filter(Boolean).slice(0,300);
+    if(!ids.length)return data;
+    const api=window.BBMobileOfflineWorkspaceV1;
+    const key=staffCacheKey('daily-items','');
+    const current=await api?.read(key);
+    if(!force&&current?.value?.success&&Date.now()-current.syncedAt<45*60*1000)return data;
+    // One bounded detail call, not one request per invoice.
+    const details=await safeRpc('bb_daily_sale_items',{p_invoice_ids:ids});
+    if(details?.success&&Array.isArray(details.invoices)&&api?.canUseNetwork()&&canRoute('daily-sale-summary')){
+      await api.write(key,{success:true,invoices:details.invoices});
+    }
+    return data;
+  },
+  async warm(){
+    if(!window.BBMobileOfflineWorkspaceV1?.canUseNetwork())return;
+    // Sequential, deliberately no burst of dozens of module requests.
+    if(canRoute('sales-support-your-stock')){
+      const first=await this.syncStock();
+      // Prefetch at most two other assigned open batches. Never request
+      // warehouse stock or every admin batch on a slow connection.
+      for(const row of (first?.batches||[]).filter(x=>
+        clean(x.batchId)&&clean(x.batchId)!==clean(first?.selectedBatch?.batchId)).slice(0,2)){
+        if(!window.BBMobileOfflineWorkspaceV1?.canUseNetwork())break;
+        await this.syncStock(row.batchId);
+      }
+    }
+    if(canRoute('sales-support-batch-selling-tracker')){
+      const first=await this.syncTracker();
+      for(const row of (first?.batches||[]).filter(x=>
+        clean(x.batchId)&&clean(x.batchId)!==clean(first?.selectedBatch?.batchId)).slice(0,2)){
+        if(!window.BBMobileOfflineWorkspaceV1?.canUseNetwork())break;
+        await this.syncTracker(row.batchId);
+      }
+    }
+    if(canRoute('daily-sale-summary'))await this.syncDaily();
+  }
+});
+
 const calcPriceFlights=new Map();
 window.BBMobileLiveReadBridgeV1=Object.freeze({
   // This is a read-only authenticated RPC. No local Calculator operation
@@ -1743,6 +1843,7 @@ function start(){
     if(!profile)return;
     setTimeout(()=>{void window.BBMobileOfflineModulesV1?.sync(safeRpc,canRoute,true)},1600);
     setTimeout(()=>{void window.BBMobileReportSyncV1?.warm()},2600);
+    setTimeout(()=>{void window.BBMobileStaffReportsV12?.warm()},4000);
     // mobile.js activate() already refreshes Overview: avoid duplicate RPCs.
     void refreshAttention(true);
     void syncPreferencesFromServer(true);

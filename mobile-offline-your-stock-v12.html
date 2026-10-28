@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>BIG BROTHER — Your Stock Mobile</title>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif}
+#stockFrame{display:block;width:100%;height:100%;border:0;background:#f4f7fb}
+#boot{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#f4f7fb;color:#17457a;font-weight:800;z-index:5}
+#boot.hide{display:none}
+</style>
+</head>
+<body>
+<div id="boot">Loading Your Stock…</div>
+<iframe id="stockFrame" src="mobile-offline-your-stock-source-v12.html?embed=1&mobileSkin=1&v=20261028-v12" title="Your Stock"></iframe>
+<script>
+(function(){
+'use strict';
+const frame=document.getElementById('stockFrame');
+const boot=document.getElementById('boot');
+const MOBILE_CSS=`
+:root{--bb-navy:#17457a;--bb-blue:#2f6fed;--bb-bg:#f4f7fb;--bb-line:#d9e2ef;--bb-text:#172b4d;--bb-muted:#667085;--bb-green:#18864b;--bb-red:#c93c46;--bb-orange:#e87512;--bb-purple:#7a3ec8}
+html,body{background:var(--bb-bg)!important;overflow-x:hidden!important}
+body{padding:7px 8px 20px!important;font-family:Arial,Helvetica,sans-serif!important}
+.app{max-width:none!important;margin:0!important;padding:0!important}
+.hero{display:none!important}
+.profile{margin:0 0 7px!important;padding:10px 11px!important;border-radius:11px!important;background:#eaf3ff!important;border-color:#c9def9!important;color:var(--bb-navy)!important;font-size:10.5px!important;line-height:1.25!important;box-shadow:none!important}
+.bb-stock-mobile-actions{display:flex!important;justify-content:flex-end!important;margin:0 0 7px!important}
+.bb-stock-mobile-actions .actions{display:flex!important;width:auto!important;margin:0!important}
+.bb-stock-mobile-actions .btn{min-height:38px!important;padding:7px 12px!important;border-radius:9px!important;font-size:10.5px!important;background:#eef3f8!important;color:var(--bb-navy)!important;border:1px solid #d5deea!important;box-shadow:none!important}
+.error{margin:0 0 7px!important;padding:9px 10px!important;font-size:10px!important}
+.loading{padding:28px 10px!important;font-size:11px!important}
+.summary{grid-template-columns:1fr 1fr!important;gap:6px!important;margin:0 0 7px!important}
+.kpi{position:relative!important;min-height:66px!important;padding:8px 8px 7px 35px!important;border-radius:10px!important;box-shadow:none!important;overflow:hidden!important}
+.kpi::before{position:absolute;left:8px;top:8px;width:21px;height:21px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900}
+.kpi:nth-child(1){background:#f3f8ff!important;border-color:#d5e6ff!important}.kpi:nth-child(1)::before{content:'▣';background:#e2efff;color:#1768d5}
+.kpi:nth-child(2){background:#f1fbf6!important;border-color:#cfead9!important}.kpi:nth-child(2)::before{content:'▦';background:#d9f3e4;color:#13874e}
+.kpi:nth-child(3){background:#fff8ef!important;border-color:#f3dec0!important}.kpi:nth-child(3)::before{content:'☷';background:#ffead0;color:#c96d00}
+.kpi:nth-child(4){background:#f8f4ff!important;border-color:#e2d6f5!important}.kpi:nth-child(4)::before{content:'◷';background:#eee4ff;color:#7a3ec8}
+.kpi small{margin:0 0 4px!important;font-size:7.5px!important;line-height:1.1!important;letter-spacing:.15px!important}.kpi strong{margin:0!important;font-size:14px!important;line-height:1.1!important}.kpi:nth-child(2) strong{color:var(--bb-green)!important}.kpi:nth-child(3) strong{color:var(--bb-orange)!important}.kpi:nth-child(4) strong{color:var(--bb-purple)!important}.kpi span{display:none!important}
+/* Staff mobile: maximize stock-list space. */
+body.bb-stock-mobile-staff .summary{display:none!important}
+body.bb-stock-mobile-staff .admin-batch-info{display:none!important}
+body.bb-stock-mobile-staff .privacy-note{display:none!important}
+.section{margin-top:0!important;border-radius:12px!important;box-shadow:none!important;overflow:hidden!important}
+/* Let the compact Pending Batch menu float above the stock card. */
+body.bb-stock-mobile-staff #adminBatchSection{
+  position:relative!important;
+  z-index:80!important;
+  overflow:visible!important;
+}
+body.bb-stock-mobile-staff #adminBatchSection .admin-filter-wrap{
+  position:relative!important;
+  z-index:90!important;
+  overflow:visible!important;
+}
+body.bb-stock-mobile-staff #adminBatchSection .bb-mobile-batch-picker{
+  position:relative!important;
+  z-index:100!important;
+}
+body.bb-stock-mobile-staff #adminBatchSection .bb-mobile-batch-menu{
+  z-index:9999!important;
+}
+body.bb-stock-mobile-staff #adminBatchSection + .card.section{
+  position:relative!important;
+  z-index:1!important;
+}
+.section-head{padding:10px 11px!important}.section-head strong{font-size:13px!important}.section-head span{font-size:9px!important}
+.privacy-note{padding:8px 10px!important;font-size:9px!important;line-height:1.3!important;background:#eef6ff!important;color:#315f95!important}
+.toolbar{padding:8px 10px!important}.toolbar input{width:100%!important;max-width:none!important;min-height:40px!important;padding:8px 10px!important;border-radius:9px!important;font-size:12px!important;background:#fff!important}
+.footer{display:none!important}
+body.bb-stock-mobile-staff .table-wrap{overflow:visible!important;padding:0!important;background:#fff!important}
+body.bb-stock-mobile-staff #itemTable{display:block!important;width:100%!important;min-width:0!important;border-collapse:separate!important}
+body.bb-stock-mobile-staff #itemHead{display:block!important;width:100%!important}
+body.bb-stock-mobile-staff #itemHead>tr.bb-mobile-stock-head{display:grid!important;grid-template-columns:minmax(0,1fr) 60px 55px 55px 60px!important;align-items:center!important;width:100%!important;min-height:32px!important;background:#f5f8fc!important;border-bottom:1px solid #d6e0eb!important}
+body.bb-stock-mobile-staff #itemHead>tr.bb-mobile-stock-head>th{display:block!important;min-width:0!important;padding:7px 3px!important;border:0!important;background:transparent!important;color:#64758a!important;font-size:6.5px!important;line-height:1!important;font-weight:900!important;text-transform:uppercase!important;letter-spacing:.12px!important;text-align:center!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+body.bb-stock-mobile-staff #itemHead>tr.bb-mobile-stock-head>th:first-child{text-align:left!important;padding-left:9px!important}
+body.bb-stock-mobile-staff #itemRows{display:block!important;width:100%!important}
+body.bb-stock-mobile-staff #itemRows>tr{display:grid!important;grid-template-columns:minmax(0,1fr) 60px 55px 55px 60px!important;align-items:center!important;width:100%!important;min-height:42px!important;margin:0!important;padding:0!important;border:0!important;border-bottom:1px solid #e6ebf1!important;border-radius:0!important;background:#fff!important;box-shadow:none!important;overflow:hidden!important}
+body.bb-stock-mobile-staff #itemRows>tr>td{display:block!important;min-width:0!important;margin:0!important;padding:8px 4px!important;border:0!important;background:transparent!important;text-align:center!important;white-space:nowrap!important;font-size:9px!important;line-height:1.15!important;overflow:hidden!important;text-overflow:ellipsis!important}
+body.bb-stock-mobile-staff #itemRows>tr>td:first-child{text-align:left!important;padding-left:9px!important;color:#173f77!important;font-size:10px!important;font-weight:800!important}
+body.bb-stock-mobile-staff #itemRows>tr>td:nth-child(2){color:var(--bb-navy)!important;font-weight:900!important}
+body.bb-stock-mobile-staff #itemRows>tr>td:nth-child(3){color:var(--bb-green)!important;font-weight:900!important}
+body.bb-stock-mobile-staff #itemRows>tr>td:nth-child(4){color:var(--bb-red)!important;font-weight:900!important}
+body.bb-stock-mobile-staff #itemRows>tr>td:nth-child(5){color:var(--bb-blue)!important;font-weight:900!important}
+body.bb-stock-mobile-staff .bb-stock-list-head{display:none!important}
+body.bb-stock-mobile-staff #itemRows>tr.bb-group-row{cursor:pointer!important;background:#eef5ff!important;border-bottom-color:#ccddf1!important}
+body.bb-stock-mobile-staff #itemRows>tr.bb-group-row>td:first-child{position:relative!important;padding-left:26px!important;font-size:10.5px!important;color:#123f73!important}
+body.bb-stock-mobile-staff #itemRows>tr.bb-group-row>td:first-child::before{content:'▸';position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:11px;color:#4778ad}
+body.bb-stock-mobile-staff #itemRows>tr.bb-group-row.bb-open>td:first-child::before{content:'▾'}
+body.bb-stock-mobile-staff #itemRows>tr.bb-group-row .bb-group-tag{display:inline-block;margin-left:4px;padding:1px 4px;border-radius:999px;background:#dcecff;color:#2368bd;font-size:5.5px;font-weight:900;vertical-align:1px}
+body.bb-stock-mobile-staff #itemRows>tr.bb-child-row{background:#fbfdff!important}
+body.bb-stock-mobile-staff #itemRows>tr.bb-child-row>td:first-child{padding-left:25px!important;color:#48627f!important;font-size:9px!important;font-weight:700!important}
+body.bb-stock-mobile-staff #itemRows>tr.bb-child-row>td:first-child::before{content:'↳';margin-right:4px;color:#9aacc0}
+body.bb-stock-mobile-staff #itemRows>tr.bb-child-row[hidden]{display:none!important}
+body.bb-stock-mobile-staff #itemRows>tr.bb-single-row>td:first-child{font-size:10px!important}
+body.bb-stock-mobile-staff #itemRows>tr.bb-empty-row{display:block!important;padding:18px 10px!important}
+body.bb-stock-mobile-staff .bb-empty-row .empty{display:block!important;padding:0!important;text-align:center!important;color:var(--bb-muted)!important;font-size:10px!important}
+body.bb-stock-mobile-staff .section-head{padding-bottom:8px!important}
+body.bb-stock-mobile-staff .toolbar{padding-top:7px!important;padding-bottom:7px!important}
+@media(max-width:380px){
+ body{padding:6px 6px 18px!important}
+ .summary{gap:5px!important}
+ .kpi{min-height:62px!important;padding:7px 7px 6px 33px!important}
+ .kpi::before{left:7px!important;top:7px!important;width:20px!important;height:20px!important}
+ .kpi strong{font-size:13px!important}
+ body.bb-stock-mobile-staff .summary .kpi:nth-child(3),body.bb-stock-mobile-staff .summary .kpi:nth-child(4){min-height:50px!important;padding:6px 6px 5px 29px!important}
+ body.bb-stock-mobile-staff .summary .kpi:nth-child(3)::before,body.bb-stock-mobile-staff .summary .kpi:nth-child(4)::before{left:6px!important;top:6px!important;width:17px!important;height:17px!important;font-size:9px!important}
+ body.bb-stock-mobile-staff .summary .kpi strong{font-size:12px!important}
+ body.bb-stock-mobile-staff #itemHead>tr.bb-mobile-stock-head,body.bb-stock-mobile-staff #itemRows>tr{grid-template-columns:minmax(0,1fr) 55px 51px 51px 55px!important}
+ body.bb-stock-mobile-staff #itemRows>tr>td{font-size:8.5px!important;padding-left:2px!important;padding-right:2px!important}
+ body.bb-stock-mobile-staff #itemRows>tr>td:first-child{font-size:9.3px!important}
+ body.bb-stock-mobile-staff #itemHead>tr.bb-mobile-stock-head>th{font-size:6px!important}
+}
+
+/* Batch adjustment columns: readable horizontal swipe instead of squeezing seven columns. */
+body.bb-stock-mobile-staff .table-wrap{
+  overflow-x:auto!important;overflow-y:visible!important;
+  overscroll-behavior-x:contain!important;-webkit-overflow-scrolling:touch!important;
+}
+body.bb-stock-mobile-staff #itemTable,
+body.bb-stock-mobile-staff #itemHead,
+body.bb-stock-mobile-staff #itemRows{width:max-content!important;min-width:100%!important}
+body.bb-stock-mobile-staff #itemHead>tr.bb-mobile-stock-head,
+body.bb-stock-mobile-staff #itemRows>tr{
+  display:grid!important;
+  grid-template-columns:150px repeat(7,76px)!important;
+  width:max-content!important;min-width:100%!important;
+}
+body.bb-stock-mobile-staff #itemRows>tr:not(.bb-empty-row){overflow:visible!important}
+body.bb-stock-mobile-staff #itemHead>tr.bb-mobile-stock-head{min-height:39px!important}
+body.bb-stock-mobile-staff #itemHead>tr.bb-mobile-stock-head>th{
+  font-size:8px!important;white-space:normal!important;line-height:1.12!important;
+  overflow:visible!important;
+}
+body.bb-stock-mobile-staff #itemRows>tr>td{font-size:9px!important}
+body.bb-stock-mobile-staff #itemRows .bb-adjusted-zero{display:block!important;font-size:8px!important;color:#a87630!important;font-weight:850!important;line-height:1.15!important}
+body.bb-stock-mobile-staff #itemHead>tr.bb-mobile-stock-head>th:first-child,
+body.bb-stock-mobile-staff #itemRows>tr:not(.bb-empty-row)>td:first-child{
+  position:sticky!important;left:0!important;z-index:2!important;
+  background:inherit!important;
+}
+body.bb-stock-mobile-staff #itemRows>tr>td:nth-child(3){color:#168551!important;font-weight:900!important}
+body.bb-stock-mobile-staff #itemRows>tr>td:nth-child(4){color:#bf6d14!important;font-weight:900!important}
+body.bb-stock-mobile-staff #itemRows>tr>td:nth-child(5){color:var(--bb-green)!important;font-weight:900!important}
+body.bb-stock-mobile-staff #itemRows>tr>td:nth-child(6){color:#b57522!important;font-weight:900!important}
+body.bb-stock-mobile-staff #itemRows>tr>td:nth-child(7){color:var(--bb-red)!important;font-weight:900!important}
+body.bb-stock-mobile-staff #itemRows>tr>td:nth-child(8){color:var(--bb-blue)!important;font-weight:900!important}
+`;
+const MOBILE_SCRIPT=`(function(){
+'use strict';
+
+const GROUPS={
+  'KIR-2L-GRP':{name:'Kirisu Milk 2L',codes:['KIR3-2L','KIRB-2L']},
+  'KIR-830-GRP':{name:'Kirisu Milk 830ml',codes:['KIR0-830','KIR3-830']},
+  'KIR-135-GRP':{name:'Kirisu Yogurt',codes:['KIRP-Y135','KIRS-Y135','KIRV-Y135']},
+  'CMP-220ml-GRP':{name:'Champei Milk 220ml',codes:['CH-O220','CHM-220','CHP-220','CHS-220','CHT-220']}
+};
+
+const ORDER=[
+  {kind:'group',key:'KIR-2L-GRP'},
+  {kind:'group',key:'KIR-830-GRP'},
+  {kind:'single',code:'FF-2L',name:'Farm Fresh 2L'},
+  {kind:'single',code:'AF-2L',name:'Aus Fresh 2L'},
+  {kind:'single',code:'VP-2L',name:'VP Dalat Milk 2L'},
+  {kind:'single',code:'OM-2L',name:"O'More 2L"},
+  {kind:'single',code:'GF-190',name:'Greenfield Fullcream 1.90L'},
+  {kind:'single',code:'GF-1L',name:'Greenfield Fullcream 1L'},
+  {kind:'single',code:'GFJ-1L',name:'Greenfield Jersey 1L'},
+  {kind:'group',key:'KIR-135-GRP'},
+  {kind:'group',key:'CMP-220ml-GRP'}
+];
+
+const CODE_TO_GROUP={};
+Object.entries(GROUPS).forEach(([key,g])=>g.codes.forEach(code=>CODE_TO_GROUP[code]=key));
+const openGroups=new Set();
+
+function cleanText(v){return String(v==null?'':v).trim()}
+function qnum(v){const n=Number(v);return Number.isFinite(n)?n:0}
+function fmtQty(v){
+  const n=qnum(v);
+  return Number.isInteger(n)
+    ? n.toLocaleString('en-US')
+    : n.toLocaleString('en-US',{maximumFractionDigits:2});
+}
+function fmtWithUnit(v,unit){
+  const u=cleanText(unit)||'unit';
+  return fmtQty(v)+'/'+u;
+}
+function escText(v){
+  return cleanText(v)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#039;');
+}
+function sum(items,key){return items.reduce((t,x)=>t+qnum(x&&x[key]),0)}
+function groupUnit(items){
+  const units=[...new Set(items.map(x=>cleanText(x&&x.unit)).filter(Boolean))];
+  return units.length===1?units[0]:'unit';
+}
+function rowHtml(cls,name,item,unit,extra=''){
+  if(item&&item.adjustmentOnly)name+='<small class="bb-adjusted-zero">Adjusted · 0 current stock</small>';
+  return '<tr class="'+cls+'" '+extra+'>'+
+    '<td>'+name+'</td>'+
+    '<td>'+escText(fmtWithUnit(Math.max(0,qnum(item.assignedQty)-qnum(item.adjustmentInQty)+qnum(item.adjustmentOutQty)),unit))+'</td>'+
+    '<td>'+escText(fmtWithUnit(item.adjustmentInQty,unit))+'</td>'+
+    '<td>'+escText(fmtWithUnit(item.adjustmentOutQty,unit))+'</td>'+
+    '<td>'+escText(fmtWithUnit(item.soldQty,unit))+'</td>'+
+    '<td>'+escText(fmtWithUnit(item.damageReturnQty,unit))+'</td>'+
+    '<td>'+escText(fmtWithUnit(item.currentDamageQty,unit))+'</td>'+
+    '<td>'+escText(fmtWithUnit(item.currentQty,unit))+'</td>'+
+  '</tr>';
+}
+function ensureListHead(){
+  const wrap=document.querySelector('.table-wrap');
+  if(!wrap)return;
+  let head=wrap.querySelector('.bb-stock-list-head');
+  if(!head){
+    head=document.createElement('div');
+    head.className='bb-stock-list-head';
+    head.innerHTML='<span>Name</span><span>Assign/Unit</span><span>Adj IN</span><span>Adj OUT</span><span>Sold/Unit</span><span>Damage Return</span><span>Current Damage</span><span>Current/Unit</span>';
+    const table=document.getElementById('itemTable');
+    if(table)wrap.insertBefore(head,table);
+  }
+}
+function staffMode(){
+  const table=document.getElementById('itemTable');
+  const privacy=document.getElementById('salesPrivacyNote');
+  const adminBatch=document.body.classList.contains('bb-stock-admin-batch');
+  return !!table
+    &&!table.classList.contains('admin-table')
+    &&(
+      adminBatch
+      ||
+      (!!privacy&&!privacy.hidden)
+    );
+}
+function renderMobileItems(){
+  if(!staffMode())return false;
+  if(typeof data==='undefined'||!data)return false;
+
+  const body=document.getElementById('itemRows');
+  const search=document.getElementById('searchBox');
+  const count=document.getElementById('itemCount');
+  if(!body)return false;
+
+  ensureListHead();
+  const heading=document.getElementById('itemHead');
+  if(heading)heading.innerHTML='<tr class="bb-mobile-stock-head"><th>Name</th><th>Assign</th><th>Adj IN</th><th>Adj OUT</th><th>Sold</th><th>Damage Return</th><th>Current Damage</th><th>Current</th></tr>';
+
+  const all=Array.isArray(data.items)?data.items:[];
+  const query=cleanText(search&&search.value).toLowerCase();
+  const byCode=new Map(all.map(x=>[cleanText(x.productCode),x]));
+  const used=new Set();
+  let html='';
+  let shown=0;
+
+  ORDER.forEach(spec=>{
+    if(spec.kind==='group'){
+      const g=GROUPS[spec.key];
+      const members=g.codes.map(code=>byCode.get(code)).filter(Boolean);
+      if(!members.length)return;
+
+      const matches=!query ||
+        g.name.toLowerCase().includes(query) ||
+        members.some(x=>
+          cleanText(x.productName).toLowerCase().includes(query) ||
+          cleanText(x.productCode).toLowerCase().includes(query)
+        );
+      if(!matches)return;
+
+      members.forEach(x=>used.add(cleanText(x.productCode)));
+      const unit=groupUnit(members);
+      const total={
+        assignedQty:sum(members,'assignedQty'),
+        adjustmentInQty:sum(members,'adjustmentInQty'),
+        adjustmentOutQty:sum(members,'adjustmentOutQty'),
+        soldQty:sum(members,'soldQty'),
+        damagedQty:sum(members,'damagedQty'),
+        damageReturnQty:sum(members,'damageReturnQty'),
+        currentDamageQty:sum(members,'currentDamageQty'),
+        currentQty:sum(members,'currentQty')
+      };
+
+      const forcedOpen=!!query;
+      const isOpen=forcedOpen||openGroups.has(spec.key);
+      html+=rowHtml(
+        'bb-group-row'+(isOpen?' bb-open':''),
+        escText(g.name)+'<span class="bb-group-tag">GROUP</span>',
+        total,
+        unit,
+        'data-bb-group="'+escText(spec.key)+'" role="button" tabindex="0" aria-expanded="'+(isOpen?'true':'false')+'"'
+      );
+
+      members.forEach(x=>{
+        html+=rowHtml(
+          'bb-child-row',
+          escText(x.productName||x.productCode),
+          x,
+          x.unit,
+          'data-bb-parent="'+escText(spec.key)+'"'+(isOpen?'':' hidden')
+        );
+      });
+      shown++;
+      return;
+    }
+
+    const x=byCode.get(spec.code);
+    if(!x)return;
+    const matches=!query ||
+      spec.name.toLowerCase().includes(query) ||
+      cleanText(x.productName).toLowerCase().includes(query) ||
+      cleanText(x.productCode).toLowerCase().includes(query);
+    if(!matches)return;
+
+    used.add(spec.code);
+    html+=rowHtml('bb-single-row',escText(spec.name),x,x.unit);
+    shown++;
+  });
+
+  /* Keep any future/unmapped active stock visible after the requested order. */
+  all.filter(x=>!used.has(cleanText(x.productCode))).forEach(x=>{
+    const name=cleanText(x.productName||x.productCode);
+    const code=cleanText(x.productCode);
+    if(query && !name.toLowerCase().includes(query) && !code.toLowerCase().includes(query))return;
+    html+=rowHtml('bb-single-row',escText(name),x,x.unit);
+    shown++;
+  });
+
+  body.innerHTML=html||'<tr class="bb-empty-row"><td colspan="8" class="empty">No current stock matches this view.</td></tr>';
+  if(count)count.textContent=shown+' line'+(shown===1?'':'s');
+  return true;
+}
+
+function bindGroupEvents(){
+  const body=document.getElementById('itemRows');
+  if(!body||body.__bbGroupBound)return;
+  body.__bbGroupBound=true;
+
+  function toggle(row){
+    const key=row&&row.dataset?row.dataset.bbGroup:'';
+    if(!key)return;
+    if(openGroups.has(key))openGroups.delete(key);else openGroups.add(key);
+    renderMobileItems();
+  }
+
+  body.addEventListener('click',e=>toggle(e.target.closest('tr.bb-group-row')));
+  body.addEventListener('keydown',e=>{
+    if(e.key!=='Enter'&&e.key!==' ')return;
+    const row=e.target.closest('tr.bb-group-row');
+    if(!row)return;
+    e.preventDefault();
+    toggle(row);
+  });
+}
+
+function installRenderer(){
+  if(typeof renderItems==='function'&&!renderItems.__bbMobileList){
+    const desktopRender=renderItems;
+    const wrapped=function(){
+      if(staffMode()&&renderMobileItems())return;
+      return desktopRender();
+    };
+    wrapped.__bbMobileList=true;
+    renderItems=wrapped;
+
+    const search=document.getElementById('searchBox');
+    if(search)search.oninput=renderItems;
+  }
+  bindGroupEvents();
+  if(staffMode())renderMobileItems();
+}
+
+function moveRefresh(){
+  const profile=document.getElementById('profile');
+  const actions=document.querySelector('.hero .actions');
+  if(!profile||!actions||document.querySelector('.bb-stock-mobile-actions'))return;
+  const holder=document.createElement('div');
+  holder.className='bb-stock-mobile-actions';
+  profile.insertAdjacentElement('afterend',holder);
+  holder.appendChild(actions);
+  const link=document.querySelector('.bb-report-damage-link');
+  if(link&&!holder.contains(link)){
+    actions.prepend(link);
+    link.style.cssText='display:inline-flex!important;align-items:center;justify-content:center;min-height:38px;padding:7px 11px;border-radius:9px;background:#b57522;color:#fff;text-decoration:none;font-size:10.5px;font-weight:900';
+  }
+}
+function syncMode(){
+  const staff=staffMode();
+  document.body.classList.toggle('bb-stock-mobile-staff',staff);
+  if(staff){
+    ensureListHead();
+    installRenderer();
+  }else{
+    const head=document.querySelector('.bb-stock-list-head');
+    if(head)head.remove();
+  }
+}
+function observe(){
+  const privacy=document.getElementById('salesPrivacyNote');
+  if(privacy&&!privacy.__bbMobileObserved){
+    privacy.__bbMobileObserved=true;
+    new MutationObserver(()=>requestAnimationFrame(syncMode))
+      .observe(privacy,{attributes:true,attributeFilter:['hidden']});
+  }
+  const table=document.getElementById('itemTable');
+  if(table&&!table.__bbMobileObserved){
+    table.__bbMobileObserved=true;
+    new MutationObserver(()=>requestAnimationFrame(syncMode))
+      .observe(table,{attributes:true,attributeFilter:['class']});
+  }
+}
+function bootMobile(){
+  moveRefresh();
+  syncMode();
+  observe();
+  setTimeout(()=>{syncMode();installRenderer()},200);
+  setTimeout(()=>{syncMode();installRenderer()},700);
+}
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',bootMobile,{once:true});
+}else{
+  bootMobile();
+}
+})();`;
+function inject(){let doc;try{doc=frame.contentDocument||frame.contentWindow.document}catch(_){return}if(!doc||!doc.head)return;let style=doc.getElementById('bb-mobile-stock-skin');if(!style){style=doc.createElement('style');style.id='bb-mobile-stock-skin';doc.head.appendChild(style)}style.textContent=MOBILE_CSS;if(!doc.getElementById('bb-mobile-stock-script')){const script=doc.createElement('script');script.id='bb-mobile-stock-script';script.textContent=MOBILE_SCRIPT;doc.body.appendChild(script)}boot.classList.add('hide')}
+frame.addEventListener('load',()=>{setTimeout(inject,80);setTimeout(inject,450);setTimeout(inject,1100)});
+})();
+</script>
+</body>
+</html>
