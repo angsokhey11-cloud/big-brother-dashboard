@@ -107,6 +107,7 @@ window.addEventListener('online',()=>{setConnection(true);window.dispatchEvent(n
 window.BBMobileOfflineWorkspaceV1={
   read,write,clearUser,currentUserId,canUseNetwork,setConnection,success,init,updateIndicator,
   // Other repo modules need separate offline-safe implementation before being enabled.
+  previewReadOnly:true,
   offlineRouteAllowed:()=>false
 };
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
