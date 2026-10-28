@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Trust user-installed Caddy CA only for our company's local hostname. -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="false">bigbrother.local</domain>
+        <trust-anchors>
+            <certificates src="system"/>
+            <certificates src="user"/>
+        </trust-anchors>
+    </domain-config>
+</network-security-config>

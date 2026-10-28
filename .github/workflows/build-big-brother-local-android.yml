@@ -1,0 +1,40 @@
+name: Build BIG BROTHER Local Android APK
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'android-local-app/**'
+      - '.github/workflows/build-big-brother-local-android.yml'
+permissions:
+  contents: read
+jobs:
+  android-local:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Compile SDK
+        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+      - name: Put BIG BROTHER icon into Android resource
+        run: |
+          mkdir -p android-local-app/app/src/main/res/drawable-nodpi
+          cp pwa-icon-192.png android-local-app/app/src/main/res/drawable-nodpi/launcher.png
+      - name: Build test APK
+        run: gradle --no-daemon -p android-local-app assembleDebug
+      - name: Publish installable APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: BIG-BROTHER-Local-Android-preview-APK
+          path: android-local-app/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
