@@ -972,7 +972,15 @@ function renderMainMenu(){
 function openRoute(route,navState=''){
   if(!canRoute(route))return toast('Access denied.');
   const offline=window.BBMobileOfflineWorkspaceV1;
-  if(offline&&!offline.canUseNetwork()&&!offline.offlineRouteAllowed(route))return toast('Online required for this function. Saved Overview works offline.');
+  if(offline&&!offline.canUseNetwork()){
+    if(window.BBMobileOfflineModulesV1?.canOpen(route)){
+      void window.BBMobileOfflineModulesV1.open(route).then(ok=>{
+        if(!ok)toast('This function has no synced offline data yet. Open online once.');
+      });
+      return;
+    }
+    return toast('Online required for this function.');
+  }
   closePicker();currentRoute=route;fallbackRoute='';
   if(BASE_ROUTES.has(route)&&window.BBMobile?.open){
     try{
@@ -1563,12 +1571,15 @@ async function load(){
     if(overview)renderOverview();
   });
 
+  // Nonblocking background sync of permitted offline datasets.
+  setTimeout(()=>{void window.BBMobileOfflineModulesV1?.sync(safeRpc,canRoute)},1500);
   await Promise.allSettled([liveProfilePromise,prefsPromise,overviewPromise,paymentPromise,attentionPromise,stockPromise]);
 }
 
 function start(){
   window.addEventListener('bb:mobile-reconnected',()=>{
     if(!profile)return;
+    setTimeout(()=>{void window.BBMobileOfflineModulesV1?.sync(safeRpc,canRoute,true)},1600);
     // mobile.js activate() already refreshes Overview: avoid duplicate RPCs.
     void refreshAttention(true);
     void syncPreferencesFromServer(true);
