@@ -988,7 +988,7 @@ function openRoute(route,navState='',forceLive=false){
     return;
   }
   const universal=window.BBMobileUniversalReadOnlyV1;
-  if(!forceLive&&universal){
+  if(!forceLive&&universal&&!['history','monthly-sales-report'].includes(route)){
     void universal.open(route).then(ok=>{
       if(!ok){
         if(offline?.canUseNetwork())openRoute(route,navState,true);
