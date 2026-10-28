@@ -5,7 +5,10 @@
 (function(){
 'use strict';
 const parentApi=()=>{
-  const api=window.parent?.BBMobileOfflineWorkspaceV1;
+  // Original Invoice History mobile skin nests its document one iframe deep.
+  // Resolve the trusted dashboard data store through that same-origin wrapper.
+  const api=window.parent?.parent?.BBMobileOfflineWorkspaceV1||
+    window.parent?.BBMobileOfflineWorkspaceV1;
   let session=null;
   try{session=JSON.parse(localStorage.getItem('BB_SUPABASE_DEV_SESSION_V1')||'null')}catch(_){}
   if(!api||!session?.user?.id||api.currentUserId()!==String(session.user.id))
