@@ -241,6 +241,10 @@ function replaceFrameUrl(frame,url){
    window.BBMobileTransitionV3?.start?.(url);
    const fresh=frame.cloneNode(false);
    fresh.removeAttribute('src');
+   fresh.removeAttribute('srcdoc');
+   fresh.removeAttribute('sandbox');
+   fresh.removeAttribute('aria-hidden');
+   fresh.inert=false;
    fresh.removeAttribute('data-bb-theme-bound');
    frame.replaceWith(fresh);
    fresh.addEventListener('load',()=>{
@@ -376,7 +380,7 @@ function openModule(route,updateUrl=true,forceLive=false){
     return true;
   }
   const universal=window.BBMobileUniversalReadOnlyV1;
-  if(!forceLive&&universal){
+  if(!forceLive&&universal&&!['history','monthly-sales-report'].includes(route)){
     // Every permitted route can use its previously saved, non-executable
     // original UI first, even while internet is slow.
     void universal.open(route).then(ok=>{
