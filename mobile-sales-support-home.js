@@ -1236,8 +1236,7 @@ async function refreshOverview(force=false){
     if(next?.success){
       lastOverviewFetch=Date.now();
       overview=next;
-      void window.BBMobileOfflineWorkspaceV1?.write('home-overview',{args:overviewArgs(),data:next});
-      void window.BBMobileOfflineWorkspaceV1?.success();
+      void window.BBMobileOfflineWorkspaceV1?.write('home-overview',{args:overviewArgs(),data:next}).then(ok=>{if(ok)void window.BBMobileOfflineWorkspaceV1.success()});
       renderOverview();
     }
   }finally{
@@ -1443,8 +1442,7 @@ async function load(){
     if(data?.success){
       lastOverviewFetch=Date.now();
       overview=data;
-      void offline?.write('home-overview',{args:overviewArgs(),data});
-      void offline?.success();
+      void offline?.write('home-overview',{args:overviewArgs(),data}).then(ok=>{if(ok)void offline.success()});
       renderOverview();
     }else{
       const grid=$('kpiGrid');
