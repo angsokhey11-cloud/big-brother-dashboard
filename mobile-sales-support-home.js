@@ -1067,6 +1067,8 @@ async function syncOverviewLocations(){
   // Once per 12 hours per account/period, unless permission or device changed.
   const locations=Array.isArray(profile.locations)?profile.locations:[];
   const codes=[...new Set(locations.map(x=>clean(x.locationCode)).filter(Boolean))].slice(0,30);
+  // If a user last viewed one location, also cache their authorized ALL total.
+  if(clean(monthArgs.p_location_code))codes.unshift('');
   const fingerprint=codes.map(x=>x.toLowerCase()).sort().join('|');
   if(previous?.value?.fingerprint===fingerprint&&Date.now()-Number(previous.value.at||0)<12*60*60*1000)return;
   locationSyncBusy=true;
