@@ -42,14 +42,16 @@ async function dailyApi(params={}){
   }
   if(action==='dailySaleItems'){
     const ids=(Array.isArray(params.invoiceIds)?params.invoiceIds:[]).map(x=>String(x).trim()).filter(Boolean);
-    const source=await api.read('offline-history-lines-v1');
-    const map=source?.value?.itemsByInvoiceId||{};
-    const invoices=(await dailyApi({action:'invoiceList'})).invoices;
-    const wanted=new Set(ids);
-    const selected=invoices.filter(row=>wanted.has(String(row.invoiceId||'')));
-    const response=selected.map(row=>({...row,items:
-      Object.prototype.hasOwnProperty.call(map,String(row.invoiceId||''))?map[String(row.invoiceId||'')]:[]}));
-    return {success:true,invoices:response};
+    const d=await api.read('offline-staff-v12::daily-items::DEFAULT');
+    const details=Array.isArray(d?.value?.invoices)?d.value.invoices:[];
+    const map=new Map(details.map(row=>[String(row.invoiceId||''),row]));
+    const invoiceList=(await dailyApi({action:'invoiceList'})).invoices;
+    const selected=invoiceList.filter(row=>ids.includes(String(row.invoiceId||'')));
+    return {success:true,invoices:selected.map(row=>{
+      const original=map.get(String(row.invoiceId||''));
+      return original?{...row,...original,items:Array.isArray(original.items)?original.items:[]}:
+        {...row,items:[]};
+    })};
   }
   throw Error('Sending or changing company data requires an online connection.');
 }
