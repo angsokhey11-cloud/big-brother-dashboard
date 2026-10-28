@@ -1636,6 +1636,8 @@ async function reportReadOnlyJob(route,key,fn,args={},force=false){
     if(!response||a.currentUserId()!==user||!a.canUseNetwork()||!canRoute(route))return null;
     // Never write failed/empty query results over the last good report.
     if(key==='offline-history-list-v1'&&!Array.isArray(response.invoices))return null;
+    if(key==='offline-history-lines-v1'&&(!response.itemsByInvoiceId||
+      typeof response.itemsByInvoiceId!=='object'||Array.isArray(response.itemsByInvoiceId)))return null;
     if(key.startsWith('offline-monthly::')&&!response.totals)return null;
     if(key.startsWith('offline-history-detail::')&&!response.invoice)return null;
     const valid=response.success===false?null:{...response,success:true,syncedAt:Date.now()};
@@ -1653,11 +1655,17 @@ window.BBMobileReportSyncV1=Object.freeze({
       'bb_report_monthly_sales',{p_year:year,p_month:month},force);
   },
   async refreshHistory(force=false){
-    const data=await reportReadOnlyJob('history','offline-history-list-v1','bb_invoice_history_mobile_list',{
-      p_invoice_no:'',p_customer:'',p_date_from:null,p_date_to:null,p_invoice_type:''
-    },force);
-    // Prefetch only a few recent full invoice documents so their original
-    // A4 previews work offline. Fetching every invoice would be wasteful.
+    // Fetch list and its complete line-item map together. Only TWO read-only
+    // RPCs replace one detail request per invoice (~1000+ in larger histories).
+    const [data,allLines]=await Promise.all([
+      reportReadOnlyJob('history','offline-history-list-v1','bb_invoice_history_mobile_list',{
+        p_invoice_no:'',p_customer:'',p_date_from:null,p_date_to:null,p_invoice_type:''
+      },force),
+      this.refreshHistoryLines(force)
+    ]);
+    // The bulk lines map already holds all authorized product lines. Fetch
+    // only six complete documents for extra fields like returns/payments,
+    // avoiding a separate RPC per old invoice.
     if(data?.invoices?.length&&window.BBMobileOfflineWorkspaceV1?.canUseNetwork()){
       void (async()=>{
         const recent=data.invoices.slice(0,6);
@@ -1669,6 +1677,10 @@ window.BBMobileReportSyncV1=Object.freeze({
       })();
     }
     return data;
+  },
+  async refreshHistoryLines(force=false){
+    return reportReadOnlyJob('history','offline-history-lines-v1',
+      'bb_invoice_history_mobile_offline_lines_v1',{},force);
   },
   async refreshDetail(invoiceId,invoiceNo){
     const id=clean(invoiceId),no=clean(invoiceNo);

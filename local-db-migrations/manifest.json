@@ -110,6 +110,12 @@
       "file": "20261027_multi_bank_admin_pilot_local_v1.sql",
       "sha256": "C68918CFE74A12BDB4EF73DCF7CB14FF1AC2FEB9E099A38417A9E8DD90709423",
       "description": "Local Brain V5/V6 admin-only atomic 2+ registered-bank invoice settlements; SQL schema/RPC only, verified bank guard, ledger RLS, safe rollback and Local-only data preservation; fail closed on missing parity."
+    },
+    {
+      "id": "20261028_mobile_history_offline_product_lines_v1",
+      "file": "20261028_mobile_history_offline_product_lines_v1.sql",
+      "sha256": "84B58F5E47833548DDF3A6B82E29CBCB632C42AEDA0076312A87FC1A3F62012D",
+      "description": "Code Sync V5/V6: one permission-gated read-only RPC to sync original invoice product lines for authorized mobile Invoice History; no business data changes"
     }
   ]
 }
