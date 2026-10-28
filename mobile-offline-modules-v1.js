@@ -395,8 +395,22 @@ function stageLivePage(name){
     const attach=()=>{
       if(livePreload!==entry)return;
       try{
-        const doc=current.contentDocument;
-        ['pointerdown','keydown','input','change'].forEach(event=>doc?.addEventListener(event,mark,{once:true}));
+        const observe=(doc,depth=0)=>{
+          if(!doc||depth>3||livePreload!==entry)return;
+          if(!doc.__bbLiveHandoffInteractedWatch){
+            doc.__bbLiveHandoffInteractedWatch=true;
+            ['pointerdown','keydown','input','change'].forEach(event=>
+              doc.addEventListener(event,mark,{once:true,capture:true}));
+          }
+          // Wrapper iframes are separate event documents: user interactions
+          // inside offline Collection/Stock/Tracker must cancel background swap.
+          [...doc.querySelectorAll('iframe')].forEach(child=>{
+            const watch=()=>{try{observe(child.contentDocument,depth+1)}catch(_){}};
+            child.addEventListener('load',watch,{once:true});
+            watch();
+          });
+        };
+        observe(current.contentDocument);
       }catch(_){}
     };
     current.addEventListener('load',attach,{once:true});
