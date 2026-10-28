@@ -4598,6 +4598,58 @@
   loadCalcRatePreference();
   handleCalcCurrencyChange();
   setView(currentView, false);
+  // Same Calculator screen stays mounted when the parent mobile app downloads
+  // newer authorized master data. Never reset quantities, prices or local history.
+  window.addEventListener('message',async event=>{
+    if(event.origin!==location.origin||event.source!==window.parent)return;
+    const message=event.data;
+    if(message?.type==='bb:calc-snapshot-refreshed'&&message.key==='offline-calc-bootstrap'){
+      try{
+        const fresh=await window.BBSalesSupportAdapter.bootstrap();
+        if(!fresh?.success)return;
+        if(profile)profile.locations=(fresh.locations||[]).map(l=>({
+          locationCode:clean(l.locationCode),
+          locationName:clean(l.locationName),
+          salespersonName:clean(l.salespersonName)
+        }));
+        products=(fresh.products||[]).map(p=>({
+          code:clean(p.code),name:clean(p.name),unit:clean(p.unit),
+          usdPrice:num(p.usdPrice),barcode:clean(p.barcode)
+        })).filter(p=>p.code&&p.name);
+        customers=(fresh.customers||[]).map(c=>({
+          customerId:clean(c.customerId),name:clean(c.name),locationCode:clean(c.locationCode),
+          googleMapsLink:clean(c.googleMapsLink)
+        })).filter(c=>c.customerId&&c.name);
+        // Only refresh lookup lists, NOT the open calculation or its editors.
+        renderCalcLocationFilter();
+        if(document.activeElement===$('calcCustomerSearch'))renderCalcCustomerSuggestions();
+        if(document.activeElement===$('calcProductSearch'))renderProductSuggestions('calc');
+      }catch(error){console.warn('Saved Calculator background update:',error)}
+    }
+    if(message?.type==='bb:calc-price-refreshed'&&message.customerId){
+      try{
+        const id=clean(message.customerId);
+        const api=window.parent?.BBMobileOfflineWorkspaceV1;
+        const record=await api?.read('calc-price::'+id);
+        if(!record?.value?.success)return;
+        const customer=customers.find(c=>c.customerId===id);
+        if(!customer)return;
+        const key=customer.customerId||(customer.locationCode+'|'+customer.name);
+        const result={
+          customer:record.value.customer||customer,
+          products:(record.value.products||[]).map(p=>({
+            productCode:clean(p.productCode),productName:clean(p.productName),unit:clean(p.unit),
+            defaultPriceUSD:num(p.defaultPriceUSD),customerPriceUSD:num(p.customerPriceUSD),
+            isCustomPrice:!!p.isCustomPrice
+          }))
+        };
+        customerPriceCache[key]=result;
+        cacheSet(PRICE_CACHE_PREFIX+encodeURIComponent(key),result);
+        // Existing calculation lines and manually entered prices are preserved.
+      }catch(error){console.warn('Calculator price cache update:',error)}
+    }
+  });
+
   initializePublicMode(false);
 
 })();
