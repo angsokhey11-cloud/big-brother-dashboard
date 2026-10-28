@@ -1443,6 +1443,8 @@ async function load(){
     installPreferenceSync();
   });
 
+  // This initial request shares the same in-flight guard as later refreshes.
+  overviewLoading=true;
   const overviewPromise=safeRpc('bb_mobile_overview_filtered',overviewArgs()).then(data=>{
     if(offline?.canUseNetwork()===false)return;
     if(data?.success){
@@ -1458,6 +1460,8 @@ async function load(){
       }
     }
   });
+
+  overviewPromise.finally(()=>{overviewLoading=false});
 
   const paymentPromise=(canRoute('staff-relation')
     ?safeRpc('bb_staff_relation_my_payments',{p_from:null,p_to:null,p_salary_month:null})
@@ -1488,7 +1492,7 @@ async function load(){
 function start(){
   window.addEventListener('bb:mobile-reconnected',()=>{
     if(!profile)return;
-    void refreshOverview(true);
+    // mobile.js activate() already refreshes Overview: avoid duplicate RPCs.
     void refreshAttention(true);
     void syncPreferencesFromServer(true);
   });
