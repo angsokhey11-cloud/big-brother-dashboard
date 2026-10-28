@@ -14,6 +14,7 @@ const esc=v=>clean(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const mapRoutes={
   'ar-your':'offline-ar-your',
   'sales-support-your-receivable':'offline-ar-your',
+  'sales-support-your-customer':'offline-your-customer-v1',
   'ar-all':'offline-ar-all',
   'stock-report':'offline-stock-report',
   'sales-support-calculator':'offline-calc-bootstrap',
@@ -281,6 +282,14 @@ function livePageReady(name,frame){
       return !doc.getElementById('main')?.hidden &&
         /Generated|Ready/i.test(doc.getElementById('status')?.textContent||'');
     }
+    if(name==='sales-support-your-customer'){
+      const list=doc.getElementById('yourCustomerList');
+      const badge=doc.getElementById('customerCountBadge');
+      // Customer bootstrap/render must complete before the live page replaces
+      // the interactive saved directory; the iframe's load event is not enough.
+      return !!list?.firstElementChild&&!!badge&&
+        !!doc.querySelector('#view-your-customer.active');
+    }
     if(name==='history'){
       // The authenticated mobile Invoice History wrapper embeds a nested
       // list iframe; the full rendered list is the readiness signal.
@@ -424,15 +433,16 @@ async function open(name){
   const date=new Date(rec.syncedAt).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
   showRefreshTime();
   const frame=$('moduleFrame');
-  if(name==='sales-support-calculator'||name==='stock-report'||name==='history'||name==='monthly-sales-report'||
+  if(name==='sales-support-calculator'||name==='sales-support-your-customer'||name==='stock-report'||name==='history'||name==='monthly-sales-report'||
      name==='sales-support-your-stock'||name==='sales-support-batch-selling-tracker'||name==='daily-sale-summary'){
     const full=name==='stock-report'?await offline()?.read('offline-stock-report-full'):null;
     if(epoch!==openEpoch)return false;
-    if(name==='sales-support-calculator'||name==='history'||name==='monthly-sales-report'||
+    if(name==='sales-support-calculator'||name==='sales-support-your-customer'||name==='history'||name==='monthly-sales-report'||
        name==='sales-support-your-stock'||name==='sales-support-batch-selling-tracker'||name==='daily-sale-summary'||
        full?.value?.success){
       const url=name==='sales-support-calculator'
         ?'./mobile-offline-calculator.html?mobile=1&view=calculator&v=20261028-seamless1'
+        :name==='sales-support-your-customer'?'./mobile-offline-your-customer-v1.html?embed=1&v=20261028-interactive1'
         :name==='history'?'./mobile-offline-history-mobile-v1.html?embed=1&v=20261028-alllines1'
         :name==='monthly-sales-report'?'./mobile-offline-monthly-sales-v1.html?embed=1&v=20261028-monthly1'
         :name==='sales-support-your-stock'?'./mobile-offline-your-stock-v12.html?embed=1&v=20261028-stock-batchfix1'
@@ -780,6 +790,19 @@ function snapshotFor(key,data){
       grandTotal:r.grandTotal,amountPaid:r.amountPaid,outstanding:r.outstanding,arStatus:r.arStatus
     }))};
   }
+  if(key==='offline-your-customer-v1'){
+    return {success:true,
+      locations:(Array.isArray(data.locations)?data.locations:[])
+        .map(l=>({locationCode:clean(l.locationCode),locationName:clean(l.locationName)}))
+        .filter(l=>l.locationCode),
+      customers:(Array.isArray(data.customers)?data.customers:[])
+        .map(c=>({
+          customerId:clean(c.customerId),name:clean(c.name),locationCode:clean(c.locationCode),
+          phone:clean(c.phone),address:clean(c.address),deliveryLocationNote:clean(c.deliveryLocationNote),
+          googleMapsLink:clean(c.googleMapsLink),latitude:clean(c.latitude),longitude:clean(c.longitude)
+        })).filter(c=>c.name&&c.locationCode)
+    };
+  }
   if(key==='offline-stock-report'){
     return {success:true,products:(Array.isArray(data.products)?data.products:[]).map(r=>({
       productCode:r.productCode,productName:r.productName,unit:r.unit,category:r.category,
@@ -809,7 +832,9 @@ let syncing=false;
 async function sync(safeRpc,canRoute,force=false){
   const api=offline();if(!api?.canUseNetwork()||!currentId()||syncing)return;
   const last=await api.read('offline-modules-last-sync-v5');
-  if(!force&&last?.value?.at&&Date.now()-last.value.at<30*60*1000)return;
+  const customerMissing=!!canRoute('sales-support-your-customer')&&
+    !(await api.read('offline-your-customer-v1'))?.value?.success;
+  if(!force&&!customerMissing&&last?.value?.at&&Date.now()-last.value.at<30*60*1000)return;
   syncing=true;
   const jobs=[];
   if(canRoute('ar-your')||canRoute('sales-support-your-receivable')){
@@ -820,6 +845,8 @@ async function sync(safeRpc,canRoute,force=false){
   if(canRoute('sales-support-calculator')){
     jobs.push(['offline-calc-bootstrap','bb_sales_support_bootstrap']);
     jobs.push(['offline-calc-batch-scope','bb_sales_support_calculator_batch_scope']);
+  }else if(canRoute('sales-support-your-customer')){
+    jobs.push(['offline-your-customer-v1','bb_sales_support_bootstrap']);
   }
   let allOK=true;
   try{
@@ -833,6 +860,10 @@ async function sync(safeRpc,canRoute,force=false){
         const minimal=snapshotFor(group[j][0],value);
         if(minimal&&api.canUseNetwork()){
           await api.write(group[j][0],minimal);
+          if(group[j][0]==='offline-calc-bootstrap'&&canRoute('sales-support-your-customer')){
+            const directory=snapshotFor('offline-your-customer-v1',value);
+            if(directory)await api.write('offline-your-customer-v1',directory);
+          }
           if(group[j][0]==='offline-stock-report'){
             await api.write('offline-stock-report-full',value);
           }
@@ -848,6 +879,7 @@ async function sync(safeRpc,canRoute,force=false){
 const refreshPending=new Map();
 const refreshedAt=new Map();
 const routeRpcs={
+  'sales-support-your-customer':[['offline-your-customer-v1','bb_sales_support_bootstrap']],
   'ar-your':[['offline-ar-your','bb_ar_list']],
   'sales-support-your-receivable':[['offline-ar-your','bb_ar_list']],
   'ar-all':[['offline-ar-all','bb_ar_list_all']],
@@ -859,6 +891,10 @@ const routeRpcs={
 };
 function updateVisibleDataset(key,value){
   if(!route||$('moduleScreen')?.hidden)return;
+  if(route==='sales-support-your-customer'&&key==='offline-your-customer-v1'){
+    try{$('moduleFrame')?.contentWindow?.postMessage({type:'bb:customers-snapshot-refreshed'},location.origin)}catch(_){}
+    return;
+  }
   if(route==='sales-support-calculator'&&(key==='offline-calc-bootstrap'||key==='offline-calc-batch-scope')){
     try{$('moduleFrame')?.contentWindow?.postMessage({type:'bb:calc-snapshot-refreshed',key},location.origin)}catch(_){}
     return;
