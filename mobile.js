@@ -206,7 +206,7 @@ function dateText(){return new Date().toLocaleDateString(undefined,{weekday:'sho
 function currentPeriod(){return new Date().toLocaleDateString(undefined,{month:'long',year:'numeric'})}
 function statusIcon(type){const t=String(type||'').toLowerCase();if(t.includes('invoice'))return '🧾';if(t.includes('purchase'))return '🛒';if(t.includes('expense'))return '💸';return '•'}
 
-function hideAll(){['bootScreen','loginScreen','mobileHome','menuScreen','moduleScreen'].forEach(id=>$(id).hidden=true)}
+function hideAll(){window.BBMobileUniversalReadOnlyV1?.stop();['bootScreen','loginScreen','mobileHome','menuScreen','moduleScreen'].forEach(id=>$(id).hidden=true)}
 function showLogin(message=''){
   hideAll();$('loginScreen').hidden=false;$('loginError').textContent=message||'';
   const email=$('loginEmail');
@@ -375,9 +375,24 @@ function openModule(route,updateUrl=true,forceLive=false){
     });
     return true;
   }
+  const universal=window.BBMobileUniversalReadOnlyV1;
+  if(!forceLive&&universal){
+    // Every permitted route can use its previously saved, non-executable
+    // original UI first, even while internet is slow.
+    void universal.open(route).then(ok=>{
+      if(!ok){
+        if(offline?.canUseNetwork())openModule(route,updateUrl,true);
+        else toast('Open this function online once to save its read-only view.');
+      }
+    });
+    return true;
+  }
   if(offline&&!offline.canUseNetwork()){toast('This function requires internet.');return false}
   window.BBMobileOfflineModulesV1?.close();
-  hideAll();$('moduleScreen').hidden=false;$('moduleTitle').textContent=item.label;replaceFrameUrl($('moduleFrame'),item.url);
+  universal?.stop();
+  hideAll();$('moduleScreen').hidden=false;$('moduleTitle').textContent=item.label;
+  const liveFrame=replaceFrameUrl($('moduleFrame'),item.url);
+  universal?.watch(route,liveFrame);
   $('moduleDesktopLink').href='index.html?module='+encodeURIComponent(route)+'&autoload=1';
   if(updateUrl){
     if((window.BBMobileHistoryV7||window.BBMobileHistoryV6))(window.BBMobileHistoryV7||window.BBMobileHistoryV6).recordModule(route,true);

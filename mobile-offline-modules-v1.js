@@ -365,6 +365,7 @@ function showRefreshTime(){
   notice('Data as of '+savedAt);
 }
 async function open(name){
+  window.BBMobileUniversalReadOnlyV1?.stop();
   if(!canOpen(name)||!currentId())return false;
   discardLivePreload();
   const epoch=++openEpoch;

@@ -987,8 +987,22 @@ function openRoute(route,navState='',forceLive=false){
     });
     return;
   }
+  const universal=window.BBMobileUniversalReadOnlyV1;
+  if(!forceLive&&universal){
+    void universal.open(route).then(ok=>{
+      if(!ok){
+        if(offline?.canUseNetwork())openRoute(route,navState,true);
+        else toast('Open this function online once to save its read-only view.');
+        return;
+      }
+      currentRoute=route;fallbackRoute='';closePicker();
+      renderNav(navState||currentNavState());
+    });
+    return;
+  }
   if(offline&&!offline.canUseNetwork())return toast('Online required for this function.');
   window.BBMobileOfflineModulesV1?.close();
+  universal?.stop();
   closePicker();currentRoute=route;fallbackRoute='';
   if(!forceLive&&BASE_ROUTES.has(route)&&window.BBMobile?.open){
     try{
@@ -1003,7 +1017,7 @@ function openRoute(route,navState='',forceLive=false){
   if($('menuScreen'))$('menuScreen').hidden=true;
   if($('moduleScreen'))$('moduleScreen').hidden=false;
   if($('moduleTitle'))$('moduleTitle').textContent=item.label;
-  if($('moduleFrame'))replaceFrameUrl($('moduleFrame'),item.url);
+  if($('moduleFrame'))universal?.watch(route,replaceFrameUrl($('moduleFrame'),item.url));
   try{
     const nav=window.BBMobileHistoryV7||window.BBMobileHistoryV6;
     if(nav&&!nav.isRestoring?.())nav.recordModule(route,true);
@@ -1620,6 +1634,11 @@ window.BBMobileLiveReadBridgeV1=Object.freeze({
     calcPriceFlights.set(flightKey,task);
     try{return await task}finally{calcPriceFlights.delete(flightKey)}
   }
+});
+// Authorize extra Quick Action routes that are not in the core 52-route menu.
+window.BBMobileHomeRouteAccessV1=Object.freeze({
+  url(route){return canRoute(route)?ROUTES[route]?.url||'':''},
+  label(route){return canRoute(route)?ROUTES[route]?.label||route:''}
 });
 function start(){
   window.addEventListener('bb:cached-route-opened',event=>{
