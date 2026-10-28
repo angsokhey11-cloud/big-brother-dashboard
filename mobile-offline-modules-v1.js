@@ -219,6 +219,32 @@ function drawCalc(){
   // Current calculation is local only, never a sale or an invoice.
   saveLocal(currentKey(),calcState());
 }
+function snapshotFor(key,data){
+  if(!data?.success)return null;
+  if(key==='offline-ar-your'||key==='offline-ar-all'){
+    return {success:true,receivables:(Array.isArray(data.receivables)?data.receivables:[]).map(r=>({
+      invoiceId:r.invoiceId,invoiceNo:r.invoiceNo,invoiceDate:r.invoiceDate,
+      dueDate:r.dueDate,customer:r.customer,customerId:r.customerId,
+      locationCode:r.locationCode,locationName:r.locationName,currency:r.currency,
+      outstanding:r.outstanding,arStatus:r.arStatus
+    }))};
+  }
+  if(key==='offline-stock-report'){
+    return {success:true,products:(Array.isArray(data.products)?data.products:[]).map(r=>({
+      productCode:r.productCode,productName:r.productName,unit:r.unit,
+      warehousePhysical:r.warehousePhysical,batchPhysical:r.batchPhysical,
+      damaged:r.damaged,totalValue:r.totalValue
+    })),totals:{warehouseValue:data?.totals?.warehouseValue||0}};
+  }
+  if(key==='offline-calc-bootstrap'){
+    return {success:true,customers:(Array.isArray(data.customers)?data.customers:[]).map(c=>({
+      customerId:c.customerId,name:c.name,locationCode:c.locationCode,googleMapsLink:c.googleMapsLink
+    })),products:(Array.isArray(data.products)?data.products:[]).map(p=>({
+      code:p.code,name:p.name,unit:p.unit,usdPrice:p.usdPrice
+    }))};
+  }
+  return null;
+}
 let syncing=false;
 async function sync(safeRpc,canRoute,force=false){
   const api=offline();if(!api?.canUseNetwork()||!currentId()||syncing)return;
@@ -241,7 +267,8 @@ async function sync(safeRpc,canRoute,force=false){
       const fetched=await Promise.allSettled(group.map(([,fn])=>safeRpc(fn)));
       for(let j=0;j<group.length;j++){
         const value=fetched[j].status==='fulfilled'?fetched[j].value:null;
-        if(value?.success && api.canUseNetwork())await api.write(group[j][0],value);
+        const minimal=snapshotFor(group[j][0],value);
+        if(minimal&&api.canUseNetwork())await api.write(group[j][0],minimal);
         else allOK=false;
       }
     }
