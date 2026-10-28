@@ -970,20 +970,24 @@ function renderMainMenu(){
   host.querySelectorAll('[data-menu-route]').forEach(button=>button.onclick=()=>openRoute(button.dataset.menuRoute));
 }
 
-function openRoute(route,navState=''){
+function openRoute(route,navState='',forceLive=false){
   if(!canRoute(route))return toast('Access denied.');
   const offline=window.BBMobileOfflineWorkspaceV1;
-  if(offline&&!offline.canUseNetwork()){
-    if(window.BBMobileOfflineModulesV1?.canOpen(route)){
-      void window.BBMobileOfflineModulesV1.open(route).then(ok=>{
-        if(!ok)return toast('This function has no synced offline data yet. Open online once.');
-        currentRoute=route;fallbackRoute='';closePicker();
-        renderNav(navState||currentNavState());
-      });
-      return;
-    }
-    return toast('Online required for this function.');
+  const cached=window.BBMobileOfflineModulesV1;
+  // Cache first even when navigator.onLine=true; slow mobile data must not block taps.
+  if(!forceLive&&cached?.canOpen(route)){
+    void cached.open(route).then(ok=>{
+      if(!ok){
+        if(offline?.canUseNetwork())openRoute(route,navState,true);
+        else toast('No synchronized data yet. Connect once to download it.');
+        return;
+      }
+      currentRoute=route;fallbackRoute='';closePicker();
+      renderNav(navState||currentNavState());
+    });
+    return;
   }
+  if(offline&&!offline.canUseNetwork())return toast('Online required for this function.');
   window.BBMobileOfflineModulesV1?.close();
   closePicker();currentRoute=route;fallbackRoute='';
   if(BASE_ROUTES.has(route)&&window.BBMobile?.open){
@@ -1594,6 +1598,19 @@ async function load(){
 }
 
 function start(){
+  window.addEventListener('bb:cached-route-opened',event=>{
+    const target=event.detail?.route;
+    if(target&&canRoute(target)){
+      // Never await network here: the saved page is already on-screen.
+      void window.BBMobileOfflineModulesV1?.refreshRoute(target,safeRpc,canRoute);
+    }
+  });
+  window.addEventListener('bb:offline-open-online',event=>{
+    const target=event.detail?.route;
+    if(target&&canRoute(target)&&window.BBMobileOfflineWorkspaceV1?.canUseNetwork()){
+      openRoute(target,'',true);
+    }
+  });
   window.addEventListener('bb:mobile-reconnected',()=>{
     if(!profile)return;
     setTimeout(()=>{void window.BBMobileOfflineModulesV1?.sync(safeRpc,canRoute,true)},1600);
