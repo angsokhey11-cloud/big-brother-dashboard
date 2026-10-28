@@ -316,7 +316,7 @@ function renderRecent(){
 }
 function bindRouteButtons(host){host.querySelectorAll('[data-route]').forEach(btn=>btn.onclick=()=>openModule(btn.dataset.route,true))}
 function renderHome(){
-  $('greeting').textContent=greeting();$('userName').textContent=displayName();const chip=$('locationChip');const pin=window.BBMobileFunctionIconsV1?.named?.('map-pin');if(pin){chip.innerHTML=pin;chip.appendChild(document.createTextNode(locationText()))}else{chip.textContent='📍 '+locationText();}$('dateChip').textContent=dateText();
+  $('userName').textContent='Welcome '+displayName()+'!';const chip=$('locationChip');const pin=window.BBMobileFunctionIconsV1?.named?.('map-pin');if(pin){chip.innerHTML=pin;chip.appendChild(document.createTextNode(locationText()))}else{chip.textContent='📍 '+locationText();}$('dateChip').textContent=dateText();
   renderKpis();
 
   /*
