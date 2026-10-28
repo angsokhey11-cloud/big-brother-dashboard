@@ -18,7 +18,7 @@ const mapRoutes={
   'stock-report':'offline-stock-report',
   'sales-support-calculator':'offline-calc-bootstrap'
 };
-let host=null,route='',dataset=null,datasetSyncedAt=0,selectedReceivables=new Set(),calcCustomer=null,calcPrices=null,calcLines=[],calcCurrency='USD',calcRate=4100,calcDiscount=0;
+let host=null,route='',openEpoch=0,dataset=null,datasetSyncedAt=0,selectedReceivables=new Set(),calcCustomer=null,calcPrices=null,calcLines=[],calcCurrency='USD',calcRate=4100,calcDiscount=0;
 function currentId(){return offline()?.currentUserId()||''}
 function historyKey(){return 'bb_sales_support_calc_history_v2_'+currentId()}
 function currentKey(){return 'bb_sales_support_calc_current_v2_'+currentId()}
@@ -165,6 +165,18 @@ function createHost(){
   const screen=$('moduleScreen');
   if(!screen)throw new Error('BIG BROTHER mobile module shell unavailable.');
   screen.appendChild(host);
+  const live=document.createElement('button');
+  live.type='button';
+  live.id='bbOfflineLiveActions';
+  live.textContent='Live Actions';
+  live.title='Open the connected version for cloud-changing actions';
+  live.style.cssText='position:absolute;z-index:22;right:8px;top:8px;padding:6px 9px;border:1px solid #a8c8e6;border-radius:8px;background:#eef6ff;color:#235680;font:700 10px system-ui;box-shadow:0 2px 5px #164b7615';
+  live.hidden=true;
+  live.addEventListener('click',()=>{
+    if(!offline()?.canUseNetwork()||!route)return;
+    window.dispatchEvent(new CustomEvent('bb:offline-open-online',{detail:{route}}));
+  });
+  screen.appendChild(live);
   // Hardware Back or bottom-nav changes still use the real navigation stack.
   // Close a summary modal whenever navigation leaves the module.
   new MutationObserver(()=>{
@@ -173,12 +185,14 @@ function createHost(){
   return host;
 }
 function close(){
+  openEpoch++;
   closeReceivableSummary();
   if(host)host.style.display='none';
   const screen=$('moduleScreen');
   if(screen)screen.classList.remove('bb-offline-native');
   const frame=$('moduleFrame');if(frame)frame.style.display='';
   const back=$('moduleBack');if(back)back.hidden=false;
+  const live=$('bbOfflineLiveActions');if(live)live.hidden=true;
   route='';dataset=null;
 }
 function openNativeRoute(name,useLocalFrame=false,skipRecord=false){
@@ -207,11 +221,20 @@ function openNativeRoute(name,useLocalFrame=false,skipRecord=false){
   return true;
 }
 function notice(message){const note=$('bbOffNote');if(note)note.textContent=message}
+function showLiveActions(){
+  const button=$('bbOfflineLiveActions');
+  if(button)button.hidden=!route||offline()?.canUseNetwork()!==true;
+}
+function announceOpen(name){
+  showLiveActions();
+  if(offline()?.canUseNetwork())window.dispatchEvent(new CustomEvent('bb:cached-route-opened',{detail:{route:name}}));
+}
 async function open(name){
   if(!canOpen(name)||!currentId())return false;
+  const epoch=++openEpoch;
   const restoringAtStart=(window.BBMobileHistoryV7||window.BBMobileHistoryV6)?.isRestoring?.()===true;
   const rec=await offline()?.read(mapRoutes[name]);
-  if(!rec?.value)return false;
+  if(epoch!==openEpoch||!rec?.value)return false;
   route=name;
   dataset=rec.value;
   datasetSyncedAt=rec.syncedAt;
@@ -222,6 +245,7 @@ async function open(name){
   const frame=$('moduleFrame');
   if(name==='sales-support-calculator'||name==='stock-report'){
     const full=name==='stock-report'?await offline()?.read('offline-stock-report-full'):null;
+    if(epoch!==openEpoch)return false;
     if(name==='sales-support-calculator'||full?.value?.success){
       const url=name==='sales-support-calculator'
         ?'./mobile-offline-calculator.html?mobile=1&view=calculator&v=20261028-unified1'
@@ -235,6 +259,7 @@ async function open(name){
         frame.replaceWith(fresh);
         fresh.setAttribute('src',url);
       }
+      announceOpen(name);
       return true;
     }
   }
@@ -242,6 +267,7 @@ async function open(name){
   if(name.includes('receivable')||name.startsWith('ar-'))renderReceivables();
   else renderStock();
   if(host)host.scrollTop=0;
+  announceOpen(name);
   return true;
 }
 
@@ -623,5 +649,70 @@ async function sync(safeRpc,canRoute,force=false){
     if(api.canUseNetwork())await api.write('offline-modules-last-sync-v5',{at:Date.now(),allOK});
   }finally{syncing=false}
 }
-window.BBMobileOfflineModulesV1={open,canOpen,available,sync,close};
+
+const refreshPending=new Map();
+const refreshedAt=new Map();
+const routeRpcs={
+  'ar-your':[['offline-ar-your','bb_ar_list']],
+  'sales-support-your-receivable':[['offline-ar-your','bb_ar_list']],
+  'ar-all':[['offline-ar-all','bb_ar_list_all']],
+  'stock-report':[['offline-stock-report','bb_stock_report_fast']],
+  'sales-support-calculator':[
+    ['offline-calc-bootstrap','bb_sales_support_bootstrap'],
+    ['offline-calc-batch-scope','bb_sales_support_calculator_batch_scope']
+  ]
+};
+function updateVisibleDataset(key,value){
+  if(!route||mapRoutes[route]!==key||$('moduleScreen')?.hidden)return;
+  // A displayed summary must remain a stable historical selection while printing.
+  if($('bbOfflineSummaryPrint'))return;
+  dataset=value;
+  datasetSyncedAt=Date.now();
+  if(key==='offline-ar-your'||key==='offline-ar-all'){
+    const ids=['bbOffSearch','bbOffLocation','bbOffStatus','bbOffDateFrom','bbOffDateTo','bbOffMin','bbOffMax'];
+    const selection=Object.fromEntries(ids.map(id=>[id,$(id)?.value]));
+    const y=host?.scrollTop||0;
+    const availableIds=new Set((value.receivables||[]).map(invoiceIdentity));
+    for(const id of selectedReceivables)if(!availableIds.has(id))selectedReceivables.delete(id);
+    renderReceivables();
+    ids.forEach(id=>{if($(id)&&selection[id]!=null)$(id).value=selection[id]});
+    $('bbOffSearch')?.dispatchEvent(new Event('input'));
+    if(host)host.scrollTop=y;
+  }else if(key==='offline-stock-report'){
+    // Refresh the original Stock Report data inside the same iframe, without navigation.
+    try{$('moduleFrame')?.contentWindow?.postMessage({type:'bb:stock-snapshot-refreshed'},location.origin)}catch(_){}
+  }
+}
+async function refreshRoute(name,safeRpc,canRoute){
+  const api=offline(),jobs=routeRpcs[name];
+  if(!jobs||!api?.canUseNetwork()||!currentId()||!canRoute(name))return false;
+  const key=name+'::'+currentId();
+  if(Date.now()-(refreshedAt.get(key)||0)<120000)return false;
+  if(refreshPending.has(key))return refreshPending.get(key);
+  const request=(async()=>{
+    let any=false;
+    const user=currentId();
+    for(const [storeKey,rpcName] of jobs){
+      if(!api.canUseNetwork()||currentId()!==user)return any;
+      // These are read-only permission-checked RPCs; don't block cached rendering.
+      let response;
+      try{response=await safeRpc(rpcName)}catch(_){response=null}
+      const minimal=snapshotFor(storeKey,response);
+      if(!minimal||!api.canUseNetwork()||currentId()!==user)continue;
+      const wrote=await api.write(storeKey,minimal);
+      if(!wrote)continue;
+      if(storeKey==='offline-stock-report')await api.write('offline-stock-report-full',response);
+      any=true;
+      if(route===name)updateVisibleDataset(storeKey,minimal);
+    }
+    if(any)refreshedAt.set(key,Date.now());
+    return any;
+  })();
+  refreshPending.set(key,request);
+  try{return await request}finally{refreshPending.delete(key)}
+}
+window.addEventListener('online',()=>showLiveActions());
+window.addEventListener('offline',()=>showLiveActions());
+
+window.BBMobileOfflineModulesV1={open,canOpen,available,sync,refreshRoute,close};
 })();
