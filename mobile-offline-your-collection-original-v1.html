@@ -1822,7 +1822,7 @@ async function openPreview(key){
       cell.innerHTML=productSummaryHtml(detail?.items||[]);
     }catch(error){
       console.warn("Cash Collection product detail:",inv.invoiceId||inv.invoiceNo,error?.message||error);
-      cell.innerHTML='<span class="warn">Could not load products</span>';
+      cell.innerHTML='<span class="warn">Product details not saved on this device</span>';
     }
   }));
 
