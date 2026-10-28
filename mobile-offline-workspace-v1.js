@@ -152,6 +152,11 @@ async function toggleTest(){
     if(active)localStorage.removeItem(k);
     else localStorage.setItem(k,'1');
   }catch(_){setNote('Device storage is unavailable. Test mode could not be changed.');return}
+  // Close any hidden live module still left in the iframe before simulated offline mode.
+  if(!active){
+    const frame=document.getElementById('moduleFrame');
+    if(frame&&frame.getAttribute('src')!=='about:blank')frame.src='about:blank';
+  }
   updateIndicator();updateControls();
   window.dispatchEvent(new Event('bb:mobile-offline-mode-changed'));
   // Explicitly trigger cloud refresh when returning to Normal Mode.
@@ -164,11 +169,11 @@ function installControls(){
   panel.id='bbOfflineTestPanel';
   panel.style.cssText='padding:13px 12px;margin:12px 0;border:1px solid #cbdceb;border-radius:14px;background:#f3f8fd;display:grid;gap:8px;';
   panel.innerHTML=
-    '<strong style="font-size:13px;color:#173f69">Offline Workspace</strong>'+
+    '<strong style="font-size:13px;color:#173f69">Offline Workspace · Dashboard</strong>'+
     '<small id="bbOfflineTestNote" style="font-size:11px;color:#48647e;line-height:1.5"></small>'+
     '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
     '<button type="button" id="bbOfflineTestToggle" aria-pressed="false" style="flex:1;border:0;border-radius:10px;color:#fff;padding:11px;font-weight:800;min-width:130px"></button>'+
-    '<button type="button" id="bbOfflineSyncNow" style="flex:1;border:1px solid #b8d1e6;border-radius:10px;background:#fff;color:#1761a1;padding:11px;font-weight:800;min-width:100px">Sync Now</button>'+
+    '<button type="button" id="bbOfflineSyncNow" style="flex:1;border:1px solid #b8d1e6;border-radius:10px;background:#fff;color:#1761a1;padding:11px;font-weight:800;min-width:100px">Sync Dashboard</button>'+
     '</div>';
   const install=document.getElementById('installAppBtn');
   if(install?.parentNode===sheet)install.insertAdjacentElement('afterend',panel);
