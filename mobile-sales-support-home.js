@@ -1234,6 +1234,7 @@ async function refreshOverview(force=false){
     if(next?.success){
       overview=next;
       void window.BBMobileOfflineWorkspaceV1?.write('home-overview',{args:overviewArgs(),data:next});
+      void window.BBMobileOfflineWorkspaceV1?.success();
       renderOverview();
     }
   }finally{
@@ -1439,6 +1440,7 @@ async function load(){
     if(data?.success){
       overview=data;
       void offline?.write('home-overview',{args:overviewArgs(),data});
+      void offline?.success();
       renderOverview();
     }else{
       const grid=$('kpiGrid');
