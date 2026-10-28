@@ -18,7 +18,7 @@
   <link rel="stylesheet" href="mobile.css?v=20261006-login17">
   <link rel="stylesheet" href="mobile-sales-support.css?v=20260921-overviewtap2">
   <link rel="stylesheet" href="pwa-install.css?v=20260920-ios1">
-  <link id="bbMobileHomeThemeV5" rel="stylesheet" href="mobile-home-theme-v5.css?v=20261029-header-sync1">
+  <link id="bbMobileHomeThemeV5" rel="stylesheet" href="mobile-home-theme-v5.css?v=20261029-header-layout2">
 
   <style id="bb-mobile-dashboard-compact">
 
@@ -772,6 +772,7 @@
 
 
             <div class="bb-hero-right">
+              <div id="bbOfflineWorkspaceStatus" class="bb-header-sync" role="status">Online · Sync: —</div>
               <div class="hero-actions">
 
               <button
@@ -787,11 +788,10 @@
                 class="icon-btn"
                 type="button"
                 aria-label="Account and settings">
-                👤
+                <svg class="bb-settings-gear" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="3"/><path d="M10 2h4l.8 2.8 2 .9 2.6-1.3 2.5 3.4-2 2.1v2.3l2 2.1-2.5 3.4-2.6-1.3-2 .9L14 22h-4l-.8-2.8-2-.9-2.6 1.3-2.5-3.4 2-2.1v-2.3l-2-2.1 2.5-3.4 2.6 1.3 2-.9Z"/></svg>
               </button>
 
               </div>
-              <div id="bbOfflineWorkspaceStatus" class="bb-header-sync" role="status">Online · Sync: —</div>
             </div>
 
           </div>
@@ -815,10 +815,11 @@
 
             </div>
 
-            <div id="userName" class="greeting-name bb-header-welcome">
-              Welcome BIG BROTHER User!
-            </div>
+          </div>
 
+          <div class="bb-hero-footer">
+            <span id="userName" class="bb-header-welcome">Welcome BIG BROTHER User!</span>
+            <span class="bb-header-quote">“Consistency is the only key”</span>
           </div>
 
         </header>
