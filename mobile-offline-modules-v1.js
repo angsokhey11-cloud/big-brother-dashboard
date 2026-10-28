@@ -37,9 +37,19 @@ function createHost(){
   if(host)return host;
   host=document.createElement('div');
   host.id='bbOfflineModulesScreen';
-  host.style.cssText='position:fixed;inset:0;z-index:999999;background:#edf3fa;display:none;overflow:auto;color:#173e66;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;';
+  host.style.cssText='position:absolute;top:0;bottom:calc(68px + env(safe-area-inset-bottom));left:0;right:0;z-index:3;background:#edf3fa;display:none;overflow:auto;color:#173e66;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;';
   const style=document.createElement('style');
   style.textContent=`
+    /* Offline and online use the same mobile module shell and bottom navigation.
+       The duplicate offline header is intentionally removed. */
+    #moduleScreen.bb-offline-native .module-header{display:none!important}
+    #moduleScreen.bb-offline-native .module-frame{top:0!important;bottom:calc(68px + env(safe-area-inset-bottom))!important;
+      height:calc(100dvh - 68px - env(safe-area-inset-bottom))!important}
+    #moduleScreen.bb-offline-native #bbOfflineModulesScreen{display:block}
+    @media print{
+      body.bb-offline-summary-print #mobileApp,body.bb-offline-summary-print #app{display:none!important}
+      body.bb-offline-summary-print #bbOfflineSummaryPrint{position:static!important;display:block!important}
+    }
     #bbOfflineModulesScreen .bb-off-header{position:sticky;top:0;z-index:3;padding:12px;background:#14528b;color:#fff;display:flex;gap:10px;align-items:center}
     #bbOfflineModulesScreen button,#bbOfflineModulesScreen select,#bbOfflineModulesScreen input{font:inherit}
     #bbOfflineModulesScreen button{cursor:pointer}
@@ -104,40 +114,69 @@ function createHost(){
     #bbOfflineModulesScreen .bb-stock-line .metric.value{color:#123f73}
   `;
   document.head.appendChild(style);
-  host.innerHTML='<header class="bb-off-header"><button type="button" class="bb-back" id="bbOffClose">‹ Back</button><strong id="bbOffTitle">Saved Data</strong></header><main class="bb-off-main"><div class="bb-off-note" id="bbOffNote"></div><div id="bbOffBody"></div></main>';
-  document.body.appendChild(host);
-  host.querySelector('#bbOffClose').addEventListener('click',close);
+  host.innerHTML='<main class="bb-off-main"><div class="bb-off-note" id="bbOffNote"></div><div id="bbOffBody"></div></main>';
+  const screen=$('moduleScreen');
+  if(!screen)throw new Error('BIG BROTHER mobile module shell unavailable.');
+  screen.appendChild(host);
   return host;
 }
 function close(){
   if(host)host.style.display='none';
+  const screen=$('moduleScreen');
+  if(screen)screen.classList.remove('bb-offline-native');
   route='';dataset=null;
+}
+function openNativeRoute(name,useLocalFrame=false){
+  const screen=$('moduleScreen'),frame=$('moduleFrame');
+  if(!screen||!frame)return false;
+  // Reuse the EXACT native history stack and bottom navigation as an online module.
+  ['mobileHome','menuScreen','loginScreen','bootScreen'].forEach(id=>{
+    const element=$(id);if(element)element.hidden=true;
+  });
+  screen.hidden=false;
+  screen.classList.add('bb-offline-native');
+  const back=$('moduleBack');
+  // Keep native Back wiring installed by mobile.js; no second back handler.
+  if(back)back.hidden=true;
+  const bottom=$('moduleBottomNav');
+  if(bottom)bottom.hidden=false;
+  const nav=window.BBMobileHistoryV7||window.BBMobileHistoryV6;
+  if(nav&&!nav.isRestoring?.())nav.recordModule(name,true);
+  if(!useLocalFrame){
+    frame.style.display='none';
+    if(host)host.style.display='block';
+  }else{
+    if(host)host.style.display='none';
+    frame.style.display='';
+  }
+  return true;
 }
 function notice(message){const note=$('bbOffNote');if(note)note.textContent=message}
 async function open(name){
-  if(!canOpen(name))return false;
-  // A local screen can open only for a permitted route whose snapshot was saved.
+  if(!canOpen(name)||!currentId())return false;
   const rec=await offline()?.read(mapRoutes[name]);
   if(!rec?.value)return false;
   route=name;
   dataset=rec.value;
-  createHost().style.display='block';
-  $('bbOffTitle').textContent=name.includes('receivable')||name.startsWith('ar-')?'Receivable · Offline':name.includes('calculator')?'Calculator · Offline':'Stock Report · Offline';
+  createHost();
   const date=new Date(rec.syncedAt).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
-  notice('Saved snapshot: '+date+' · Cloud transactions cannot be created, cleared or edited offline.');
-  if(name==='sales-support-calculator'){
-    // The exact online Calculator UI is loaded from an offline-cached copy.
-    // It uses the same responsive markup, controls, layout and local history.
-    $('bbOffBody').innerHTML='<iframe title="BIG BROTHER Calculator" src="./mobile-offline-calculator.html?mobile=1&view=calculator" style="width:100%;height:calc(100dvh - 104px);min-height:560px;border:0;background:#eef4fa;border-radius:10px"></iframe>';
+  notice('Saved '+date+' · Read-only snapshot, not a live financial balance.');
+  const frame=$('moduleFrame');
+  if(name==='sales-support-calculator'||name==='stock-report'){
+    const full=name==='stock-report'?await offline()?.read('offline-stock-report-full'):null;
+    if(name==='sales-support-calculator'||full?.value?.success){
+      const url=name==='sales-support-calculator'
+        ?'./mobile-offline-calculator.html?mobile=1&view=calculator'
+        :'./mobile-offline-stock.html?embed=1';
+      if(!openNativeRoute(name,true))return false;
+      if(frame.getAttribute('src')!==url)frame.setAttribute('src',url);
+      return true;
+    }
   }
-  else if(name.includes('receivable')||name.startsWith('ar-'))renderReceivables();
-  else {
-    const full=await offline()?.read('offline-stock-report-full');
-    if(full?.value?.success){
-      $('bbOffBody').innerHTML='<iframe title="BIG BROTHER Stock Report" src="./mobile-offline-stock.html?embed=1" style="width:100%;height:calc(100dvh - 104px);min-height:560px;border:0;background:#eef3f8;border-radius:10px"></iframe>';
-    }else renderStock();
-  }
-  host.scrollTop=0;
+  if(!openNativeRoute(name,false))return false;
+  if(name.includes('receivable')||name.startsWith('ar-'))renderReceivables();
+  else renderStock();
+  if(host)host.scrollTop=0;
   return true;
 }
 
