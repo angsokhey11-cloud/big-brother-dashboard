@@ -1461,7 +1461,7 @@ async function load(){
     }
   });
 
-  overviewPromise.finally(()=>{overviewLoading=false});
+  void overviewPromise.then(()=>{overviewLoading=false},()=>{overviewLoading=false});
 
   const paymentPromise=(canRoute('staff-relation')
     ?safeRpc('bb_staff_relation_my_payments',{p_from:null,p_to:null,p_salary_month:null})
