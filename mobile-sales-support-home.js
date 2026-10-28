@@ -124,6 +124,7 @@ let pages=[];
 let quickPreferencesReady=false;
 let overview=null;
 let overviewLoading=false;
+let overviewRefreshQueued=false;
 let lastOverviewFetch=0;
 let overviewFilter={locationCode:'',year:0,month:0};
 let preferenceSyncBusy=false;
@@ -972,7 +973,15 @@ function renderMainMenu(){
 function openRoute(route,navState=''){
   if(!canRoute(route))return toast('Access denied.');
   const offline=window.BBMobileOfflineWorkspaceV1;
-  if(offline&&!offline.canUseNetwork()&&!offline.offlineRouteAllowed(route))return toast('Online required for this function. Saved Overview works offline.');
+  if(offline&&!offline.canUseNetwork()){
+    if(window.BBMobileOfflineModulesV1?.canOpen(route)){
+      void window.BBMobileOfflineModulesV1.open(route).then(ok=>{
+        if(!ok)toast('This function has no synced offline data yet. Open online once.');
+      });
+      return;
+    }
+    return toast('Online required for this function.');
+  }
   closePicker();currentRoute=route;fallbackRoute='';
   if(BASE_ROUTES.has(route)&&window.BBMobile?.open){
     try{
@@ -1024,6 +1033,65 @@ function overviewArgs(){
     p_month:Number(overviewFilter.month),
     p_location_code:clean(overviewFilter.locationCode)||null
   };
+}
+function overviewSnapshotKey(args=overviewArgs()){
+  return 'overview-period::'+Number(args.p_year)+'-'+Number(args.p_month)+'::'+(clean(args.p_location_code).toUpperCase()||'ALL');
+}
+async function showSelectedOverview(){
+  const offline=window.BBMobileOfflineWorkspaceV1;
+  const args=overviewArgs();
+  const stored=await offline?.read(overviewSnapshotKey(args));
+  // Never show an unrelated location's values under a newly selected name.
+  if(stored?.value?.success && JSON.stringify(args)===JSON.stringify(overviewArgs())){
+    overview=stored.value;
+    renderOverview();
+  }else if(offline?.canUseNetwork()===false){
+    toast('This location/month has not been synced. Connect to internet once.');
+    return false;
+  }else{
+    overview=null;
+    ensureOverviewHeader();
+    const grid=$('kpiGrid');
+    if(grid)grid.innerHTML='<div class="bb-home-data-note">Loading this location / month…</div>';
+  }
+  if(offline?.canUseNetwork())void refreshOverview(true);
+  return true;
+}
+let locationSyncBusy=false,locationSyncAt=0;
+async function syncOverviewLocations(){
+  const offline=window.BBMobileOfflineWorkspaceV1;
+  if(locationSyncBusy||!profile||!offline?.canUseNetwork())return;
+  const monthArgs=overviewArgs();
+  const period=monthArgs.p_year+'-'+monthArgs.p_month;
+  const marker='overview-locations-sync::'+period;
+  const previous=await offline.read(marker);
+  // Once per 12 hours per account/period, unless permission or device changed.
+  const locations=Array.isArray(profile.locations)?profile.locations:[];
+  const codes=[...new Set(locations.map(x=>clean(x.locationCode)).filter(Boolean))].slice(0,30);
+  // If a user last viewed one location, also cache their authorized ALL total.
+  if(clean(monthArgs.p_location_code))codes.unshift('');
+  const fingerprint=codes.map(x=>x.toLowerCase()).sort().join('|');
+  if(previous?.value?.fingerprint===fingerprint&&Date.now()-Number(previous.value.at||0)<12*60*60*1000)return;
+  locationSyncBusy=true;
+  try{
+    // Small batches to keep Supabase requests modest and the dashboard responsive.
+    let allOK=true;
+    for(let i=0;i<codes.length;i+=2){
+      if(!offline.canUseNetwork()){allOK=false;break}
+      const group=codes.slice(i,i+2);
+      const results=await Promise.allSettled(group.map(code=>safeRpc('bb_mobile_overview_filtered',{
+        p_year:monthArgs.p_year,p_month:monthArgs.p_month,p_location_code:code
+      })));
+      for(let j=0;j<results.length;j++){
+        const data=results[j].status==='fulfilled'?results[j].value:null;
+        if(data?.success)await offline.write(overviewSnapshotKey({
+          p_year:monthArgs.p_year,p_month:monthArgs.p_month,p_location_code:group[j]
+        }),data);
+        else allOK=false;
+      }
+    }
+    if(allOK&&offline.canUseNetwork())await offline.write(marker,{fingerprint,at:Date.now()});
+  }finally{locationSyncBusy=false;locationSyncAt=Date.now()}
 }
 function monthOptionRows(){
   const rows=[];
@@ -1093,10 +1161,14 @@ function openOverviewLocationPicker(){
 
   list.querySelectorAll('[data-overview-location-value]').forEach(button=>{
     button.onclick=()=>{
-      overviewFilter.locationCode=clean(button.dataset.overviewLocationValue);
-      saveOverviewFilter();
+      const requested=clean(button.dataset.overviewLocationValue);
+      const prior=overviewFilter.locationCode;
+      overviewFilter.locationCode=requested;
       picker.hidden=true;
-      refreshOverview(true);
+      void showSelectedOverview().then(ok=>{
+        if(ok)saveOverviewFilter();
+        else {overviewFilter.locationCode=prior;renderOverview()}
+      });
     };
   });
 
@@ -1126,11 +1198,14 @@ function openOverviewMonthPicker(){
       const year=Number(parts[0]);
       const month=Number(parts[1]);
       if(Number.isInteger(year)&&Number.isInteger(month)&&month>=1&&month<=12){
+        const previous={...overviewFilter};
         overviewFilter.year=year;
         overviewFilter.month=month;
-        saveOverviewFilter();
         picker.hidden=true;
-        refreshOverview(true);
+        void showSelectedOverview().then(ok=>{
+          if(ok){saveOverviewFilter();if(window.BBMobileOfflineWorkspaceV1?.canUseNetwork())void syncOverviewLocations()}
+          else {overviewFilter=previous;renderOverview()}
+        });
       }
     };
   });
@@ -1222,7 +1297,8 @@ function renderOverview(){
 }
 
 async function refreshOverview(force=false){
-  if(overviewLoading||window.BBMobileOfflineWorkspaceV1?.canUseNetwork()===false)return;
+  if(overviewLoading){if(force)overviewRefreshQueued=true;return}
+  if(window.BBMobileOfflineWorkspaceV1?.canUseNetwork()===false)return;
   if(!force&&Date.now()-lastOverviewFetch<120000)return;
   if(!profile)return;
 
@@ -1231,21 +1307,30 @@ async function refreshOverview(force=false){
   if(panel)panel.classList.add('bb-overview-loading');
 
   try{
+    const requestArgs=overviewArgs();
     const [next,nextStockReport]=await Promise.all([
-      safeRpc('bb_mobile_overview_filtered',overviewArgs()),
+      safeRpc('bb_mobile_overview_filtered',requestArgs),
       isAdmin()?safeRpc('bb_stock_report_fast'):Promise.resolve(null)
     ]);
     if(nextStockReport?.success)stockReport=nextStockReport;
     if(window.BBMobileOfflineWorkspaceV1?.canUseNetwork()===false)return;
     if(next?.success){
       lastOverviewFetch=Date.now();
+      // Reject stale responses if another location was selected while fetching.
+      const fetchedArgs={...requestArgs};
+      if(JSON.stringify(fetchedArgs)!==JSON.stringify(overviewArgs()))return;
       overview=next;
-      void window.BBMobileOfflineWorkspaceV1?.write('home-overview',{args:overviewArgs(),data:next}).then(ok=>{if(ok)void window.BBMobileOfflineWorkspaceV1.success()});
+      void window.BBMobileOfflineWorkspaceV1?.write(overviewSnapshotKey(fetchedArgs),next);
+      void window.BBMobileOfflineWorkspaceV1?.write('home-overview',{args:fetchedArgs,data:next}).then(ok=>{if(ok)void window.BBMobileOfflineWorkspaceV1.success()});
       renderOverview();
     }
   }finally{
     overviewLoading=false;
     if(panel)panel.classList.remove('bb-overview-loading');
+    if(overviewRefreshQueued&&window.BBMobileOfflineWorkspaceV1?.canUseNetwork()){
+      overviewRefreshQueued=false;
+      setTimeout(()=>{void refreshOverview(true)},0);
+    }
   }
 }
 
@@ -1380,6 +1465,11 @@ async function load(){
   if(savedPayment?.value)payment=savedPayment.value;
   if(savedAttention?.value){attention=savedAttention.value;attentionLoaded=true}
   if(savedStock?.value)stockReport=savedStock.value;
+  // The selection persists per account; each period/location needs its own snapshot.
+  if(!overview){
+    const selectedSnapshot=await offline?.read(overviewSnapshotKey());
+    if(selectedSnapshot?.value?.success)overview=selectedSnapshot.value;
+  }
 
   const quickKeyName=quickKey();
   const pageKeyName=pageKey();
@@ -1450,7 +1540,10 @@ async function load(){
     if(data?.success){
       lastOverviewFetch=Date.now();
       overview=data;
+      void offline?.write(overviewSnapshotKey(overviewArgs()),data);
       void offline?.write('home-overview',{args:overviewArgs(),data}).then(ok=>{if(ok)void offline.success()});
+      // Populate per-location sales snapshots after first paint, not before.
+      setTimeout(()=>{void syncOverviewLocations()},1500);
       renderOverview();
     }else{
       const grid=$('kpiGrid');
@@ -1461,7 +1554,13 @@ async function load(){
     }
   });
 
-  void overviewPromise.then(()=>{overviewLoading=false},()=>{overviewLoading=false});
+  void overviewPromise.then(()=>{
+    overviewLoading=false;
+    if(overviewRefreshQueued){overviewRefreshQueued=false;void refreshOverview(true)}
+  },()=>{
+    overviewLoading=false;
+    if(overviewRefreshQueued){overviewRefreshQueued=false;void refreshOverview(true)}
+  });
 
   const paymentPromise=(canRoute('staff-relation')
     ?safeRpc('bb_staff_relation_my_payments',{p_from:null,p_to:null,p_salary_month:null})
@@ -1486,12 +1585,15 @@ async function load(){
     if(overview)renderOverview();
   });
 
+  // Nonblocking background sync of permitted offline datasets.
+  setTimeout(()=>{void window.BBMobileOfflineModulesV1?.sync(safeRpc,canRoute)},1500);
   await Promise.allSettled([liveProfilePromise,prefsPromise,overviewPromise,paymentPromise,attentionPromise,stockPromise]);
 }
 
 function start(){
   window.addEventListener('bb:mobile-reconnected',()=>{
     if(!profile)return;
+    setTimeout(()=>{void window.BBMobileOfflineModulesV1?.sync(safeRpc,canRoute,true)},1600);
     // mobile.js activate() already refreshes Overview: avoid duplicate RPCs.
     void refreshAttention(true);
     void syncPreferencesFromServer(true);

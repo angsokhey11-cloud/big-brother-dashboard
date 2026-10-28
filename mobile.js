@@ -354,7 +354,13 @@ function showMenu(tab,clearRoute=true){
 function openModule(route,updateUrl=true){
   const item=ROUTES[route];if(!item){toast('This mobile route is not ready yet.');return false}if(!canRoute(route)){toast('Access denied for this function.');return false}
   const offline=window.BBMobileOfflineWorkspaceV1;
-  if(offline&&!offline.canUseNetwork()&&!offline.offlineRouteAllowed(route)){toast('This function requires internet. Saved Overview is available offline.');return false}
+  if(offline&&!offline.canUseNetwork()){
+    if(window.BBMobileOfflineModulesV1?.canOpen(route)){
+      void window.BBMobileOfflineModulesV1.open(route).then(ok=>{if(!ok)toast('No saved offline data for this function yet.')});
+      return false;
+    }
+    toast('This function requires internet.');return false;
+  }
   hideAll();$('moduleScreen').hidden=false;$('moduleTitle').textContent=item.label;replaceFrameUrl($('moduleFrame'),item.url);
   $('moduleDesktopLink').href='index.html?module='+encodeURIComponent(route)+'&autoload=1';
   if(updateUrl){
