@@ -96,8 +96,6 @@ function createHost(){
     #bbOfflineSummaryPrint .bb-summary-customer strong{display:block;font-size:10px;color:#56708b}
     #bbOfflineSummaryPrint .bb-summary-customer div{font-weight:900;font-size:18px;margin:5px 0;color:#173f77}
     #bbOfflineSummaryPrint .bb-summary-customer small{display:block;color:#60758c;font-size:10px}
-    #bbOfflineSummaryPrint .bb-summary-warning{padding:10px;background:#fff4e5;border:1px solid #edc78e;
-      border-radius:8px;font-weight:800;font-size:10px;line-height:1.5;color:#885508;margin:10px 0}
     #bbOfflineSummaryPrint .bb-summary-period{font-size:10px;color:#60758c;margin:12px 0}
     #bbOfflineSummaryPrint table{width:100%;border-collapse:collapse;font-size:10px;table-layout:auto}
     #bbOfflineSummaryPrint th{background:#173f77;color:#fff;text-align:left;font-weight:800;padding:9px 5px}
@@ -374,11 +372,11 @@ function openReceivableSummary(input){
       '<small>Phnom Penh, Cambodia</small></div><div class="bb-summary-meta">'+
       '<b>Summary Date:</b> '+esc(receivableDate(summaryDay))+
       '<p><b>Selected Invoices:</b> '+picked.length+'</p>'+
-      '<p><b>Saved Data:</b> '+esc(synced)+'</p></div></div>'+
+      '<p><b>Data as of:</b> '+esc(synced)+'</p></div></div>'+
       '<h2>CUSTOMER INVOICE SUMMARY</h2>'+
       '<div class="bb-summary-customer"><strong>Customer</strong><div>'+esc(label)+'</div>'+
       (names.length>1?'<small>'+names.map(esc).join(' · ')+'</small>':'')+'</div>'+
-      '<div class="bb-summary-warning">OFFLINE COPY — Balances saved '+esc(synced)+'. Not verified against live payments or adjustments. No original invoice photos are included.</div>'+
+
       '<div class="bb-summary-period">Invoice range: '+esc(receivableDate(dates[0]))+' to '+esc(receivableDate(dates[dates.length-1]))+'</div>'+
       '<table><thead><tr><th>#</th>'+(names.length>1?'<th>Customer</th>':'')+
       '<th>Invoice</th><th>Date</th><th>Due</th><th>Total</th><th>Paid</th><th>Outstanding</th></tr></thead><tbody>'+
@@ -392,7 +390,7 @@ function openReceivableSummary(input){
       '</tbody></table>'+
       '<div class="bb-summary-totals">'+currencies.map(c=>
         '<div><span>TOTAL OUTSTANDING ('+esc(c)+')</span><strong>'+esc(money(totals[c],c))+'</strong></div>').join('')+'</div>'+
-      '<footer>Invoice Summary includes selected saved outstanding balances only. • BIG BROTHER</footer>'+
+      '<footer>Invoice Summary includes only selected invoice balances. • BIG BROTHER</footer>'+
     '</div>';
   document.body.appendChild(modal);
   document.body.classList.add('bb-offline-summary-print');
