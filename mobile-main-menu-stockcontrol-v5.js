@@ -211,6 +211,7 @@ function renderDirect(route,forceLive=false){
    return false;
  }
  window.BBMobileOfflineModulesV1?.close();
+ window.BBMobileUniversalReadOnlyV1?.stop();
  const frame=$('moduleFrame'),screen=$('moduleScreen');
  if(!frame||!screen)return false;
  const url=routeUrl(route);
@@ -219,7 +220,8 @@ function renderDirect(route,forceLive=false){
  screen.hidden=false;
  if($('moduleTitle'))$('moduleTitle').textContent=routeLabel(route);
  if($('moduleDesktopLink'))$('moduleDesktopLink').href=DASH+'?module='+encodeURIComponent(route)+'&autoload=1';
- replaceFrameUrl(frame,url);
+ const next=replaceFrameUrl(frame,url);
+ window.BBMobileUniversalReadOnlyV1?.watch(route,next);
  return true;
 }
 function openDirect(route,push=true,forceLive=false){
@@ -229,6 +231,16 @@ function openDirect(route,push=true,forceLive=false){
      if(!ok){
        if(offline?.canUseNetwork())openDirect(route,push,true);
        else{const el=document.getElementById('toast');if(el){el.textContent='No synced data available yet.';el.hidden=false}}
+     }
+   });
+   return true;
+ }
+ const universal=window.BBMobileUniversalReadOnlyV1;
+ if(!forceLive&&universal){
+   void universal.open(route).then(ok=>{
+     if(!ok){
+       if(offline?.canUseNetwork())openDirect(route,push,true);
+       else{const el=$('toast');if(el){el.textContent='Open this function online once to save its read-only view.';el.hidden=false}}
      }
    });
    return true;
