@@ -172,7 +172,7 @@ const readOnlyFlights=new Map();
 const safeReadOnlyFunctions=new Set([
   'bb_mobile_overview_filtered','bb_mobile_my_attention',
   'bb_stock_report_fast','bb_mobile_get_preferences',
-  'bb_staff_relation_my_payments'
+  'bb_staff_relation_my_payments','bb_sales_support_customer_prices'
 ]);
 async function rpc(fn,args={}){
   if(!safeReadOnlyFunctions.has(fn))return rpcNetwork(fn,args);
@@ -1597,18 +1597,36 @@ async function load(){
   await Promise.allSettled([liveProfilePromise,prefsPromise,overviewPromise,paymentPromise,attentionPromise,stockPromise]);
 }
 
+const calcPriceFlights=new Map();
+window.BBMobileLiveReadBridgeV1=Object.freeze({
+  // This is a read-only authenticated RPC. No local Calculator operation
+  // can create an invoice, clear a receivable or send a delivery request.
+  async refreshCustomerPrice(customerId){
+    const id=clean(customerId),api=window.BBMobileOfflineWorkspaceV1;
+    if(!id||id.length>128||!canRoute('sales-support-calculator')||!api?.canUseNetwork())return null;
+    const uid=api.currentUserId();
+    if(!uid)return null;
+    const flightKey=uid+'::'+id;
+    if(calcPriceFlights.has(flightKey))return calcPriceFlights.get(flightKey);
+    const task=(async()=>{
+      const result=await safeRpc('bb_sales_support_customer_prices',{p_customer_id:id});
+      if(!result?.success||api.currentUserId()!==uid||!api.canUseNetwork())return null;
+      if(!await api.write('calc-price::'+id,result))return null;
+      try{
+        $('moduleFrame')?.contentWindow?.postMessage({type:'bb:calc-price-refreshed',customerId:id},location.origin);
+      }catch(_){}
+      return result;
+    })();
+    calcPriceFlights.set(flightKey,task);
+    try{return await task}finally{calcPriceFlights.delete(flightKey)}
+  }
+});
 function start(){
   window.addEventListener('bb:cached-route-opened',event=>{
     const target=event.detail?.route;
     if(target&&canRoute(target)){
       // Never await network here: the saved page is already on-screen.
       void window.BBMobileOfflineModulesV1?.refreshRoute(target,safeRpc,canRoute);
-    }
-  });
-  window.addEventListener('bb:offline-open-online',event=>{
-    const target=event.detail?.route;
-    if(target&&canRoute(target)&&window.BBMobileOfflineWorkspaceV1?.canUseNetwork()){
-      openRoute(target,'',true);
     }
   });
   window.addEventListener('bb:mobile-reconnected',()=>{
