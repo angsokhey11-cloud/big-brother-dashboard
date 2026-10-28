@@ -1649,9 +1649,22 @@ window.BBMobileReportSyncV1=Object.freeze({
       'bb_report_monthly_sales',{p_year:year,p_month:month},force);
   },
   async refreshHistory(force=false){
-    return reportReadOnlyJob('history','offline-history-list-v1','bb_invoice_history_mobile_list',{
+    const data=await reportReadOnlyJob('history','offline-history-list-v1','bb_invoice_history_mobile_list',{
       p_invoice_no:'',p_customer:'',p_date_from:null,p_date_to:null,p_invoice_type:''
     },force);
+    // Prefetch only a few recent full invoice documents so their original
+    // A4 previews work offline. Fetching every invoice would be wasteful.
+    if(data?.invoices?.length&&window.BBMobileOfflineWorkspaceV1?.canUseNetwork()){
+      void (async()=>{
+        const recent=data.invoices.slice(0,6);
+        for(let i=0;i<recent.length;i+=2){
+          if(!canRoute('history')||!window.BBMobileOfflineWorkspaceV1?.canUseNetwork())return;
+          await Promise.allSettled(recent.slice(i,i+2).map(row=>
+            this.refreshDetail(row.invoiceId,row.invoiceNo)));
+        }
+      })();
+    }
+    return data;
   },
   async refreshDetail(invoiceId,invoiceNo){
     const id=clean(invoiceId),no=clean(invoiceNo);
