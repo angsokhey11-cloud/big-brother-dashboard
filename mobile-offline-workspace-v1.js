@@ -99,22 +99,24 @@ function indicator(){
     el=document.createElement('div');
     el.id='bbOfflineWorkspaceStatus';
     el.setAttribute('role','status');
-    el.style.cssText='font-size:11px;font-weight:700;padding:7px 10px;margin:6px 0;border-radius:10px;background:#ecf4ff;color:#215b87';
-    hero.appendChild(el);
+    (hero.querySelector('.bb-hero-right')||hero.querySelector('.hero-top')||hero).appendChild(el);
   }
+  el.classList.add('bb-header-sync');
+  el.removeAttribute('style');
   return el;
 }
 function updateIndicator(){
   const el=indicator();
   if(!el)return;
   const offline=!canUseNetwork()||!connection;
-  const stamp=latestSync?new Date(latestSync).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'not yet synced';
-  const recentlySaved=latestSync&&Date.now()-latestSync<5*60*1000;
-  const status=offline?'Offline · saved read-only dashboard':
-    (recentlySaved?'Online · data saved successfully':'Network connected · awaiting fresh data');
-  el.textContent=status+' · Last sync: '+stamp;
-  el.style.background=offline?'#e9f7f0':'#ecf4ff';
-  el.style.color=offline?'#185e4b':'#215b87';
+  // The clock always describes the last successfully saved account-scoped snapshot,
+  // never merely a connected Wi-Fi signal.
+  const last=new Date(latestSync);
+  const stamp=latestSync&&Number.isFinite(last.getTime())
+    ?last.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).replace(/\\s+/g,'-')+', '+
+      last.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true})
+    :'Not synced';
+  el.textContent=(offline?'Offline':'Online')+' · Sync: '+stamp;
 }
 async function init(){
   const user=currentUserId();
