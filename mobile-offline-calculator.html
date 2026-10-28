@@ -16,9 +16,7 @@ html,body{margin:0;min-height:100%;background:#eef3f8;font-family:Arial,sans-ser
   [data-view="request-delivery"],[data-view="successful-delivery"],[data-view="your-customer"],
   .bb-report-share,.bb-delivery-send,.bb-share-btn,
   [id*="ShareBtn"],[id*="shareBtn"],[id*="DeliveryShare"]{display:none!important}
-  body::after{content:"OFFLINE · SAVED DATA";position:fixed;top:5px;right:7px;z-index:30;
-    font:800 9px system-ui;background:#d9f5e9;color:#12674a;padding:5px 7px;
-    border:1px solid #a7dfc5;border-radius:8px;pointer-events:none}
+
 </style>
 <script src="mobile-offline-calculator-dual-currency-v1.js?v=20261028-sameui1"></script>
 </head>
@@ -1728,9 +1726,7 @@ html,body{margin:0;min-height:100%;background:#eef3f8;font-family:Arial,sans-ser
       '#bbCalcShareTelegram,#bbDeliveryYes,#submitDeliveryBtn,'+
       '[data-view="request-delivery"],[data-view="your-customer"],'+
       '[data-view="successful-delivery"]{display:none!important}'+
-      'body::after{content:"OFFLINE · SAVED DATA";position:fixed;top:5px;right:6px;'+
-      'z-index:900;font:800 9px Arial;background:#e3f4eb;border:1px solid #b7dfc9;'+
-      'color:#166746;padding:5px 7px;border-radius:7px;pointer-events:none}'+
+
       '</style></head>');
     document.open();
     document.write(html);
