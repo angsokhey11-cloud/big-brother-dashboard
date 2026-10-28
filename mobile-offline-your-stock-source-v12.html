@@ -829,16 +829,16 @@ function render(){
   $('loading').hidden=true;
   $('content').hidden=false;
 }
-async function fetchStockData(){
+async function fetchStockData(forceLive=false){
   if(data?.isAdmin&&data?.scope==='ALL_OPEN_SALESMAN_BATCHES'){
     return rpc('bb_sales_support_admin_your_stock',{
-      p_batch_id:adminSelectedBatchId||null
+      p_batch_id:adminSelectedBatchId||null,bb_force_live:forceLive
     });
   }
 
   if(data&&!data?.isAdmin&&data?.scope==='MY_OPEN_BATCHES'){
     return rpc('bb_sales_support_my_stock',{
-      p_batch_id:staffSelectedBatchId||null
+      p_batch_id:staffSelectedBatchId||null,bb_force_live:forceLive
     });
   }
 
@@ -847,12 +847,12 @@ async function fetchStockData(){
 
   if(base.isAdmin){
     return rpc('bb_sales_support_admin_your_stock',{
-      p_batch_id:adminSelectedBatchId||null
+      p_batch_id:adminSelectedBatchId||null,bb_force_live:forceLive
     });
   }
 
   return rpc('bb_sales_support_my_stock',{
-    p_batch_id:staffSelectedBatchId||null
+    p_batch_id:staffSelectedBatchId||null,bb_force_live:forceLive
   });
 }
 async function bbAddBatchAdjustmentColumns(report){
@@ -928,7 +928,7 @@ async function bbAddBatchAdjustmentColumns(report){
   }
   return report;
 }
-async function load(showLoader=true){
+async function load(showLoader=true,forceLive=false){
   if(loadingNow)return;
   loadingNow=true;
   const btn=$('refreshBtn');
@@ -937,8 +937,13 @@ async function load(showLoader=true){
   if(showLoader&&!data)$('loading').hidden=false;
 
   try{
-    const next=await fetchStockData();
+    const requestedBatchId=clean(data?.isAdmin?adminSelectedBatchId:staffSelectedBatchId);
+    const next=await fetchStockData(forceLive);
     if(!next?.success)throw new Error('Could not load Your Stock.');
+    // Never present a different (possibly stale) batch as the chosen one.
+    if(requestedBatchId&&clean(next.selectedBatch?.batchId)!==requestedBatchId){
+      throw new Error('Batch '+requestedBatchId+' is no longer open or assigned. Refresh the batch list.');
+    }
     await bbAddBatchAdjustmentColumns(next);
     data=next;
 
@@ -958,6 +963,15 @@ async function load(showLoader=true){
     console.error(e);
     $('error').textContent=e?.message||String(e);
     $('error').hidden=false;
+    // Restore the selector to match the last verified visible stock report.
+    if(data){
+      const last=clean(data.selectedBatch?.batchId);
+      if(data.isAdmin){
+        adminSelectedBatchId=last;
+        adminSelectedSalesmanKey=adminSalesmanKey(data.selectedBatch);
+      }else staffSelectedBatchId=last;
+      renderBatches();
+    }
     if(!data){
       $('loading').hidden=true;
       $('content').hidden=true;
@@ -967,7 +981,7 @@ async function load(showLoader=true){
     loadingNow=false;
   }
 }
-$('refreshBtn').onclick=()=>load(false);
+$('refreshBtn').onclick=()=>load(false,true);
 $('searchBox').oninput=renderItems;
 $('adminSalesmanFilter').onchange=()=>{
   if(!data?.isAdmin)return;
@@ -977,7 +991,7 @@ $('adminSalesmanFilter').onchange=()=>{
   adminSelectedBatchId=clean(first?.batchId);
   BB_OPEN_STOCK_GROUPS.clear();
   $('searchBox').value='';
-  load(false);
+  load(false,true);
 };
 $('mobileBatchPickerButton').onclick=()=>{
   if(data?.isAdmin||!BB_MOBILE_STOCK_LIST)return;
@@ -1002,7 +1016,7 @@ $('mobileBatchPickerMenu').onclick=e=>{
   closeMobileBatchPicker();
   BB_OPEN_STOCK_GROUPS.clear();
   $('searchBox').value='';
-  load(false);
+  load(false,true);
 };
 document.addEventListener('click',e=>{
   const picker=$('mobileBatchPicker');
@@ -1023,7 +1037,7 @@ $('adminBatchFilter').onchange=()=>{
   closeMobileBatchPicker();
   BB_OPEN_STOCK_GROUPS.clear();
   $('searchBox').value='';
-  load(false);
+  load(false,true);
 };
 $('itemRows').addEventListener('click',e=>{
   const row=e.target.closest('tr[data-bb-group]');
