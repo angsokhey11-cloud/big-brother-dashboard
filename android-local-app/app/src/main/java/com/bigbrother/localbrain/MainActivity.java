@@ -33,7 +33,10 @@ public final class MainActivity extends Activity {
         getWindow().setStatusBarColor(Color.rgb(10,36,64));
         getWindow().setNavigationBarColor(Color.rgb(10,36,64));
         FrameLayout frame = new FrameLayout(this);
-        frame.setBackgroundColor(Color.rgb(232,241,250));
+        // Keep Local Brain pages below Android 15+ system status/navigation bars.
+        // The dark background makes white status icons legible.
+        frame.setBackgroundColor(Color.rgb(10,36,64));
+        protectSystemBars(frame);
         view = new WebView(this);
         view.setBackgroundColor(Color.WHITE);
         view.getSettings().setJavaScriptEnabled(true);
@@ -112,6 +115,29 @@ public final class MainActivity extends Activity {
         setContentView(frame);
         view.loadUrl(HOME);
     }
+    /**
+     * Android 15 (API 35) enforces edge-to-edge for targetSdk 35 apps.
+     * Apply the device's status/navigation/cutout insets to the native root,
+     * rather than patching each web page's CSS or zooming the WebView.
+     *
+     * After applying system-bar padding, pass a copy with those SAME insets
+     * zeroed to the WebView. Otherwise the WebView may apply the inset twice.
+     * IME (keyboard) insets are deliberately preserved.
+     * On Android 14 and earlier, normal platform content fitting is untouched.
+     */
+    private void protectSystemBars(FrameLayout container) {
+        if (android.os.Build.VERSION.SDK_INT < 35) return;
+        container.setOnApplyWindowInsetsListener((view, insets) -> {
+            int types = android.view.WindowInsets.Type.systemBars()
+                | android.view.WindowInsets.Type.displayCutout();
+            android.graphics.Insets system = insets.getInsets(types);
+            view.setPadding(system.left, system.top, system.right, system.bottom);
+            return new android.view.WindowInsets.Builder(insets)
+                .setInsets(types, android.graphics.Insets.NONE)
+                .build();
+        });
+    }
+
     private int dp(int v){return (int)(getResources().getDisplayMetrics().density*v+0.5f);}
     @Override public void onBackPressed(){
         if(view!=null && view.canGoBack())view.goBack();
