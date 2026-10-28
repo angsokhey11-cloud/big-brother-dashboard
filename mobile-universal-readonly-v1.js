@@ -58,7 +58,7 @@ function scrub(doc){
   if(doc.querySelector('input[type=password]:focus'))return null;
   // Never persist authentication screens or session-related controls.
   const login=doc.querySelector('#loginOverlay,#loginScreen,#signInScreen');
-  if(login && !login.hidden && getComputedStyle(login).display!=='none')return null;
+  if(login && !login.hidden && getComputedStyle(login).display!=='none' && getComputedStyle(login).visibility!=='hidden')return null;
   const clone=original.cloneNode(true);
   const banned='script,noscript,object,embed,meta[http-equiv],base,template,canvas,video,audio,source,link[rel=preload],link[rel=prefetch]';
   clone.querySelectorAll(banned).forEach(e=>e.remove());
@@ -84,7 +84,10 @@ function scrub(doc){
   clone.querySelectorAll('*').forEach(stripAttributes);
   // Keep stylesheet links for browser HTTP cache; inline copies already added.
   clone.querySelectorAll('link').forEach(el=>{
-    if(el.rel!=='stylesheet'||!/^https?:$/.test(new URL(el.href,doc.baseURI).protocol))el.remove();
+    try{
+      if(el.rel!=='stylesheet'||!/^https?:$/.test(new URL(el.href,doc.baseURI).protocol))el.remove();
+      else el.href=new URL(el.href,doc.baseURI).href;
+    }catch(_){el.remove()}
   });
   clone.querySelectorAll('form').forEach(form=>{form.removeAttribute('action');form.removeAttribute('method')});
   clone.querySelectorAll('a').forEach(a=>{a.removeAttribute('href');a.removeAttribute('target')});
@@ -92,7 +95,7 @@ function scrub(doc){
   if(!head)return null;
   const csp=clone.ownerDocument.createElement('meta');
   csp.setAttribute('http-equiv','Content-Security-Policy');
-  csp.setAttribute('content',"default-src 'none'; script-src 'none'; connect-src 'none'; form-action 'none'; frame-src 'none'; object-src 'none'; style-src 'unsafe-inline' https:; font-src data: https:; img-src data: https:; base-uri 'none'");
+  csp.setAttribute('content',"default-src 'none'; script-src 'none'; connect-src 'none'; form-action 'none'; frame-src 'none'; object-src 'none'; style-src 'unsafe-inline' https:; font-src data: https:; img-src data: https:; base-uri 'self'");
   head.prepend(csp);
   const base=clone.ownerDocument.createElement('base');
   base.href=doc.URL.split('#')[0];
@@ -128,6 +131,13 @@ async function capture(route,frame){
   try{
     const doc=frame.contentDocument;
     if(!doc||doc.location.origin!==location.origin||doc.readyState==='loading')return false;
+    // A reused iframe must never save Route B's private data under Route A.
+    const expected=new URL(access(route)),actual=new URL(doc.URL);
+    if(expected.origin!==actual.origin||expected.pathname!==actual.pathname)return false;
+    for(const parameter of ['view','type']){
+      if(expected.searchParams.has(parameter)&&expected.searchParams.get(parameter)!==actual.searchParams.get(parameter))return false;
+    }
+    if(frame.dataset.bbStaticWatchRoute!==route)return false;
     const data=scrub(doc);
     if(!data||api().currentUserId()!==user)return false;
     return await api().write(key(route),{schema:1,html:data,origin:location.origin,route});
@@ -141,7 +151,7 @@ function watch(route,frame){
   const captured=()=>{
     if(frame.id!=='moduleFrame'||$('moduleFrame')!==frame)return;
     [1600,4800,9500].forEach(ms=>setTimeout(()=>{
-      if($('moduleFrame')===frame&&frame.getAttribute('src')&&!frame.srcdoc)
+      if($('moduleFrame')===frame&&frame.dataset.bbStaticWatchRoute===route&&frame.getAttribute('src')&&!frame.srcdoc)
         void capture(route,frame);
     },ms));
   };
@@ -173,6 +183,7 @@ function onlineReady(frame,started){
   }catch(_){return false}
 }
 async function open(route){
+  stop();
   const id=++epoch,record=await saved(route);
   if(!record||id!==epoch)return false;
   const screen=$('moduleScreen'),old=$('moduleFrame');
