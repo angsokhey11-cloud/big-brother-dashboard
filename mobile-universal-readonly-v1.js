@@ -210,6 +210,10 @@ async function open(route){
   if(!access(route))return 'cancelled';
   const screen=$('moduleScreen'),old=$('moduleFrame');
   if(!screen||!old)return false;
+  // Clear any previous specialized Calculator/AR/Stock overlay before
+  // showing a different saved function in the native module screen.
+  window.BBMobileOfflineModulesV1?.close();
+  screen.classList.remove('bb-offline-native');
   const url=access(route);
   const snapshot=old.cloneNode(false);
   snapshot.removeAttribute('src');snapshot.removeAttribute('sandbox');
