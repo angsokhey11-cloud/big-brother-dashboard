@@ -18,7 +18,10 @@ const mapRoutes={
   'stock-report':'offline-stock-report',
   'sales-support-calculator':'offline-calc-bootstrap',
   'history':'offline-history-list-v1',
-  'monthly-sales-report':'offline-monthly-current'
+  'monthly-sales-report':'offline-monthly-current',
+  'sales-support-your-stock':'offline-staff-v12::stock-ready::DEFAULT',
+  'sales-support-batch-selling-tracker':'offline-staff-v12::tracker::DEFAULT',
+  'daily-sale-summary':'offline-staff-v12::daily-invoices::DEFAULT'
 };
 function routeStoreKey(name){
   if(name==='monthly-sales-report'){
@@ -260,6 +263,20 @@ function livePageReady(name,frame){
         /ready|restored|prices loaded|local data|product prices loaded/i.test(status) &&
         !/sign in|loading|could not|error/i.test(status);
     }
+    if(name==='sales-support-your-stock'){
+      const inner=doc.getElementById('stockFrame')?.contentDocument;
+      return !!inner?.getElementById('content') && inner.getElementById('content').hidden===false &&
+        inner.getElementById('loading')?.hidden===true;
+    }
+    if(name==='sales-support-batch-selling-tracker'){
+      const inner=doc.getElementById('trackerFrame')?.contentDocument;
+      return !!inner?.getElementById('content') && inner.getElementById('content').hidden===false &&
+        inner.getElementById('loading')?.hidden===true;
+    }
+    if(name==='daily-sale-summary'){
+      return /Updated/i.test(doc.getElementById('syncStatus')?.textContent||'') &&
+        !!doc.getElementById('summaryBody');
+    }
     if(name==='monthly-sales-report'){
       return !doc.getElementById('main')?.hidden &&
         /Generated|Ready/i.test(doc.getElementById('status')?.textContent||'');
@@ -403,14 +420,20 @@ async function open(name){
   const date=new Date(rec.syncedAt).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
   showRefreshTime();
   const frame=$('moduleFrame');
-  if(name==='sales-support-calculator'||name==='stock-report'||name==='history'||name==='monthly-sales-report'){
+  if(name==='sales-support-calculator'||name==='stock-report'||name==='history'||name==='monthly-sales-report'||
+     name==='sales-support-your-stock'||name==='sales-support-batch-selling-tracker'||name==='daily-sale-summary'){
     const full=name==='stock-report'?await offline()?.read('offline-stock-report-full'):null;
     if(epoch!==openEpoch)return false;
-    if(name==='sales-support-calculator'||name==='history'||name==='monthly-sales-report'||full?.value?.success){
+    if(name==='sales-support-calculator'||name==='history'||name==='monthly-sales-report'||
+       name==='sales-support-your-stock'||name==='sales-support-batch-selling-tracker'||name==='daily-sale-summary'||
+       full?.value?.success){
       const url=name==='sales-support-calculator'
         ?'./mobile-offline-calculator.html?mobile=1&view=calculator&v=20261028-seamless1'
         :name==='history'?'./mobile-offline-history-mobile-v1.html?embed=1&v=20261028-alllines1'
         :name==='monthly-sales-report'?'./mobile-offline-monthly-sales-v1.html?embed=1&v=20261028-monthly1'
+        :name==='sales-support-your-stock'?'./mobile-offline-your-stock-v12.html?embed=1&v=20261028-v12'
+        :name==='sales-support-batch-selling-tracker'?'./mobile-offline-tracker-v12.html?embed=1&v=20261028-v12'
+        :name==='daily-sale-summary'?'./mobile-offline-daily-sale-v1.html?embed=1&v=20261028-v12'
         :'./mobile-offline-stock.html?embed=1&v=20261028-seamless1';
       if(!openNativeRoute(name,true,restoringAtStart))return false;
       if(frame.getAttribute('src')!==url){
