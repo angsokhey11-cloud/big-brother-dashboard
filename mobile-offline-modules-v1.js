@@ -226,8 +226,8 @@ async function open(name){
     const full=name==='stock-report'?await offline()?.read('offline-stock-report-full'):null;
     if(name==='sales-support-calculator'||full?.value?.success){
       const url=name==='sales-support-calculator'
-        ?'./mobile-offline-calculator.html?mobile=1&view=calculator'
-        :'./mobile-offline-stock.html?embed=1';
+        ?'./mobile-offline-calculator.html?mobile=1&view=calculator&v=20261028-unified1'
+        :'./mobile-offline-stock.html?embed=1&v=20261028-unified1';
       if(!openNativeRoute(name,true,restoringAtStart))return false;
       if(frame.getAttribute('src')!==url)frame.setAttribute('src',url);
       return true;
