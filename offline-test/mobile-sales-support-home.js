@@ -776,14 +776,16 @@ function renderPicker(){
   host.querySelectorAll('[data-pick-route]').forEach(button=>button.onclick=()=>chooseRoute(button.dataset.pickRoute));
 }
 async function chooseRoute(route){
+  if(window.BBMobileOfflineWorkspaceV1?.previewReadOnly)return toast('Test workspace: changes to shortcuts are disabled.');
   if(pickerMode==='quick'){
     quick=quick.includes(route)?quick.filter(x=>x!==route):quick.concat(route);
     await saveQuick();renderQuick();renderPicker();return;
   }
   pages[pickerSlot]=route;await savePages();closePicker();renderNav(currentNavState());toast('Page '+(pickerSlot+1)+' saved');
 }
-async function removePage(){pages[pickerSlot]='';await savePages();closePicker();renderNav(currentNavState());toast('Page removed')}
+async function removePage(){if(window.BBMobileOfflineWorkspaceV1?.previewReadOnly)return toast('Test workspace: changes are disabled.');pages[pickerSlot]='';await savePages();closePicker();renderNav(currentNavState());toast('Page removed')}
 async function saveQuick(){
+  if(window.BBMobileOfflineWorkspaceV1?.previewReadOnly)return;
   quick=normalizeQuick(quick);
   writeLocal(quickKey(),quick);
   preferenceWriteCount+=1;
@@ -795,6 +797,7 @@ async function saveQuick(){
   }
 }
 async function savePages(){
+  if(window.BBMobileOfflineWorkspaceV1?.previewReadOnly)return;
   pages=normalizePages(pages);
   writeLocal(pageKey(),pages);
   preferenceWriteCount+=1;
@@ -969,6 +972,7 @@ function renderMainMenu(){
 function openRoute(route,navState=''){
   if(!canRoute(route))return toast('Access denied.');
   const offline=window.BBMobileOfflineWorkspaceV1;
+  if(offline?.previewReadOnly)return toast('Test workspace: dashboard preview only. No live modules.');
   if(offline&&!offline.canUseNetwork()&&!offline.offlineRouteAllowed(route))return toast('Online required for this function. Saved Overview works offline.');
   closePicker();currentRoute=route;fallbackRoute='';
   if(BASE_ROUTES.has(route)&&window.BBMobile?.open){
