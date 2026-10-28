@@ -3,7 +3,7 @@ const CACHE='bb-mobile-shell-v101';
 const MOBILE_FILES=new Set([
   'mobile.html','mobile-function-icons-v1.js','mobile-home-theme-v5.css','mobile.css','mobile-sales-support.css','pwa-install.css','mobile.js','mobile-offline-workspace-v1.js','mobile-user-overview.js',
   'mobile-sales-support-home.js','pwa-install.js','mobile-main-menu-v3.js','mobile-main-menu-stockcontrol-v5.js','mobile-ui-policy-v1.js',
-  'mobile-navigation-v5.js','mobile-module-transition-v3.js','mobile-ios-decimal-v1.js','mobile-theme-v1.js','manifest.webmanifest','pwa-icon.svg','pwa-icon-maskable.svg','big-brother-angkor-login.png'
+  'mobile-navigation-v5.js','mobile-module-transition-v3.js','mobile-ios-decimal-v1.js','bb-web-push-client-v1.js','mobile-theme-v1.js','manifest.webmanifest','pwa-icon.svg','pwa-icon-maskable.svg','big-brother-angkor-login.png'
 ]);
 function fileName(url){const parts=url.pathname.split('/');return parts[parts.length-1]||''}
 function isMobileAsset(url){return MOBILE_FILES.has(fileName(url))}
@@ -45,6 +45,7 @@ const PRECACHE=[
   './mobile-sales-support-home.js?v=20261028-offline-first1',
   './pwa-install.js?v=20261024-mobileperf1',
   './mobile-module-transition-v3.js?v=20261024-module-transition1',
+  './bb-web-push-client-v1.js?v=20261025-webpush-v1',
   './mobile-ui-policy-v1.js?v=20260915-2',
   './manifest.webmanifest?v=20260927-autorotate1',
   './pwa-icon.svg',
