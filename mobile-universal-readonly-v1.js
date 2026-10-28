@@ -201,8 +201,13 @@ function onlineReady(frame,started){
 }
 async function open(route){
   stop();
+  const user=api()?.currentUserId();
   const id=++epoch,record=await saved(route);
-  if(!record||id!==epoch)return false;
+  // A superseded request is not an uncached route: do not start a stale live
+  // page from an earlier tap after the user moved elsewhere.
+  if(id!==epoch||api()?.currentUserId()!==user)return 'cancelled';
+  if(!record)return false;
+  if(!access(route))return 'cancelled';
   const screen=$('moduleScreen'),old=$('moduleFrame');
   if(!screen||!old)return false;
   const url=access(route);
