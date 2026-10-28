@@ -54,7 +54,16 @@ function captureCss(doc,clone){
 }
 function scrub(doc){
   const original=doc?.documentElement;
-  if(!original||!doc.body||doc.body.textContent.length<40)return null;
+  if(!original||!doc.body)return null;
+  let meaningful=doc.body.textContent.length>=40;
+  // Some existing BIG BROTHER mobile pages are a tiny wrapper around the
+  // real same-origin report iframe. Capture the real inner document as well.
+  if(!meaningful){
+    for(const child of doc.querySelectorAll('iframe')){
+      try{if(child.contentDocument?.body?.textContent?.length>=40)meaningful=true}catch(_){}
+    }
+  }
+  if(!meaningful)return null;
   if(doc.querySelector('input[type=password]:focus'))return null;
   // Never persist authentication screens or session-related controls.
   const login=doc.querySelector('#loginOverlay,#loginScreen,#signInScreen');
