@@ -418,6 +418,10 @@ async function open(name){
         // Android Back should navigate the parent BIG BROTHER app, not an iframe.
         const fresh=frame.cloneNode(false);
         fresh.removeAttribute('src');
+        fresh.removeAttribute('srcdoc');
+        fresh.removeAttribute('sandbox');
+        fresh.removeAttribute('aria-hidden');
+        fresh.inert=false;
         frame.replaceWith(fresh);
         fresh.setAttribute('src',url);
       }
