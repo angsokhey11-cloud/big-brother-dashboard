@@ -1,8 +1,8 @@
 {
   "id": "./mobile.html",
-  "name": "BIG BROTHER Accounting",
-  "short_name": "BIG BROTHER",
-  "description": "BIG BROTHER mobile sales and accounting workspace.",
+  "name": "BIG BROTHER Offline Test",
+  "short_name": "BB OFFLINE TEST",
+  "description": "Isolated offline-first mobile dashboard preview. Not the live production app.",
   "start_url": "./mobile.html?source=pwa",
   "scope": "./",
   "display": "standalone",
