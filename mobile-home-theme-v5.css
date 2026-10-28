@@ -817,3 +817,56 @@
     height:16px!important;
   }
 }
+
+
+/* BIG BROTHER Mobile Header V5.6: text-only sync + staff welcome.
+   Works with the existing light/dark hero colors; no status background. */
+#mobileHome .hero .hero-top{align-items:flex-start}
+#mobileHome .hero .bb-hero-right{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:7px;
+  min-width:0;
+  max-width:61%;
+}
+#mobileHome .hero .bb-header-sync{
+  background:transparent!important;
+  color:inherit!important;
+  border:0!important;
+  box-shadow:none!important;
+  padding:0!important;
+  margin:0!important;
+  text-align:right;
+  font-size:10px;
+  line-height:1.35;
+  font-weight:750;
+  letter-spacing:0;
+  overflow-wrap:normal;
+  max-width:100%;
+  opacity:.88;
+}
+#mobileHome .hero .greeting-wrap{margin-top:12px}
+#mobileHome .hero .hero-meta{margin-top:0;justify-content:flex-start;gap:7px}
+#mobileHome .hero .bb-header-welcome{
+  position:absolute;
+  left:18px;
+  bottom:11px;
+  max-width:51%;
+  margin:0!important;
+  padding:0!important;
+  font-size:13px!important;
+  line-height:1.2!important;
+  font-weight:850!important;
+  color:inherit!important;
+  text-shadow:none!important;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+#mobileHome .hero .bb-header-quote{max-width:44%!important}
+@media(max-width:360px){
+  #mobileHome .hero .bb-header-sync{font-size:9px}
+  #mobileHome .hero .bb-header-welcome{font-size:12px!important;max-width:49%}
+  #mobileHome .hero .bb-header-quote{max-width:42%!important;white-space:normal!important}
+}
