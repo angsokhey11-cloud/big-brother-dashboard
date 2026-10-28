@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#123e72">
+<title>BIG BROTHER — Offline Workspace Test</title>
+<style>
+:root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#173f69;background:#edf4fb}
+body{min-height:100dvh;display:grid;place-items:center;margin:0;padding:20px;box-sizing:border-box}
+main{max-width:420px;width:100%;box-sizing:border-box;padding:28px 24px;background:#fff;border:1px solid #dce6f1;border-radius:22px;box-shadow:0 12px 38px #092d5015;text-align:center}
+.logo{width:56px;height:56px;display:grid;place-items:center;border-radius:18px;background:#176eb6;color:#fff;font-size:24px;font-weight:900;margin:0 auto 14px}
+h1{font-size:21px;margin:0 0 8px}p{font-size:14px;line-height:1.65;color:#536a81;margin:0 0 14px}
+#status{font-size:13px;font-weight:700;color:#23629d;background:#ecf5ff;border-radius:10px;padding:12px;white-space:pre-wrap}
+#again{margin-top:14px;background:#176eb6;color:white;border:none;border-radius:11px;padding:11px 24px;font-weight:700;font-size:14px;cursor:pointer}
+small{display:block;margin-top:16px;color:#65798e;line-height:1.6}
+</style>
+</head>
+<body>
+<main>
+<div class="logo">BB</div>
+<h1>Offline Workspace Test</h1>
+<p>Preparing a separate, read-only test version. Your normal BIG BROTHER dashboard remains unchanged.</p>
+<div id="status" role="status">Checking test environment…</div>
+<button id="again" type="button" hidden>Try again</button>
+<small>Open this test launcher online once. After setup, use the installed test app with airplane mode to verify offline startup.</small>
+</main>
+<script>
+(function(){
+'use strict';
+const status=document.getElementById('status');
+const again=document.getElementById('again');
+async function launch(){
+  again.hidden=true;
+  if(!('serviceWorker' in navigator)){status.textContent='This browser does not support the offline test. Use Chrome, Edge or Safari with PWA support.';again.hidden=false;return}
+  try{
+    status.textContent='Installing separate test cache…';
+    const reg=await navigator.serviceWorker.register('./sw.js',{scope:'./',updateViaCache:'none'});
+    if(!new URL(reg.scope).pathname.endsWith('/offline-test/'))throw Error('Unexpected service worker scope. Test was cancelled.');
+    if(reg.active?.state!=='activated')await new Promise((resolve,reject)=>{
+      let done=false;
+      const finish=error=>{if(done)return;done=true;clearTimeout(timer);clearInterval(interval);if(error)reject(error);else resolve()};
+      const check=()=>{if(reg.active?.state==='activated')finish();else if(reg.installing?.state==='redundant')finish(new Error('Test cache installation failed.'))};
+      const timer=setTimeout(()=>finish(new Error('Test service worker did not activate. Please reload while online.')),30000);
+      const interval=setInterval(check,250);
+      check();
+    });
+    status.textContent='Test version ready. Opening saved dashboard…';
+    location.replace('./mobile.html?offline_preview=1');
+  }catch(error){
+    status.textContent='Could not prepare offline test. Check your internet connection and reload.\n'+String(error?.message||error);
+    again.hidden=false;
+  }
+}
+again.addEventListener('click',launch);
+launch();
+})();
+</script>
+</body>
+</html>
