@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>BIG BROTHER — Your Customer (Saved)</title>
+<style>
+:root{--navy:#173f77;--line:#dce6f0;--muted:#6b7f94}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:#eef3f8;color:#173e66;font-family:Arial,Helvetica,sans-serif}
+.app{padding:14px;max-width:1100px;margin:auto}
+.card,.customer-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px;min-width:0}
+.card{margin-bottom:11px}
+.section-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+h2{font-size:18px;color:var(--navy);margin:0}
+.muted{font-size:11px;color:var(--muted);line-height:1.5}
+.note{margin:7px 0 12px}
+.search-row{display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:9px}
+.search-row input,.search-row select{width:100%;min-width:0;min-height:42px;border:1px solid #cdd9e7;border-radius:8px;padding:9px 10px;background:#fff;color:#173e66;font-size:13px}
+.customer-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.customer-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.customer-card h3{margin:0;color:var(--navy);font-size:15px;overflow-wrap:anywhere}
+.customer-card .code{font-size:10px;color:var(--muted);margin-top:3px}
+.customer-card p{margin:8px 0 0;color:#526a82;font-size:12px;line-height:1.45;overflow-wrap:anywhere}
+.badge{font-size:10px;font-weight:800;padding:6px 8px;border-radius:8px;white-space:nowrap;background:#e8f2ff;color:#185f9e}
+.card-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}
+.btn{cursor:pointer;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:8px;padding:9px 10px;font:800 11px Arial,Helvetica,sans-serif;text-decoration:none;min-height:36px}
+.btn.ghost{color:#205b99;background:#eef5fe;border:1px solid #c9dceb}
+.btn.secondary{color:#234e82;background:#e9f1fd}
+.btn.primary{color:#fff;background:#2468b3}
+.price-panel{display:none;margin-top:11px;border-top:1px solid #e5ebf2;padding-top:10px}
+.price-panel.open{display:block}
+.price-grid{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 10px;font-size:11px}
+.price-grid>div{padding:5px 0;border-bottom:1px dashed #e4eaf1}
+.pval{text-align:right;font-weight:800;white-space:nowrap}
+.notice{border-radius:9px;padding:11px;background:#eaf3ff;color:#315879;font-size:11px;line-height:1.5}
+.notice.red{background:#fff1ef;color:#ac3a35}
+.empty{padding:24px;text-align:center;background:#fff;border:1px solid var(--line);border-radius:11px;color:var(--muted);font-size:12px}
+#lastSync{margin:0 0 10px}
+@media(max-width:720px){.customer-list{grid-template-columns:1fr}.search-row{grid-template-columns:1fr}.card-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.btn{width:100%;min-width:0}.app{padding:10px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="card">
+    <div class="section-head"><h2>Your Customer</h2><span class="badge" id="customerCountBadge">0 CUSTOMERS</span></div>
+    <p class="muted note">Read-only customer information. Only customers from your assigned Location Control are shown.</p>
+    <div class="search-row">
+      <input id="customerSearch" type="search" placeholder="Search customer name, phone, address..." autocomplete="off">
+      <select id="customerLocationFilter" aria-label="Filter by location"><option value="">All Your Locations</option></select>
+    </div>
+  </div>
+  <div class="muted" id="lastSync" role="status"></div>
+  <div id="yourCustomerList" class="customer-list"><div class="empty">Loading saved customers…</div></div>
+</div>
+<script>
+(function(){
+'use strict';
+const SESSION='BB_SUPABASE_DEV_SESSION_V1',SNAP='offline-your-customer-v1';
+const $=id=>document.getElementById(id);
+const clean=v=>String(v==null?'':v).trim();
+const escapeHtml=v=>clean(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+const api=window.parent?.BBMobileOfflineWorkspaceV1;
+let customers=[],locations=[],syncedAt=0,revision=0;
+function currentUser(){
+  try{return clean(JSON.parse(localStorage.getItem(SESSION)||'null')?.user?.id)}catch(_){return ''}
+}
+function valid(){
+  return !!api?.read&&!!currentUser()&&api.currentUserId()===currentUser();
+}
+function locationName(code){return locations.find(l=>clean(l.locationCode)===code)?.locationName||code||'-'}
+function priceKey(c){return 'calc-price::'+clean(c.customerId)}
+function mapUrl(c){
+  const link=clean(c.googleMapsLink);
+  if(link){
+    try{
+      const u=new URL(link);
+      if(u.protocol==='https:'&&/(^|\.)google\.com$|(^|\.)goo\.gl$|(^|\.)google\.[a-z.]+$/.test(u.hostname))return u.href;
+    }catch(_){}
+  }
+  if(clean(c.latitude)&&clean(c.longitude)&&Number.isFinite(Number(c.latitude))&&Number.isFinite(Number(c.longitude))){
+    return 'https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(c.latitude+','+c.longitude);
+  }
+  return clean(c.address)?'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(c.address):'';
+}
+function phoneHref(c){
+  const p=clean(c.phone);
+  return /^[+\d][\d\s()+.-]{3,30}$/.test(p)?'tel:'+p.replace(/[^\d+]/g,''):'';
+}
+function card(c){
+  const key=clean(c.customerId),url=mapUrl(c),phone=phoneHref(c);
+  const el=document.createElement('article');el.className='customer-card';
+  el.innerHTML='<div class="customer-card-head"><div><h3>'+escapeHtml(c.name)+'</h3>'+
+    '<div class="code">'+escapeHtml(key||'-')+' · '+escapeHtml(c.locationCode)+' — '+escapeHtml(locationName(c.locationCode))+'</div></div>'+
+    '<span class="badge">'+escapeHtml(c.locationCode)+'</span></div>'+
+    '<p><strong>Phone:</strong> '+escapeHtml(c.phone||'-')+'</p>'+
+    '<p><strong>Address:</strong> '+escapeHtml(c.address||'-')+'</p>'+
+    '<p><strong>Delivery Note:</strong> '+escapeHtml(c.deliveryLocationNote||'-')+'</p>'+
+    '<div class="card-actions">'+
+    (phone?'<a class="btn ghost" data-call>📞 Call</a>':'')+
+    (url?'<button class="btn ghost" type="button" data-map>📍 Google Maps</button>':'')+
+    '<button class="btn secondary" type="button" data-prices aria-expanded="false">💲 Product Price</button>'+
+    '<button class="btn primary" type="button" data-calculator>🧮 Calculator</button></div>'+
+    '<div class="price-panel"></div>';
+  if(phone)el.querySelector('[data-call]').href=phone;
+  el.querySelector('[data-map]')?.addEventListener('click',()=>{
+    // External maps may still require downloaded offline map data.
+    window.open(url,'_blank','noopener');
+  });
+  el.querySelector('[data-prices]').addEventListener('click',async()=>{
+    const button=el.querySelector('[data-prices]'),panel=el.querySelector('.price-panel');
+    const opening=!panel.classList.contains('open');
+    panel.classList.toggle('open',opening);button.setAttribute('aria-expanded',String(opening));
+    if(!opening)return;
+    panel.innerHTML='<div class="muted">Loading saved product prices…</div>';
+    if(!valid()){panel.innerHTML='<div class="notice red">Please sign in again.</div>';return}
+    let rec=key?await api.read(priceKey(c)):null;
+    // Read-only RPC, only when connected and prices were never saved.
+    if(!rec?.value?.success&&api.canUseNetwork()&&key){
+      try{
+        const fresh=await window.parent?.BBMobileLiveReadBridgeV1?.refreshCustomerPrice?.(key);
+        if(fresh?.success)rec=await api.read(priceKey(c));
+      }catch(_){}
+    }
+    if(!panel.classList.contains('open'))return;
+    const products=rec?.value?.products;
+    if(!Array.isArray(products)){
+      panel.innerHTML='<div class="notice">Custom prices for this customer are not saved on this device yet. Open Product Price once while connected to synchronize them.</div>';
+      return;
+    }
+    panel.innerHTML=products.length
+      ?'<div class="muted" style="margin-bottom:5px">Saved prices · '+escapeHtml(new Date(rec.syncedAt).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}))+'</div>'+
+       '<div class="price-grid">'+products.map(p=>'<div><strong>'+escapeHtml(p.productName||p.name)+'</strong>'+
+         '<div class="muted">'+escapeHtml(p.productCode||p.code)+(p.unit?' · '+escapeHtml(p.unit):'')+
+         (p.isCustomPrice?' · Custom':'')+'</div></div>'+
+         '<div class="pval">$'+(Number(p.customerPriceUSD)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div>').join('')+'</div>'
+      :'<div class="muted">No product prices found.</div>';
+  });
+  el.querySelector('[data-calculator]').addEventListener('click',()=>{
+    const parent=window.parent;
+    if(parent?.BBMobile?.open)parent.BBMobile.open('sales-support-calculator',true);
+  });
+  return el;
+}
+function render(){
+  const term=clean($('customerSearch').value).toLowerCase();
+  const code=clean($('customerLocationFilter').value);
+  const filtered=customers.filter(c=>(!code||clean(c.locationCode)===code)&&
+    (!term||[c.name,c.phone,c.address,c.locationCode,c.deliveryLocationNote,c.customerId]
+       .some(v=>clean(v).toLowerCase().includes(term))));
+  $('customerCountBadge').textContent=filtered.length+' CUSTOMER'+(filtered.length===1?'':'S');
+  const host=$('yourCustomerList');
+  host.replaceChildren();
+  if(!filtered.length){
+    host.innerHTML='<div class="empty" style="grid-column:1/-1">No customers match your filter.</div>';
+    return;
+  }
+  // Render on demand from account-scoped cache. No database writes.
+  filtered.forEach(c=>host.appendChild(card(c)));
+}
+async function load(){
+  const v=++revision;
+  if(!valid()){
+    $('yourCustomerList').innerHTML='<div class="notice red">Offline customer data is unavailable for this signed-in account.</div>';
+    return;
+  }
+  const record=await api.read(SNAP);
+  if(v!==revision)return;
+  if(!record?.value?.success||!Array.isArray(record.value.customers)){
+    $('yourCustomerList').innerHTML='<div class="notice">Your Customer has not been synchronized on this device. Connect once to load the customer directory.</div>';
+    return;
+  }
+  customers=record.value.customers;
+  locations=Array.isArray(record.value.locations)?record.value.locations:[];
+  syncedAt=record.syncedAt;
+  $('lastSync').textContent='Saved customer directory · '+new Date(syncedAt).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const select=$('customerLocationFilter'),previous=select.value;
+  select.replaceChildren(new Option('All Your Locations',''));
+  locations.forEach(l=>select.add(new Option(clean(l.locationCode)+' — '+clean(l.locationName),clean(l.locationCode))));
+  if(locations.some(l=>clean(l.locationCode)===previous))select.value=previous;
+  render();
+}
+$('customerSearch').addEventListener('input',render);
+$('customerLocationFilter').addEventListener('change',render);
+window.addEventListener('message',event=>{
+  if(event.source!==window.parent||event.origin!==location.origin)return;
+  if(event.data?.type==='bb:customers-snapshot-refreshed')void load();
+});
+void load();
+})();
+</script>
+</body>
+</html>
