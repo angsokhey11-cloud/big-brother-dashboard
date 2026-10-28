@@ -819,54 +819,107 @@
 }
 
 
-/* BIG BROTHER Mobile Header V5.6: text-only sync + staff welcome.
-   Works with the existing light/dark hero colors; no status background. */
-#mobileHome .hero .hero-top{align-items:flex-start}
+/* BIG BROTHER Mobile Header V5.7:
+   Top-right plain sync status, existing gear icon, real staff-name footer.
+   The current home theme may be light OR dark; inherit the text color. */
+#mobileHome .hero .hero-top{
+  align-items:flex-start!important;
+  gap:8px!important;
+}
 #mobileHome .hero .bb-hero-right{
-  display:flex;
-  flex-direction:column;
-  align-items:flex-end;
-  gap:7px;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-end!important;
+  gap:6px!important;
   min-width:0;
-  max-width:61%;
+  max-width:64%;
 }
 #mobileHome .hero .bb-header-sync{
-  background:transparent!important;
+  order:0;
+  display:block!important;
+  background:none!important;
   color:inherit!important;
   border:0!important;
   box-shadow:none!important;
+  border-radius:0!important;
   padding:0!important;
   margin:0!important;
-  text-align:right;
-  font-size:10px;
-  line-height:1.35;
-  font-weight:750;
+  text-align:right!important;
+  font-size:10px!important;
+  line-height:1.35!important;
+  font-weight:750!important;
   letter-spacing:0;
-  overflow-wrap:normal;
   max-width:100%;
-  opacity:.88;
+  overflow-wrap:break-word;
+  opacity:.92!important;
 }
-#mobileHome .hero .greeting-wrap{margin-top:12px}
-#mobileHome .hero .hero-meta{margin-top:0;justify-content:flex-start;gap:7px}
-#mobileHome .hero .bb-header-welcome{
-  position:absolute;
-  left:18px;
-  bottom:11px;
-  max-width:51%;
-  margin:0!important;
-  padding:0!important;
-  font-size:13px!important;
-  line-height:1.2!important;
-  font-weight:850!important;
+#mobileHome .hero .bb-hero-right .hero-actions{
+  order:1;
+  display:flex;
+  justify-content:flex-end;
+}
+#mobileHome .hero #settingsBtn .bb-settings-gear{
+  width:20px;
+  height:20px;
+  display:inline-block;
+  vertical-align:middle;
   color:inherit!important;
-  text-shadow:none!important;
-  overflow:hidden;
-  white-space:nowrap;
-  text-overflow:ellipsis;
 }
-#mobileHome .hero .bb-header-quote{max-width:44%!important}
+#mobileHome .hero .greeting-wrap{margin-top:12px!important}
+#mobileHome .hero .hero-meta{
+  margin-top:0!important;
+  justify-content:flex-start;
+  gap:7px;
+}
+#mobileHome .hero .bb-hero-footer{
+  position:absolute!important;
+  display:flex!important;
+  align-items:flex-end!important;
+  justify-content:space-between!important;
+  gap:8px!important;
+  left:18px!important;
+  right:16px!important;
+  bottom:11px!important;
+  z-index:5;
+  min-height:18px;
+  pointer-events:none;
+}
+#mobileHome .hero .bb-hero-footer .bb-header-welcome{
+  display:block!important;
+  position:static!important;
+  flex:0 1 auto;
+  max-width:57%;
+  color:inherit!important;
+  background:none!important;
+  border:0!important;
+  padding:0!important;
+  margin:0!important;
+  font-size:13px!important;
+  font-weight:850!important;
+  line-height:1.2!important;
+  letter-spacing:0;
+  text-shadow:none!important;
+  text-align:left!important;
+  white-space:normal!important;
+  overflow-wrap:anywhere;
+  visibility:visible!important;
+  opacity:1!important;
+}
+#mobileHome .hero .bb-hero-footer .bb-header-quote{
+  display:block!important;
+  position:static!important;
+  flex:0 1 auto;
+  max-width:41%!important;
+  right:auto!important;
+  bottom:auto!important;
+  margin:0!important;
+  white-space:normal!important;
+  overflow-wrap:break-word;
+  text-align:right!important;
+  pointer-events:none!important;
+}
 @media(max-width:360px){
-  #mobileHome .hero .bb-header-sync{font-size:9px}
-  #mobileHome .hero .bb-header-welcome{font-size:12px!important;max-width:49%}
-  #mobileHome .hero .bb-header-quote{max-width:42%!important;white-space:normal!important}
+  #mobileHome .hero .bb-header-sync{font-size:9px!important}
+  #mobileHome .hero .bb-hero-footer .bb-header-welcome{font-size:12px!important}
+  #mobileHome .hero .bb-hero-footer .bb-header-quote{font-size:8px!important}
 }
