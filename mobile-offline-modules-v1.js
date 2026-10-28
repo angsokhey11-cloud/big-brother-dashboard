@@ -46,8 +46,8 @@ function createHost(){
     #moduleScreen.bb-offline-native .module-frame{top:0!important;bottom:calc(68px + env(safe-area-inset-bottom))!important;
       height:calc(100dvh - 68px - env(safe-area-inset-bottom))!important}
     @media print{
-      body:has(#bbOfflineSummaryPrint)>*:not(#bbOfflineSummaryPrint){display:none!important}
-      body:has(#bbOfflineSummaryPrint){background:#fff!important;margin:0!important;padding:0!important}
+      body.bb-offline-summary-print>*:not(#bbOfflineSummaryPrint){display:none!important}
+      body.bb-offline-summary-print{background:#fff!important;margin:0!important;padding:0!important}
       #bbOfflineSummaryPrint{position:static!important;width:auto!important;height:auto!important;overflow:visible!important;
         background:#fff!important;padding:0!important}
       #bbOfflineSummaryPrint .bb-summary-actions{display:none!important}
@@ -321,6 +321,7 @@ function renderReceivables(){
   draw();
 }
 function closeReceivableSummary(){
+  document.body.classList.remove('bb-offline-summary-print');
   const overlay=$('bbOfflineSummaryPrint');
   if(overlay)overlay.remove();
 }
@@ -369,6 +370,7 @@ function openReceivableSummary(input){
       '<footer>Invoice Summary includes selected saved outstanding balances only. • BIG BROTHER</footer>'+
     '</div>';
   document.body.appendChild(modal);
+  document.body.classList.add('bb-offline-summary-print');
   modal.querySelector('#bbSummaryClose').onclick=closeReceivableSummary;
   modal.querySelector('#bbSummaryPrint').onclick=()=>{
     // Printing a cached summary is allowed, but a permanent stale-data label stays on the document.
