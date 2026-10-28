@@ -210,6 +210,7 @@ function renderDirect(route){
    const toast=document.getElementById('toast');if(toast){toast.textContent='This function requires internet. Saved Overview is available offline.';toast.hidden=false;setTimeout(()=>toast.hidden=true,3000)}
    return false;
  }
+ window.BBMobileOfflineModulesV1?.close();
  const frame=$('moduleFrame'),screen=$('moduleScreen');
  if(!frame||!screen)return false;
  const url=routeUrl(route);
