@@ -173,6 +173,7 @@ function createHost(){
   return host;
 }
 function close(){
+  discardLivePreload();
   openEpoch++;
   closeReceivableSummary();
   if(host)host.style.display='none';
@@ -210,9 +211,140 @@ function openNativeRoute(name,useLocalFrame=false,skipRecord=false){
 function notice(message){const note=$('bbOffNote');if(note)note.textContent=message}
 function announceOpen(name){
   if(offline()?.canUseNetwork()){
+    // Prepare the full live function invisibly; the saved screen stays usable.
+    stageLivePage(name);
     window.dispatchEvent(new CustomEvent('bb:cached-route-opened',{detail:{route:name}}));
   }
 }
+
+/* Seamless live-page handoff: the original cloud page loads fully out of sight.
+ * We expose it only after its own data success UI is ready. We never interrupt
+ * a user's selected invoice, report filter or in-progress calculation.
+ */
+let livePreload=null;
+function discardLivePreload(){
+  const entry=livePreload;
+  if(!entry)return;
+  livePreload=null;
+  try{clearInterval(entry.interval);clearTimeout(entry.timeout)}catch(_){}
+  try{entry.frame?.remove()}catch(_){}
+}
+function livePageReady(name,frame){
+  try{
+    const doc=frame.contentDocument;
+    if(!doc||doc.readyState==='loading')return false;
+    if(name==='stock-report'){
+      return /Live Stock loaded/i.test(doc.getElementById('status')?.textContent||'') &&
+        !!doc.getElementById('rows');
+    }
+    if(name==='sales-support-calculator'){
+      const status=(doc.getElementById('calcStatus')?.textContent||'').trim();
+      return !!doc.getElementById('calcCustomerSearch') && !!doc.getElementById('calcProductSearch') &&
+        !!doc.getElementById('calcLocation') &&
+        /ready|restored|prices loaded|local data|product prices loaded/i.test(status) &&
+        !/sign in|loading|could not|error/i.test(status);
+    }
+    if(name==='ar-your'||name==='ar-all'||name==='sales-support-your-receivable'){
+      // The AR mobile wrapper has its own nested same-origin data engine.
+      // The wrapper load event alone is NOT proof that A/R data is ready.
+      const inner=doc.getElementById('arMobileFrame')?.contentDocument;
+      return !!inner?.getElementById('arBody') &&
+        /Up to date/i.test(inner.getElementById('syncStatus')?.textContent||'') &&
+        !!doc.getElementById('boot')?.classList.contains('hide');
+    }
+  }catch(_){return false}
+  return false;
+}
+function commitLivePreload(entry){
+  if(livePreload!==entry||entry.interacted)return;
+  if(!offline()?.canUseNetwork()||route!==entry.route||currentId()!==entry.userId)return discardLivePreload();
+  const screen=$('moduleScreen'),old=$('moduleFrame');
+  if(!screen||screen.hidden||!old||!entry.frame?.parentNode)return discardLivePreload();
+  // Do not replace an active selection, summary or calculation in progress.
+  if($('bbOfflineSummaryPrint'))return discardLivePreload();
+  livePreload=null;
+  clearInterval(entry.interval);clearTimeout(entry.timeout);
+  const original=entry.frame;
+  try{
+    const label=window.BBMobileLiveRoutesV1?.label(entry.route)||'BIG BROTHER';
+    close(); // close saved view without adding another navigation history entry
+    old.replaceWith(original);
+    original.id='moduleFrame';
+    original.inert=false;
+    original.removeAttribute('aria-hidden');
+    original.removeAttribute('tabindex');
+    original.style.cssText='';
+    screen.hidden=false;
+    if($('moduleTitle'))$('moduleTitle').textContent=label;
+    if($('moduleDesktopLink'))$('moduleDesktopLink').href='index.html?module='+encodeURIComponent(entry.route)+'&autoload=1';
+  }catch(error){
+    console.warn('BIG BROTHER seamless live handoff:',error);
+    try{original.remove()}catch(_){}
+  }
+}
+function stageLivePage(name){
+  discardLivePreload();
+  if(!offline()?.canUseNetwork()||!currentId())return;
+  const raw=window.BBMobileLiveRoutesV1?.url(name);
+  if(!raw)return;
+  let url;
+  try{
+    url=new URL(raw,location.href);
+    // Only inspect a trusted same-origin module. Never switch to a remote origin.
+    if(url.origin!==location.origin)return;
+    url.searchParams.set('bb_handoff','1');
+  }catch(_){return}
+  const screen=$('moduleScreen'),current=$('moduleFrame');
+  if(!screen||!current||screen.hidden||!route)return;
+  const entry={route:name,userId:currentId(),frame:null,interacted:false,interval:null,timeout:null};
+  const staged=document.createElement('iframe');
+  staged.id='bbLiveStagedFrame';
+  staged.className=current.className||'module-frame';
+  staged.title='BIG BROTHER loading live module';
+  staged.setAttribute('aria-hidden','true');
+  staged.setAttribute('tabindex','-1');
+  staged.inert=true;
+  staged.style.cssText='position:absolute!important;top:0!important;left:0!important;right:0!important;'+
+    'bottom:calc(68px + env(safe-area-inset-bottom))!important;width:100%!important;'+
+    'height:calc(100dvh - 68px - env(safe-area-inset-bottom))!important;'+
+    'visibility:hidden!important;opacity:0!important;pointer-events:none!important;z-index:-1!important;';
+  entry.frame=staged;
+  livePreload=entry;
+  // User interaction always wins over a background page swap.
+  const mark=event=>{
+    if(livePreload!==entry||event?.isTrusted===false)return;
+    entry.interacted=true;
+    discardLivePreload();
+  };
+  if(host&&host.style.display!=='none'){
+    ['pointerdown','keydown','input','change'].forEach(event=>host.addEventListener(event,mark,{once:true}));
+  }else{
+    const attach=()=>{
+      if(livePreload!==entry)return;
+      try{
+        const doc=current.contentDocument;
+        ['pointerdown','keydown','input','change'].forEach(event=>doc?.addEventListener(event,mark,{once:true}));
+      }catch(_){}
+    };
+    current.addEventListener('load',attach,{once:true});
+    attach();
+  }
+  const check=()=>{
+    if(livePreload!==entry)return;
+    if(!offline()?.canUseNetwork()||currentId()!==entry.userId||route!==name||screen.hidden){
+      discardLivePreload();return;
+    }
+    if(document.visibilityState==='hidden')return;
+    if(livePageReady(name,staged))commitLivePreload(entry);
+  };
+  screen.appendChild(staged);
+  staged.addEventListener('load',check);
+  entry.interval=setInterval(check,180);
+  entry.timeout=setTimeout(()=>{if(livePreload===entry)discardLivePreload()},90000);
+  // Start after the cached screen has already appeared. No await or spinner.
+  staged.src=url.toString();
+}
+
 function showRefreshTime(){
   if(!route)return;
   const savedAt=datasetSyncedAt
@@ -223,6 +355,7 @@ function showRefreshTime(){
 }
 async function open(name){
   if(!canOpen(name)||!currentId())return false;
+  discardLivePreload();
   const epoch=++openEpoch;
   const restoringAtStart=(window.BBMobileHistoryV7||window.BBMobileHistoryV6)?.isRestoring?.()===true;
   const rec=await offline()?.read(mapRoutes[name]);
