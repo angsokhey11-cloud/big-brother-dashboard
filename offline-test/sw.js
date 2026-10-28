@@ -1,5 +1,5 @@
 /* BIG BROTHER Mobile + Desktop PWA service worker V2.0 — Web Push */
-const CACHE='bb-mobile-shell-v101';
+const CACHE='bb-mobile-preview-shell-v101';
 const MOBILE_FILES=new Set([
   'mobile.html','mobile-function-icons-v1.js','mobile-home-theme-v5.css','mobile.css','mobile-sales-support.css','pwa-install.css','mobile.js','mobile-offline-workspace-v1.js','mobile-user-overview.js',
   'mobile-sales-support-home.js','pwa-install.js','mobile-main-menu-v3.js','mobile-main-menu-stockcontrol-v5.js','mobile-ui-policy-v1.js',
@@ -89,7 +89,7 @@ self.addEventListener('activate',event=>{
   event.waitUntil((async()=>{
     const keys=await caches.keys();
     await Promise.all(keys
-      .filter(name=>name.startsWith('bb-mobile-shell-')&&name!==CACHE)
+      .filter(name=>name.startsWith('bb-mobile-preview-shell-')&&name!==CACHE)
       .map(name=>caches.delete(name)));
     await self.clients.claim();
   })());
