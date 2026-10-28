@@ -16,8 +16,17 @@ const mapRoutes={
   'sales-support-your-receivable':'offline-ar-your',
   'ar-all':'offline-ar-all',
   'stock-report':'offline-stock-report',
-  'sales-support-calculator':'offline-calc-bootstrap'
+  'sales-support-calculator':'offline-calc-bootstrap',
+  'history':'offline-history-list-v1',
+  'monthly-sales-report':'offline-monthly-current'
 };
+function routeStoreKey(name){
+  if(name==='monthly-sales-report'){
+    const d=new Date();
+    return 'offline-monthly::'+d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  }
+  return mapRoutes[name];
+}
 let host=null,route='',openEpoch=0,dataset=null,datasetSyncedAt=0,selectedReceivables=new Set(),calcCustomer=null,calcPrices=null,calcLines=[],calcCurrency='USD',calcRate=4100,calcDiscount=0;
 function currentId(){return offline()?.currentUserId()||''}
 function historyKey(){return 'bb_sales_support_calc_history_v2_'+currentId()}
@@ -30,7 +39,7 @@ function saveLocal(key,value){try{localStorage.setItem(key,JSON.stringify(value)
 function canOpen(name){return !!mapRoutes[name]}
 async function available(name){
   if(!canOpen(name)||!currentId())return false;
-  const data=await offline()?.read(mapRoutes[name]);
+  const data=await offline()?.read(routeStoreKey(name));
   return !!data?.value;
 }
 function createHost(){
@@ -251,6 +260,20 @@ function livePageReady(name,frame){
         /ready|restored|prices loaded|local data|product prices loaded/i.test(status) &&
         !/sign in|loading|could not|error/i.test(status);
     }
+    if(name==='monthly-sales-report'){
+      return !doc.getElementById('main')?.hidden &&
+        /Generated|Ready/i.test(doc.getElementById('status')?.textContent||'');
+    }
+    if(name==='history'){
+      // The authenticated mobile Invoice History wrapper embeds a nested
+      // list iframe; the full rendered list is the readiness signal.
+      const inner=doc.getElementById('historyMobileFrame')?.contentDocument||
+        doc.querySelector('iframe')?.contentDocument;
+      const source=inner?.querySelector('iframe')?.contentDocument||inner;
+      return !!source?.getElementById('invoiceBody') &&
+        !/Loading invoice history/i.test(source.getElementById('invoiceBody')?.textContent||'') &&
+        !!source.getElementById('summaryCount')?.textContent;
+    }
     if(name==='ar-your'||name==='ar-all'||name==='sales-support-your-receivable'){
       // The AR mobile wrapper has its own nested same-origin data engine.
       // The wrapper load event alone is NOT proof that A/R data is ready.
@@ -370,7 +393,7 @@ async function open(name){
   discardLivePreload();
   const epoch=++openEpoch;
   const restoringAtStart=(window.BBMobileHistoryV7||window.BBMobileHistoryV6)?.isRestoring?.()===true;
-  const rec=await offline()?.read(mapRoutes[name]);
+  const rec=await offline()?.read(routeStoreKey(name));
   if(epoch!==openEpoch||!rec?.value)return false;
   route=name;
   dataset=rec.value;
@@ -380,12 +403,14 @@ async function open(name){
   const date=new Date(rec.syncedAt).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
   showRefreshTime();
   const frame=$('moduleFrame');
-  if(name==='sales-support-calculator'||name==='stock-report'){
+  if(name==='sales-support-calculator'||name==='stock-report'||name==='history'||name==='monthly-sales-report'){
     const full=name==='stock-report'?await offline()?.read('offline-stock-report-full'):null;
     if(epoch!==openEpoch)return false;
-    if(name==='sales-support-calculator'||full?.value?.success){
+    if(name==='sales-support-calculator'||name==='history'||name==='monthly-sales-report'||full?.value?.success){
       const url=name==='sales-support-calculator'
         ?'./mobile-offline-calculator.html?mobile=1&view=calculator&v=20261028-seamless1'
+        :name==='history'?'./mobile-offline-history-original-v1.html?embed=1&mobileSkin=1&v=20261028-realhistory1'
+        :name==='monthly-sales-report'?'./mobile-offline-monthly-sales-v1.html?embed=1&v=20261028-monthly1'
         :'./mobile-offline-stock.html?embed=1&v=20261028-seamless1';
       if(!openNativeRoute(name,true,restoringAtStart))return false;
       if(frame.getAttribute('src')!==url){
