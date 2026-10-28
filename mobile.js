@@ -361,6 +361,7 @@ function openModule(route,updateUrl=true){
     }
     toast('This function requires internet.');return false;
   }
+  window.BBMobileOfflineModulesV1?.close();
   hideAll();$('moduleScreen').hidden=false;$('moduleTitle').textContent=item.label;replaceFrameUrl($('moduleFrame'),item.url);
   $('moduleDesktopLink').href='index.html?module='+encodeURIComponent(route)+'&autoload=1';
   if(updateUrl){
