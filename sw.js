@@ -1,5 +1,5 @@
 /* BIG BROTHER Mobile + Desktop PWA service worker V2.0 — Web Push */
-const CACHE='bb-mobile-shell-v109';
+const CACHE='bb-mobile-shell-v110';
 const MOBILE_FILES=new Set([
   'mobile.html','mobile-function-icons-v1.js','mobile-home-theme-v5.css','mobile.css','mobile-sales-support.css','pwa-install.css','mobile.js','mobile-offline-workspace-v1.js','mobile-offline-modules-v1.js','mobile-offline-calculator.html','mobile-offline-calculator-source-v1.html','mobile-offline-calculator-dual-currency-v1.js','mobile-offline-calculator-adapter-v1.js','mobile-offline-stock.html','mobile-offline-stock-source-v1.html','mobile-user-overview.js',
   'mobile-sales-support-home.js','pwa-install.js','mobile-main-menu-v3.js','mobile-main-menu-stockcontrol-v5.js','mobile-ui-policy-v1.js',
@@ -42,14 +42,14 @@ const PRECACHE=[
   './mobile-navigation-v5.js?v=20261008-batchtransfer-mobile1',
   './mobile-ios-decimal-v1.js?v=20260920-iosdecimal3',
   './mobile-theme-v1.js?v=20261005-angkor-login16',
-  './mobile-sales-support-home.js?v=20261028-cachefirst1',
-  './mobile-offline-modules-v1.js?v=20261028-cachefirst1',
-  './mobile-offline-stock.html?embed=1&v=20261028-cachefirst1',
-  './mobile-offline-stock-source-v1.html?v=20261028-cachefirst1',
-  './mobile-offline-calculator.html?mobile=1&view=calculator&v=20261028-unified1',
-  './mobile-offline-calculator-source-v1.html?v=20261028-sameui1',
+  './mobile-sales-support-home.js?v=20261028-seamless1',
+  './mobile-offline-modules-v1.js?v=20261028-seamless1',
+  './mobile-offline-stock.html?embed=1&v=20261028-seamless1',
+  './mobile-offline-stock-source-v1.html?v=20261028-seamless1',
+  './mobile-offline-calculator.html?mobile=1&view=calculator&v=20261028-seamless1',
+  './mobile-offline-calculator-source-v1.html?v=20261028-seamless1',
   './mobile-offline-calculator-dual-currency-v1.js?v=20261028-sameui1',
-  './mobile-offline-calculator-adapter-v1.js?v=20261028-unified1',
+  './mobile-offline-calculator-adapter-v1.js?v=20261028-seamless1',
   './pwa-install.js?v=20261024-mobileperf1',
   './mobile-module-transition-v3.js?v=20261024-module-transition1',
   './bb-web-push-client-v1.js?v=20261025-webpush-v1',
@@ -82,15 +82,15 @@ self.addEventListener('install',event=>{
       './mobile-offline-workspace-v1.js?v=20261028-auto-offline3',
       './mobile.js?v=20261028-cachefirst1',
       './mobile-main-menu-stockcontrol-v5.js?v=20261028-cachefirst1',
-      './mobile-sales-support-home.js?v=20261028-cachefirst1',
+      './mobile-sales-support-home.js?v=20261028-seamless1',
       './mobile-user-overview.js?v=20261028-auto-offline3',
-      './mobile-offline-modules-v1.js?v=20261028-cachefirst1',
-      './mobile-offline-stock.html?embed=1&v=20261028-cachefirst1',
-      './mobile-offline-stock-source-v1.html?v=20261028-cachefirst1',
-      './mobile-offline-calculator.html?mobile=1&view=calculator&v=20261028-unified1',
-      './mobile-offline-calculator-source-v1.html?v=20261028-sameui1',
+      './mobile-offline-modules-v1.js?v=20261028-seamless1',
+      './mobile-offline-stock.html?embed=1&v=20261028-seamless1',
+      './mobile-offline-stock-source-v1.html?v=20261028-seamless1',
+      './mobile-offline-calculator.html?mobile=1&view=calculator&v=20261028-seamless1',
+      './mobile-offline-calculator-source-v1.html?v=20261028-seamless1',
       './mobile-offline-calculator-dual-currency-v1.js?v=20261028-sameui1',
-      './mobile-offline-calculator-adapter-v1.js?v=20261028-unified1'
+      './mobile-offline-calculator-adapter-v1.js?v=20261028-seamless1'
     ]);
     await Promise.all([...critical].map(path=>
       cache.add(new Request(new URL(path,self.registration.scope),{cache:'reload'}))
