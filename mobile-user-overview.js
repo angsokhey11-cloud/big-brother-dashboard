@@ -11,7 +11,7 @@ let loading=false;
 let lastLoad=0;
 let liveTimer=null;
 let disabledForAdmin=false;
-const LIVE_REFRESH_MS=20000;
+const LIVE_REFRESH_MS=120000;
 
 const $=id=>document.getElementById(id);
 const num=v=>Number(v||0)||0;
@@ -145,7 +145,8 @@ function applyOverview(data,payment){
 }
 
 async function refresh(force=false){
-  if(disabledForAdmin||loading||!homeVisible()||!readSession()?.access_token)return;
+  if(disabledForAdmin||loading||!homeVisible()||!readSession()?.access_token||window.BBMobileOfflineWorkspaceV1?.canUseNetwork()===false)return;
+  if(lastLoad&&Date.now()-lastLoad<LIVE_REFRESH_MS)return;
 
   /*
    * Viewer Overview is always refreshed from Supabase when requested.
@@ -178,7 +179,9 @@ async function refresh(force=false){
       payment=cached?.payment||null;
     }
 
+    if(window.BBMobileOfflineWorkspaceV1?.canUseNetwork()===false)return;
     cached={overview,payment};
+    void window.BBMobileOfflineWorkspaceV1?.write('staff-overview',cached).then(ok=>{if(ok)void window.BBMobileOfflineWorkspaceV1.success()});
     lastLoad=Date.now();
     applyOverview(overview,payment);
   }catch(error){
@@ -192,13 +195,16 @@ async function refresh(force=false){
 }
 
 function start(){
+  void window.BBMobileOfflineWorkspaceV1?.read('staff-overview').then(snapshot=>{
+    if(snapshot?.value){cached=snapshot.value;lastLoad=Number(snapshot.syncedAt)||0;if(homeVisible())applyOverview(cached.overview,cached.payment)}
+  });
   const home=$('mobileHome');
   if(!home){setTimeout(start,100);return}
 
   const observer=new MutationObserver(()=>{
     if(homeVisible()){
-      /* Returning from any module must immediately pull fresh viewer data. */
-      setTimeout(()=>refresh(true),40);
+      if(cached)applyOverview(cached.overview,cached.payment);
+      setTimeout(()=>refresh(false),40);
     }
   });
 
@@ -207,11 +213,12 @@ function start(){
     attributeFilter:['hidden']
   });
 
-  window.addEventListener('focus',()=>refresh(true));
+  window.addEventListener('focus',()=>refresh(false));
 
   document.addEventListener('visibilitychange',()=>{
     if(document.visibilityState==='visible'&&homeVisible()){
-      refresh(true);
+      if(cached)applyOverview(cached.overview,cached.payment);
+      refresh(false);
     }
   });
 
