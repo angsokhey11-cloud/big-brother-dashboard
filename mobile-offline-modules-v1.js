@@ -16,7 +16,6 @@ const mapRoutes={
   'sales-support-your-receivable':'offline-ar-your',
   'ar-all':'offline-ar-all',
   'stock-report':'offline-stock-report',
-  'sales-support-your-stock':'offline-stock-report',
   'sales-support-calculator':'offline-calc-bootstrap'
 };
 let host=null,route='',dataset=null,calcCustomer=null,calcPrices=null,calcLines=[],calcCurrency='USD',calcRate=4100,calcDiscount=0;
@@ -231,7 +230,7 @@ async function sync(safeRpc,canRoute,force=false){
     jobs.push(['offline-ar-your','bb_ar_list']);
   }
   if(canRoute('ar-all'))jobs.push(['offline-ar-all','bb_ar_list_all']);
-  if(canRoute('stock-report')||canRoute('sales-support-your-stock'))jobs.push(['offline-stock-report','bb_stock_report_fast']);
+  if(canRoute('stock-report'))jobs.push(['offline-stock-report','bb_stock_report_fast']);
   if(canRoute('sales-support-calculator'))jobs.push(['offline-calc-bootstrap','bb_sales_support_bootstrap']);
   let allOK=true;
   try{
