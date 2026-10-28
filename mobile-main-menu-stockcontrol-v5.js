@@ -199,7 +199,12 @@ function renderDirect(route){
  const offline=window.BBMobileOfflineWorkspaceV1;
  if(offline&&!offline.canUseNetwork()){
    if(window.BBMobileOfflineModulesV1?.canOpen(route)){
-     void window.BBMobileOfflineModulesV1.open(route);
+     void window.BBMobileOfflineModulesV1.open(route).then(ok=>{
+       if(!ok){
+         const notice=document.getElementById('toast');
+         if(notice){notice.textContent='No saved offline data for this function yet.';notice.hidden=false;setTimeout(()=>notice.hidden=true,3000)}
+       }
+     });
      return false;
    }
    const toast=document.getElementById('toast');if(toast){toast.textContent='This function requires internet. Saved Overview is available offline.';toast.hidden=false;setTimeout(()=>toast.hidden=true,3000)}
