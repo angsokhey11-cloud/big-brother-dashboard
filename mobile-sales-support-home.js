@@ -1826,18 +1826,21 @@ async function syncCollection(force=false){
   const flightKey=user+'::collection-list';
   if(collectionOfflineFlights.has(flightKey))return collectionOfflineFlights.get(flightKey);
   const work=(async()=>{
-    const [list,state,access]=await Promise.all([
+    // The list RPC already returns its permission-checked access profile,
+    // so two cloud reads are enough (no redundant third profile request).
+    const [list,state]=await Promise.all([
       safeRpc('bb_sales_support_your_collection_invoice_list'),
-      safeRpc('bb_sales_support_your_collection_my_state'),
-      safeRpc('bb_sales_support_your_collection_access_profile')
+      safeRpc('bb_sales_support_your_collection_my_state')
     ]);
+    const access=list?.access;
     if(!list?.success||!Array.isArray(list.invoices)||!state?.success||
-       !access?.success||api.currentUserId()!==user||!api.canUseNetwork()||!canRoute(collectionRoute))return null;
+       !Array.isArray(access?.locations)||
+       api.currentUserId()!==user||!api.canUseNetwork()||!canRoute(collectionRoute))return null;
     const data={success:true,invoices:list.invoices,
       invoiceStates:state.invoiceStates||state.lockedInvoices||{},
-      locations:Array.isArray(access.locations)?access.locations.map(l=>({
+      locations:access.locations.map(l=>({
         locationCode:clean(l.locationCode),locationName:clean(l.locationName)
-      })):[],syncedAt:Date.now()};
+      })),revision:String(list.revision||state.revision||''),syncedAt:Date.now()};
     if(!await api.write(COLLECTION_KEY,data))return null;
     // A small bounded warm-up saves initial invoice product previews. Subsequent
     // details are saved on-demand; no large request storm or polling.
