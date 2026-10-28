@@ -1,0 +1,1900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BIG BROTHER — Your Collection (Saved Read-only)</title>
+<style>
+:root{
+  --bg:#f4f7fb;--card:#fff;--line:#dfe6ef;--text:#17304f;--muted:#6d7d91;
+  --blue:#1f5fbf;--blue2:#174b98;--green:#198754;--red:#c93c46;
+  --shadow:0 10px 28px rgba(20,48,82,.08)
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
+body{padding:20px}
+.wrap{max-width:1500px;margin:0 auto}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:16px}
+.topbar h1{margin:0 0 5px;font-size:28px}
+.subtitle{margin:0;color:var(--muted)}
+.pill{display:inline-flex;align-items:center;padding:8px 12px;border:1px solid #c9d8ec;border-radius:999px;background:#edf5ff;color:#245da8;font-size:12px;font-weight:800}
+.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px;box-shadow:var(--shadow)}
+.card small{display:block;color:var(--muted);font-weight:800;margin-bottom:7px}
+.card strong{font-size:23px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+.filters{display:grid;grid-template-columns:1fr 1fr 1.1fr 1.1fr auto auto;gap:10px;padding:14px;border-bottom:1px solid var(--line)}
+input,select{width:100%;border:1px solid #cbd6e3;border-radius:9px;padding:10px 11px;font:inherit;color:var(--text);background:#fff}
+.btn{border:0;border-radius:9px;padding:10px 14px;font-weight:800;cursor:pointer}
+.btn.primary{background:var(--blue);color:#fff}
+.btn.primary:hover{background:var(--blue2)}
+.btn.secondary{background:#eef3f8;color:#284761}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.tablewrap{overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:1080px}
+th,td{padding:11px 10px;border-bottom:1px solid #e7edf4;text-align:left;font-size:13px;white-space:nowrap}
+th{background:#f7f9fc;color:#53657a;font-size:12px;position:sticky;top:0;z-index:1}
+tbody tr:hover{background:#f9fbfe}
+.money{text-align:right;font-variant-numeric:tabular-nums}
+.center{text-align:center}
+.empty{text-align:center;color:var(--muted);padding:30px}
+.daily-key{font-weight:900;color:#174b98}
+.warn{color:var(--red);font-weight:800}
+.foot{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:11px 14px;color:var(--muted);font-size:12px}
+.statusbar{display:none;margin-bottom:12px;padding:10px 12px;border-radius:9px;background:#fff0f1;color:var(--red);font-size:12px;font-weight:700}
+.statusbar.show{display:block}
+.overlay{position:fixed;inset:0;background:rgba(10,27,48,.68);display:flex;align-items:center;justify-content:center;padding:18px;z-index:9999}
+.overlay.hidden{display:none}
+.modal{width:min(1200px,97vw);max-height:95vh;overflow:auto;background:#eef2f7;border-radius:16px;padding:16px;box-shadow:0 25px 70px rgba(0,0,0,.3)}
+.modal-actions{display:flex;justify-content:space-between;align-items:center;gap:10px;position:sticky;top:0;z-index:5;background:#eef2f7;padding:2px 0 10px}
+.modal-title h2{margin:0 0 4px;font-size:22px}
+.modal-title p{margin:0;color:var(--muted);font-size:12px}
+.detail-card{background:#fff;border:1px solid var(--line);border-radius:13px;padding:16px;box-shadow:var(--shadow)}
+.preview-meta{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.meta-box{border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.meta-box small{display:block;color:var(--muted);font-weight:800;margin-bottom:4px}
+.meta-box strong{font-size:15px}
+.preview-table{min-width:920px}
+.preview-table td,.preview-table th{font-size:12px}
+.select-box{width:18px;height:18px;cursor:pointer}
+.requestbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 14px;margin:0 0 14px;background:#f7faff;border:1px solid var(--line);border-radius:12px}
+.requestbar .sum{display:flex;gap:16px;flex-wrap:wrap;flex:1}
+.requestbar .sum span{font-size:12px;color:var(--muted)}
+.requestbar .sum strong{display:block;color:var(--text);font-size:15px;margin-top:2px}
+.btn.request{background:#1f8f5f;color:#fff}
+.btn.request:disabled{opacity:.45;cursor:not-allowed}
+.loginbox,.requestbox{width:min(560px,96vw);background:#fff;border-radius:16px;padding:22px;box-shadow:0 25px 70px rgba(0,0,0,.25)}
+.field{margin-top:12px}.field label{display:block;font-weight:700;font-size:12px;margin-bottom:6px}
+.field input,.field textarea{width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:9px;font:inherit}
+.formerror{display:none;color:#c93c46;background:#fff0f1;border:1px solid #ffd5d9;padding:8px 10px;border-radius:8px;margin-top:10px}.formerror.show{display:block}
+.selected-list{max-height:300px;overflow:auto;border:1px solid var(--line);border-radius:10px;margin-top:12px}
+.selected-item{display:flex;justify-content:space-between;gap:12px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.selected-item:last-child{border-bottom:0}
+.status-pill{display:inline-block;padding:5px 8px;border-radius:999px;font-size:11px;font-weight:800;background:#e9f2ff;color:#1f5fbf}
+.status-pill.pending{background:#fff5d8;color:#8a6500}
+.status-pill.pending-deposit{background:#fff0dc;color:#a05d00}
+.status-pill.deposited{background:#e8f7ef;color:#18764b}
+.status-pill.available{background:#eaf3ff;color:#1f5fbf}
+.status-pill.mixed{background:#f0edf9;color:#6649a8}
+.products-cell{white-space:normal;min-width:240px;line-height:1.45}
+/* ===== V4.4 CLOSE SELECTED RESPONSIVE WORKSPACE ===== */
+.close-workspace{
+  width:min(1500px,98vw);
+  height:min(920px,96vh);
+  background:#fff;
+  border-radius:18px;
+  box-shadow:0 28px 80px rgba(14,39,73,.28);
+  display:grid;
+  grid-template-columns:minmax(0,1.7fr) minmax(360px,.75fr);
+  overflow:hidden;
+}
+.close-left{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  border-right:1px solid var(--line);
+  background:#fff;
+}
+.close-right{
+  min-width:0;
+  overflow:auto;
+  padding:20px;
+  background:#fbfcfe;
+}
+.close-head{
+  padding:18px 20px 14px;
+  border-bottom:1px solid var(--line);
+  display:flex;
+  justify-content:space-between;
+  gap:14px;
+  align-items:flex-start;
+}
+.close-head h2{margin:0 0 5px;font-size:24px}
+.close-head p{margin:0;color:var(--muted);font-size:13px}
+.rulebar{
+  margin:12px 16px;
+  border:1px solid #cfe0f7;
+  background:#eef6ff;
+  color:#234f85;
+  border-radius:10px;
+  padding:10px 12px;
+  font-size:12px;
+  font-weight:700;
+}
+.close-selectbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:10px 16px;
+  border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+  background:#fafcff;
+}
+.close-selectbar .left{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  font-size:12px;
+  font-weight:800;
+}
+.close-list-wrap{
+  flex:1;
+  min-height:0;
+  overflow:auto;
+}
+.close-list-wrap table{
+  min-width:760px;
+}
+.close-list-wrap th,
+.close-list-wrap td{
+  padding:8px 10px;
+  font-size:12px;
+}
+.close-list-wrap .btn{
+  padding:6px 10px;
+  font-size:11px;
+  white-space:nowrap;
+}
+
+.close-pagination{
+  padding:10px 16px;
+  border-top:1px solid var(--line);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  background:#fff;
+}
+.page-controls{display:flex;align-items:center;gap:6px}
+.page-btn{
+  min-width:34px;height:34px;padding:0 10px;border:1px solid var(--line);
+  background:#fff;border-radius:8px;cursor:pointer;font-weight:800;color:var(--text)
+}
+.page-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.page-btn:disabled{opacity:.4;cursor:not-allowed}
+.close-right-title{margin:0 0 4px;font-size:21px}
+.close-right-sub{margin:0 0 14px;color:var(--muted);font-size:12px}
+.close-metrics{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin:12px 0;
+}
+.close-metric{
+  border:1px solid var(--line);
+  background:#fff;
+  border-radius:12px;
+  padding:12px;
+}
+.close-metric small{display:block;color:var(--muted);font-weight:800;margin-bottom:5px}
+.close-metric strong{font-size:19px}
+.close-metric.good{background:#edf9f2;border-color:#ccebd8}
+.close-metric.bad{background:#fff3f3;border-color:#ffd6d8}
+.input-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.paginationbar{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:9px 12px;border-top:1px solid var(--line);background:#fff;
+}
+.paginationbar .info{font-size:12px;color:var(--muted)}
+.checkall-wrap{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800}
+.checkall-wrap input{width:18px;height:18px}
+.group-rule-note{
+  padding:9px 12px;border-radius:9px;background:#eff9f3;color:#256744;
+  font-size:12px;font-weight:700;margin-bottom:10px
+}
+.main-table-actions{display:flex;gap:6px;align-items:center}
+@media(max-width:1100px){
+  body{padding:10px}
+  .wrap{max-width:none}
+  .cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .filters{grid-template-columns:1fr 1fr auto auto}
+  .close-workspace{
+    grid-template-columns:1fr;
+    height:97vh;
+    overflow:auto;
+  }
+  .close-left{border-right:0;border-bottom:1px solid var(--line);min-height:520px}
+  .close-right{overflow:visible}
+}
+@media(max-width:720px){
+  .topbar{align-items:flex-start}
+  .topbar h1{font-size:22px}
+  .pill{display:none}
+  .cards{grid-template-columns:1fr 1fr}
+  .filters{grid-template-columns:1fr 1fr}
+  .filters .btn{width:100%}
+  .requestbar{align-items:stretch}
+  .requestbar .sum{display:grid;grid-template-columns:1fr 1fr}
+  .summary-toolbar{justify-content:stretch}
+  .summary-toolbar .btn{width:100%}
+  .close-head{padding:14px}
+  .close-head h2{font-size:20px}
+  .close-left{min-height:480px}
+  .close-right{padding:14px}
+  .close-metrics{grid-template-columns:1fr 1fr}
+  .input-grid{grid-template-columns:1fr}
+  .close-pagination{align-items:flex-start;flex-direction:column}
+}
+
+.summary-toolbar{display:flex;justify-content:flex-end;padding:0 14px 12px}
+.summary-modal{width:min(1350px,98vw);max-height:95vh;overflow:auto;background:#eef2f7;border-radius:16px;padding:16px;box-shadow:0 25px 70px rgba(0,0,0,.3)}
+.invoice-detail-panel{margin-top:14px;border-top:1px solid var(--line);padding-top:14px}
+.product-chip{display:inline-block;background:#f0f5fb;border:1px solid #dbe5ef;border-radius:999px;padding:4px 8px;margin:2px;font-size:11px}
+.totals{margin-top:16px;margin-left:auto;width:min(560px,100%);border-top:3px solid #2456a6;padding-top:7px}
+.total-row{display:flex;justify-content:space-between;gap:16px;padding:7px 8px;border-bottom:1px solid #e2e8f0;font-size:13px}
+.total-row.key{background:#eef5ff;color:#143d78;font-size:15px;font-weight:900}
+.note{font-size:12px;color:#6d7d91;padding:12px 14px;border-top:1px solid var(--line);background:#fafcff}
+@media(max-width:900px){.cards{grid-template-columns:repeat(2,1fr)}.filters{grid-template-columns:1fr 1fr}.preview-meta{grid-template-columns:1fr 1fr}.topbar{align-items:flex-start;flex-direction:column}}
+@media(max-width:560px){body{padding:10px}.cards{grid-template-columns:1fr 1fr;gap:8px}.card{padding:11px}.card strong{font-size:18px}.filters{grid-template-columns:1fr}.preview-meta{grid-template-columns:1fr}.modal-actions{align-items:flex-start;flex-direction:column}}
+
+/* ===== V4.7 MODAL STACKING FIX ===== */
+#cashRequestOverlay{
+  z-index:1000;
+}
+#previewOverlay{
+  z-index:1200;
+}
+#previewOverlay .modal,
+#previewOverlay .preview-panel,
+#previewOverlay > div{
+  position:relative;
+  z-index:1201;
+}
+
+
+/* Khmer readability for collection tables and previews; existing layout retained. */
+html,body,input,select,textarea,td{font-family:Arial,Helvetica,'Noto Sans Khmer',sans-serif}
+.tablewrap tbody td,.preview-table td,.close-list-wrap td{font-family:Arial,'Noto Sans Khmer',sans-serif;line-height:1.7;color:#263d56}
+
+/* Explicit high-contrast Khmer name cells, matching All Receivable. */
+td.bb-khmer-name{font-family:'Noto Sans Khmer',Arial,sans-serif;font-size:14px;font-weight:600;color:#243a56;line-height:1.7}
+</style>
+<script src="mobile-offline-your-collection-adapter-v1.js?v=20261028-collection1"></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div>
+      <h1>💵 Your Collection</h1>
+      <p class="subtitle">Your Cash invoices only · Permanent Salesman Location Responsibility.</p>
+    </div>
+    <span class="pill">Permanent Salesman · Read-only</span>
+  </div>
+
+  <div id="errorBox" class="statusbar"></div>
+
+  <div class="cards">
+    <div class="card"><small>Cash Invoices</small><strong id="cardGroups">0</strong></div>
+    <div class="card"><small>Cash USD</small><strong id="cardUsd">$0.00</strong></div>
+    <div class="card"><small>Cash KHR</small><strong id="cardKhr">៛0</strong></div>
+    <div class="card"><small>Cash Collection in USD</small><strong id="cardDailyUsd">$0.00</strong></div>
+  </div>
+
+  <div class="panel">
+    <div class="filters">
+      <input type="date" id="dateFrom" onchange="applyFilters()" title="Date From">
+      <input type="date" id="dateTo" onchange="applyFilters()" title="Date To">
+      <select id="locationFilter" onchange="applyFilters()"><option value="">All Locations</option></select>
+      <button class="btn secondary" onclick="clearFilters()">Clear</button>
+      <button class="btn primary" id="refreshBtn" onclick="loadInvoices(true,false)">↻ Refresh</button>
+    </div>
+
+    <div class="summary-toolbar">
+      <button class="btn primary" id="dailyCashSummaryBtn" onclick="openDailyCashSummary()" disabled>▦ Daily Cash Summary (0)</button>
+    </div>
+
+    <div class="requestbar">
+      <div class="sum">
+        <span>Selected Invoices<strong id="selectedGroupsCount">0</strong></span>
+        <span>Selected Invoices<strong id="selectedInvoicesCount">0</strong></span>
+        <span>Cash USD<strong id="selectedCashUSD">$0.00</strong></span>
+        <span>Cash KHR<strong id="selectedCashKHR">៛0</strong></span>
+      </div>
+      <button class="btn secondary" onclick="clearSelection()">Clear Selection</button>
+      <button class="btn request" id="batchRequestBtn" onclick="openBatchRequest()" disabled>Close Selected (0)</button>
+    </div>
+
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="center">
+              <label class="checkall-wrap" title="Check all eligible invoices on this page">
+                <input id="checkAllPage" type="checkbox" onchange="toggleCheckAllPage(this.checked)">
+                <span>All</span>
+              </label>
+            </th>
+            <th>Collection Date</th>
+            <th>Invoice No</th>
+            <th>Salesman</th>
+            <th>Location Name</th>
+            <th>Customer Name</th>
+            <th class="money">Cash USD</th>
+            <th class="money">Cash KHR</th>
+            <th class="money">Avg. KHR Rate</th>
+            <th class="money">Cash Collection in USD</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="summaryBody">
+          <tr><td colspan="12" class="empty">Loading Daily Cash Collection...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="paginationbar">
+      <div class="info"><span id="rowCount">0 cash invoices</span> · <span id="syncStatus">Smart Sync</span></div>
+      <div class="page-controls" id="mainPagination"></div>
+    </div>
+
+    <div class="note">
+      Source: Invoice History. OPEN and PENDING Cash invoices are shown. Close batches can include different Sale Dates within the same Location and Salesman. Maximum 20 rows are shown per page.
+    </div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="previewOverlay">
+  <div class="modal">
+    <div class="modal-actions">
+      <div class="modal-title">
+        <h2>Cash Collection Preview</h2>
+        <p id="previewSubtitle"></p>
+      </div>
+      <button class="btn secondary" onclick="closePreview()">✕ Close</button>
+    </div>
+
+    <div class="detail-card">
+      <div class="preview-meta" id="previewMeta"></div>
+      <div class="tablewrap">
+        <table class="preview-table">
+          <thead>
+            <tr>
+              <th>Invoice No</th>
+              <th>Customer</th>
+              <th>Products Bought</th>
+              <th>Payment Method</th>
+              <th>Currency</th>
+              <th class="money">Exchange Rate</th>
+              <th class="money">Cash Collected</th>
+              <th>Close Status</th>
+            </tr>
+          </thead>
+          <tbody id="previewBody"></tbody>
+        </table>
+      </div>
+      <div class="totals" id="previewTotals"></div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+<div class="overlay hidden" id="cashRequestOverlay">
+  <div class="close-workspace">
+    <section class="close-left">
+      <div class="close-head">
+        <div>
+          <h2 id="cashRequestTitle">Close Daily Cash</h2>
+          <p id="cashRequestInfo">Review selected invoices before sending the close to Admin.</p>
+        </div>
+        <button class="btn secondary" onclick="closeCashRequest()">✕ Close</button>
+      </div>
+
+      <div class="rulebar">
+        Batch rule: selected invoices must have the same Location and Salesman (any Sale Date).
+      </div>
+
+      <div class="close-selectbar">
+        <div class="left">
+          <input id="closeCheckAllPage" class="select-box" type="checkbox" onchange="toggleCloseCheckAllPage(this.checked)">
+          <label for="closeCheckAllPage">Check All (This Page)</label>
+          <span id="closeSelectedCount">0 selected</span>
+        </div>
+        <strong id="closePageTotal">$0.00</strong>
+      </div>
+
+      <div class="close-list-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="center">Select</th>
+              <th>#</th>
+              <th>Invoice No</th>
+              <th>Customer Name</th>
+              <th>Salesman</th>
+              <th>Sale Date</th>
+              <th>Location</th>
+              <th class="money">Cash USD</th>
+              <th class="money">Cash KHR</th>
+              <th class="money">Total USD</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="cashRequestList"></tbody>
+        </table>
+      </div>
+
+      <div class="close-pagination">
+        <span id="closePageInfo">0 selected invoices</span>
+        <div class="page-controls" id="closePagination"></div>
+      </div>
+    </section>
+
+    <aside class="close-right">
+      <h3 class="close-right-title">Close Daily Cash</h3>
+      <p class="close-right-sub">Count the real physical USD and KHR. Submit only when actual cash matches the selected invoice value.</p>
+
+      <div class="group-rule-note" id="closeGroupRule">Any Sale Date · Same Location · Same Salesman</div>
+
+      <div class="field">
+        <label>Close Method</label>
+        <select id="closeMethod" onchange="toggleCloseMethod()">
+          <option value="Hand Cash to Accountant">Hand Cash to Accountant → Cash Vault</option>
+          <option value="Deposit to Company Bank">Deposit to Company Bank Myself</option>
+        </select>
+      </div>
+
+      <div class="close-metrics">
+        <div class="close-metric"><small>Expected Invoice Value</small><strong id="closeExpectedUSD">$0.00</strong></div>
+        <div class="close-metric"><small>Actual Cash Value</small><strong id="closeActualEquivalent">$0.00</strong></div>
+        <div class="close-metric"><small>Difference</small><strong id="closeDifference">$0.00</strong></div>
+        <div class="close-metric" id="closeResultCard"><small>Result</small><strong id="closeMatchStatus">Enter Cash</strong></div>
+      </div>
+
+      <div class="input-grid">
+        <div class="field"><label>Actual USD Cash</label><input id="actualCashUSD" type="number" min="0" step="0.01" value="0" oninput="recalculateClose()"></div>
+        <div class="field"><label>Actual KHR Cash</label><input id="actualCashKHR" type="number" min="0" step="100" value="0" oninput="recalculateClose()"></div>
+      </div>
+
+      <div class="field"><label>Closing Exchange Rate (KHR per USD)</label><input id="closingRate" type="number" min="0" step="1" placeholder="Example: 4060" oninput="recalculateClose()"></div>
+
+      <div id="selfDepositFields" style="display:none">
+        <div class="field"><label>Company Bank Account</label><input id="closeBankAccount" placeholder="Example: ABA USD"></div>
+        <div class="field"><label>Deposit Exchange Rate</label><input id="depositRate" type="number" min="0" step="1" placeholder="Rate used to exchange KHR to USD" oninput="recalculateClose()"></div>
+        <div class="field"><label>Final Bank Deposit USD</label><input id="bankDepositUSD" type="number" min="0" step="0.01" oninput="recalculateClose()"></div>
+        <div class="field"><label>Bank Transaction ID</label><input id="closeTransactionId" placeholder="Fresh unique Transaction ID"></div>
+
+        <div class="close-metrics">
+          <div class="close-metric"><small>Expected Bank USD</small><strong id="expectedBankUSD">$0.00</strong></div>
+          <div class="close-metric"><small>Bank Difference</small><strong id="bankDifferenceUSD">$0.00</strong></div>
+        </div>
+      </div>
+
+      <div class="field"><label>Note <span style="font-weight:400;color:var(--muted)">(optional)</span></label><textarea id="cashRequestNote" rows="3"></textarea></div>
+      <div class="formerror" id="cashRequestError"></div>
+
+      <button class="btn request" id="sendCashRequestBtn" style="width:100%;margin-top:12px" onclick="sendCashRequest()">✓ Send Close to Admin</button>
+      <button class="btn secondary" style="width:100%;margin-top:8px" onclick="clearSelection()">Clear Selection</button>
+    </aside>
+  </div>
+</div>
+
+
+
+
+<div class="overlay hidden" id="dailyCashSummaryOverlay">
+  <div class="summary-modal">
+    <div class="modal-actions">
+      <div class="modal-title">
+        <h2>Daily Cash Summary</h2>
+        <p id="dailyCashSummarySubtitle">Selected Cash invoices only.</p>
+      </div>
+      <button class="btn secondary" onclick="closeDailyCashSummary()">✕ Close</button>
+    </div>
+
+    <div class="detail-card">
+      <div class="preview-meta" id="dailyCashSummaryMeta"></div>
+      <div class="tablewrap">
+        <table class="preview-table" style="min-width:1150px">
+          <thead>
+            <tr>
+              <th>Date</th><th>Invoice No</th><th>Customer</th><th>Salesman</th>
+              <th>Location</th><th>Currency</th><th class="money">Cash Amount</th>
+              <th>Close Status</th><th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="dailyCashSummaryBody"></tbody>
+        </table>
+      </div>
+      <div class="invoice-detail-panel hidden" id="dailyCashInvoiceDetailPanel">
+        <h3 id="dailyCashInvoiceDetailTitle" style="margin:0 0 8px"></h3>
+        <div id="dailyCashInvoiceDetailContent"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SALES_API="https://script.google.com/macros/s/AKfycbyM5mUlz5SeMZ_oPJCo2FgLkPEcodAQ7wPl5wxAdrvfqLvsZLaHxiOtS02L1Q3ZRA3D/exec";
+const MASTER_API="https://script.google.com/macros/s/AKfycbzIjs-cNehMxWTZs3ZPAosseGUu1nqACTPo3S4-onLLEYnEgqP6AUK7p3jwb6MaFr7H0w/exec";
+
+const CACHE_KEY="BB_DAILY_CASH_COLLECTION_CACHE_V1";
+const CLOSE_STATE_CACHE_KEY="BB_DAILY_CASH_CLOSE_STATE_V1";
+const SYNC_INTERVAL_MS=20000;
+
+const $=id=>document.getElementById(id);
+
+let allInvoices=[];
+let selectedGroups=new Set();
+let mainPage=1;
+const MAIN_PAGE_SIZE=20;
+let closePage=1;
+const CLOSE_PAGE_SIZE=20;
+let invoiceStates={};
+let lockedInvoices={};
+let invoiceDetailCache={};
+let requestGroups=[];
+let salesmanSessionToken=sessionStorage.getItem("bb_ar_salesman_session")||"";
+let pendingAction=null;
+let groups=[];
+let filteredGroups=[];
+let currentGroup=null;
+let lastRevision="";
+let locationMap={};
+let syncBusy=false;
+let syncTimer=null;
+
+function esc(v){
+  return String(v??"").replace(/[&<>"']/g,m=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[m]));
+}
+
+function num(v){
+  const n=Number(v);
+  return Number.isFinite(n)?n:0;
+}
+
+function readCloseStateCache(){
+  try{
+    const raw=localStorage.getItem(CLOSE_STATE_CACHE_KEY);
+    if(!raw)return {};
+    const d=JSON.parse(raw);
+    return d&&typeof d==="object"?d:{};
+  }catch(_){
+    return {};
+  }
+}
+
+function saveCloseStateCache(){
+  try{
+    localStorage.setItem(CLOSE_STATE_CACHE_KEY,JSON.stringify(invoiceStates||{}));
+  }catch(_){}
+}
+
+function dateOnly(v){
+  if(!v) return "";
+  const s=String(v);
+  const iso=s.match(/^(\d{4}-\d{2}-\d{2})/);
+  if(iso) return iso[1];
+
+  const d=new Date(s);
+  if(!isNaN(d)){
+    const y=d.getFullYear();
+    const m=String(d.getMonth()+1).padStart(2,"0");
+    const day=String(d.getDate()).padStart(2,"0");
+    return `${y}-${m}-${day}`;
+  }
+  return s.slice(0,10);
+}
+
+function usd(v){
+  return "$"+num(v).toLocaleString(undefined,{
+    minimumFractionDigits:2,
+    maximumFractionDigits:2
+  });
+}
+
+function khr(v){
+  return "៛"+num(v).toLocaleString(undefined,{
+    minimumFractionDigits:0,
+    maximumFractionDigits:0
+  });
+}
+
+function rate(v){
+  return num(v).toLocaleString(undefined,{
+    minimumFractionDigits:0,
+    maximumFractionDigits:2
+  });
+}
+
+function showError(msg){
+  $("errorBox").textContent=msg||"";
+  $("errorBox").classList.toggle("show",!!msg);
+}
+
+async function api(params){
+  const res=await fetch(
+    SALES_API+"?"+new URLSearchParams(params).toString(),
+    {cache:"no-store"}
+  );
+
+  if(!res.ok){
+    throw new Error("Sales Database returned HTTP "+res.status);
+  }
+
+  const d=await res.json();
+
+  if(!d || d.success===false){
+    throw new Error(d?.error||"Sales Database returned an error.");
+  }
+
+  return d;
+}
+
+
+async function apiPost(params){
+  const body=new URLSearchParams();
+  Object.entries(params||{}).forEach(([k,v])=>body.append(k,v==null?"":String(v)));
+
+  const res=await fetch(SALES_API,{
+    method:"POST",
+    headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},
+    body,
+    redirect:"follow"
+  });
+
+  const text=await res.text();
+  let data;
+  try{data=JSON.parse(text)}
+  catch(_){throw new Error("Server returned an unreadable response.");}
+
+  if(data?.success===false)throw new Error(data.error||"Database error.");
+  return data;
+}
+
+
+function locationNameFromCode(code){
+  const key=String(code||"").trim().toLowerCase();
+  return locationMap[key] || String(code||"").trim() || "-";
+}
+
+async function loadLocationMap(){
+  try{
+    const d=await fetch(
+      MASTER_API+"?"+new URLSearchParams({action:"getLocations"}).toString(),
+      {cache:"no-store"}
+    ).then(r=>{
+      if(!r.ok) throw new Error("Master Database returned HTTP "+r.status);
+      return r.json();
+    });
+
+    const rows=Array.isArray(d)?d:(Array.isArray(d?.data)?d.data:(Array.isArray(d?.locations)?d.locations:[]));
+    const map={};
+
+    rows.forEach(row=>{
+      const code=String(row?.locationCode||row?.code||"").trim();
+      const name=String(row?.locationName||row?.name||code).trim();
+      if(code) map[code.toLowerCase()]=name||code;
+    });
+
+    locationMap=map;
+    return map;
+  }catch(error){
+    console.warn("Could not load Location Names:",error);
+    return locationMap;
+  }
+}
+
+function groupKey(inv){
+  // One Daily Cash row = one exact invoice.
+  return String(inv.invoiceId||inv.invoiceNo||[
+    dateOnly(inv.invoiceDate),
+    String(inv.salesperson||"").trim(),
+    String(inv.locationCode||"").trim()
+  ].join("|||")).trim();
+}
+
+function isInvoiceCash(inv){
+  const method=String(inv.paymentMethod||"").trim().toLowerCase();
+  const currency=String(inv.currency||"USD").trim().toUpperCase();
+  const paid=num(inv.amountPaid);
+
+  // Daily Cash Collection uses CASH SALE invoices only.
+  // Bank and Credit invoices are excluded.
+  if(method!=="cash") return false;
+
+  // Keep only the two currencies used by BIG BROTHER.
+  if(currency!=="USD" && currency!=="KHR") return false;
+
+  // A cash invoice must actually contain collected money.
+  if(paid<=0) return false;
+
+  return true;
+}
+
+function calculateGroup(list){
+  const paidInvoices=list.filter(isInvoiceCash);
+  const first=paidInvoices[0]||{};
+
+  let cashUSD=0;
+  let cashKHR=0;
+  const khrRates=[];
+  let missingKHRRate=false;
+
+  paidInvoices.forEach(inv=>{
+    const currency=String(inv.currency||"USD").toUpperCase();
+    const paid=num(inv.amountPaid);
+
+    if(currency==="KHR"){
+      cashKHR+=paid;
+
+      const r=num(inv.exchangeRate);
+      if(r>0) khrRates.push(r);
+      else missingKHRRate=true;
+    }else{
+      cashUSD+=paid;
+    }
+  });
+
+  const khrPaidCount=paidInvoices.filter(inv=>
+    String(inv.currency||"USD").toUpperCase()==="KHR" &&
+    num(inv.amountPaid)>0
+  ).length;
+
+  const avgRate=khrRates.length
+    ? khrRates.reduce((a,b)=>a+b,0)/khrRates.length
+    : 0;
+
+  const hasKHR=cashKHR>0;
+  const rateComplete=!hasKHR || (
+    !missingKHRRate &&
+    avgRate>0 &&
+    khrRates.length===khrPaidCount
+  );
+
+  const dailyCashUSD=rateComplete
+    ? cashUSD + (hasKHR ? cashKHR/avgRate : 0)
+    : null;
+
+  return {
+    key:groupKey(first),
+    saleDate:dateOnly(first.invoiceDate),
+    salesman:String(first.salesperson||"").trim()||"-",
+    locationCode:String(first.locationCode||"").trim()||"-",
+    locationName:locationNameFromCode(first.locationCode),
+    invoiceCount:paidInvoices.length,
+    cashUSD,
+    cashKHR,
+    avgRate,
+    rateComplete,
+    dailyCashUSD,
+    invoices:paidInvoices.slice().sort(
+      (a,b)=>String(a.invoiceNo||"").localeCompare(String(b.invoiceNo||""))
+    )
+  };
+}
+
+function buildGroups(){
+  groups=allInvoices
+    .filter(isInvoiceCash)
+    .map(inv=>calculateGroup([inv]))
+    .filter(g=>{
+      if(g.invoiceCount<=0)return false;
+
+      const inv=g.invoices?.[0];
+      const status=invoiceRequestStatus(inv);
+
+      // Keep OPEN and PENDING visible.
+      // Hide only after Admin approval / final close stage.
+      return !["In Vault","Deposited","Approved"].includes(status);
+    })
+    .sort((a,b)=>
+      b.saleDate.localeCompare(a.saleDate) ||
+      String(b.invoices?.[0]?.invoiceNo||"").localeCompare(String(a.invoices?.[0]?.invoiceNo||""))
+    );
+
+  populateFilters();
+  applyFilters();
+}
+
+function populateFilters(){
+  const locs=[...new Set(
+    groups.map(g=>g.locationName).filter(v=>v&&v!=="-")
+  )].sort();
+
+  const l=$("locationFilter");
+  const lv=l.value;
+
+  l.innerHTML='<option value="">All Locations</option>'+
+    locs.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("");
+
+  if(locs.includes(lv))l.value=lv;
+}
+
+function applyFilters(){
+  const f=$("dateFrom").value;
+  const t=$("dateTo").value;
+  const l=$("locationFilter").value;
+
+  filteredGroups=groups.filter(g=>
+    (!f||g.saleDate>=f) &&
+    (!t||g.saleDate<=t) &&
+    (!l||g.locationName===l)
+  );
+
+  const pageCount=Math.max(1,Math.ceil(filteredGroups.length/MAIN_PAGE_SIZE));
+  if(mainPage>pageCount)mainPage=pageCount;
+  renderGroups();
+}
+
+
+function invoiceRequestState(inv){
+  const id=String(inv?.invoiceId||"").trim();
+  return invoiceStates[id]||null;
+}
+
+function invoiceRequestStatus(inv){
+  const s=invoiceRequestState(inv);
+  return s?.status||"Open";
+}
+
+function invoiceCanRequest(inv){
+  return !invoiceRequestState(inv);
+}
+
+function groupAvailableInvoices(g){
+  return (g?.invoices||[]).filter(invoiceCanRequest);
+}
+
+function groupRequestStatus(g){
+  const statuses=[...new Set((g?.invoices||[]).map(invoiceRequestStatus))];
+  if(!statuses.length)return "Not Requested";
+  if(statuses.length===1)return statuses[0];
+  return "Mixed";
+}
+
+function statusClass(text){
+  const s=String(text||"").toLowerCase();
+  if(s==="pending")return "pending";
+  if(s==="in vault")return "pending-deposit";
+  if(s==="pending deposit")return "pending-deposit";
+  if(s==="deposited")return "deposited";
+  if(s==="mixed")return "mixed";
+  return "available";
+}
+
+function renderMainPagination(){
+  const pages=Math.max(1,Math.ceil(filteredGroups.length/MAIN_PAGE_SIZE));
+  const wrap=$("mainPagination");
+  if(!wrap)return;
+
+  const buttons=[];
+  buttons.push(`<button class="page-btn" ${mainPage<=1?"disabled":""} onclick="setMainPage(${mainPage-1})">‹</button>`);
+
+  for(let p=1;p<=pages;p++){
+    if(p===1||p===pages||Math.abs(p-mainPage)<=1){
+      buttons.push(`<button class="page-btn ${p===mainPage?"active":""}" onclick="setMainPage(${p})">${p}</button>`);
+    }else if(!buttons[buttons.length-1]?.includes("…")){
+      buttons.push(`<span style="padding:0 2px;color:var(--muted)">…</span>`);
+    }
+  }
+
+  buttons.push(`<button class="page-btn" ${mainPage>=pages?"disabled":""} onclick="setMainPage(${mainPage+1})">›</button>`);
+  wrap.innerHTML=buttons.join("");
+}
+
+function setMainPage(page){
+  const pages=Math.max(1,Math.ceil(filteredGroups.length/MAIN_PAGE_SIZE));
+  mainPage=Math.min(Math.max(1,page),pages);
+  renderGroups();
+}
+
+function currentMainPageGroups(){
+  const start=(mainPage-1)*MAIN_PAGE_SIZE;
+  return filteredGroups.slice(start,start+MAIN_PAGE_SIZE);
+}
+
+function renderGroups(){
+  const pageRows=currentMainPageGroups();
+  const startRow=filteredGroups.length?(mainPage-1)*MAIN_PAGE_SIZE+1:0;
+  const endRow=Math.min(mainPage*MAIN_PAGE_SIZE,filteredGroups.length);
+
+  $("rowCount").textContent=
+    filteredGroups.length
+      ? `${startRow}-${endRow} of ${filteredGroups.length} cash invoices`
+      : "0 cash invoices";
+
+  $("cardGroups").textContent=filteredGroups.length;
+
+  const totalUsd=filteredGroups.reduce((x,g)=>x+g.cashUSD,0);
+  const totalKhr=filteredGroups.reduce((x,g)=>x+g.cashKHR,0);
+  const allComplete=filteredGroups.every(g=>g.rateComplete);
+  const dailyUsd=filteredGroups.reduce((x,g)=>x+(g.dailyCashUSD==null?0:g.dailyCashUSD),0);
+
+  $("cardUsd").textContent=usd(totalUsd);
+  $("cardKhr").textContent=khr(totalKhr);
+  $("cardDailyUsd").textContent=allComplete?usd(dailyUsd):"Rate Missing";
+  updateSelectedSummary();
+  renderMainPagination();
+
+  if(!pageRows.length){
+    $("summaryBody").innerHTML=
+      '<tr><td colspan="12" class="empty">No Daily Cash invoices found.</td></tr>';
+    if($("checkAllPage"))$("checkAllPage").checked=false;
+    return;
+  }
+
+  $("summaryBody").innerHTML=pageRows.map(g=>{
+    const available=groupAvailableInvoices(g);
+    const groupStatus=groupRequestStatus(g);
+    const canRequest=available.length>0;
+
+    return `
+    <tr>
+      <td class="center">
+        <input class="select-box" type="checkbox"
+          ${selectedGroups.has(g.key)?"checked":""}
+          ${canRequest?"":"disabled"}
+          onchange='toggleGroupSelection(${JSON.stringify(g.key)},this.checked,this)'>
+      </td>
+      <td><strong>${esc(g.saleDate)}</strong></td>
+      <td><strong>${esc(g.invoices?.[0]?.invoiceNo||"-")}</strong></td>
+      <td class="bb-khmer-name">${esc(g.salesman||"-")}</td>
+      <td><strong>${esc(g.locationName)}</strong></td>
+      <td>${esc(g.invoices?.[0]?.customer||"-")}</td>
+      <td class="money">${usd(g.cashUSD)}</td>
+      <td class="money">${khr(g.cashKHR)}</td>
+      <td class="money ${g.rateComplete?"":"warn"}">
+        ${g.cashKHR ? (g.rateComplete?rate(g.avgRate):"Missing Rate") : "-"}
+      </td>
+      <td class="money daily-key">${g.dailyCashUSD==null?"—":usd(g.dailyCashUSD)}</td>
+      <td><span class="status-pill ${statusClass(groupStatus)}">${esc(groupStatus)}</span></td>
+      <td>
+        <div class="main-table-actions">
+          <button class="btn primary" onclick='openPreview(${JSON.stringify(g.key)})'>Preview</button>
+          ${canRequest
+            ? `<button class="btn request" onclick='openSingleRequest(${JSON.stringify(g.key)})'>Request</button>`
+            : `<button class="btn request" disabled>${groupStatus}</button>`}
+        </div>
+      </td>
+    </tr>`;
+  }).join("");
+
+  const eligible=pageRows.filter(g=>groupAvailableInvoices(g).length>0);
+  const allChecked=eligible.length>0 && eligible.every(g=>selectedGroups.has(g.key));
+  if($("checkAllPage"))$("checkAllPage").checked=allChecked;
+}
+
+function clearFilters(){
+  $("dateFrom").value="";
+  $("dateTo").value="";
+  $("locationFilter").value="";
+  mainPage=1;
+  applyFilters();
+}
+
+
+function groupInvoiceIds(g){
+  return (g?.invoices||[]).map(x=>String(x.invoiceId||"").trim()).filter(Boolean);
+}
+
+function selectedGroupObjects(){
+  return groups.filter(g=>selectedGroups.has(g.key));
+}
+
+function updateSelectedSummary(){
+  const picked=selectedGroupObjects();
+  const available=picked.flatMap(groupAvailableInvoices);
+  const invoiceCount=available.length;
+  const cashUSD=available.filter(x=>String(x.currency||"USD").toUpperCase()==="USD").reduce((s,x)=>s+num(x.amountPaid),0);
+  const cashKHR=available.filter(x=>String(x.currency||"USD").toUpperCase()==="KHR").reduce((s,x)=>s+num(x.amountPaid),0);
+
+  $("selectedGroupsCount").textContent=picked.length;
+  $("selectedInvoicesCount").textContent=invoiceCount;
+  $("selectedCashUSD").textContent=usd(cashUSD);
+  $("selectedCashKHR").textContent=khr(cashKHR);
+
+  const btn=$("batchRequestBtn");
+  btn.disabled=invoiceCount===0;
+  btn.textContent=`Close Selected (${invoiceCount})`;
+
+  const summaryBtn=$("dailyCashSummaryBtn");
+  if(summaryBtn){
+    summaryBtn.disabled=invoiceCount===0;
+    summaryBtn.textContent=`▦ Daily Cash Summary (${invoiceCount})`;
+  }
+}
+
+function selectionSignature(g){
+  // Collection requests can contain invoices from different sales dates.
+  // Keep each close scoped to one location and one responsible salesman.
+  return [
+    String(g?.locationCode||g?.locationName||"").trim().toLowerCase(),
+    String(g?.salesman||"").trim().toLowerCase()
+  ].join("|||");
+}
+
+function currentSelectionSignature(){
+  const first=selectedGroupObjects()[0];
+  return first?selectionSignature(first):"";
+}
+
+function canJoinCurrentSelection(g){
+  const sig=currentSelectionSignature();
+  return !sig || selectionSignature(g)===sig;
+}
+
+function toggleGroupSelection(key,checked,el){
+  const g=groups.find(x=>x.key===key);
+  if(!g)return;
+
+  if(checked){
+    if(!groupAvailableInvoices(g).length){
+      if(el)el.checked=false;
+      return;
+    }
+
+    if(!canJoinCurrentSelection(g)){
+      if(el)el.checked=false;
+      alert("Batch selection must use the same Location and Salesman (any Sale Date).");
+      return;
+    }
+
+    selectedGroups.add(key);
+  }else{
+    selectedGroups.delete(key);
+  }
+
+  updateSelectedSummary();
+  renderGroups();
+}
+
+function toggleCheckAllPage(checked){
+  const page=currentMainPageGroups();
+  const eligible=page.filter(g=>groupAvailableInvoices(g).length>0);
+
+  if(!checked){
+    eligible.forEach(g=>selectedGroups.delete(g.key));
+    updateSelectedSummary();
+    renderGroups();
+    return;
+  }
+
+  let sig=currentSelectionSignature();
+
+  if(!sig){
+    const first=eligible[0];
+    if(!first){
+      renderGroups();
+      return;
+    }
+    sig=selectionSignature(first);
+  }
+
+  eligible
+    .filter(g=>selectionSignature(g)===sig)
+    .forEach(g=>selectedGroups.add(g.key));
+
+  updateSelectedSummary();
+  renderGroups();
+}
+
+function clearSelection(){
+  selectedGroups.clear();
+  requestGroups=[];
+  if($("cashRequestOverlay"))$("cashRequestOverlay").classList.add("hidden");
+  renderGroups();
+}
+
+async function loadRequestState(){
+  try{
+    const d=await api({action:"dccMyState",_ts:Date.now()});
+    invoiceStates=d.invoiceStates||d.lockedInvoices||{};
+    lockedInvoices=invoiceStates;
+    saveCloseStateCache();
+
+    buildGroups();
+
+    const availableKeys=new Set(
+      groups.filter(g=>groupAvailableInvoices(g).length>0).map(g=>g.key)
+    );
+
+    [...selectedGroups].forEach(k=>{
+      if(!availableKeys.has(k))selectedGroups.delete(k);
+    });
+
+    renderGroups();
+  }catch(e){
+    console.warn("Daily Cash close state:",e);
+    // Keep cached/current data visible and retry on next sync.
+  }
+}
+
+
+function requireSalesman(action){
+  if(typeof action==="function")action();
+}
+
+function openSingleRequest(key){
+  const g=groups.find(x=>x.key===key);
+  if(!g)return;
+  if(!groupAvailableInvoices(g).length)return alert("This Cash invoice is already closed or pending.");
+  openCashRequest([g]);
+}
+
+function openBatchRequest(){
+  const picked=selectedGroupObjects().filter(g=>groupAvailableInvoices(g).length>0);
+  if(!picked.length)return alert("Please select Cash invoices first.");
+
+  const sigs=[...new Set(picked.map(selectionSignature))];
+  if(sigs.length!==1){
+    return alert("Selected invoices must have the same Location and Salesman (any Sale Date).");
+  }
+
+  openCashRequest(picked);
+}
+
+function selectedCloseInvoices(){
+  return requestGroups.flatMap(g=>g.invoices||[]);
+}
+
+function expectedUsdForInvoice(inv){
+  const c=String(inv.currency||"USD").toUpperCase();
+  const amount=num(inv.amountPaid);
+
+  if(c==="USD")return amount;
+
+  const r=num(inv.exchangeRate);
+  return r>0?amount/r:NaN;
+}
+
+function expectedCloseUSD(){
+  return selectedCloseInvoices().reduce((s,inv)=>{
+    const x=expectedUsdForInvoice(inv);
+    return s+(Number.isFinite(x)?x:0);
+  },0);
+}
+
+function toggleCloseMethod(){
+  const self=$("closeMethod").value==="Deposit to Company Bank";
+  $("selfDepositFields").style.display=self?"":"none";
+  recalculateClose();
+}
+
+function recalculateClose(){
+  const expected=expectedCloseUSD();
+  const usdCash=num($("actualCashUSD").value);
+  const khrCash=num($("actualCashKHR").value);
+  const closeRate=num($("closingRate").value);
+
+  const actual=usdCash+(khrCash>0&&closeRate>0?khrCash/closeRate:0);
+  const diff=actual-expected;
+  const matched=Math.abs(diff)<=0.05 && (khrCash<=0||closeRate>0);
+
+  $("closeExpectedUSD").textContent=usd(expected);
+  $("closeActualEquivalent").textContent=usd(actual);
+  $("closeDifference").textContent=(diff>=0?"+":"-")+usd(Math.abs(diff));
+  $("closeMatchStatus").textContent=matched?"MATCHED ✓":"NOT MATCHED";
+  $("closeMatchStatus").style.color=matched?"#198754":"#c93c46";
+  const resultCard=$("closeResultCard");
+  if(resultCard){
+    resultCard.classList.toggle("good",matched);
+    resultCard.classList.toggle("bad",!matched);
+  }
+
+  if($("closeMethod").value==="Deposit to Company Bank"){
+    const depRate=num($("depositRate").value);
+    const expectedBank=usdCash+(khrCash>0&&depRate>0?khrCash/depRate:0);
+    const bankUsd=num($("bankDepositUSD").value);
+    const bankDiff=bankUsd-expectedBank;
+
+    $("expectedBankUSD").textContent=usd(expectedBank);
+    $("bankDifferenceUSD").textContent=(bankDiff>=0?"+":"-")+usd(Math.abs(bankDiff));
+  }
+
+  return {expected,actual,diff,matched};
+}
+
+function closeSelectedRows(){
+  return requestGroups.flatMap(g=>
+    (g.invoices||[]).map(inv=>({
+      inv,
+      g,
+      key:g.key
+    }))
+  );
+}
+
+function renderClosePagination(){
+  const rows=closeSelectedRows();
+  const pages=Math.max(1,Math.ceil(rows.length/CLOSE_PAGE_SIZE));
+  if(closePage>pages)closePage=pages;
+
+  const wrap=$("closePagination");
+  if(!wrap)return;
+
+  const buttons=[];
+  buttons.push(`<button class="page-btn" ${closePage<=1?"disabled":""} onclick="setClosePage(${closePage-1})">‹</button>`);
+
+  for(let p=1;p<=pages;p++){
+    if(p===1||p===pages||Math.abs(p-closePage)<=1){
+      buttons.push(`<button class="page-btn ${p===closePage?"active":""}" onclick="setClosePage(${p})">${p}</button>`);
+    }else if(!buttons[buttons.length-1]?.includes("…")){
+      buttons.push(`<span style="padding:0 2px;color:var(--muted)">…</span>`);
+    }
+  }
+
+  buttons.push(`<button class="page-btn" ${closePage>=pages?"disabled":""} onclick="setClosePage(${closePage+1})">›</button>`);
+  wrap.innerHTML=buttons.join("");
+}
+
+function setClosePage(page){
+  const rows=closeSelectedRows();
+  const pages=Math.max(1,Math.ceil(rows.length/CLOSE_PAGE_SIZE));
+  closePage=Math.min(Math.max(1,page),pages);
+  renderCloseSelectedPage();
+}
+
+function renderCloseSelectedPage(){
+  const rows=closeSelectedRows();
+  const start=(closePage-1)*CLOSE_PAGE_SIZE;
+  const page=rows.slice(start,start+CLOSE_PAGE_SIZE);
+
+  $("closeSelectedCount").textContent=`${rows.length} selected`;
+  $("closePageInfo").textContent=rows.length
+    ? `${start+1}-${Math.min(start+CLOSE_PAGE_SIZE,rows.length)} of ${rows.length} selected invoices`
+    : "0 selected invoices";
+
+  $("cashRequestList").innerHTML=page.map((x,i)=>{
+    const inv=x.inv;
+    const g=x.g;
+    const c=String(inv.currency||"USD").toUpperCase();
+    const expected=expectedUsdForInvoice(inv);
+
+    return `<tr>
+      <td class="center">
+        <input class="select-box" type="checkbox" checked onchange='removeFromCloseSelection(${JSON.stringify(x.key)},this.checked)'>
+      </td>
+      <td>${start+i+1}</td>
+      <td><strong>${esc(inv.invoiceNo||"-")}</strong></td>
+      <td class="bb-khmer-name">${esc(inv.customer||"-")}</td>
+      <td class="bb-khmer-name">${esc(g.salesman||"-")}</td>
+      <td>${esc(g.saleDate||"-")}</td>
+      <td class="bb-khmer-name">${esc(g.locationName||"-")}</td>
+      <td class="money">${c==="USD"?usd(inv.amountPaid):usd(0)}</td>
+      <td class="money">${c==="KHR"?khr(inv.amountPaid):khr(0)}</td>
+      <td class="money">${Number.isFinite(expected)?usd(expected):"—"}</td>
+      <td><span class="status-pill ${statusClass(invoiceRequestStatus(inv))}">${esc(invoiceRequestStatus(inv))}</span></td>
+      <td>
+        <button class="btn primary" type="button"
+          onclick='openPreview(${JSON.stringify(x.key)})'>Preview</button>
+      </td>
+    </tr>`;
+  }).join("");
+
+  const currentPageKeys=new Set(page.map(x=>x.key));
+  const allChecked=page.length>0 && page.every(x=>selectedGroups.has(x.key));
+  if($("closeCheckAllPage"))$("closeCheckAllPage").checked=allChecked;
+
+  const expected=expectedCloseUSD();
+  $("closePageTotal").textContent=`Selected Total: ${usd(expected)}`;
+
+  renderClosePagination();
+  recalculateClose();
+}
+
+function removeFromCloseSelection(key,checked){
+  if(checked)return;
+
+  selectedGroups.delete(key);
+  requestGroups=requestGroups.filter(g=>g.key!==key);
+
+  if(!requestGroups.length){
+    closeCashRequest();
+    renderGroups();
+    return;
+  }
+
+  renderCloseSelectedPage();
+  renderGroups();
+  updateSelectedSummary();
+}
+
+function toggleCloseCheckAllPage(checked){
+  if(checked){
+    // Everything shown in this close workspace is already selected.
+    renderCloseSelectedPage();
+    return;
+  }
+
+  const rows=closeSelectedRows();
+  const start=(closePage-1)*CLOSE_PAGE_SIZE;
+  const page=rows.slice(start,start+CLOSE_PAGE_SIZE);
+
+  page.forEach(x=>selectedGroups.delete(x.key));
+  requestGroups=requestGroups.filter(g=>selectedGroups.has(g.key));
+
+  if(!requestGroups.length){
+    closeCashRequest();
+    renderGroups();
+    return;
+  }
+
+  renderCloseSelectedPage();
+  renderGroups();
+  updateSelectedSummary();
+}
+
+function openCashRequest(picked){
+  const sigs=[...new Set(picked.map(selectionSignature))];
+  if(sigs.length!==1){
+    return alert("Selected invoices must have the same Location and Salesman (any Sale Date).");
+  }
+
+  requestGroups=picked
+    .map(g=>({...g,invoices:groupAvailableInvoices(g)}))
+    .filter(g=>g.invoices.length>0);
+
+  const invoices=selectedCloseInvoices();
+  if(!invoices.length)return alert("No Cash invoice is available to close.");
+
+  const missingRate=invoices.some(inv=>
+    String(inv.currency||"USD").toUpperCase()==="KHR" && num(inv.exchangeRate)<=0
+  );
+  if(missingRate)return alert("One or more KHR invoices are missing Exchange Rate.");
+
+  const first=requestGroups[0];
+  closePage=1;
+
+  $("cashRequestTitle").textContent=`Close Daily Cash (${invoices.length} invoice${invoices.length===1?"":"s"})`;
+  $("cashRequestInfo").textContent="Review selected invoices and count the real physical USD/KHR before sending to Admin.";
+  const dates=invoices.map(inv=>dateOnly(inv.invoiceDate)).filter(Boolean).sort();
+  const dateRange=dates.length
+    ? (dates[0]===dates[dates.length-1]?dates[0]:dates[0]+" → "+dates[dates.length-1])
+    : "Selected Sale Dates";
+  $("closeGroupRule").textContent=`${dateRange} · ${first.locationName} · Same Salesman (auto verified)`;
+
+  $("closeMethod").value="Hand Cash to Accountant";
+  $("actualCashUSD").value="0";
+  $("actualCashKHR").value="0";
+  $("closingRate").value="";
+  $("closeBankAccount").value="";
+  $("depositRate").value="";
+  $("bankDepositUSD").value="";
+  $("closeTransactionId").value="";
+  $("cashRequestNote").value="";
+  $("cashRequestError").textContent="";
+  $("cashRequestError").classList.remove("show");
+
+  toggleCloseMethod();
+  renderCloseSelectedPage();
+  $("cashRequestOverlay").classList.remove("hidden");
+}
+
+function closeCashRequest(){
+  $("cashRequestOverlay").classList.add("hidden");
+  requestGroups=[];
+}
+
+async function sendCashRequest(){
+  const invoices=selectedCloseInvoices();
+  if(!invoices.length)return;
+
+  const calc=recalculateClose();
+
+  if(!calc.matched){
+    $("cashRequestError").textContent="Actual USD + KHR does not match the selected invoice value.";
+    $("cashRequestError").classList.add("show");
+    return;
+  }
+
+  const method=$("closeMethod").value;
+  const actualKHR=num($("actualCashKHR").value);
+  const closingRate=num($("closingRate").value);
+
+  if(actualKHR>0&&closingRate<=0){
+    $("cashRequestError").textContent="Closing Exchange Rate is required.";
+    $("cashRequestError").classList.add("show");
+    return;
+  }
+
+  if(method==="Deposit to Company Bank"){
+    const bank=$("closeBankAccount").value.trim();
+    const tx=$("closeTransactionId").value.trim();
+    const depRate=num($("depositRate").value);
+    const bankUsd=num($("bankDepositUSD").value);
+    const expectedBank=num($("actualCashUSD").value)+(actualKHR>0&&depRate>0?actualKHR/depRate:0);
+
+    if(!bank||!tx){
+      $("cashRequestError").textContent="Company Bank Account and Transaction ID are required.";
+      $("cashRequestError").classList.add("show");
+      return;
+    }
+
+    if(actualKHR>0&&depRate<=0){
+      $("cashRequestError").textContent="Deposit Exchange Rate is required.";
+      $("cashRequestError").classList.add("show");
+      return;
+    }
+
+    if(bankUsd<=0||Math.abs(bankUsd-expectedBank)>0.05){
+      $("cashRequestError").textContent="Bank Deposit USD does not match the collected cash at Deposit Exchange Rate.";
+      $("cashRequestError").classList.add("show");
+      return;
+    }
+  }
+
+  const invoiceIds=[...new Set(invoices.map(x=>String(x.invoiceId||"").trim()).filter(Boolean))];
+
+  const btn=$("sendCashRequestBtn");
+  btn.disabled=true;
+  btn.textContent="Sending…";
+  $("cashRequestError").textContent="";
+  $("cashRequestError").classList.remove("show");
+
+  try{
+    const requestPayload={
+      invoiceIds,
+      salesperson:invoices[0]?.salesperson||"",
+      closeMethod:method,
+      actualCashUSD:num($("actualCashUSD").value),
+      actualCashKHR:num($("actualCashKHR").value),
+      closingRate:num($("closingRate").value),
+      bankAccount:$("closeBankAccount").value.trim(),
+      transactionId:$("closeTransactionId").value.trim(),
+      depositRate:num($("depositRate").value),
+      bankDepositUSD:num($("bankDepositUSD").value),
+      note:$("cashRequestNote").value.trim()
+    };
+
+    const d=await apiPost({
+      action:"dccCreateRequest",
+      requestData:JSON.stringify(requestPayload),
+
+      // Send the three matching values separately too.
+      // This prevents Apps Script form parsing from ever losing KHR/rate values.
+      actualCashUSD:requestPayload.actualCashUSD,
+      actualCashKHR:requestPayload.actualCashKHR,
+      closingRate:requestPayload.closingRate
+    });
+
+    // Keep submitted invoices visible as PENDING until Admin approves.
+    invoiceIds.forEach(id=>{
+      invoiceStates[id]={
+        closeId:d.closeId||d.requestId||"",
+        requestId:d.closeId||d.requestId||"",
+        status:"Pending",
+        rawStatus:"Processing",
+        canRequest:false
+      };
+    });
+    lockedInvoices=invoiceStates;
+    saveCloseStateCache();
+
+    selectedGroups.clear();
+    closeCashRequest();
+    buildGroups();
+
+    // Then confirm authoritative state from backend.
+    await loadRequestState();
+
+    alert(
+      `Daily Cash Close sent successfully.\n`+
+      `Close ID: ${d.closeId}\n`+
+      `Invoices: ${d.invoiceCount}\n`+
+      `Status: Pending Admin Review`
+    );
+  }catch(e){
+    $("cashRequestError").textContent=e.message||"Could not send Daily Cash Close.";
+    $("cashRequestError").classList.add("show");
+  }finally{
+    btn.disabled=false;
+    btn.textContent="✓ Send Close to Admin";
+  }
+}
+
+
+function selectedCashInvoicesForSummary(){
+  return selectedGroupObjects()
+    .flatMap(g=>(g.invoices||[]).map(inv=>({
+      ...inv,
+      locationName:g.locationName,
+      saleDate:g.saleDate
+    })))
+    .sort((a,b)=>
+      String(b.saleDate||"").localeCompare(String(a.saleDate||"")) ||
+      String(b.invoiceNo||"").localeCompare(String(a.invoiceNo||""))
+    );
+}
+
+function openDailyCashSummary(){
+  const rows=selectedCashInvoicesForSummary();
+
+  if(!rows.length){
+    alert("Please select Cash invoice data first.");
+    return;
+  }
+
+  const usdTotal=rows
+    .filter(x=>String(x.currency||"USD").toUpperCase()==="USD")
+    .reduce((s,x)=>s+num(x.amountPaid),0);
+
+  const khrTotal=rows
+    .filter(x=>String(x.currency||"USD").toUpperCase()==="KHR")
+    .reduce((s,x)=>s+num(x.amountPaid),0);
+
+  $("dailyCashSummarySubtitle").textContent=
+    `${rows.length} selected Cash invoice${rows.length===1?"":"s"} for preview`;
+
+  $("dailyCashSummaryMeta").innerHTML=`
+    <div class="meta-box"><small>Selected Cash Invoices</small><strong>${rows.length}</strong></div>
+    <div class="meta-box"><small>Cash USD</small><strong>${usd(usdTotal)}</strong></div>
+    <div class="meta-box"><small>Cash KHR</small><strong>${khr(khrTotal)}</strong></div>
+    <div class="meta-box"><small>Pending Requests</small><strong>${rows.filter(x=>invoiceRequestStatus(x)==="Pending").length}</strong></div>
+  `;
+
+  $("dailyCashSummaryBody").innerHTML=rows.map(inv=>{
+    const c=String(inv.currency||"USD").toUpperCase();
+    const st=invoiceRequestStatus(inv);
+
+    return `<tr>
+      <td>${esc(inv.saleDate||String(inv.invoiceDate||"").slice(0,10))}</td>
+      <td><strong>${esc(inv.invoiceNo)}</strong></td>
+      <td class="bb-khmer-name">${esc(inv.customer||"-")}</td>
+      <td>${esc(inv.salesperson||"-")}</td>
+      <td class="bb-khmer-name">${esc(inv.locationName||inv.locationCode||"-")}</td>
+      <td>${esc(c)}</td>
+      <td class="money">${c==="KHR"?khr(inv.amountPaid):usd(inv.amountPaid)}</td>
+      <td><span class="status-pill ${statusClass(st)}">${esc(st)}</span></td>
+      <td><button class="btn primary" onclick='showDailyCashInvoiceDetail(${JSON.stringify(inv.invoiceId)},${JSON.stringify(inv.invoiceNo)})'>View Invoice</button></td>
+    </tr>`;
+  }).join("");
+
+  $("dailyCashInvoiceDetailPanel").classList.add("hidden");
+  $("dailyCashSummaryOverlay").classList.remove("hidden");
+}
+
+function closeDailyCashSummary(){
+  $("dailyCashSummaryOverlay").classList.add("hidden");
+  $("dailyCashInvoiceDetailPanel").classList.add("hidden");
+}
+
+async function showDailyCashInvoiceDetail(invoiceId,invoiceNo){
+  const panel=$("dailyCashInvoiceDetailPanel");
+  panel.classList.remove("hidden");
+  $("dailyCashInvoiceDetailTitle").textContent=`Invoice ${invoiceNo}`;
+  $("dailyCashInvoiceDetailContent").innerHTML='<div class="empty">Loading invoice detail…</div>';
+
+  try{
+    const inv=await getCashInvoiceDetail(invoiceId,invoiceNo);
+    if(!inv)throw new Error("Invoice was not found.");
+
+    const c=String(inv.currency||"USD").toUpperCase();
+    $("dailyCashInvoiceDetailContent").innerHTML=`
+      <div class="preview-meta">
+        <div class="meta-box"><small>Customer</small><strong>${esc(inv.customer||"-")}</strong></div>
+        <div class="meta-box"><small>Salesman</small><strong>${esc(inv.salesperson||"-")}</strong></div>
+        <div class="meta-box"><small>Location</small><strong>${esc(inv.locationCode||"-")}</strong></div>
+        <div class="meta-box"><small>Cash Amount</small><strong>${c==="KHR"?khr(inv.amountPaid):usd(inv.amountPaid)}</strong></div>
+      </div>
+      <div class="tablewrap">
+        <table class="preview-table">
+          <thead><tr><th>Product</th><th>Unit</th><th class="money">Qty</th><th class="money">Unit Price</th><th class="money">Total</th></tr></thead>
+          <tbody>${(inv.items||[]).map(x=>`
+            <tr>
+              <td><strong>${esc(x.productName||x.productCode||"-")}</strong></td>
+              <td>${esc(x.unit||"-")}</td>
+              <td class="money">${num(x.qty)}</td>
+              <td class="money">${c==="KHR"?khr(x.price):usd(x.price)}</td>
+              <td class="money">${c==="KHR"?khr(x.total):usd(x.total)}</td>
+            </tr>`).join("") || '<tr><td colspan="5" class="empty">No product detail.</td></tr>'}</tbody>
+        </table>
+      </div>`;
+  }catch(e){
+    $("dailyCashInvoiceDetailContent").innerHTML=`<div class="statusbar show">${esc(e.message||"Could not load invoice detail.")}</div>`;
+  }
+}
+
+function readCache(){
+  try{
+    const raw=localStorage.getItem(CACHE_KEY);
+    if(!raw) return null;
+    const d=JSON.parse(raw);
+    if(!d || !Array.isArray(d.invoices)) return null;
+    return d;
+  }catch(_){
+    return null;
+  }
+}
+
+function saveCache(){
+  try{
+    localStorage.setItem(CACHE_KEY,JSON.stringify({
+      revision:String(lastRevision||""),
+      savedAt:Date.now(),
+      invoices:allInvoices,
+      locationMap:locationMap
+    }));
+  }catch(_){}
+}
+
+function showCache(){
+  const c=readCache();
+  if(!c) return false;
+
+  lastRevision=String(c.revision||"");
+  allInvoices=c.invoices;
+  if(c.locationMap && typeof c.locationMap==="object") locationMap=c.locationMap;
+
+  invoiceStates=readCloseStateCache();
+  lockedInvoices=invoiceStates;
+
+  buildGroups();
+  $("syncStatus").textContent="Cached • checking for updates...";
+  return true;
+}
+
+async function getRevision(){
+  const d=await api({action:"invoiceHistoryRevision"});
+  return String(d.revision||"0");
+}
+
+async function loadInvoices(manual=false,silent=false){
+  const btn=$("refreshBtn");
+
+  if(manual){
+    btn.disabled=true;
+    btn.textContent="Refreshing…";
+  }
+
+  if(!silent){
+    showError("");
+    $("syncStatus").textContent="Loading sales invoice cash...";
+  }
+
+  try{
+    const [d,revision]=await Promise.all([
+      api({action:"invoiceList"}),
+      getRevision().catch(()=>lastRevision||""),
+      loadLocationMap()
+    ]);
+
+    allInvoices=Array.isArray(d.invoices)?d.invoices:[];
+    lastRevision=String(revision||lastRevision||"");
+
+    buildGroups();
+    saveCache();
+    await loadRequestState();
+
+    $("syncStatus").textContent=
+      `Updated • ${allInvoices.length} invoices checked`;
+  }catch(e){
+    const c=readCache();
+
+    if(c){
+      allInvoices=c.invoices;
+      lastRevision=String(c.revision||lastRevision||"");
+      if(c.locationMap && typeof c.locationMap==="object") locationMap=c.locationMap;
+      buildGroups();
+      $("syncStatus").textContent="Cached data • sync will retry";
+    }else{
+      showError(e.message||"Could not load sales invoice cash.");
+      $("summaryBody").innerHTML=
+        '<tr><td colspan="12" class="empty">Could not load Daily Cash Collection.</td></tr>';
+      $("syncStatus").textContent="Load failed";
+    }
+  }finally{
+    if(manual){
+      btn.disabled=false;
+      btn.textContent="↻ Refresh";
+    }
+  }
+}
+
+async function smartSync(force=false){
+  if(syncBusy) return;
+  if(document.hidden && !force) return;
+
+  syncBusy=true;
+
+  try{
+    const revision=await getRevision();
+
+    if(lastRevision && revision===lastRevision){
+      // Invoice data may be unchanged while Daily Cash request status changed.
+      // Refresh request state independently so Pending/Approved/Deposited
+      // never falls back to Not Requested.
+      if(salesmanSessionToken){
+        await loadRequestState();
+      }
+
+      $("syncStatus").textContent="Up to date • auto sync 20s";
+      return;
+    }
+
+    lastRevision=revision;
+    await loadInvoices(false,true);
+    $("syncStatus").textContent="Updated automatically";
+  }catch(_){
+    // Keep cached/current data visible and retry next cycle.
+  }finally{
+    syncBusy=false;
+  }
+}
+
+function startSmartSync(){
+  if(syncTimer) clearInterval(syncTimer);
+  syncTimer=setInterval(()=>smartSync(false),SYNC_INTERVAL_MS);
+}
+
+async function getCashInvoiceDetail(invoiceId,invoiceNo){
+  const id=String(invoiceId||"").trim();
+  const no=String(invoiceNo||"").trim();
+  const key=id||no;
+  if(!key)return null;
+  if(invoiceDetailCache[key])return invoiceDetailCache[key];
+
+  const d=await api({action:"invoiceDetail",invoiceId:id,invoiceNo:no,_ts:Date.now()});
+  const inv=d?.invoice||null;
+  if(inv)invoiceDetailCache[key]=inv;
+  return inv;
+}
+
+function productSummaryHtml(items){
+  if(!Array.isArray(items)||!items.length)return '<span style="color:var(--muted)">No product detail</span>';
+  return items.map(x=>{
+    const name=esc(x.productName||x.productCode||"Product");
+    const qty=num(x.qty);
+    const unit=esc(x.unit||"");
+    return `<span class="product-chip">${name} × ${qty}${unit?" "+unit:""}</span>`;
+  }).join("");
+}
+
+async function openPreview(key){
+  currentGroup=groups.find(g=>g.key===key);
+  if(!currentGroup) return;
+
+  const g=currentGroup;
+
+  $("previewSubtitle").textContent=
+    `${g.saleDate} • ${g.salesman} • ${g.locationName}`;
+
+  $("previewMeta").innerHTML=`
+    <div class="meta-box"><small>Collection Date</small><strong>${esc(g.saleDate)}</strong></div>
+    <div class="meta-box"><small>Salesman</small><strong>${esc(g.salesman)}</strong></div>
+    <div class="meta-box"><small>Location Name</small><strong>${esc(g.locationName)}</strong></div>
+    <div class="meta-box"><small>Invoice No</small><strong>${esc(g.invoices?.[0]?.invoiceNo||"-")}</strong></div>
+  `;
+
+  $("previewBody").innerHTML=g.invoices.map(inv=>{
+    const c=String(inv.currency||"USD").toUpperCase();
+    const reqStatus=invoiceRequestStatus(inv);
+
+    return `<tr data-invoice-no="${esc(inv.invoiceNo)}">
+      <td><strong>${esc(inv.invoiceNo)}</strong></td>
+      <td class="bb-khmer-name">${esc(inv.customer)}</td>
+      <td class="products-cell" id="products-${String(inv.invoiceId||inv.invoiceNo).replace(/[^a-zA-Z0-9_-]/g,"_")}"><span style="color:var(--muted)">Loading products…</span></td>
+      <td>${esc(inv.paymentMethod||"-")}</td>
+      <td>${esc(c)}</td>
+      <td class="money">${c==="KHR"?(num(inv.exchangeRate)>0?rate(inv.exchangeRate):'<span class="warn">Missing</span>'):"-"}</td>
+      <td class="money">${c==="KHR"?khr(inv.amountPaid):usd(inv.amountPaid)}</td>
+      <td><span class="status-pill ${statusClass(reqStatus)}">${esc(reqStatus)}</span></td>
+    </tr>`;
+  }).join("");
+
+  const converted=g.dailyCashUSD==null?null:(g.cashKHR ? g.cashKHR/g.avgRate : 0);
+
+  $("previewTotals").innerHTML=`
+    <div class="total-row"><span>Cash Collected USD</span><strong>${usd(g.cashUSD)}</strong></div>
+    <div class="total-row"><span>Cash Collected KHR</span><strong>${khr(g.cashKHR)}</strong></div>
+    <div class="total-row"><span>Average KHR Exchange Rate</span><strong class="${g.rateComplete?"":"warn"}">${g.cashKHR?(g.rateComplete?rate(g.avgRate):"Missing Exchange Rate"):"-"}</strong></div>
+    <div class="total-row"><span>KHR Converted to USD</span><strong>${converted==null?"—":usd(converted)}</strong></div>
+    <div class="total-row key"><span>Cash Collection in USD</span><strong>${g.dailyCashUSD==null?"—":usd(g.dailyCashUSD)}</strong></div>
+  `;
+
+  $("previewOverlay").classList.remove("hidden");
+
+  // Load product detail without blocking the preview window.
+  await Promise.allSettled(g.invoices.map(async inv=>{
+    const id="products-"+String(inv.invoiceId||inv.invoiceNo).replace(/[^a-zA-Z0-9_-]/g,"_");
+    const cell=$(id);
+    if(!cell)return;
+    try{
+      const detail=await getCashInvoiceDetail(inv.invoiceId,inv.invoiceNo);
+      cell.innerHTML=productSummaryHtml(detail?.items||[]);
+    }catch(error){
+      console.warn("Cash Collection product detail:",inv.invoiceId||inv.invoiceNo,error?.message||error);
+      cell.innerHTML='<span class="warn">Could not load products</span>';
+    }
+  }));
+
+  const previewOverlayEl=$("previewOverlay");
+  if(previewOverlayEl){
+    previewOverlayEl.style.zIndex="1200";
+  }
+}
+
+function closePreview(){
+  $("previewOverlay").classList.add("hidden");
+  currentGroup=null;
+}
+
+/* OFFLINE READ-ONLY CUTOVER. Keep original list/filter/preview/summary UI,
+ * but source every record from the signed-in user's private snapshot.
+ * LocalStorage caches here are legacy cross-user keys and MUST NOT be used.
+ */
+api=window.BBCollectionOfflineAdapter.api;
+apiPost=window.BBCollectionOfflineAdapter.apiPost;
+loadLocationMap=window.BBCollectionOfflineAdapter.locationMap;
+readCache=function(){return null};
+saveCache=function(){};
+readCloseStateCache=function(){return {}};
+saveCloseStateCache=function(){};
+startSmartSync=function(){};
+smartSync=async function(){return};
+openSingleRequest=function(){alert('Close requests require the online workspace.')};
+openBatchRequest=function(){alert('Close requests require the online workspace.')};
+openCashRequest=function(){alert('Close requests require the online workspace.')};
+sendCashRequest=async function(){throw Error('Offline collection writes are blocked.')};
+const bbReadOnlyRenderGroups=renderGroups;
+renderGroups=function(){
+  bbReadOnlyRenderGroups();
+  document.querySelectorAll('#summaryBody .btn.request').forEach(b=>{
+    b.disabled=true;b.textContent='Online Only';b.removeAttribute('onclick');
+  });
+  const batch=document.getElementById('batchRequestBtn');
+  if(batch){batch.disabled=true;batch.textContent='Close Online Only';}
+};
+const bbReadOnlySelectedSummary=updateSelectedSummary;
+updateSelectedSummary=function(){
+  bbReadOnlySelectedSummary();
+  const batch=document.getElementById('batchRequestBtn');
+  if(batch){batch.disabled=true;batch.textContent='Close Online Only';}
+};
+
+(async function init(){
+  invoiceStates=readCloseStateCache();
+  lockedInvoices=invoiceStates;
+
+  const cached=showCache();
+
+  if(cached){
+    // Show cached invoice + close status immediately.
+    // Refresh authoritative data quietly in the background.
+    Promise.allSettled([
+      loadLocationMap(),
+      loadRequestState(),
+      smartSync(true)
+    ]);
+  }else{
+    await loadInvoices(false,false);
+    await loadRequestState();
+  }
+
+  startSmartSync();
+})();
+
+document.addEventListener("visibilitychange",()=>{
+  if(!document.hidden) smartSync(true);
+});
+</script>
+</body>
+</html>
