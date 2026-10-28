@@ -14,6 +14,7 @@ const esc=v=>clean(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const mapRoutes={
   'ar-your':'offline-ar-your',
   'sales-support-your-receivable':'offline-ar-your',
+  'sales-support-your-collection':'offline-your-collection-v1',
   'sales-support-your-customer':'offline-your-customer-v1',
   'ar-all':'offline-ar-all',
   'stock-report':'offline-stock-report',
@@ -282,6 +283,15 @@ function livePageReady(name,frame){
       return !doc.getElementById('main')?.hidden &&
         /Generated|Ready/i.test(doc.getElementById('status')?.textContent||'');
     }
+    if(name==='sales-support-your-collection'){
+      // The mobile Collection wrapper is loaded before its nested read-only
+      // invoice data engine. Only hand off after real permission-scoped data.
+      const inner=doc.getElementById('collectionFrame')?.contentDocument;
+      const status=(inner?.getElementById('syncStatus')?.textContent||'').trim();
+      return !!inner?.getElementById('summaryBody') &&
+        /Updated|Up to date/i.test(status) &&
+        !!doc.getElementById('boot')?.classList.contains('hide');
+    }
     if(name==='sales-support-your-customer'){
       const list=doc.getElementById('yourCustomerList');
       const badge=doc.getElementById('customerCountBadge');
@@ -433,16 +443,17 @@ async function open(name){
   const date=new Date(rec.syncedAt).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
   showRefreshTime();
   const frame=$('moduleFrame');
-  if(name==='sales-support-calculator'||name==='sales-support-your-customer'||name==='stock-report'||name==='history'||name==='monthly-sales-report'||
+  if(name==='sales-support-calculator'||name==='sales-support-your-customer'||name==='sales-support-your-collection'||name==='stock-report'||name==='history'||name==='monthly-sales-report'||
      name==='sales-support-your-stock'||name==='sales-support-batch-selling-tracker'||name==='daily-sale-summary'){
     const full=name==='stock-report'?await offline()?.read('offline-stock-report-full'):null;
     if(epoch!==openEpoch)return false;
-    if(name==='sales-support-calculator'||name==='sales-support-your-customer'||name==='history'||name==='monthly-sales-report'||
+    if(name==='sales-support-calculator'||name==='sales-support-your-customer'||name==='sales-support-your-collection'||name==='history'||name==='monthly-sales-report'||
        name==='sales-support-your-stock'||name==='sales-support-batch-selling-tracker'||name==='daily-sale-summary'||
        full?.value?.success){
       const url=name==='sales-support-calculator'
         ?'./mobile-offline-calculator.html?mobile=1&view=calculator&v=20261028-seamless1'
         :name==='sales-support-your-customer'?'./mobile-offline-your-customer-v1.html?embed=1&v=20261028-interactive1'
+        :name==='sales-support-your-collection'?'./mobile-offline-your-collection-mobile-v1.html?embed=1&v=20261028-collection1'
         :name==='history'?'./mobile-offline-history-mobile-v1.html?embed=1&v=20261028-alllines1'
         :name==='monthly-sales-report'?'./mobile-offline-monthly-sales-v1.html?embed=1&v=20261028-monthly1'
         :name==='sales-support-your-stock'?'./mobile-offline-your-stock-v12.html?embed=1&v=20261028-stock-batchfix1'
