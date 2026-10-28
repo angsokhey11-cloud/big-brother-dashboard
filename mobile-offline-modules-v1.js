@@ -397,8 +397,8 @@ function stageLivePage(name){
       try{
         const observe=(doc,depth=0)=>{
           if(!doc||depth>3||livePreload!==entry)return;
-          if(!doc.__bbLiveHandoffInteractedWatch){
-            doc.__bbLiveHandoffInteractedWatch=true;
+          if(doc.__bbLiveHandoffInteractedWatch!==entry){
+            doc.__bbLiveHandoffInteractedWatch=entry;
             ['pointerdown','keydown','input','change'].forEach(event=>
               doc.addEventListener(event,mark,{once:true,capture:true}));
           }
