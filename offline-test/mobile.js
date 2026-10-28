@@ -154,6 +154,7 @@ async function signIn(email,password){
   const next=await parse(r);saveSession(next);return next;
 }
 async function signOut(){
+  if(window.BBMobileOfflineWorkspaceV1?.previewReadOnly){toast('Test Mode: sign out from the main BIG BROTHER app.');return}
   try{await window.BBPush?.disable({silent:true})}catch(_){}
   const current=readSession();
   try{if(current?.access_token&&window.BBMobileOfflineWorkspaceV1?.canUseNetwork()!==false)await fetch(SUPABASE_URL+'/auth/v1/logout',{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+current.access_token},cache:'no-store'})}catch(_){}
