@@ -336,7 +336,7 @@ function showHome(clearRoute=true,skipStartupDuplicateRefresh=false){
   renderHome();refreshNav('home');$('mobileScroll').scrollTop=0;
 
   /* Returning Home must immediately refresh Admin management data. */
-  if(isAdmin()&&!skipStartupDuplicateRefresh)setTimeout(()=>loadOverview(true),40);
+  if(isAdmin()&&!skipStartupDuplicateRefresh)setTimeout(()=>loadOverview(false),40);
 }
 function showMenu(tab,clearRoute=true){
   activeTab=tab;hideAll();$('menuScreen').hidden=false;
