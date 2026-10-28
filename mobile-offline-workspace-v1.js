@@ -9,6 +9,8 @@ const DB_NAME='BB_MOBILE_OFFLINE_WORKSPACE_V1', STORE='snapshots';
 const SESSION_KEY='BB_SUPABASE_DEV_SESSION_V1';
 const LEGACY_TEST_KEY_PREFIX='bb_mobile_offline_test_v1::';
 const MAX_AGE_MS=7*24*60*60*1000;
+const LOCAL_MODE=new URLSearchParams(location.search).get('localbrain')==='1';
+let lastLocalResume=0;
 let connection=navigator.onLine!==false;
 let latestSync=0,dbPromise=null,initializedFor='';
 function currentUserId(){
@@ -107,7 +109,10 @@ function updateIndicator(){
   if(!el)return;
   const offline=!canUseNetwork()||!connection;
   const stamp=latestSync?new Date(latestSync).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'not yet synced';
-  el.textContent=(offline?'Offline · saved read-only dashboard':'Online · auto-sync enabled')+' · Last sync: '+stamp;
+  const recentlySaved=latestSync&&Date.now()-latestSync<5*60*1000;
+  const status=offline?'Offline · saved read-only dashboard':
+    (recentlySaved?'Online · data saved successfully':'Network connected · awaiting fresh data');
+  el.textContent=status+' · Last sync: '+stamp;
   el.style.background=offline?'#e9f7f0':'#ecf4ff';
   el.style.color=offline?'#185e4b':'#215b87';
 }
@@ -125,6 +130,20 @@ async function success(){
   setConnection(navigator.onLine!==false);
   if(canUseNetwork())await write('last-sync',Date.now());
 }
+// Android WebView can remain on Wi-Fi while V6 restarts: the browser's
+// online event does not fire when the local server comes back. On returning
+// to the Local Brain app, retry only if data is stale (no polling of cloud).
+function resumeLocalSync(){
+  updateIndicator();
+  if(!LOCAL_MODE||document.visibilityState==='hidden'||!currentUserId()||!canUseNetwork())return;
+  const now=Date.now();
+  if(latestSync&&now-latestSync<5*60*1000)return;
+  if(now-lastLocalResume<2*60*1000)return;
+  lastLocalResume=now;
+  window.dispatchEvent(new Event('bb:mobile-reconnected'));
+}
+window.addEventListener('focus',resumeLocalSync);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')resumeLocalSync()});
 window.addEventListener('offline',()=>setConnection(false));
 window.addEventListener('online',()=>{
   setConnection(true);
