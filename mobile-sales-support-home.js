@@ -992,7 +992,7 @@ function openRoute(route,navState='',forceLive=false){
     return;
   }
   const universal=window.BBMobileUniversalReadOnlyV1;
-  if(!forceLive&&universal&&!['history','monthly-sales-report'].includes(route)){
+  if(!forceLive&&universal&&!['history','monthly-sales-report','sales-support-your-stock','sales-support-batch-selling-tracker','daily-sale-summary'].includes(route)){
     void universal.open(route).then(ok=>{
       if(!ok){
         if(offline?.canUseNetwork())openRoute(route,navState,true);
