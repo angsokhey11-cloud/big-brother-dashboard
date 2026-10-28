@@ -262,11 +262,32 @@ function preload(route,url,visible,id){
     live=null;clearInterval(entry.interval);clearTimeout(entry.timeout);
     const liveFrame=frame;const sourceFrame=$('moduleFrame');
     if(!sourceFrame||sourceFrame!==visible){liveFrame.remove();return}
-    sourceFrame.replaceWith(liveFrame);
-    liveFrame.id='moduleFrame';liveFrame.style.cssText='';
+    // Never move the already loaded frame: replaceWith() reparents it and
+    // some mobile browsers restart the entire live document.
+    try{
+      const a=sourceFrame.contentDocument?.scrollingElement;
+      const b=liveFrame.contentDocument?.scrollingElement;
+      if(a&&b){b.scrollTop=a.scrollTop;b.scrollLeft=a.scrollLeft}
+    }catch(_){}
+    sourceFrame.id='bbUniversalRetiringFrame';
+    liveFrame.id='moduleFrame';
     liveFrame.removeAttribute('aria-hidden');
-    liveFrame.removeAttribute('sandbox');
-    watch(route,liveFrame);
+    liveFrame.style.cssText='visibility:visible!important;opacity:0!important;'+
+      'z-index:6!important;pointer-events:none!important;transition:opacity 160ms ease!important;';
+    const finish=()=>{
+      sourceFrame.remove();
+      if(liveFrame.parentNode!==screen||$('moduleFrame')!==liveFrame)return;
+      liveFrame.style.cssText='';
+      liveFrame.removeAttribute('sandbox');
+      liveFrame.inert=false;
+      watch(route,liveFrame);
+    };
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      if(liveFrame.parentNode!==screen||$('moduleFrame')!==liveFrame)return finish();
+      liveFrame.style.setProperty('opacity','1','important');
+      liveFrame.style.setProperty('pointer-events','auto','important');
+      setTimeout(finish,205);
+    }));
   };
   entry.interval=setInterval(check,250);
   entry.timeout=setTimeout(()=>{if(live===entry)stop()},90000);
