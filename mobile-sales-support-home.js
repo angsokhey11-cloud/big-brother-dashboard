@@ -1614,6 +1614,7 @@ async function load(){
   setTimeout(()=>{void window.BBMobileOfflineModulesV1?.sync(safeRpc,canRoute)},1500);
   setTimeout(()=>{void window.BBMobileReportSyncV1?.warm()},2100);
   setTimeout(()=>{void window.BBMobileStaffReportsV12?.warm()},4500);
+  setTimeout(()=>{void window.BBMobileCollectionOfflineV1?.sync()},5500);
   await Promise.allSettled([liveProfilePromise,prefsPromise,overviewPromise,paymentPromise,attentionPromise,stockPromise]);
 }
 
@@ -1806,6 +1807,83 @@ window.BBMobileStaffReportsV12=Object.freeze({
   }
 });
 
+
+/* Your Collection mobile offline V1. All data comes from existing
+ * permission-scoped, read-only Supabase RPCs. Never cache other users'
+ * invoices, and never create/close a collection from an offline screen.
+ */
+const collectionOfflineFlights=new Map();
+const COLLECTION_KEY='offline-your-collection-v1';
+const collectionDetailKey=id=>'offline-your-collection-detail::'+clean(id);
+const collectionRoute='sales-support-your-collection';
+async function syncCollection(force=false){
+  const api=window.BBMobileOfflineWorkspaceV1;
+  if(!api?.canUseNetwork()||!canRoute(collectionRoute))return null;
+  const user=api.currentUserId();
+  if(!user)return null;
+  const record=await api.read(COLLECTION_KEY);
+  if(!force&&record?.value?.success&&Date.now()-record.syncedAt<20*60*1000)return record.value;
+  const flightKey=user+'::collection-list';
+  if(collectionOfflineFlights.has(flightKey))return collectionOfflineFlights.get(flightKey);
+  const work=(async()=>{
+    const [list,state,access]=await Promise.all([
+      safeRpc('bb_sales_support_your_collection_invoice_list'),
+      safeRpc('bb_sales_support_your_collection_my_state'),
+      safeRpc('bb_sales_support_your_collection_access_profile')
+    ]);
+    if(!list?.success||!Array.isArray(list.invoices)||!state?.success||
+       !access?.success||api.currentUserId()!==user||!api.canUseNetwork()||!canRoute(collectionRoute))return null;
+    const data={success:true,invoices:list.invoices,
+      invoiceStates:state.invoiceStates||state.lockedInvoices||{},
+      locations:Array.isArray(access.locations)?access.locations.map(l=>({
+        locationCode:clean(l.locationCode),locationName:clean(l.locationName)
+      })):[],syncedAt:Date.now()};
+    if(!await api.write(COLLECTION_KEY,data))return null;
+    // A small bounded warm-up saves initial invoice product previews. Subsequent
+    // details are saved on-demand; no large request storm or polling.
+    void (async()=>{
+      const ids=[...new Set(data.invoices
+        .filter(x=>clean(x.paymentMethod).toLowerCase()==='cash'&&Number(x.amountPaid)>0)
+        .map(x=>clean(x.invoiceId)).filter(Boolean))].slice(0,12);
+      for(const id of ids){
+        if(!api.canUseNetwork()||api.currentUserId()!==user||!canRoute(collectionRoute))break;
+        const existing=await api.read(collectionDetailKey(id));
+        if(existing?.value?.success)continue;
+        await collectionDetail(id);
+      }
+    })().catch(()=>{});
+    return data;
+  })();
+  collectionOfflineFlights.set(flightKey,work);
+  try{return await work}finally{collectionOfflineFlights.delete(flightKey)}
+}
+async function collectionDetail(invoiceId){
+  const api=window.BBMobileOfflineWorkspaceV1,id=clean(invoiceId);
+  if(!id||!api?.canUseNetwork()||!canRoute(collectionRoute))return null;
+  const user=api.currentUserId();
+  if(!user)return null;
+  const list=await api.read(COLLECTION_KEY);
+  if(!list?.value?.success||!Array.isArray(list.value.invoices)||
+     !list.value.invoices.some(x=>clean(x.invoiceId)===id))return null;
+  const key=collectionDetailKey(id);
+  const existing=await api.read(key);
+  if(existing?.value?.success&&clean(existing.value.invoice?.invoiceId)===id)return existing.value;
+  const flightKey=user+'::collection-detail::'+id;
+  if(collectionOfflineFlights.has(flightKey))return collectionOfflineFlights.get(flightKey);
+  const work=(async()=>{
+    const data=await safeRpc('bb_sales_support_your_collection_invoice_detail_by_id',{p_invoice_id:id});
+    if(!data?.success||clean(data.invoice?.invoiceId)!==id||
+       api.currentUserId()!==user||!api.canUseNetwork()||!canRoute(collectionRoute))return null;
+    // Membership must be checked again after the network response.
+    const stillAllowed=await api.read(COLLECTION_KEY);
+    if(!stillAllowed?.value?.invoices?.some(x=>clean(x.invoiceId)===id))return null;
+    return await api.write(key,data)?data:null;
+  })();
+  collectionOfflineFlights.set(flightKey,work);
+  try{return await work}finally{collectionOfflineFlights.delete(flightKey)}
+}
+window.BBMobileCollectionOfflineV1=Object.freeze({sync:syncCollection,detail:collectionDetail});
+
 const calcPriceFlights=new Map();
 window.BBMobileLiveReadBridgeV1=Object.freeze({
   // This is a read-only authenticated RPC. No local Calculator operation
@@ -1848,6 +1926,7 @@ function start(){
     setTimeout(()=>{void window.BBMobileOfflineModulesV1?.sync(safeRpc,canRoute,true)},1600);
     setTimeout(()=>{void window.BBMobileReportSyncV1?.warm()},2600);
     setTimeout(()=>{void window.BBMobileStaffReportsV12?.warm()},4000);
+    setTimeout(()=>{void window.BBMobileCollectionOfflineV1?.sync(true)},5800);
     // mobile.js activate() already refreshes Overview: avoid duplicate RPCs.
     void refreshAttention(true);
     void syncPreferencesFromServer(true);
