@@ -155,7 +155,7 @@ async function toggleTest(){
   updateIndicator();updateControls();
   window.dispatchEvent(new Event('bb:mobile-offline-mode-changed'));
   // Explicitly trigger cloud refresh when returning to Normal Mode.
-  if(active&&canUseNetwork())window.dispatchEvent(new Event('bb:mobile-reconnected'));
+  if(active&&navigator.onLine!==false){setConnection(true);window.dispatchEvent(new Event('bb:mobile-reconnected'))}
 }
 function installControls(){
   const sheet=document.querySelector('#settingsSheet .sheet-card');
@@ -175,7 +175,8 @@ function installControls(){
   else sheet.insertBefore(panel,sheet.lastElementChild);
   panel.querySelector('#bbOfflineTestToggle').addEventListener('click',()=>void toggleTest());
   panel.querySelector('#bbOfflineSyncNow').addEventListener('click',()=>{
-    if(!canUseNetwork()){setNote('Internet required. Turn OFF Offline Test first.');return}
+    if(isTestMode()||navigator.onLine===false){setNote('Internet required. Turn OFF Offline Test first.');return}
+    setConnection(true);
     setNote('Sync requested. The timestamp updates after data is saved.');
     window.dispatchEvent(new Event('bb:mobile-reconnected'));
   });
