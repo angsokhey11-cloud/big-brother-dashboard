@@ -178,7 +178,7 @@ function close(){
   const back=$('moduleBack');if(back)back.hidden=false;
   route='';dataset=null;
 }
-function openNativeRoute(name,useLocalFrame=false){
+function openNativeRoute(name,useLocalFrame=false,skipRecord=false){
   const screen=$('moduleScreen'),frame=$('moduleFrame');
   if(!screen||!frame)return false;
   // Reuse the EXACT native history stack and bottom navigation as an online module.
@@ -193,7 +193,7 @@ function openNativeRoute(name,useLocalFrame=false){
   const bottom=$('moduleBottomNav');
   if(bottom)bottom.hidden=false;
   const nav=window.BBMobileHistoryV7||window.BBMobileHistoryV6;
-  if(nav&&!nav.isRestoring?.())nav.recordModule(name,true);
+  if(nav&&!skipRecord&&!nav.isRestoring?.())nav.recordModule(name,true);
   if(!useLocalFrame){
     frame.style.display='none';
     if(host)host.style.display='block';
@@ -206,6 +206,7 @@ function openNativeRoute(name,useLocalFrame=false){
 function notice(message){const note=$('bbOffNote');if(note)note.textContent=message}
 async function open(name){
   if(!canOpen(name)||!currentId())return false;
+  const restoringAtStart=(window.BBMobileHistoryV7||window.BBMobileHistoryV6)?.isRestoring?.()===true;
   const rec=await offline()?.read(mapRoutes[name]);
   if(!rec?.value)return false;
   route=name;
@@ -222,12 +223,12 @@ async function open(name){
       const url=name==='sales-support-calculator'
         ?'./mobile-offline-calculator.html?mobile=1&view=calculator'
         :'./mobile-offline-stock.html?embed=1';
-      if(!openNativeRoute(name,true))return false;
+      if(!openNativeRoute(name,true,restoringAtStart))return false;
       if(frame.getAttribute('src')!==url)frame.setAttribute('src',url);
       return true;
     }
   }
-  if(!openNativeRoute(name,false))return false;
+  if(!openNativeRoute(name,false,restoringAtStart))return false;
   if(name.includes('receivable')||name.startsWith('ar-'))renderReceivables();
   else renderStock();
   if(host)host.scrollTop=0;
@@ -236,6 +237,17 @@ async function open(name){
 
 
 function invoiceIdentity(r){return clean(r.invoiceId)||[clean(r.invoiceNo),clean(r.customerId),clean(r.locationCode)].join('|')}
+function invoiceIsoDate(value){
+  const raw=clean(value);
+  if(/^\d{4}-\d{2}-\d{2}/.test(raw))return raw.slice(0,10);
+  const match=raw.match(/^(\d{1,2})[-\/]([a-z]{3}|\d{1,2})[-\/](\d{4})/i);
+  if(match){
+    const months=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+    const m=/^\d+$/.test(match[2])?Number(match[2]):months.indexOf(match[2].toLowerCase())+1;
+    if(m>=1&&m<=12)return match[3]+'-'+String(m).padStart(2,'0')+'-'+match[1].padStart(2,'0');
+  }
+  return '';
+}
 function receivableDate(value){
   if(!value)return '—';
   const raw=clean(value);
@@ -272,7 +284,7 @@ function renderReceivables(){
     const from=$('bbOffDateFrom').value,to=$('bbOffDateTo').value;
     const min=clean($('bbOffMin').value),max=clean($('bbOffMax').value);
     return rows.filter(r=>{
-      const day=clean(r.invoiceDate).slice(0,10);
+      const day=invoiceIsoDate(r.invoiceDate);
       return (!loc||clean(r.locationName||r.locationCode)===loc)&&(!status||clean(r.arStatus)===status)
         &&[r.customer,r.invoiceNo,r.locationName,r.locationCode].some(x=>clean(x).toLowerCase().includes(q))
         &&(!from||day>=from)&&(!to||day<=to)
@@ -327,7 +339,7 @@ function closeReceivableSummary(){
 }
 function openReceivableSummary(input){
   const picked=input.filter(r=>num(r.outstanding)>0&&clean(r.arStatus).toLowerCase()!=='processing')
-    .slice().sort((a,b)=>clean(a.invoiceDate).localeCompare(clean(b.invoiceDate)));
+    .slice().sort((a,b)=>invoiceIsoDate(a.invoiceDate).localeCompare(invoiceIsoDate(b.invoiceDate)));
   if(!picked.length)return;
   closeReceivableSummary();
   // Never convert KHR to USD using an arbitrary or stale exchange rate.
@@ -336,8 +348,9 @@ function openReceivableSummary(input){
     .reduce((sum,r)=>sum+num(r.outstanding),0)]));
   const names=[...new Set(picked.map(r=>clean(r.customer)).filter(Boolean))];
   const synced=datasetSyncedAt?new Date(datasetSyncedAt).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'unknown';
-  const dates=picked.map(r=>clean(r.invoiceDate)).filter(Boolean).sort();
+  const dates=picked.map(r=>invoiceIsoDate(r.invoiceDate)).filter(Boolean).sort();
   const label=names.length===1?names[0]:names.length+' Selected Customers';
+  const now=new Date(),summaryDay=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
   const modal=document.createElement('div');
   modal.id='bbOfflineSummaryPrint';
   modal.innerHTML='<div class="bb-summary-actions">'+
@@ -347,7 +360,7 @@ function openReceivableSummary(input){
     '<div class="bb-summary-sheet">'+
       '<div class="bb-summary-top"><div><h1>BIG BROTHER</h1><p>Ready to be your partner</p>'+
       '<small>Phnom Penh, Cambodia</small></div><div class="bb-summary-meta">'+
-      '<b>Summary Date:</b> '+esc(receivableDate(new Date().toISOString().slice(0,10)))+
+      '<b>Summary Date:</b> '+esc(receivableDate(summaryDay))+
       '<p><b>Selected Invoices:</b> '+picked.length+'</p>'+
       '<p><b>Saved Data:</b> '+esc(synced)+'</p></div></div>'+
       '<h2>CUSTOMER INVOICE SUMMARY</h2>'+
