@@ -654,7 +654,33 @@
 
       <div class="login-bg-pan" aria-hidden="true"></div>
 
-      <div class="login-version">LOGIN V17 · 06 OCT 2026</div>
+      <div class="login-version" id="bbLoginLiveDate">LOGIN V17 · —</div>
+<script data-bb-login-live-date-v1>
+/* Live Cambodia calendar date on BIG BROTHER login; never a build timestamp. */
+(function(){
+  'use strict';
+  const labelId='bbLoginLiveDate';
+  const formatter=new Intl.DateTimeFormat('en-GB',{
+    day:'2-digit',month:'short',year:'numeric',timeZone:'Asia/Phnom_Penh'
+  });
+  function refreshLoginDate(){
+    const node=document.getElementById(labelId);
+    if(!node)return;
+    const parts=Object.create(null);
+    for(const part of formatter.formatToParts(new Date())){
+      if(part.type==='day'||part.type==='month'||part.type==='year')parts[part.type]=part.value;
+    }
+    const label='LOGIN V17 · '+parts.day+'-'+parts.month+'-'+parts.year;
+    if(node.textContent!==label)node.textContent=label;
+  }
+  refreshLoginDate();
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='visible')refreshLoginDate();
+  });
+  window.addEventListener('focus',refreshLoginDate);
+  window.setInterval(refreshLoginDate,60000); // local DOM only; zero network calls
+})();
+</script>
 
       <form
         id="loginForm"
