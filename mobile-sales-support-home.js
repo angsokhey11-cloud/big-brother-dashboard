@@ -967,6 +967,8 @@ function renderMainMenu(){
 
 function openRoute(route,navState=''){
   if(!canRoute(route))return toast('Access denied.');
+  const offline=window.BBMobileOfflineWorkspaceV1;
+  if(offline&&!offline.canUseNetwork()&&!offline.offlineRouteAllowed(route))return toast('Online required for this function. Saved Overview works offline.');
   closePicker();currentRoute=route;fallbackRoute='';
   if(BASE_ROUTES.has(route)&&window.BBMobile?.open){
     try{
