@@ -401,8 +401,7 @@ async function loadOverview(force=false){
     });
 
     overview=fresh;
-    void window.BBMobileOfflineWorkspaceV1?.write('admin-overview',fresh);
-    void window.BBMobileOfflineWorkspaceV1?.success();
+    void window.BBMobileOfflineWorkspaceV1?.write('admin-overview',fresh).then(ok=>{if(ok)void window.BBMobileOfflineWorkspaceV1.success()});
     adminOverviewLastLoad=Date.now();
 
     if(mobileHomeVisible())renderHome();
