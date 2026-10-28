@@ -148,7 +148,7 @@ try{
 `;
 
 try{
- const response=await fetch('mobile-offline-stock-source-v1.html?v=20261028-sameui1',{cache:'default'});
+ const response=await fetch('mobile-offline-stock-source-v1.html?v=20261028-cachefirst1',{cache:'default'});
  if(!response.ok)throw new Error('Could not load Live Stock source.');
  let html=await response.text();
  const head=html.toLowerCase().indexOf('</head>');
