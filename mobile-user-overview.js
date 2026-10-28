@@ -179,6 +179,7 @@ async function refresh(force=false){
       payment=cached?.payment||null;
     }
 
+    if(window.BBMobileOfflineWorkspaceV1?.canUseNetwork()===false)return;
     cached={overview,payment};
     void window.BBMobileOfflineWorkspaceV1?.write('staff-overview',cached).then(ok=>{if(ok)void window.BBMobileOfflineWorkspaceV1.success()});
     lastLoad=Date.now();
@@ -202,8 +203,8 @@ function start(){
 
   const observer=new MutationObserver(()=>{
     if(homeVisible()){
-      /* Returning from any module must immediately pull fresh viewer data. */
-      setTimeout(()=>refresh(true),40);
+      if(cached)applyOverview(cached.overview,cached.payment);
+      setTimeout(()=>refresh(false),40);
     }
   });
 
@@ -212,11 +213,12 @@ function start(){
     attributeFilter:['hidden']
   });
 
-  window.addEventListener('focus',()=>refresh(true));
+  window.addEventListener('focus',()=>refresh(false));
 
   document.addEventListener('visibilitychange',()=>{
     if(document.visibilityState==='visible'&&homeVisible()){
-      refresh(true);
+      if(cached)applyOverview(cached.overview,cached.payment);
+      refresh(false);
     }
   });
 
