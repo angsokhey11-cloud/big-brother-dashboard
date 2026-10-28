@@ -1724,6 +1724,10 @@ async function staffFetch(route,storeName,rpcName,args={},batch='',force=false){
   const work=(async()=>{
     const raw=await safeRpc(rpcName,args);
     if(!raw?.success||api.currentUserId()!==user||!api.canUseNetwork()||!canRoute(route))return null;
+    // A closed or reassigned batch can make the RPC choose a fallback batch.
+    // Never cache that other batch's stock under the requested batch's key.
+    if(batch&&(storeName==='stock-my'||storeName==='stock-admin')&&
+       clean(raw.selectedBatch?.batchId)!==clean(batch))return null;
     await api.write(key,raw);
     return raw;
   })();
@@ -1742,7 +1746,7 @@ window.BBMobileStaffReportsV12=Object.freeze({
   },
   async syncStock(batchId='',force=false){
     const route='sales-support-your-stock';
-    const base=await staffFetch(route,'stock-base','bb_sales_support_your_stock',{},'',force);
+    const base=await staffFetch(route,'stock-base','bb_sales_support_your_stock',{},'',force&&!batchId);
     if(!base?.success)return null;
     const admin=!!base.isAdmin,kind=admin?'stock-admin':'stock-my';
     const result=await staffFetch(route,kind,
