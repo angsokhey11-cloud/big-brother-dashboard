@@ -156,7 +156,7 @@ async function signIn(email,password){
 async function signOut(){
   try{await window.BBPush?.disable({silent:true})}catch(_){}
   const current=readSession();
-  try{if(current?.access_token)await fetch(SUPABASE_URL+'/auth/v1/logout',{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+current.access_token},cache:'no-store'})}catch(_){}
+  try{if(current?.access_token&&window.BBMobileOfflineWorkspaceV1?.canUseNetwork()!==false)await fetch(SUPABASE_URL+'/auth/v1/logout',{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+current.access_token},cache:'no-store'})}catch(_){}
   try{await window.BBMobileOfflineWorkspaceV1?.clearUser(current?.user?.id)}catch(_){}
   saveSession(null);profile=null;overview=null;showLogin('');
 }
@@ -402,6 +402,7 @@ async function loadOverview(force=false){
 
     overview=fresh;
     void window.BBMobileOfflineWorkspaceV1?.write('admin-overview',fresh);
+    void window.BBMobileOfflineWorkspaceV1?.success();
     adminOverviewLastLoad=Date.now();
 
     if(mobileHomeVisible())renderHome();
@@ -444,7 +445,7 @@ function installAdminOverviewLive(){
 async function activate(){
   profile=await rpc('bb_current_access_profile');
   const offline=window.BBMobileOfflineWorkspaceV1;
-  if(offline){void offline.write('access-profile',profile);void offline.success()}
+  if(offline){void offline.write('access-profile',profile);offline.setConnection(true)}
   installAdminOverviewLive();
   const requested=new URLSearchParams(location.search).get('module')||'';
   // Direct module links need authentication and permissions, not a blocking Home overview.
