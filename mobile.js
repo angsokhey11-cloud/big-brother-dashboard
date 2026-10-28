@@ -70,6 +70,16 @@ const ROUTES={
   'notification-center':{tab:'more',icon:'🔔',label:'Notifications',url:'https://angsokhey11-cloud.github.io/big-brother-admin-work/company-control.html?embed=1&view=notifications&v=1'}
 };
 
+// Authorized original live page URL for the mobile cache-first handoff.
+// An offscreen frame can only be prepared for a route that this user may view.
+window.BBMobileLiveRoutesV1=Object.freeze({
+  url(route){
+    const item=ROUTES[String(route||'')];
+    return item&&canRoute(route)?item.url:'';
+  },
+  label(route){return ROUTES[String(route||'')]?.label||'BIG BROTHER'}
+});
+
 const QUICK=['sales-support-calculator','invoice','sales-support-your-customer','ar-your','sales-support-request-delivery','daily-cash-collection','stock-report','staff-relation'];
 const NAV=[['home','⌂','Home'],['sales','▥','Sales'],['stock','◫','Stock'],['reports','▥','Reports'],['more','•••','More']];
 
