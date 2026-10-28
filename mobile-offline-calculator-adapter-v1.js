@@ -32,10 +32,18 @@ async function jsonp(_url,params={}){
       const customer=(data.customers||[]).find(c=>String(c.customerId)===id);
       if(!customer)throw Error('Customer not included in saved assigned-location data.');
       const record=await parentApi().read('calc-price::'+id);
-      if(!record?.value?.success){
-        throw Error('Customer-specific prices not downloaded. Use manual prices or open this customer online once.');
+      const bridge=window.parent?.BBMobileLiveReadBridgeV1;
+      if(record?.value?.success){
+        // Let the Calculator continue immediately with the saved price, while
+        // downloading the latest price quietly for the same customer.
+        if(bridge&&parentApi().canUseNetwork())void bridge.refreshCustomerPrice(id);
+        return record.value;
       }
-      return record.value;
+      if(bridge&&parentApi().canUseNetwork()){
+        const fresh=await bridge.refreshCustomerPrice(id);
+        if(fresh?.success)return fresh;
+      }
+      throw Error('Customer-specific prices have not been synchronized for offline use.');
     }
     default:throw Error('This function requires an internet connection.');
   }
