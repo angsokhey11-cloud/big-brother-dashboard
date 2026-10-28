@@ -1842,13 +1842,29 @@ async function syncCollection(force=false){
         locationCode:clean(l.locationCode),locationName:clean(l.locationName)
       })),revision:String(list.revision||state.revision||''),syncedAt:Date.now()};
     if(!await api.write(COLLECTION_KEY,data))return null;
-    // A small bounded warm-up saves initial invoice product previews. Subsequent
-    // details are saved on-demand; no large request storm or polling.
+    // Reuse the already-deployed bounded batch read for users allowed to view
+    // invoice history/daily sales. That saves many product previews in ONE
+    // read. For Collection-only staff, warm only 12 scoped details instead.
+    // No write RPC, periodic polling, or unbounded request fan-out.
     void (async()=>{
-      const ids=[...new Set(data.invoices
-        .filter(x=>clean(x.paymentMethod).toLowerCase()==='cash'&&Number(x.amountPaid)>0)
-        .map(x=>clean(x.invoiceId)).filter(Boolean))].slice(0,12);
-      for(const id of ids){
+      const eligible=data.invoices.filter(x=>
+        clean(x.paymentMethod).toLowerCase()==='cash'&&Number(x.amountPaid)>0);
+      const allowed=new Map(eligible.map(x=>[clean(x.invoiceId),x]));
+      if((canRoute('history')||canRoute('daily-sale-summary'))&&allowed.size){
+        const ids=[...allowed.keys()].filter(Boolean).slice(0,160);
+        const response=await safeRpc('bb_daily_sale_items',{p_invoice_ids:ids});
+        if(response?.success&&Array.isArray(response.invoices)){
+          for(const row of response.invoices){
+            const id=clean(row.invoiceId),source=allowed.get(id);
+            if(!source||!Array.isArray(row.items)||
+               api.currentUserId()!==user||!api.canUseNetwork()||!canRoute(collectionRoute))continue;
+            await api.write(collectionDetailKey(id),{
+              success:true,invoice:{...source,...row,items:row.items}
+            });
+          }
+        }
+      }
+      for(const id of [...allowed.keys()].filter(Boolean).slice(0,12)){
         if(!api.canUseNetwork()||api.currentUserId()!==user||!canRoute(collectionRoute))break;
         const existing=await api.read(collectionDetailKey(id));
         if(existing?.value?.success)continue;
