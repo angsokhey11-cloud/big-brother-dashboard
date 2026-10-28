@@ -1,0 +1,354 @@
+/* BIG BROTHER — Dashboard Supabase Auth & Permission Adapter V1.3 */
+(function(){
+  'use strict';
+
+  const SUPABASE_URL='https://sjfhlaclgmkwwofzstok.supabase.co';
+  const SUPABASE_KEY='sb_publishable_w762jR65CWwlO30fKQsYOw_6L9grx8S';
+  const SESSION_KEY='BB_SUPABASE_DEV_SESSION_V1';
+  const STOCK_ADJUSTMENT_URL='https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/adjustment.html?embed=1&v=20260915-1';
+
+  const ROUTE_ACCESS={
+    'customers-editor':{module:'customers_editor',action:'view'},
+    'customers-add':{module:'customers_editor',action:'create'},
+    'customers-map':{module:'customers_editor',action:'view'},
+    'customers-details':{module:'customers_editor',action:'view'},
+    'clients-editor':{module:'clients_editor',action:'view'},
+    'clients-add':{module:'clients_editor',action:'create'},
+    'clients-details':{module:'clients_editor',action:'view'},
+    'products-editor':{module:'products_editor',action:'view'},
+    'products-add':{module:'products_editor',action:'create'},
+    'products-details':{module:'products_editor',action:'view'},
+    'sales-support-calculator':{module:'sales_support',action:'view'},
+    'sales-support-request-delivery':{module:'sales_support',action:'create'},
+    'sales-support-your-customer':{module:'sales_support',action:'view'},
+    'sales-support-successful-delivery':{module:'sales_support',action:'view'},
+    'invoice':{module:'invoice_generator',action:'create'},
+    'history':{module:'invoice_history',action:'view'},
+    'sale-return':{module:'invoice_reversal',action:'view'},
+    'payment-history':{module:'payment_history',action:'view'},
+    'daily-sale-summary':{module:'daily_sale_summary',action:'view'},
+    'daily-cash-collection':{module:'daily_cash_collection',action:'view'},
+    'purchase-create':{module:'purchase_create',action:'create'},
+    'purchase-history':{module:'purchase_history',action:'view'},
+    'purchase-payable':{module:'purchase_payable',action:'view'},
+    'purchase-payment-history':{module:'purchase_payment_history',action:'view'},
+    'expense-add':{module:'expenses',action:'create'},
+    'expense-accrued':{module:'expenses',action:'view'},
+    'expense-history':{module:'expenses',action:'view'},
+    'expense-monthly-report':{module:'expenses',action:'view'},
+    'cogs-daily':{module:'expenses',action:'view'},
+    'cogs-monthly':{module:'expenses',action:'view'},
+    'master-expense-categories':{module:'master_data',action:'edit',adminOnly:true},
+    'stock-control-allocation':{module:'route.stock-control-allocation',action:'view'},
+    'stock-control-batch-transfer':{module:'route.stock-control-batch-transfer',action:'view'},
+    'stock-control-back-sale':{module:'route.stock-control-back-sale',action:'view'},
+    'stock-keyin':{module:'Stock Management',action:'view'},
+    'stock-pending-borrow':{module:'route.stock-pending-borrow',action:'view'},
+    'stock-adjustment':{module:'Stock Management',action:'create'},
+    'stock-damaged':{module:'Stock Management',action:'view'},
+    'stock-damaged-report':{module:'Stock Management',action:'view'},
+    'stock-damaged-cleared':{module:'Stock Management',action:'view'},
+    'stock-damaged-accounting':{module:'Stock Management',action:'view'},
+    'stock-report':{module:'Stock Report',action:'view'},
+    'batch-report':{module:'Stock Report',action:'view'},
+    'closed-batch':{module:'Stock Report',action:'view'},
+    'stock-transactions':{module:'Stock Report',action:'view'},
+    'real-invoice':{module:'route.real-invoice',action:'view'},
+    'ar-all':{module:'accounts_receivable',action:'view'},
+    'ar-your':{module:'accounts_receivable',action:'view'},
+    'ar-payment-history':{module:'ar_payment_history',action:'view'},
+    'ar-daily-receivable-cash':{module:'daily_receivable_cash_summary',action:'view'},
+    'daily-cash':{module:'daily_cash',action:'view'},
+    'admin-pending-receivable':{module:'admin_work',action:'view'},
+    'admin-pending-daily-cash':{module:'admin_work',action:'view'},
+    'admin-pending-deposit':{module:'admin_work',action:'view'},
+    'admin-deposit-history':{module:'admin_work',action:'view'},
+    'admin-staff-request':{module:'admin_work',action:'view'},
+    'admin-request':{module:'admin_work',action:'view'},
+    'admin-user-permissions':{module:'admin_work',action:'view',adminOnly:true},
+    'admin-bank-register':{module:'admin_work',action:'view',adminOnly:true},
+    'admin-bank-history':{module:'admin_work',action:'view',adminOnly:true}
+  };
+
+  let session=null;
+  let profile=null;
+  let originalLoadWorkspace=null;
+  let started=false;
+
+  function readSession(){
+    try{return JSON.parse(localStorage.getItem(SESSION_KEY)||'null')}catch(_){return null}
+  }
+
+  function saveSession(value){
+    session=value||null;
+    try{
+      if(!value){localStorage.removeItem(SESSION_KEY);return}
+      if(!value.expires_at&&value.expires_in){
+        value.expires_at=Math.floor(Date.now()/1000)+Number(value.expires_in);
+      }
+      localStorage.setItem(SESSION_KEY,JSON.stringify(value));
+    }catch(_){}
+  }
+
+  async function parse(response){
+    const text=await response.text();
+    let data={};
+    try{data=text?JSON.parse(text):{}}catch(_){data={message:text}}
+    if(!response.ok){
+      throw new Error(data.message||data.msg||data.error_description||data.error||data.error_code||('Supabase request failed ('+response.status+')'));
+    }
+    return data;
+  }
+
+  let sharedAuthRefresh=null;
+  async function refreshSession(){
+    if(sharedAuthRefresh)return sharedAuthRefresh;
+    const rotate=async()=>{
+      const current=readSession();
+      if(!current?.refresh_token)throw new Error('Please sign in to BIG BROTHER.');
+      const now=Math.floor(Date.now()/1000);
+      // Another BIG BROTHER view may already have refreshed our shared session.
+      if(Number(current.expires_at||0)>now+60){session=current;return current;}
+      const response=await fetch(SUPABASE_URL+'/auth/v1/token?grant_type=refresh_token',{
+        method:'POST',headers:{apikey:SUPABASE_KEY,'Content-Type':'application/json'},
+        body:JSON.stringify({refresh_token:current.refresh_token}),cache:'no-store'
+      });
+      if(!response.ok){
+        let detail={};try{detail=await response.json()}catch(_){}
+        const newest=readSession();
+        if(newest?.access_token&&newest.refresh_token!==current.refresh_token&&
+           Number(newest.expires_at||0)>Math.floor(Date.now()/1000)+30){
+          session=newest;return newest;
+        }
+        if(['refresh_token_not_found','refresh_token_already_used'].includes(String(detail.error_code||''))||
+           String(detail.msg||'').toLowerCase().includes('refresh token')){
+          throw new Error('Sign-in session expired. Please sign in again.');
+        }
+        throw new Error(detail.message||detail.msg||detail.error_description||detail.error||('Session refresh failed ('+response.status+')'));
+      }
+      const next=await parse(response);saveSession(next);return next;
+    };
+    const task=()=>navigator.locks?.request
+      ? navigator.locks.request('BB_SUPABASE_DEV_SESSION_REFRESH_V1',rotate)
+      : rotate();
+    sharedAuthRefresh=task();
+    try{return await sharedAuthRefresh}finally{sharedAuthRefresh=null}
+  }
+
+  async function ensureSession(){
+    session=readSession();
+    if(!session?.access_token)throw new Error('Please sign in to BIG BROTHER.');
+    const now=Math.floor(Date.now()/1000);
+    if(session.expires_at&&Number(session.expires_at)<now+45)await refreshSession();
+    session=readSession()||session;
+    return session;
+  }
+
+  async function rpc(fn,args={}){
+    await ensureSession();
+    const request=()=>fetch(SUPABASE_URL+'/rest/v1/rpc/'+fn,{
+      method:'POST',
+      headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},
+      body:JSON.stringify(args||{}),cache:'no-store'
+    });
+    let response=await request();
+    if(response.status===401){await refreshSession();session=readSession()||session;response=await request()}
+    return parse(response);
+  }
+
+  async function signIn(email,password){
+    const response=await fetch(SUPABASE_URL+'/auth/v1/token?grant_type=password',{
+      method:'POST',headers:{apikey:SUPABASE_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({email:String(email||'').trim(),password:String(password||'')}),cache:'no-store'
+    });
+    const next=await parse(response);saveSession(next);return next;
+  }
+
+  async function signOut(){
+    try{await window.BBPush?.disable({silent:true})}catch(_){}
+    const current=readSession();
+    try{
+      if(current?.access_token){
+        await fetch(SUPABASE_URL+'/auth/v1/logout',{
+          method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+current.access_token},cache:'no-store'
+        });
+      }
+    }catch(_){}
+    saveSession(null);location.href=location.pathname;
+  }
+
+  const key=value=>String(value||'').trim().toLowerCase();
+
+  function grantFor(moduleKey){
+    if(profile?.user?.isAdmin)return{canView:true,canCreate:true,canEdit:true,canApprove:true};
+    const modules=Array.isArray(profile?.modules)?profile.modules:[];
+    return modules.find(m=>key(m.moduleKey)==='*')||modules.find(m=>key(m.moduleKey)===key(moduleKey))||null;
+  }
+
+  function canRoute(route){
+    const rule=ROUTE_ACCESS[route];
+    if(!rule)return false;
+    if(rule.adminOnly)return profile?.user?.isAdmin===true;
+    const grant=grantFor(rule.module);if(!grant)return false;
+    const field={view:'canView',create:'canCreate',edit:'canEdit',approve:'canApprove'}[rule.action]||'canView';
+    return grant[field]===true;
+  }
+
+  function extractRoute(el){
+    const code=el.getAttribute('onclick')||'';
+    const match=code.match(/loadWorkspace\(\s*['"]([^'"]+)['"]/);
+    return match?match[1]:'';
+  }
+
+  function installStyles(){
+    if(document.getElementById('bbDashboardAuthStyle'))return;
+    const style=document.createElement('style');
+    style.id='bbDashboardAuthStyle';
+    style.textContent=`
+      .bb-auth-hidden{display:none!important}
+      .bb-auth-version{position:absolute;top:14px;right:16px;z-index:3;padding:7px 10px;border:1px solid rgba(255,255,255,.62);border-radius:999px;background:rgba(46,27,11,.42);color:#fff8ec;font-size:10px;font-weight:900;letter-spacing:.45px;box-shadow:0 5px 18px rgba(0,0,0,.16);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);user-select:none}
+      .bb-auth-overlay{position:fixed;inset:0;z-index:999999;display:flex;align-items:center;justify-content:center;padding:18px;background:#2a1809 url("assets/big-brother-angkor-login.png?v=20261005-login9") center/cover no-repeat;overflow:hidden;isolation:isolate}
+      .bb-auth-overlay:before{content:"";position:absolute;inset:-3%;z-index:-1;pointer-events:none;background:radial-gradient(circle at 50% 46%,rgba(255,244,213,.16),transparent 27%),linear-gradient(180deg,rgba(45,25,8,.01),rgba(42,22,7,.10));animation:bbAngkorBreath 12s ease-in-out infinite alternate}
+      @keyframes bbAngkorBreath{from{transform:scale(1);opacity:.82}to{transform:scale(1.012);opacity:1}}
+      .bb-auth-card{position:relative;z-index:1;width:min(360px,calc(100vw - 38px));padding:20px 18px 16px;background:transparent;border:0;border-radius:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;text-align:center;color:#3a2512}
+      .bb-auth-card:before{content:"";position:absolute;z-index:-1;left:50%;top:50%;width:430px;height:410px;transform:translate(-50%,-50%);pointer-events:none;background:radial-gradient(ellipse at center,rgba(255,245,222,.30) 0%,rgba(255,239,203,.14) 40%,rgba(54,30,10,.04) 62%,transparent 76%);filter:blur(18px)}
+      .bb-auth-mark{width:58px;height:28px;margin:0 auto 8px;position:relative}
+      .bb-auth-mark:before{content:"";position:absolute;left:10px;right:10px;bottom:2px;height:2px;background:#9b5c1b;border-radius:99px;box-shadow:0 -6px 0 -1px #9b5c1b}
+      .bb-auth-brand{color:#4b2b12;font-size:28px;font-weight:900;letter-spacing:1.5px;text-shadow:0 1px 0 rgba(255,255,255,.65)}
+      .bb-auth-quote{max-width:320px;margin:7px auto 18px;color:#5f4024;font-size:12px;line-height:1.5;font-weight:700;text-shadow:0 1px 0 rgba(255,255,255,.5)}
+      .bb-auth-field{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+      .bb-auth-input{width:100%;min-height:50px;border:1px solid rgba(255,255,255,.82);border-radius:14px;padding:11px 15px;font:inherit;font-size:14px;color:#402b18;background:rgba(255,250,241,.58);box-shadow:0 7px 18px rgba(79,43,12,.10),inset 0 1px 0 rgba(255,255,255,.65);outline:none;transition:.18s ease;margin-bottom:11px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+      .bb-auth-input::placeholder{color:#755f49}
+      .bb-auth-input:focus{background:rgba(255,255,255,.78);border-color:rgba(145,89,27,.58);box-shadow:0 0 0 3px rgba(173,112,42,.14),0 8px 22px rgba(79,43,12,.10)}
+      .bb-auth-btn{width:100%;min-height:48px;border:1px solid rgba(85,47,16,.18);border-radius:13px;margin-top:3px;background:linear-gradient(135deg,#6c421d,#a46a28);color:#fff7e8;font-weight:900;letter-spacing:.3px;cursor:pointer;box-shadow:0 8px 20px rgba(88,49,15,.22)}
+      .bb-auth-btn:hover{filter:brightness(1.06);transform:translateY(-1px)}
+      .bb-auth-btn:disabled{opacity:.55;cursor:wait;transform:none}
+      .bb-auth-error{min-height:18px;margin-top:10px;padding:0 4px;color:#8f211d;font-size:11px;font-weight:800;text-shadow:0 1px 0 rgba(255,255,255,.45)}
+      .bb-auth-note{margin-top:7px;color:#684d32;font-size:9px;line-height:1.4;text-shadow:0 1px 0 rgba(255,255,255,.4)}
+      @media(max-width:620px){.bb-auth-overlay{padding:16px;background-position:72% center}.bb-auth-card{width:min(330px,calc(100vw - 28px));padding:18px 14px 14px}.bb-auth-card:before{width:390px;height:390px}.bb-auth-brand{font-size:24px}.bb-auth-quote{font-size:11px;margin-bottom:15px}}
+      @media(prefers-reduced-motion:reduce){.bb-auth-overlay:before{animation:none}}
+      .bb-user-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+      .bb-user-signout{border:0;border-radius:999px;background:#fff0ef;color:#b42318;padding:8px 11px;font-size:11px;font-weight:900;cursor:pointer}
+      .bb-access-toast{position:fixed;right:18px;bottom:18px;z-index:999998;background:#7a271a;color:#fff;padding:11px 14px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.18);font-size:12px;font-weight:800}
+    `;
+    document.head.appendChild(style);
+  }
+
+  function toast(message){
+    document.querySelector('.bb-access-toast')?.remove();
+    const el=document.createElement('div');el.className='bb-access-toast';el.textContent=message;document.body.appendChild(el);
+    setTimeout(()=>el.remove(),2600);
+  }
+
+  function showLogin(message=''){
+    document.getElementById('bbDashboardLogin')?.remove();
+    const overlay=document.createElement('div');overlay.id='bbDashboardLogin';overlay.className='bb-auth-overlay';
+    overlay.innerHTML=`<div class="bb-auth-version">LOGIN V9 · 05 OCT 2026</div><form class="bb-auth-card" id="bbDashboardLoginForm">
+      <div class="bb-auth-mark" aria-hidden="true"></div>
+      <div class="bb-auth-brand">BIG BROTHER</div>
+      <div class="bb-auth-quote">“From small beginnings to big achievements, we grow with trust, purpose, and vision.”</div>
+      <label class="bb-auth-field" for="bbLoginEmail">Email</label>
+      <input class="bb-auth-input" id="bbLoginEmail" type="email" autocomplete="username" placeholder="Email" required>
+      <label class="bb-auth-field" for="bbLoginPassword">Password</label>
+      <input class="bb-auth-input" id="bbLoginPassword" type="password" autocomplete="current-password" placeholder="Password" required>
+      <button class="bb-auth-btn" id="bbLoginButton" type="submit">Sign In</button>
+      <div class="bb-auth-error" id="bbLoginError"></div>
+      <div class="bb-auth-note">Secure access for approved BIG BROTHER accounts.</div>
+    </form>`;
+    document.body.appendChild(overlay);
+    const err=document.getElementById('bbLoginError');if(message)err.textContent=message;
+    document.getElementById('bbDashboardLoginForm').addEventListener('submit',async event=>{
+      event.preventDefault();const btn=document.getElementById('bbLoginButton');err.textContent='';btn.disabled=true;btn.textContent='Signing in…';
+      try{
+        await signIn(document.getElementById('bbLoginEmail').value,document.getElementById('bbLoginPassword').value);
+        profile=await rpc('bb_current_access_profile');overlay.remove();activateDashboard();
+      }catch(error){err.textContent=error?.message||String(error);btn.disabled=false;btn.textContent='Sign In'}
+    });
+  }
+
+  function installStockAdjustmentMenu(){
+    if(document.getElementById('navStockAdjustment'))return;
+    const keyin=document.getElementById('navStockKeyin');
+    const submenu=document.getElementById('stockSubmenu');
+    if(!keyin||!submenu)return;
+    const button=document.createElement('button');
+    button.type='button';button.id='navStockAdjustment';button.textContent='⚖️ Stock Adjustment';
+    button.setAttribute('onclick',"loadWorkspace('stock-adjustment')");
+    keyin.insertAdjacentElement('afterend',button);
+  }
+
+  function applyRouteVisibility(){
+    const launchers=[...document.querySelectorAll('[onclick*="loadWorkspace"]')];
+    launchers.forEach(el=>{
+      const route=extractRoute(el);if(!route)return;
+      const allowed=canRoute(route);el.classList.toggle('bb-auth-hidden',!allowed);
+      if(el.closest('.module')&&el.matches('a,button'))el.closest('.module').classList.toggle('bb-auth-hidden',!allowed);
+    });
+    [...document.querySelectorAll('.nested-nav-group')].reverse().forEach(group=>{
+      const launch=[...group.querySelectorAll('[onclick*="loadWorkspace"]')];
+      if(launch.length&&!launch.some(el=>!el.classList.contains('bb-auth-hidden')))group.classList.add('bb-auth-hidden');
+    });
+    [...document.querySelectorAll('.nav-group')].reverse().forEach(group=>{
+      const launch=[...group.querySelectorAll('[onclick*="loadWorkspace"]')];
+      if(launch.length&&!launch.some(el=>!el.classList.contains('bb-auth-hidden')))group.classList.add('bb-auth-hidden');
+    });
+  }
+
+  function updateUserUI(){
+    const topbar=document.querySelector('#dashboardHome .topbar');
+    const pill=topbar?.querySelector('.system-pill');const user=profile?.user||{};const staff=profile?.staff||{};
+    const locationCount=Array.isArray(profile?.locations)?profile.locations.length:0;
+    const displayName=staff.staffName||user.email||'BIG BROTHER User';
+    if(pill){pill.textContent=(user.isAdmin?'ADMIN':'USER')+' • '+locationCount+' LOCATION'+(locationCount===1?'':'S');pill.title=displayName}
+    if(topbar&&!document.getElementById('bbUserTools')){
+      const tools=document.createElement('div');tools.id='bbUserTools';tools.className='bb-user-tools';
+      const name=document.createElement('div');name.className='system-pill';name.textContent=displayName;
+      const btn=document.createElement('button');btn.type='button';btn.className='bb-user-signout';btn.textContent='Sign Out';btn.addEventListener('click',signOut);
+      tools.append(name,btn);topbar.appendChild(tools);
+    }
+  }
+
+  function openStockAdjustment(updateUrl=true){
+    const home=document.getElementById('dashboardHome');
+    const workspace=document.getElementById('moduleWorkspace');
+    const frame=document.getElementById('moduleFrame');
+    if(!home||!workspace||!frame)return false;
+    home.hidden=true;workspace.hidden=false;frame.src=STOCK_ADJUSTMENT_URL;
+    document.querySelectorAll('.nav-submenu button,.shell-nav-link').forEach(el=>el.classList.remove('active'));
+    document.getElementById('navStockAdjustment')?.classList.add('active');
+    const stockSub=document.getElementById('stockSubmenu');const stockBtn=document.getElementById('stockMenuButton');
+    stockSub?.classList.add('open');stockBtn?.classList.add('open');stockBtn?.setAttribute('aria-expanded','true');
+    if(updateUrl){
+      const url=new URL(location.href);url.searchParams.set('module','stock-adjustment');history.pushState({module:'stock-adjustment'},'',url);
+    }
+    return true;
+  }
+
+  function installWorkspaceGuard(){
+    if(originalLoadWorkspace)return;
+    originalLoadWorkspace=window.loadWorkspace;
+    window.loadWorkspace=function(moduleName,updateUrl=true){
+      if(!canRoute(moduleName)){toast('Access denied for this module.');return false}
+      if(moduleName==='stock-adjustment')return openStockAdjustment(updateUrl);
+      return originalLoadWorkspace.call(window,moduleName,updateUrl);
+    };
+  }
+
+  function activateDashboard(){
+    installStockAdjustmentMenu();
+    installWorkspaceGuard();
+    applyRouteVisibility();
+    updateUserUI();
+    const initial=new URLSearchParams(location.search).get('module');
+    if(initial==='stock-adjustment'&&canRoute('stock-adjustment'))openStockAdjustment(false);
+    else window.openInitialWorkspace();
+  }
+
+  async function start(){
+    if(started)return;started=true;installStyles();
+    try{await ensureSession();profile=await rpc('bb_current_access_profile');activateDashboard()}
+    catch(error){saveSession(null);showLogin(error?.message&&error.message!=='Please sign in to BIG BROTHER.'?error.message:'')}
+  }
+
+  window.BBDashboardAdapter={start,signOut,canRoute,getProfile:()=>profile,getSession:()=>readSession()};
+})();

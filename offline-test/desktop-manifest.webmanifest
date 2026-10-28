@@ -1,0 +1,26 @@
+{
+  "id": "./desktop-app",
+  "name": "BIG BROTHER Accounting — Desktop",
+  "short_name": "BIG BROTHER",
+  "description": "BIG BROTHER desktop accounting and management dashboard.",
+  "start_url": "./index.html?source=pwa-desktop",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#eef3f8",
+  "theme_color": "#173f77",
+  "categories": ["business", "finance", "productivity"],
+  "icons": [
+    {
+      "src": "./desktop-pwa-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./desktop-pwa-icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

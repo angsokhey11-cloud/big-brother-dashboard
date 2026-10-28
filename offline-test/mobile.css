@@ -1,0 +1,613 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@400;500;600;700;800&display=swap');
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Arial,Helvetica,'Noto Sans Khmer',sans-serif;background:#0d2239;color:#18324d}body{overscroll-behavior:none}.mobile-app{min-height:100dvh}.boot-screen,.login-screen{position:fixed;inset:0;display:grid;place-items:center;padding:20px;background:linear-gradient(145deg,#0b3d68,#0b6aa4 62%,#0a8b97);z-index:20}.boot-card,.login-card{width:min(100%,410px);background:#fff;border-radius:24px;padding:26px;box-shadow:0 24px 70px rgba(0,0,0,.24)}.boot-card{text-align:center}.boot-logo{width:70px;height:70px;border-radius:20px;display:grid;place-items:center;margin:0 auto 14px;background:linear-gradient(145deg,#0b5f9e,#12a3a7);color:#fff;font-size:26px;font-weight:900}.boot-card strong{display:block;color:#17457a;font-size:24px}.boot-card span{display:block;margin-top:7px;color:#718398;font-size:12px}.login-brand{font-size:26px;font-weight:900;color:#17457a}.login-sub{margin:5px 0 18px;color:#718398;font-size:12px}.login-card label{display:block;margin:11px 0 6px;font-size:10px;font-weight:900;text-transform:uppercase;color:#526981}.login-card input{width:100%;height:48px;border:1px solid #ccd9e7;border-radius:12px;padding:0 13px;font-size:15px;color:#18324d;outline:none}.login-card input:focus{border-color:#2f82c5;box-shadow:0 0 0 3px rgba(47,130,197,.12)}.login-card button{width:100%;height:48px;border:0;border-radius:12px;margin-top:15px;background:#0c619e;color:#fff;font-weight:900;font-size:14px;cursor:pointer}.login-card button:disabled{opacity:.55}.login-error{min-height:18px;margin-top:9px;color:#b42318;font-size:11px;font-weight:800}.desktop-link{display:block;text-align:center;margin-top:14px;color:#246aa6;font-size:12px;font-weight:800;text-decoration:none}.mobile-home,.menu-screen,.module-screen{position:fixed;inset:0;background:#f3f7fb;overflow:hidden}.mobile-scroll{height:100%;overflow:auto;padding-bottom:84px;-webkit-overflow-scrolling:touch}.hero{background:linear-gradient(135deg,#07589d,#0877b8 62%,#0b8a9c);color:#fff;padding:calc(18px + env(safe-area-inset-top)) 18px 25px;border-radius:0 0 26px 26px;box-shadow:0 10px 26px rgba(12,83,135,.18)}.hero-top{display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{font-size:21px;font-weight:900;letter-spacing:.6px}.brand-sub{margin-top:2px;font-size:10px;opacity:.82;font-weight:700}.hero-actions{display:flex;gap:7px}.icon-btn,.header-btn{border:0;background:rgba(255,255,255,.15);color:#fff;cursor:pointer}.icon-btn{width:40px;height:40px;border-radius:13px;font-size:17px}.greeting-wrap{margin-top:26px}.greeting-small{font-size:14px;opacity:.9}.greeting-name{font-size:27px;font-weight:900;margin-top:2px;letter-spacing:.2px}.hero-meta{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:16px}.hero-chip{padding:7px 10px;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.08);border-radius:999px;font-size:10px;font-weight:800}.content{padding:14px}.panel{background:#fff;border:1px solid #e0e8f1;border-radius:18px;padding:14px;margin-bottom:14px;box-shadow:0 6px 18px rgba(35,65,94,.05)}.section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}.section-head strong{font-size:16px;color:#18324d}.section-head span{font-size:10px;color:#8292a3}.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.kpi{border-radius:15px;padding:13px;min-height:88px;background:#eaf4ff}.kpi:nth-child(2){background:#eafbf4}.kpi:nth-child(3){background:#fff4df}.kpi:nth-child(4){background:#ffedf0}.kpi small{display:block;font-size:10px;font-weight:800;color:#657a90}.kpi strong{display:block;margin-top:7px;font-size:19px;color:#0b5c97}.kpi em{display:block;margin-top:5px;font-style:normal;font-size:9px;color:#8191a2}.quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:13px 7px}.quick-btn{border:0;background:transparent;padding:0;color:#18324d;cursor:pointer}.quick-icon{width:50px;height:50px;margin:0 auto 7px;border-radius:15px;display:grid;place-items:center;font-size:22px;background:linear-gradient(145deg,#e9f4ff,#dbeeff)}.quick-btn:nth-child(4n+2) .quick-icon{background:linear-gradient(145deg,#e9fbf3,#d8f4e9)}.quick-btn:nth-child(4n+3) .quick-icon{background:linear-gradient(145deg,#f4edff,#e7dcff)}.quick-btn:nth-child(4n) .quick-icon{background:linear-gradient(145deg,#fff1e8,#ffe2d1)}.quick-btn span{font-size:10px;font-weight:800;line-height:1.15}.attention-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.attention-card{border-radius:14px;padding:11px 9px;text-align:center;background:#fff0f0}.attention-card:nth-child(2){background:#fff7df}.attention-card:nth-child(3){background:#eef6ff}.attention-card b{display:block;font-size:19px;color:#b63e3e}.attention-card:nth-child(2) b{color:#9a6b00}.attention-card:nth-child(3) b{color:#286ba7}.attention-card span{display:block;margin-top:4px;font-size:9px;font-weight:800;color:#63788e;line-height:1.2}.recent-list{display:flex;flex-direction:column}.recent-row{display:grid;grid-template-columns:38px 1fr auto;gap:9px;align-items:center;padding:10px 0;border-bottom:1px solid #edf1f5}.recent-row:last-child{border-bottom:0}.recent-icon{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:#eaf4ff}.recent-main{min-width:0}.recent-main strong{display:block;font-size:11px;color:#18324d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.recent-main span{display:block;margin-top:3px;font-size:9px;color:#8595a5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.recent-side{text-align:right}.recent-side strong{display:block;font-size:10px;color:#17457a}.recent-side span{display:block;margin-top:3px;font-size:8px;color:#8b99a7}.bottom-nav{position:absolute;left:0;right:0;bottom:0;height:calc(70px + env(safe-area-inset-bottom));padding:6px 4px env(safe-area-inset-bottom);background:rgba(255,255,255,.98);border-top:1px solid #dfe7ef;display:grid;grid-template-columns:repeat(5,1fr);z-index:10}.nav-btn{border:0;background:transparent;color:#6f8297;border-radius:11px;font-size:9px;font-weight:800;cursor:pointer}.nav-btn b{display:block;font-size:18px;margin-bottom:3px}.nav-btn.active{color:#0b74c2;background:#eef7ff}.simple-header,.module-header{height:calc(58px + env(safe-area-inset-top));padding:env(safe-area-inset-top) 12px 0;background:linear-gradient(135deg,#07589d,#0877b8);color:#fff;display:flex;align-items:center;gap:10px}.header-btn{width:38px;height:38px;border-radius:12px;font-size:20px;flex:0 0 auto}.simple-header>div,.module-title-wrap{min-width:0;flex:1}.simple-header strong,.module-title-wrap strong{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.simple-header span,.module-title-wrap span{display:block;margin-top:2px;font-size:9px;opacity:.8}.menu-grid{position:absolute;top:calc(58px + env(safe-area-inset-top));left:0;right:0;bottom:calc(70px + env(safe-area-inset-bottom));overflow:auto;padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:start}.menu-card{min-height:98px;border:1px solid #e0e8f1;background:#fff;border-radius:16px;padding:14px;text-align:left;cursor:pointer;box-shadow:0 5px 16px rgba(35,65,94,.04)}.menu-card b{display:block;font-size:24px;margin-bottom:8px}.menu-card strong{display:block;color:#18324d;font-size:12px;line-height:1.2}.menu-card small{display:block;color:#8795a5;font-size:9px;margin-top:5px}.menu-empty{grid-column:1/-1;background:#fff;border:1px dashed #cbd7e4;border-radius:16px;padding:24px;text-align:center;color:#718398;font-size:12px}.module-screen{background:#dfe7ef}.module-frame{position:absolute;top:calc(58px + env(safe-area-inset-top));bottom:calc(70px + env(safe-area-inset-bottom));left:0;width:100%;height:calc(100dvh - 128px - env(safe-area-inset-top) - env(safe-area-inset-bottom));border:0;background:#fff}.desktop-small{flex:0 0 auto;text-decoration:none;color:#fff;background:rgba(255,255,255,.14);padding:9px 10px;border-radius:10px;font-size:10px;font-weight:900}.sheet{position:fixed;inset:0;z-index:50;background:rgba(6,22,38,.58);display:grid;align-items:end;padding:12px}.sheet-card{width:min(100%,520px);margin:0 auto;background:#fff;border-radius:22px;padding:16px 15px calc(15px + env(safe-area-inset-bottom));box-shadow:0 20px 60px rgba(0,0,0,.25)}.sheet-handle{width:42px;height:4px;border-radius:999px;background:#cbd5df;margin:0 auto 12px}.sheet-card h3{margin:0;color:#18324d}.sheet-card p{margin:5px 0 13px;color:#7c8da0;font-size:11px;line-height:1.4}.sheet-option{width:100%;display:flex;align-items:center;gap:12px;border:1px solid #e0e7ef;background:#f9fbfd;border-radius:14px;padding:12px;margin:7px 0;text-align:left;text-decoration:none;color:#18324d;cursor:pointer}.sheet-option>span{font-size:21px}.sheet-option strong,.sheet-option small{display:block}.sheet-option strong{font-size:12px}.sheet-option small{margin-top:3px;color:#8191a2;font-size:9px}.sheet-option.danger strong{color:#b42318}.sheet-close{width:100%;height:43px;border:0;border-radius:12px;background:#eaf0f6;color:#294764;font-weight:900;margin-top:7px}.toast{position:fixed;left:14px;right:14px;bottom:calc(82px + env(safe-area-inset-bottom));z-index:60;background:#18324d;color:#fff;border-radius:12px;padding:11px 13px;text-align:center;font-size:11px;font-weight:800;box-shadow:0 10px 28px rgba(0,0,0,.2)}[hidden]{display:none!important}@media(min-width:620px){.mobile-home,.menu-screen,.module-screen{left:50%;right:auto;width:560px;transform:translateX(-50%);box-shadow:0 0 45px rgba(0,0,0,.28)}body{background:#0b2038}.sheet{place-items:end center}}@media(max-width:380px){.content{padding:10px}.panel{padding:12px}.quick-icon{width:45px;height:45px}.quick-grid{gap:11px 5px}.greeting-name{font-size:24px}.menu-grid{padding:10px;gap:8px}}
+/* =====================================================
+   iOS LOGIN UX V1
+   Mobile only. Desktop untouched.
+   ===================================================== */
+.login-screen{
+  min-height:100dvh;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  padding:
+    max(18px,env(safe-area-inset-top))
+    max(16px,env(safe-area-inset-right))
+    max(18px,env(safe-area-inset-bottom))
+    max(16px,env(safe-area-inset-left));
+}
+.login-card{
+  margin:auto;
+}
+.login-card input{
+  font-size:16px !important;
+  min-height:52px;
+  height:52px;
+}
+.login-password-wrap{
+  position:relative;
+}
+.login-password-wrap input{
+  padding-right:70px;
+}
+.login-password-toggle{
+  position:absolute;
+  right:6px;
+  top:50%;
+  transform:translateY(-50%);
+  width:auto !important;
+  height:38px !important;
+  min-width:58px;
+  margin:0 !important;
+  padding:0 10px;
+  border:1px solid #cbd9e7 !important;
+  border-radius:9px !important;
+  background:#f4f8fc !important;
+  color:#245d8f !important;
+  font-size:11px !important;
+  font-weight:900;
+}
+.login-helper{
+  margin-top:9px;
+  color:#708197;
+  font-size:10px;
+  line-height:1.4;
+}
+#loginButton{
+  min-height:52px;
+  height:52px;
+  font-size:15px;
+}
+@media(max-height:620px){
+  .login-screen{
+    place-items:start center;
+  }
+  .login-card{
+    margin:10px auto 24px;
+  }
+  .login-sub{
+    margin-bottom:12px;
+  }
+}
+
+
+/* Bottom navigation collapse — controlled by mobile-navigation-v5.js */
+.bb-bottom-nav-collapse{
+  position:fixed;right:12px;bottom:calc(68px + env(safe-area-inset-bottom));
+  z-index:10020;width:34px;height:26px;padding:0;border:1px solid rgba(18,103,176,.22);
+  border-radius:999px;background:rgba(255,255,255,.96);color:#1267b0;
+  box-shadow:0 3px 12px rgba(12,45,80,.14);font:900 16px/1 inherit;
+  display:flex;align-items:center;justify-content:center;transition:bottom .2s ease;
+}
+html.bb-bottom-nav-collapsed #bottomNav,
+html.bb-bottom-nav-collapsed #moduleBottomNav,
+html.bb-bottom-nav-collapsed #menuBottomNav{
+  transform:translateY(calc(100% + env(safe-area-inset-bottom) + 14px))!important;
+  opacity:0!important;pointer-events:none!important;
+}
+
+/* When module nav is collapsed, give its iframe the recovered nav space. */
+html.bb-bottom-nav-collapsed #moduleScreen .module-frame{
+  bottom:0 !important;
+  height:calc(100dvh - 58px - env(safe-area-inset-top)) !important;
+}
+
+html.bb-bottom-nav-collapsed .bb-bottom-nav-collapse{
+  bottom:calc(8px + env(safe-area-inset-bottom));
+}
+#bottomNav,#moduleBottomNav,#menuBottomNav{transition:transform .2s ease,opacity .2s ease}
+
+
+/* =====================================================
+   BIG BROTHER ANGKOR LOGIN V1
+   Login shell only — dashboard/function UI is untouched.
+   ===================================================== */
+.login-screen{
+  background:#261507 url("assets/big-brother-angkor-login.png?v=20261006-login17") 64% center/cover no-repeat !important;
+  position:fixed;
+  isolation:isolate;
+}
+.login-screen::before{
+  content:"";
+  position:fixed;
+  inset:-3%;
+  z-index:-2;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 50% 42%,rgba(255,240,196,.13),transparent 31%),
+    linear-gradient(180deg,rgba(39,21,7,.02),rgba(39,21,7,.17));
+  animation:bbMobileAngkorBreath 12s ease-in-out infinite alternate;
+}
+.login-screen::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:-1;
+  pointer-events:none;
+  background:linear-gradient(180deg,rgba(31,16,5,.03),rgba(31,16,5,.14));
+}
+@keyframes bbMobileAngkorBreath{
+  from{transform:scale(1);opacity:.72}
+  to{transform:scale(1.018);opacity:1}
+}
+.login-card{
+  width:min(100%,360px) !important;
+  background:transparent !important;
+  border:0 !important;
+  border-radius:0 !important;
+  padding:22px 18px 16px !important;
+  box-shadow:none !important;
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+  color:#432e19;
+  text-align:center;
+}
+.login-mark{
+  width:58px;
+  height:28px;
+  margin:0 auto 8px;
+  position:relative;
+}
+.login-mark::before{
+  content:"";
+  position:absolute;
+  left:10px;right:10px;bottom:2px;
+  height:2px;
+  border-radius:99px;
+  background:#a86b21;
+  box-shadow:0 -6px 0 -1px #a86b21;
+}
+.login-brand{
+  color:#4a2d14 !important;
+  font-size:25px !important;
+  letter-spacing:1.3px !important;
+  text-shadow:0 1px 0 rgba(255,255,255,.5);
+}
+.login-quote{
+  max-width:310px;
+  margin:7px auto 16px;
+  color:#684a2e;
+  font-size:11px;
+  line-height:1.48;
+  font-weight:700;
+}
+.login-sub{display:none!important}
+.login-field-label{
+  position:absolute!important;
+  width:1px!important;
+  height:1px!important;
+  padding:0!important;
+  margin:-1px!important;
+  overflow:hidden!important;
+  clip:rect(0,0,0,0)!important;
+  white-space:nowrap!important;
+  border:0!important;
+}
+.login-card input{
+  min-height:52px !important;
+  height:52px !important;
+  border:1px solid rgba(255,255,255,.78) !important;
+  border-radius:14px !important;
+  padding:0 14px !important;
+  background:rgba(255,252,245,.48) !important;
+  color:#402b18 !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55) !important;
+  font-size:16px !important;
+  margin-bottom:11px;
+}
+.login-card input::placeholder{color:#715a43;opacity:1}
+.login-card input:focus{
+  border-color:rgba(145,89,27,.58) !important;
+  background:rgba(255,255,255,.72) !important;
+  box-shadow:0 0 0 3px rgba(173,112,42,.14),inset 0 1px 0 rgba(255,255,255,.72) !important;
+}
+.login-password-wrap input{
+  padding-right:66px !important;
+  margin-bottom:0;
+}
+.login-password-toggle{
+  right:7px !important;
+  width:48px !important;
+  min-width:48px !important;
+  height:36px !important;
+  border:1px solid rgba(120,78,38,.24) !important;
+  background:rgba(255,250,240,.42) !important;
+  color:#65421f !important;
+  font-size:10px !important;
+  backdrop-filter:blur(5px);
+}
+#loginButton{
+  min-height:50px !important;
+  height:50px !important;
+  margin-top:4px !important;
+  border:1px solid rgba(85,47,16,.18) !important;
+  border-radius:13px !important;
+  background:linear-gradient(135deg,#6c421d,#a46a28) !important;
+  color:#fff7e8 !important;
+  box-shadow:0 8px 20px rgba(88,49,15,.22);
+  letter-spacing:.3px;
+}
+.login-helper{
+  margin:8px 0 8px !important;
+  color:#715a43 !important;
+  font-size:9px !important;
+  line-height:1.4 !important;
+}
+.login-error{
+  color:#8f211d !important;
+  text-shadow:0 1px 0 rgba(255,255,255,.45);
+}
+.desktop-link{
+  margin-top:8px !important;
+  color:#684a2e !important;
+  font-size:10px !important;
+}
+@media(max-width:380px){
+  .login-screen{background-position:56% center !important;padding-left:14px!important;padding-right:14px!important}
+  .login-card{width:min(100%,338px)!important;padding:21px 17px 18px!important}
+  .login-brand{font-size:23px!important}
+  .login-quote{font-size:10px;margin-bottom:14px}
+}
+@media(max-height:620px){
+  .login-screen{place-items:center!important}
+  .login-card{margin:auto!important}
+  .login-mark{display:none}
+  .login-quote{margin-bottom:10px}
+}
+@media(prefers-reduced-motion:reduce){
+  .login-screen::before{animation:none}
+}
+
+.login-card::before{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  left:50%;
+  top:50%;
+  width:430px;
+  height:460px;
+  transform:translate(-50%,-50%);
+  pointer-events:none;
+  background:radial-gradient(ellipse at center,rgba(255,244,220,.34) 0%,rgba(255,236,197,.15) 40%,rgba(57,31,10,.06) 62%,transparent 76%);
+  filter:blur(16px);
+}
+.login-card{position:relative!important;z-index:1}
+
+.login-version{
+  position:fixed;
+  top:max(12px,env(safe-area-inset-top));
+  right:max(12px,env(safe-area-inset-right));
+  z-index:25;
+  padding:7px 10px;
+  border:1px solid rgba(255,255,255,.55);
+  border-radius:999px;
+  background:rgba(38,23,10,.42);
+  color:#fff7e8;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.35px;
+  box-shadow:0 5px 18px rgba(0,0,0,.16);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  user-select:none;
+}
+
+/* =====================================================
+   BIG BROTHER MOBILE LOGIN V11
+   Show the entire landscape image on portrait screens.
+   A blurred cover layer fills unused vertical space.
+   ===================================================== */
+.login-screen{
+  background:#2a1809 !important;
+  overflow:hidden !important;
+  isolation:isolate !important;
+}
+.login-screen::before{
+  content:"" !important;
+  position:fixed !important;
+  inset:-5% !important;
+  z-index:-2 !important;
+  pointer-events:none !important;
+  background:url("assets/big-brother-angkor-login.png?v=20261006-login17") center/cover no-repeat !important;
+  filter:blur(16px) brightness(.72) saturate(1.04) !important;
+  transform:scale(1.08) !important;
+  opacity:.86 !important;
+  animation:none !important;
+}
+.login-screen::after{
+  content:"" !important;
+  position:fixed !important;
+  inset:0 !important;
+  z-index:-1 !important;
+  pointer-events:none !important;
+  background:
+    linear-gradient(180deg,rgba(32,18,7,.08),rgba(32,18,7,.04)),
+    url("assets/big-brother-angkor-login.png?v=20261006-login17") center center/100% auto no-repeat !important;
+}
+@media(max-width:620px){
+  .login-card{
+    width:min(92vw,360px) !important;
+  }
+}
+
+/* =====================================================
+   BIG BROTHER MOBILE LOGIN V12
+   Ratio-responsive scene: no hard image width/height crop.
+   The real image always uses contain; same image fills behind softly.
+   ===================================================== */
+.login-screen{
+  min-height:100svh !important;
+  height:100dvh !important;
+  width:100vw !important;
+  padding:
+    max(14px,env(safe-area-inset-top))
+    max(14px,env(safe-area-inset-right))
+    max(14px,env(safe-area-inset-bottom))
+    max(14px,env(safe-area-inset-left)) !important;
+  display:grid !important;
+  place-items:center !important;
+  background:#2a1809 !important;
+  overflow:hidden !important;
+  isolation:isolate !important;
+}
+.login-screen::before{
+  content:"" !important;
+  position:absolute !important;
+  inset:-7vmax !important;
+  z-index:-2 !important;
+  pointer-events:none !important;
+  background:url("assets/big-brother-angkor-login.png?v=20261006-login17") center/cover no-repeat !important;
+  filter:blur(clamp(12px,2.2vmax,28px)) brightness(.70) saturate(1.05) !important;
+  transform:scale(1.05) !important;
+  opacity:.90 !important;
+  animation:none !important;
+}
+.login-screen::after{
+  content:"" !important;
+  position:absolute !important;
+  inset:0 !important;
+  z-index:-1 !important;
+  pointer-events:none !important;
+  background:
+    linear-gradient(180deg,rgba(28,15,5,.05),rgba(28,15,5,.08)),
+    url("assets/big-brother-angkor-login.png?v=20261006-login17") center/contain no-repeat !important;
+}
+.login-card{
+  width:min(90vw,22.5rem) !important;
+  max-height:calc(100dvh - max(28px,env(safe-area-inset-top)) - max(28px,env(safe-area-inset-bottom))) !important;
+  overflow:auto !important;
+  padding:clamp(16px,3.5vw,22px) clamp(14px,3.5vw,18px) !important;
+  margin:0 !important;
+}
+.login-brand{font-size:clamp(22px,6vw,28px)!important}
+.login-quote{font-size:clamp(10px,2.8vw,12px)!important}
+.login-card input{
+  min-height:clamp(48px,7svh,54px)!important;
+  height:clamp(48px,7svh,54px)!important;
+  font-size:clamp(15px,4vw,17px)!important;
+}
+#loginButton{
+  min-height:clamp(48px,7svh,54px)!important;
+  height:clamp(48px,7svh,54px)!important;
+  font-size:clamp(14px,4vw,16px)!important;
+}
+.login-version{
+  top:max(10px,env(safe-area-inset-top)) !important;
+  right:max(10px,env(safe-area-inset-right)) !important;
+  font-size:clamp(8px,2.2vw,10px)!important;
+}
+
+/* Very short landscape phones: compact vertically instead of cropping the scene. */
+@media (orientation:landscape) and (max-height:520px){
+  .login-card{
+    width:min(78vw,22rem)!important;
+    padding:10px 16px!important;
+  }
+  .login-mark{display:none!important}
+  .login-quote{margin-bottom:8px!important}
+  .login-card input{height:44px!important;min-height:44px!important}
+  #loginButton{height:44px!important;min-height:44px!important}
+  .desktop-link{margin-top:5px!important}
+}
+
+/* =====================================================
+   BIG BROTHER MOBILE LOGIN V13
+   V10-style full-screen cover with automatic horizontal pan.
+   Default/start focus is Angkor Wat.
+   ===================================================== */
+.login-screen{
+  background:#261507 !important;
+  overflow:hidden !important;
+  isolation:isolate !important;
+}
+.login-screen::before{
+  content:"" !important;
+  position:absolute !important;
+  inset:0 !important;
+  z-index:-2 !important;
+  pointer-events:none !important;
+  background-image:url("assets/big-brother-angkor-login.png?v=20261006-login17") !important;
+  background-repeat:no-repeat !important;
+  background-size:cover !important;
+  background-position:72% center !important;
+  filter:none !important;
+  transform:none !important;
+  opacity:1 !important;
+  animation:bbMobileAngkorPan 18s ease-in-out infinite alternate !important;
+}
+.login-screen::after{
+  content:"" !important;
+  position:absolute !important;
+  inset:0 !important;
+  z-index:-1 !important;
+  pointer-events:none !important;
+  background:
+    radial-gradient(circle at 50% 46%,rgba(255,241,204,.10),transparent 33%),
+    linear-gradient(180deg,rgba(31,16,5,.03),rgba(31,16,5,.14)) !important;
+}
+@keyframes bbMobileAngkorPan{
+  0%{background-position:72% center}
+  50%{background-position:50% center}
+  100%{background-position:26% center}
+}
+@media(prefers-reduced-motion:reduce){
+  .login-screen::before{
+    animation:none !important;
+    background-position:72% center !important;
+  }
+}
+
+/* =====================================================
+   BIG BROTHER MOBILE LOGIN V14
+   True V10 full-screen cover + automatic horizontal pan.
+   The actual login screen owns the image; no contained image layer.
+   ===================================================== */
+.login-screen{
+  min-height:100dvh !important;
+  height:100dvh !important;
+  width:100vw !important;
+  background:#261507 url("assets/big-brother-angkor-login.png?v=20261006-login17") 72% center/cover no-repeat !important;
+  animation:bbMobileAngkorScreenPan 18s ease-in-out infinite alternate !important;
+  overflow:hidden !important;
+  isolation:isolate !important;
+}
+.login-screen::before{
+  content:"" !important;
+  position:absolute !important;
+  inset:0 !important;
+  z-index:0 !important;
+  pointer-events:none !important;
+  background:radial-gradient(circle at 50% 46%,rgba(255,241,204,.10),transparent 34%) !important;
+  filter:none !important;
+  transform:none !important;
+  opacity:1 !important;
+  animation:none !important;
+}
+.login-screen::after{
+  content:"" !important;
+  position:absolute !important;
+  inset:0 !important;
+  z-index:0 !important;
+  pointer-events:none !important;
+  background:linear-gradient(180deg,rgba(31,16,5,.03),rgba(31,16,5,.14)) !important;
+}
+.login-card{
+  position:relative !important;
+  z-index:1 !important;
+}
+@keyframes bbMobileAngkorScreenPan{
+  0%{background-position:72% center}
+  50%{background-position:50% center}
+  100%{background-position:26% center}
+}
+@media(prefers-reduced-motion:reduce){
+  .login-screen{
+    animation:none !important;
+    background-position:72% center !important;
+  }
+}
+
+/* =====================================================
+   BIG BROTHER MOBILE LOGIN V15
+   Exact V10 visual behavior + auto-pan only.
+   ===================================================== */
+.login-screen{
+  background:#261507 url("assets/big-brother-angkor-login.png?v=20261006-login17") 72% center/cover no-repeat !important;
+  animation:bbMobileAngkorScreenPan 18s ease-in-out infinite alternate !important;
+}
+.login-screen::before{
+  content:"" !important;
+  position:absolute !important;
+  inset:0 !important;
+  z-index:0 !important;
+  background:radial-gradient(circle at 50% 46%,rgba(255,241,204,.10),transparent 34%) !important;
+  filter:none !important;
+  transform:none !important;
+  opacity:1 !important;
+  animation:none !important;
+}
+.login-screen::after{
+  content:"" !important;
+  position:absolute !important;
+  inset:0 !important;
+  z-index:0 !important;
+  background:linear-gradient(180deg,rgba(31,16,5,.03),rgba(31,16,5,.14)) !important;
+}
+.login-card{position:relative!important;z-index:1!important}
+
+/* =====================================================
+   BIG BROTHER MOBILE LOGIN V16
+   ONLY the background layer moves. Login card is fixed.
+   ===================================================== */
+.login-screen{
+  position:fixed !important;
+  inset:0 !important;
+  background:#261507 !important;
+  animation:none !important;
+  overflow:hidden !important;
+  isolation:isolate !important;
+}
+.login-bg-pan{
+  position:absolute;
+  inset:0;
+  z-index:-2;
+  pointer-events:none;
+  background-image:url("assets/big-brother-angkor-login.png?v=20261006-login17");
+  background-repeat:no-repeat;
+  background-size:cover;
+  background-position:72% center;
+  animation:bbLoginBgPanOnly 18s ease-in-out infinite alternate;
+  will-change:background-position;
+}
+.login-screen::before{
+  content:"" !important;
+  position:absolute !important;
+  inset:0 !important;
+  z-index:-1 !important;
+  pointer-events:none !important;
+  background:radial-gradient(circle at 50% 46%,rgba(255,241,204,.10),transparent 34%) !important;
+  filter:none !important;
+  transform:none !important;
+  opacity:1 !important;
+  animation:none !important;
+}
+.login-screen::after{
+  content:"" !important;
+  position:absolute !important;
+  inset:0 !important;
+  z-index:-1 !important;
+  pointer-events:none !important;
+  background:linear-gradient(180deg,rgba(31,16,5,.03),rgba(31,16,5,.14)) !important;
+}
+.login-card{
+  position:relative !important;
+  z-index:2 !important;
+  transform:none !important;
+  animation:none !important;
+}
+.login-version{z-index:3!important}
+
+@keyframes bbLoginBgPanOnly{
+  0%{background-position:72% center}
+  50%{background-position:50% center}
+  100%{background-position:24% center}
+}
+@media(prefers-reduced-motion:reduce){
+  .login-bg-pan{
+    animation:none !important;
+    background-position:72% center !important;
+  }
+}
+
+/* =====================================================
+   BIG BROTHER MOBILE LOGIN V17
+   AUTH VISIBILITY FIX
+   Legacy login experiments set display:grid!important.
+   This rule guarantees JS hidden state wins after sign-in.
+   ===================================================== */
+#loginScreen[hidden],
+.login-screen[hidden],
+#bootScreen[hidden],
+#mobileHome[hidden],
+#menuScreen[hidden],
+#moduleScreen[hidden]{
+  display:none !important;
+}

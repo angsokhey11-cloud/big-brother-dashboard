@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="utf-8">
+
+<meta
+  name="viewport"
+  content="width=device-width,initial-scale=1"
+>
+
+<title>
+  BIG BROTHER — Secure Dashboard
+</title>
+
+<style>
+
+html,
+body{
+  margin:0;
+  min-height:100%;
+  background:#eef3f8;
+  font-family:Arial,sans-serif;
+}
+
+.bb-loader{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.bb-card{
+  background:#fff;
+  border:1px solid #d9e2ef;
+  border-radius:14px;
+  padding:22px 28px;
+  box-shadow:0 8px 30px #173a6615;
+  color:#17457a;
+  font-weight:800;
+}
+
+.bb-sub{
+  margin-top:6px;
+  color:#6b7280;
+  font-size:12px;
+  font-weight:600;
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="bb-loader">
+
+  <div class="bb-card">
+
+    Loading BIG BROTHER Dashboard…
+
+    <div class="bb-sub">
+      Secure Supabase · Expenses + COGS Reports V1
+    </div>
+
+  </div>
+
+</div>
+
+
+
+<script>
+
+(async function(){
+
+  "use strict";
+
+
+  try{
+
+
+    /* =====================================================
+       LOAD LEGACY DASHBOARD
+       ===================================================== */
+
+    const response =
+      await fetch(
+        "legacy-dashboard-v3.40.html?v=20261027-invoice-admin-route1",
+        {
+          cache:"no-store"
+        }
+      );
+
+
+    if(!response.ok){
+
+      throw new Error(
+        "Could not load Dashboard source."
+      );
+
+    }
+
+
+    let html =
+      await response.text();
+
+
+
+    /* =====================================================
+       HELPER
+       ===================================================== */
+
+    function mustReplace(
+      label,
+      oldText,
+      newText
+    ){
+
+      if(
+        !html.includes(
+          oldText
+        )
+      ){
+
+        throw new Error(
+          label +
+          " marker was not found."
+        );
+
+      }
+
+
+      html =
+        html.replace(
+          oldText,
+          newText
+        );
+
+    }
+
+
+
+    /* =====================================================
+       SUPABASE AUTH / PERMISSION ADAPTER
+       ===================================================== */
+
+    const adapter =
+      '<link rel="manifest" href="desktop-manifest.webmanifest?v=20260921-desktopapp2">\n<link rel="icon" href="desktop-pwa-icon.svg?v=20260921-desktopapp2" type="image/svg+xml">\n'
+      +
+      '<meta name="theme-color" content="#07111f">\n'
+      +
+      '<scr'
+      +
+      'ipt src="supabase-dashboard-adapter.js?v=20261025-webpush-v1"></scr'
+      +
+      'ipt>\n'
+      +
+      '<scr'
+      +
+      'ipt src="bb-system-dialog-v1.js?v=20261005-dialog2"></scr'
+      +
+      'ipt>';
+
+
+    const headClose =
+      html
+        .toLowerCase()
+        .indexOf(
+          "</head>"
+        );
+
+
+    if(
+      headClose < 0
+    ){
+
+      throw new Error(
+        "Dashboard source is missing </head>."
+      );
+
+    }
+
+
+    html =
+      html.slice(
+        0,
+        headClose
+      )
+      +
+      adapter
+      +
+      "\n"
+      +
+      html.slice(
+        headClose
+      );
+
+
+
+    /* =====================================================
+       MASTER DATA
+       EXPENSE CATEGORY MENU
+       ===================================================== */
+
+    const oldProductsEnd =
+`            <div id="productsEditorSubmenu" class="nav-submenu nav-submenu-level2">
+              <button type="button" id="navProductAdd" onclick="loadWorkspace('products-add')">＋ Add Product / Service</button>
+              <button type="button" id="navProductDetails" onclick="loadWorkspace('products-details')">📋 Items & Prices</button>
+            </div>
+          </div>
+
+        </div>`;
+
+
+    const newProductsEnd =
+`            <div id="productsEditorSubmenu" class="nav-submenu nav-submenu-level2">
+              <button type="button" id="navProductAdd" onclick="loadWorkspace('products-add')">＋ Add Product / Service</button>
+              <button type="button" id="navProductDetails" onclick="loadWorkspace('products-details')">📋 Items & Prices</button>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            id="navMasterExpenseCategories"
+            onclick="loadWorkspace('master-expense-categories')"
+          >
+            💸 Expense Categories
+          </button>
+
+          <button
+            type="button"
+            id="navMasterAuditCenter"
+            onclick="loadWorkspace('master-audit-center')"
+          >
+            🛡️ Audit & Correction Center
+          </button>
+
+        </div>`;
+
+
+    mustReplace(
+      "Master Data Expense Categories menu",
+      oldProductsEnd,
+      newProductsEnd
+    );
+
+
+
+    /* =====================================================
+       MASTER DATA
+       EXPENSE CATEGORY ROUTE
+       ===================================================== */
+
+    const productRoute =
+      '"products-details": "https://angsokhey11-cloud.github.io/big-brother-products-editor/?embed=1&view=details&v=10",';
+
+
+    const productRouteWithExpenseCategory =
+      productRoute
+      +
+      '\n    "master-expense-categories": "https://angsokhey11-cloud.github.io/big-brother-master-data/expense-categories.html?embed=1&v=20260912-3",' +
+      '\n    "master-audit-center": "https://angsokhey11-cloud.github.io/big-brother-master-data/audit-center.html?embed=1&v=20260927-1",';
+
+
+    mustReplace(
+      "Master Data Expense Categories route",
+      productRoute,
+      productRouteWithExpenseCategory
+    );
+
+
+
+    /* =====================================================
+       PRODUCTS + SERVICES MASTER
+       ===================================================== */
+
+    html =
+      html.replaceAll(
+        'https://angsokhey11-cloud.github.io/big-brother-products-editor/?embed=1&view=add&v=10',
+        'https://angsokhey11-cloud.github.io/big-brother-products-editor/?embed=1&view=add&v=20260930-service2'
+      )
+      .replaceAll(
+        'https://angsokhey11-cloud.github.io/big-brother-products-editor/?embed=1&view=details&v=10',
+        'https://angsokhey11-cloud.github.io/big-brother-products-editor/?embed=1&view=details&v=20260930-service2'
+      );
+
+
+    /* =====================================================
+       MASTER DATA ACTIVE FLAGS
+       ===================================================== */
+
+    const oldFlags =
+`    const isCustomerModule = customerModules.includes(moduleName);
+    const isClientModule = clientModules.includes(moduleName);
+    const isProductModule = productModules.includes(moduleName);
+    const isSalesSupportModule = salesSupportModules.includes(moduleName);
+    const isExpensesModule = expenseModules.includes(moduleName);
+    const isStockModule = stockModules.includes(moduleName);
+
+    const isMasterModule =
+      isCustomerModule ||
+      isClientModule ||
+      isProductModule;`;
+
+
+    const newFlags =
+`    const isCustomerModule = customerModules.includes(moduleName);
+    const isClientModule = clientModules.includes(moduleName);
+    const isProductModule = productModules.includes(moduleName);
+    const isExpenseCategoryMaster =
+      moduleName === 'master-expense-categories';
+    const isAuditCenterMaster =
+      moduleName === 'master-audit-center';
+
+    const isSalesSupportModule = salesSupportModules.includes(moduleName);
+    const isExpensesModule = expenseModules.includes(moduleName);
+    const isStockModule = stockModules.includes(moduleName);
+
+    const isMasterModule =
+      isCustomerModule ||
+      isClientModule ||
+      isProductModule ||
+      isExpenseCategoryMaster ||
+      isAuditCenterMaster;`;
+
+
+    mustReplace(
+      "Master Data active module flags",
+      oldFlags,
+      newFlags
+    );
+
+
+
+    /* =====================================================
+       MASTER DATA ACTIVE MENU
+       ===================================================== */
+
+    const oldProductActive =
+`      if (isProductModule) {
+        const productNavId =
+          moduleName === 'products-add'
+            ? 'navProductAdd'
+            : 'navProductDetails';
+
+        document.getElementById(productNavId)?.classList.add('active');
+      }
+
+    } else if (`;
+
+
+    const newProductActive =
+`      if (isProductModule) {
+        const productNavId =
+          moduleName === 'products-add'
+            ? 'navProductAdd'
+            : 'navProductDetails';
+
+        document.getElementById(productNavId)?.classList.add('active');
+      }
+
+      if (isExpenseCategoryMaster) {
+        document
+          .getElementById('navMasterExpenseCategories')
+          ?.classList
+          .add('active');
+      }
+
+      if (isAuditCenterMaster) {
+        document
+          .getElementById('navMasterAuditCenter')
+          ?.classList
+          .add('active');
+      }
+
+    } else if (`;
+
+
+    mustReplace(
+      "Expense Category active menu",
+      oldProductActive,
+      newProductActive
+    );
+
+
+
+    /* =====================================================
+       COGS MENU UNDER EXPENSES
+       ===================================================== */
+
+    const oldExpenseEnd =
+`          <button type="button" id="navExpenseAccrued" onclick="loadWorkspace('expense-accrued')">⏳ Accrued Expenses</button>
+          <button type="button" id="navExpenseHistory" onclick="loadWorkspace('expense-history')">📜 Expense History</button>
+          <button
+  type="button"
+  id="navExpenseMonthlyReport"
+  onclick="loadWorkspace('expense-monthly-report')"
+>
+  📊 Monthly Expense Report
+</button>
+        </div>
+      </div>`;
+
+
+    const newExpenseEnd =
+`          <button type="button" id="navExpenseAccrued" onclick="loadWorkspace('expense-accrued')">⏳ Accrued Expenses</button>
+          <button type="button" id="navDailyCash" onclick="loadWorkspace('daily-cash')">💵 Daily Cash</button>
+          <button type="button" id="navExpenseHistory" onclick="loadWorkspace('expense-history')">📜 Expense History</button>
+
+          <button
+            type="button"
+            id="navExpenseMonthlyReport"
+            onclick="loadWorkspace('expense-monthly-report')"
+          >
+            📊 Monthly Expense Report
+          </button>
+
+
+          <div
+            class="nested-nav-group"
+            id="cogsNavGroup"
+          >
+
+            <button
+              type="button"
+              id="cogsMenuButton"
+              class="nested-nav-toggle"
+              aria-expanded="false"
+              aria-controls="cogsSubmenu"
+              onclick="toggleCogsMenu()"
+            >
+
+              <span class="nested-nav-main">
+
+                <span>📦</span>
+
+                <span>
+                  COGS
+                </span>
+
+              </span>
+
+              <span class="nav-arrow">
+                ▼
+              </span>
+
+            </button>
+
+
+            <div
+              id="cogsSubmenu"
+              class="nav-submenu nav-submenu-level2"
+            >
+
+              <button
+                type="button"
+                id="navCogsDaily"
+                onclick="loadWorkspace('cogs-daily')"
+              >
+                📅 Daily COGS Report
+              </button>
+
+
+              <button
+                type="button"
+                id="navCogsMonthly"
+                onclick="loadWorkspace('cogs-monthly')"
+              >
+                📊 Monthly COGS Report
+              </button>
+
+            </div>
+
+          </div>
+
+
+        </div>
+
+      </div>`;
+
+
+    mustReplace(
+      "COGS menu under Expenses",
+      oldExpenseEnd,
+      newExpenseEnd
+    );
+
+
+
+    /* =====================================================
+       COGS ROUTES
+       ===================================================== */
+
+    const expenseRoute =
+      '"expense-monthly-report": "https://angsokhey11-cloud.github.io/big-brother-expenses/monthly-report.html?embed=1&v=1",';
+
+
+    const expenseRoutesWithCogs =
+      expenseRoute
+      +
+      '\n    "daily-cash": "https://angsokhey11-cloud.github.io/big-brother-expenses/daily-cash.html?embed=1&v=20260920-vaultfx1",'
+      +
+      '\n    "cogs-daily": "https://angsokhey11-cloud.github.io/big-brother-cogs/daily.html?embed=1&v=20260912-2",'
+      +
+      '\n    "cogs-monthly": "https://angsokhey11-cloud.github.io/big-brother-cogs/monthly.html?embed=1&v=20260912-2",';
+
+
+    mustReplace(
+      "COGS Dashboard routes",
+      expenseRoute,
+      expenseRoutesWithCogs
+    );
+
+
+
+    /* =====================================================
+       EXPENSE MODULE LIST
+       ===================================================== */
+
+    const oldExpenseModules =
+`    const expenseModules = [
+      'expense-add',
+      'expense-accrued',
+      'expense-history',
+      'expense-monthly-report'
+    ];`;
+
+
+    const newExpenseModules =
+`    const expenseModules = [
+      'expense-add',
+      'expense-accrued',
+      'daily-cash',
+      'expense-history',
+      'expense-monthly-report',
+      'cogs-daily',
+      'cogs-monthly'
+    ];`;
+
+
+    mustReplace(
+      "COGS Expense module list",
+      oldExpenseModules,
+      newExpenseModules
+    );
+
+
+
+    /* =====================================================
+       COGS NESTED MENU TOGGLE
+       ===================================================== */
+
+    const productToggleMarker =
+`  function toggleProductsEditorMenu() {`;
+
+
+    const cogsToggle =
+`  function toggleCogsMenu() {
+
+    const submenu =
+      document.getElementById('cogsSubmenu');
+
+    const button =
+      document.getElementById('cogsMenuButton');
+
+    if (!submenu || !button) return;
+
+    const open =
+      !submenu.classList.contains('open');
+
+    submenu.classList.toggle('open', open);
+
+    button.classList.toggle('open', open);
+
+    button.setAttribute(
+      'aria-expanded',
+      String(open)
+    );
+
+    const arrow =
+      button.querySelector('.nav-arrow');
+
+    if (arrow) {
+      arrow.textContent =
+        open ? '▲' : '▼';
+    }
+
+  }
+
+
+  function toggleProductsEditorMenu() {`;
+
+
+    mustReplace(
+      "COGS toggle function",
+      productToggleMarker,
+      cogsToggle
+    );
+
+
+
+    /* =====================================================
+       COGS ACTIVE MENU STATE
+       ===================================================== */
+
+    const oldExpenseActive =
+`      const expenseId =
+        moduleName === 'expense-add'
+          ? 'navExpenseAdd'
+          : moduleName === 'expense-accrued'
+            ? 'navExpenseAccrued'
+            : moduleName === 'expense-history'
+              ? 'navExpenseHistory'
+              : 'navExpenseMonthlyReport';
+
+      document.getElementById(expenseId)?.classList.add('active');
+
+    } else if (isStockModule) {`;
+
+
+    const newExpenseActive =
+`      const expenseId =
+        moduleName === 'expense-add'
+          ? 'navExpenseAdd'
+          : moduleName === 'expense-accrued'
+            ? 'navExpenseAccrued'
+            : moduleName === 'daily-cash'
+              ? 'navDailyCash'
+              : moduleName === 'expense-history'
+                ? 'navExpenseHistory'
+                : moduleName === 'expense-monthly-report'
+                  ? 'navExpenseMonthlyReport'
+                  : moduleName === 'cogs-daily'
+                    ? 'navCogsDaily'
+                    : 'navCogsMonthly';
+
+      document.getElementById(expenseId)?.classList.add('active');
+
+
+      const isCogsModule =
+        moduleName === 'cogs-daily'
+        ||
+        moduleName === 'cogs-monthly';
+
+
+      const cogsSub =
+        document.getElementById('cogsSubmenu');
+
+      const cogsBtn =
+        document.getElementById('cogsMenuButton');
+
+
+      if (cogsSub && cogsBtn) {
+
+        cogsSub.classList.toggle(
+          'open',
+          isCogsModule
+        );
+
+        cogsBtn.classList.toggle(
+          'open',
+          isCogsModule
+        );
+
+        cogsBtn.setAttribute(
+          'aria-expanded',
+          String(isCogsModule)
+        );
+
+        const cogsArrow =
+          cogsBtn.querySelector(
+            '.nav-arrow'
+          );
+
+        if (cogsArrow) {
+          cogsArrow.textContent =
+            isCogsModule
+              ? '▲'
+              : '▼';
+        }
+
+      }
+
+
+    } else if (isStockModule) {`;
+
+
+    mustReplace(
+      "COGS active Expense menu",
+      oldExpenseActive,
+      newExpenseActive
+    );
+
+
+
+    /* =====================================================
+       COGS DIRECT URL AUTOLOAD
+       ===================================================== */
+
+    html =
+      html.replace(
+
+        "'expense-history','expense-monthly-report','stock-keyin'",
+
+        "'expense-history','daily-cash','expense-monthly-report','cogs-daily','cogs-monthly','stock-keyin'"
+
+      );
+
+
+
+    /* =====================================================
+       ADMIN USER & PERMISSION MANAGER
+       ===================================================== */
+
+    const adminMenuMarker =
+      '<button type="button" id="navAdminRequest" onclick="loadWorkspace(\'admin-request\')">🛠️ Admin Request</button>';
+
+
+    mustReplace(
+
+      "Admin User Permission menu",
+
+      adminMenuMarker,
+
+      adminMenuMarker
+      +
+      '\n          <button type="button" id="navAdminUserPermissions" onclick="loadWorkspace(\'admin-user-permissions\')">🔐 User & Permission Manager</button>\n          <button type="button" id="navAdminBankRegister" onclick="loadWorkspace(\'admin-bank-register\')">🏦 Bank Transaction Register</button>\n          <button type="button" id="navAdminBankHistory" onclick="loadWorkspace(\'admin-bank-history\')">📋 Bank Transaction History</button>'
+
+    );
+
+
+
+    const adminUrlMarker =
+      '"admin-request": "https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=admin-request"';
+
+
+    mustReplace(
+
+      "Admin User Permission route",
+
+      adminUrlMarker,
+
+      adminUrlMarker
+      +
+      ',\n    "admin-user-permissions": "https://angsokhey11-cloud.github.io/big-brother-admin-work/user-permissions.html?embed=1&v=1",\n    "admin-bank-register": "https://angsokhey11-cloud.github.io/big-brother-admin-work/bank-register.html?embed=1",\n    "admin-bank-history": "https://angsokhey11-cloud.github.io/big-brother-admin-work/bank-history.html?embed=1"'
+
+    );
+
+    html =
+      html.replace(
+
+        '"admin-pending-receivable": "https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=pending-receivable"',
+
+        '"admin-pending-receivable": "https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=pending-receivable&v=20260920-artelegram2"'
+
+      );
+
+
+    html =
+      html.replace(
+
+        '"admin-staff-request": "https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=staff-request"',
+
+        '"admin-staff-request": "https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=staff-request&desktop=1&v=20260926-batchearning1"'
+
+      );
+
+
+
+    /* =====================================================
+       ADMIN ACTIVE ROUTE
+       ===================================================== */
+
+    const adminCondition =
+`moduleName === 'admin-staff-request' ||
+      moduleName === 'admin-request'
+    ) {`;
+
+
+    const adminConditionNew =
+`moduleName === 'admin-staff-request' ||
+      moduleName === 'admin-request' ||
+      moduleName === 'admin-user-permissions' ||
+      moduleName === 'admin-bank-register' ||
+      moduleName === 'admin-bank-history'
+    ) {`;
+
+
+    mustReplace(
+      "Admin active route condition",
+      adminCondition,
+      adminConditionNew
+    );
+
+
+
+    const adminActiveMarker =
+`: moduleName === 'admin-staff-request'
+                  ? 'navAdminStaffRequest'
+                  : 'navAdminRequest';`;
+
+
+    const adminActiveReplacement =
+`: moduleName === 'admin-staff-request'
+                  ? 'navAdminStaffRequest'
+                   : moduleName === 'admin-user-permissions'
+                    ? 'navAdminUserPermissions'
+                    : moduleName === 'admin-bank-register'
+                      ? 'navAdminBankRegister'
+                      : moduleName === 'admin-bank-history'
+                        ? 'navAdminBankHistory'
+                        : 'navAdminRequest';`;
+
+
+    mustReplace(
+      "Admin active menu marker",
+      adminActiveMarker,
+      adminActiveReplacement
+    );
+
+
+
+    /* =====================================================
+       INVOICE REVERSAL SHELL
+       ===================================================== */
+
+    html =
+      html.replace(
+
+        '<a href="https://angsokhey11-cloud.github.io/big-brother-invoice-reversal/">',
+
+        '<a href="#" onclick="loadWorkspace(\'sale-return\'); return false;">'
+
+      );
+
+
+
+    /* =====================================================
+       INVOICE GENERATOR
+       ===================================================== */
+
+    html =
+      html.replace(
+
+        'invoice: "https://angsokhey11-cloud.github.io/big-brother-invoice-generator/?embed=1&v=20260924-cashbank1"',
+
+        'invoice: "https://angsokhey11-cloud.github.io/big-brother-invoice-generator/?embed=1&v=20261027-bank-equivalent-reset1"'
+
+      );
+
+
+
+    /* =====================================================
+       DESKTOP INVOICE ADMIN PILOT ROUTING
+       - Keep all users on the latest verified Invoice Generator.
+       - Only admins get the multi-bank pilot flag in its iframe URL.
+       - Server-side SQL independently checks the signed-in admin role.
+       - Reopen outdated invoice frames without touching other modules.
+       ===================================================== */
+    mustReplace(
+      "Desktop Invoice pilot route",
+      "    const url = MODULE_URLS[moduleName];",
+      [
+        "    const url = moduleName === 'invoice' ? (() => {",
+        "      const next = new URL(MODULE_URLS.invoice);",
+        "      const isAdmin = window.BBDashboardAdapter?.getProfile?.()?.user?.isAdmin === true;",
+        "      if (isAdmin) next.searchParams.set('bbMultiBankPilot', '1');",
+        "      else next.searchParams.delete('bbMultiBankPilot');",
+        "      return next.toString();",
+        "    })() : MODULE_URLS[moduleName];"
+      ].join("\n")
+    );
+
+    mustReplace(
+      "Desktop Invoice build marker",
+      "      '20260924-hide-source-no-zero1';",
+      "      '20260924-invoiceseq1';"
+    );
+
+    mustReplace(
+      "Desktop Invoice iframe refresh rule",
+      "          frame.contentWindow?.BB_INVOICE_GENERATOR_BUILD !==\n          expectedInvoiceBuild;",
+      "          frame.contentWindow?.BB_INVOICE_GENERATOR_BUILD !==\n          expectedInvoiceBuild ||\n"+
+      "          new URL(frame.src).searchParams.get('v') !==\n          new URL(url).searchParams.get('v') ||\n"+
+      "          new URL(frame.src).searchParams.get('bbMultiBankPilot') !==\n          new URL(url).searchParams.get('bbMultiBankPilot');"
+    );
+
+    /* =====================================================
+       INVOICE HISTORY — ADD PRODUCT EDITOR
+       ===================================================== */
+
+    html =
+      html.replace(
+
+        'history: "https://angsokhey11-cloud.github.io/invoice-history/?embed=1&v=20260924-sheetsync1"',
+
+        'history: "https://angsokhey11-cloud.github.io/invoice-history/?embed=1&v=20261002-headerbig2"'
+
+      );
+
+
+
+    /* =====================================================
+       SALES SUPPORT
+       ===================================================== */
+
+    html =
+      html.replaceAll(
+
+        "https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=calculator&v=20260922-nodeliverypopup1",
+
+        "https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=calculator&v=20260923-desktopcalcparity1"
+
+      );
+
+
+    html =
+      html.replaceAll(
+
+        "https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=request-delivery&v=110",
+
+        "https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=request-delivery&v=111"
+
+      );
+
+
+    html =
+      html.replaceAll(
+
+        "https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=your-customer&v=110",
+
+        "https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=your-customer&v=111"
+
+      );
+
+
+    html =
+      html.replaceAll(
+
+        "https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=successful-delivery&v=110",
+
+        "https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=successful-delivery&v=111"
+
+      );
+
+
+
+    /* =====================================================
+       PURCHASE — PROMOTION QTY V1
+       ===================================================== */
+
+    html =
+      html.replace(
+
+        '"purchase-create": "https://angsokhey11-cloud.github.io/big-brother-purchase-recorder/?embed=1&v=1"',
+
+        '"purchase-create": "https://angsokhey11-cloud.github.io/big-brother-purchase-recorder/?embed=1&v=20260912-promo-3"'
+
+      );
+
+
+    html =
+      html.replace(
+
+        '"purchase-history": "https://angsokhey11-cloud.github.io/big-brother-puchase-history/?embed=1&v=1"',
+
+        '"purchase-history": "https://angsokhey11-cloud.github.io/big-brother-puchase-history/?embed=1&v=20260926-edit1"'
+
+      );
+
+
+
+    /* =====================================================
+       STOCK — ZERO-COST STOCK V1
+       ===================================================== */
+
+    html =
+      html.replace(
+
+        '"stock-keyin": "https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=keyin&v=20"',
+
+        '"stock-keyin": "https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=keyin&v=20261003-damagevisibility1"'
+
+      );
+
+
+    html =
+      html.replace(
+
+        '"stock-report": "https://angsokhey11-cloud.github.io/big-brother-stock-report/?embed=1&v=30"',
+
+        '"stock-report": "https://angsokhey11-cloud.github.io/big-brother-stock-report/?embed=1&v=20260923-defaultorder1"'
+
+      );
+
+
+    html =
+      html.replace(
+
+        '"stock-damaged": "https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=damaged&v=20"',
+
+        '"stock-damaged": "https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/?embed=1&view=damaged&v=20260912-zero-cost-6"'
+
+      );
+
+
+    html =
+      html.replace(
+
+        '"batch-report": "https://angsokhey11-cloud.github.io/big-brother-stock-report/batch-report.html?embed=1&v=10"',
+
+        '"batch-report": "https://angsokhey11-cloud.github.io/big-brother-stock-report/batch-report.html?embed=1&v=20260923-batchedit1"'
+
+      );
+
+
+    html =
+      html.replace(
+
+        '"closed-batch": "https://angsokhey11-cloud.github.io/big-brother-stock-report/closed-batch.html?embed=1&v=10"',
+
+        '"closed-batch": "https://angsokhey11-cloud.github.io/big-brother-stock-report/closed-batch.html?embed=1&v=20260912-zero-cost-3"'
+
+      );
+
+
+    html =
+      html.replace(
+
+        '"stock-transactions": "https://angsokhey11-cloud.github.io/big-brother-stock-report/transactions.html?embed=1&v=10"',
+
+        '"stock-transactions": "https://angsokhey11-cloud.github.io/big-brother-stock-report/transactions.html?embed=1&v=20260912-zero-cost-3"'
+
+      );
+
+
+
+    /* =====================================================
+       ACCOUNTS RECEIVABLE
+       ===================================================== */
+
+    html =
+      html.replace(
+
+        '"ar-all": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=all&v=2"',
+
+        '"ar-all": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=all&v=20261001-ar-layout3"'
+
+      );
+
+
+    html =
+      html.replace(
+
+        '"ar-your": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=your&v=3"',
+
+        '"ar-your": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=your&v=20261001-ar-layout3"'
+
+      );
+
+
+
+    /* =====================================================
+       PAYMENT HISTORY
+       ===================================================== */
+
+    html =
+      html.replace(
+
+        '"payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=invoice&v=1"',
+
+        '"payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=invoice&v=20261018-date1"'
+
+      );
+
+
+    html =
+      html.replace(
+
+        '"ar-payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=receivable&v=1"',
+
+        '"ar-payment-history": "https://angsokhey11-cloud.github.io/big-brother-payment-history/?embed=1&type=receivable&v=20261018-date1"'
+
+      );
+
+
+
+    /* =====================================================
+       SUPABASE DASHBOARD START
+       ===================================================== */
+
+    const startupMarker =
+      "  window.addEventListener('DOMContentLoaded', openInitialWorkspace);";
+
+
+    const startupReplacement =
+      "  window.addEventListener('DOMContentLoaded', () => window.BBDashboardAdapter.start());";
+
+
+    mustReplace(
+      "Dashboard startup",
+      startupMarker,
+      startupReplacement
+    );
+
+
+
+    /* =====================================================
+       TITLE
+       ===================================================== */
+
+    html =
+      html.replace(
+
+        "<title>BIG BROTHER — Dashboard V3.38 Stock Transactions Active</title>",
+
+        "<title>BIG BROTHER — Secure Supabase Dashboard</title>"
+
+      );
+
+
+
+    /* =====================================================
+       EXISTING DASHBOARD FEATURE FILES
+       ===================================================== */
+
+    const bodyClose =
+      html
+        .toLowerCase()
+        .lastIndexOf(
+          "</body>"
+        );
+
+
+    if(
+      bodyClose < 0
+    ){
+
+      throw new Error(
+        "Dashboard source is missing </body>."
+      );
+
+    }
+
+
+    const featureScripts =
+
+      '<scr'
+      +
+      'ipt src="supabase-company-features.js?v=20261025-staff-pc-workspace-v2"></scr'
+      +
+      'ipt>\n'
+
+      +
+
+      '<scr'
+      +
+      'ipt src="damaged-stock-dashboard.js?v=5"></scr'
+      +
+      'ipt>\n'
+      +
+      '<scr'
+      +
+      'ipt src="supabase-sales-support-batch-selling-tracker.js?v=20261004-compact-money2"></scr'
+      +
+      'ipt>\n'
+      +
+      '<scr'
+      +
+      'ipt src="desktop-pwa-install.js?v=20260921-desktopapp2"></scr'
+      +
+      'ipt>\n';
+
+
+
+    html =
+
+      html.slice(
+        0,
+        bodyClose
+      )
+
+      +
+
+      featureScripts
+
+      +
+
+      html.slice(
+        bodyClose
+      );
+
+
+
+    /* Pending Borrowed Stock — inject after all existing menu/route transformations. */
+    const pendingBorrowNav =
+      '<button type="button" id="navStockPendingBorrow" onclick="loadWorkspace(\'stock-pending-borrow\')">📋 Pending Borrowed Stock</button>';
+
+    if(!html.includes('id="navStockPendingBorrow"')){
+      const target = '<button type="button" id="navStockTransactions"';
+      const at = html.indexOf(target);
+      if(at < 0) throw new Error('Stock Pending Borrow navigation anchor not found.');
+      html = html.slice(0,at) + pendingBorrowNav + '\n          ' + html.slice(at);
+    }
+
+    const borrowRouteAnchor =
+      '"stock-transactions": "https://angsokhey11-cloud.github.io/big-brother-stock-report/transactions.html?embed=1&v=20260912-zero-cost-3",';
+    if(!html.includes(borrowRouteAnchor)){
+      throw new Error('Stock Pending Borrow route anchor not found.');
+    }
+    html=html.replace(
+      borrowRouteAnchor,
+      borrowRouteAnchor+'\n    "stock-pending-borrow": "https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/pending-borrowed-stock.html?embed=1&v=20261001-compactreceipt3",'
+    );
+
+    html=html.replace(
+      "'stock-damaged',\n      'stock-transactions'",
+      "'stock-damaged',\n      'stock-transactions',\n      'stock-pending-borrow'"
+    );
+    html=html.replace(
+      "'stock-damaged', 'stock-transactions'",
+      "'stock-damaged', 'stock-transactions', 'stock-pending-borrow'"
+    );
+
+    html=html.replace(
+      "                  : 'navStockTransactions';",
+      "                  : moduleName === 'stock-pending-borrow'\n                    ? 'navStockPendingBorrow'\n                    : 'navStockTransactions';"
+    );
+
+    const pendingBorrowActiveAnchor =
+      "document.getElementById('navStockTransactions')?.classList.add('active');";
+    if(html.includes(pendingBorrowActiveAnchor)){
+      html=html.replace(
+        pendingBorrowActiveAnchor,
+        pendingBorrowActiveAnchor+"\n      if(moduleName==='stock-pending-borrow')document.getElementById('navStockPendingBorrow')?.classList.add('active');"
+      );
+    }
+
+
+    /* Real Invoice Scanner — separate Receivable submenu and route. */
+    const realInvoiceNav='<button type="button" id="navRealInvoice" onclick="loadWorkspace(\'real-invoice\')">📷 Real Invoice Scanner</button>';
+    const arNavAnchor='<button type="button" id="navARAll"';
+    if(!html.includes(arNavAnchor))throw Error('Real Invoice AR navigation anchor missing.');
+    html=html.replace(arNavAnchor,realInvoiceNav+'\n          '+arNavAnchor);
+    const arRouteAnchor='"ar-all": "https://angsokhey11-cloud.github.io/big-brother-ar/?embed=1&view=all&v=20261001-ar-layout3",';
+    if(!html.includes(arRouteAnchor))throw Error('Real Invoice route anchor missing.');
+    html=html.replace(arRouteAnchor,
+      arRouteAnchor+'\n    "real-invoice": "https://angsokhey11-cloud.github.io/big-brother-real-invoice/?embed=1&v=20261018-date1",');
+    html=html.replace("      moduleName === 'ar-all' ||",
+      "      moduleName === 'real-invoice' ||\n      moduleName === 'ar-all' ||");
+    html=html.replace("      const arId =\n        moduleName === 'ar-all'",
+      "      const arId =\n        moduleName === 'real-invoice' ? 'navRealInvoice' :\n        moduleName === 'ar-all'");
+    html=html.replace("'ar-all','ar-your','ar-payment-history'",
+      "'real-invoice','ar-all','ar-your','ar-payment-history'");
+
+    /* Refresh only the desktop A/R workspace URLs after all route injections. */
+    html=html.replaceAll(
+      'big-brother-ar/?embed=1&view=your&v=20261001-ar-layout3',
+      'big-brother-ar/?embed=1&view=your&v=20261025-ar-notif-focus1'
+    ).replaceAll(
+      'big-brother-ar/?embed=1&view=all&v=20261001-ar-layout3',
+      'big-brother-ar/?embed=1&view=all&v=20261025-ar-notif-focus1'
+    );
+
+    /* Preserve the original working Stock Key-In button. Force the existing
+       workspace loader to reload that module when selected again. */
+    const stockSameModuleAnchor = "    const sameModule =\n      frame.dataset.module === moduleName &&";
+    if(html.includes(stockSameModuleAnchor)){
+      html=html.replace(stockSameModuleAnchor,
+        "    const sameModule =\n      moduleName !== 'stock-keyin' &&\n      frame.dataset.module === moduleName &&");
+    }
+
+    /* Shared Stock Allocation / Back Sale logic, sized by each desktop page. */
+    html=html.replaceAll(
+      'big-brother-stock-allocation/?embed=1&v=25',
+      'big-brother-stock-allocation/?embed=1&v=20261003-shared-desktop1'
+    ).replaceAll(
+      'big-brother-stock-allocation/batch-transfer.html?embed=1&v=20261006-3',
+      'big-brother-stock-allocation/batch-transfer.html?embed=1&v=20261008-dashboard1'
+    ).replaceAll(
+      'big-brother-stock-allocation/back-sale.html?embed=1&v=14',
+      'big-brother-stock-allocation/back-sale.html?embed=1&v=20261003-shared-desktop1'
+    );
+
+    /* Display-only October 18 date refresh: preserve route injection anchors above. */
+    [
+      ['big-brother-stock-report/batch-report.html?embed=1&v=20260923-batchedit1','big-brother-stock-report/batch-report.html?embed=1&v=20261018-date1'],
+      ['big-brother-stock-report/closed-batch.html?embed=1&v=20260912-zero-cost-3','big-brother-stock-report/closed-batch.html?embed=1&v=20261018-date1'],
+      ['big-brother-stock-report/transactions.html?embed=1&v=20260912-zero-cost-3','big-brother-stock-report/transactions.html?embed=1&v=20261018-date1'],
+      ['big-brother-stock-managemenet/pending-borrowed-stock.html?embed=1&v=20261001-compactreceipt3','big-brother-stock-managemenet/pending-borrowed-stock.html?embed=1&v=20261018-date1']
+    ].forEach(([before,after])=>{html=html.replaceAll(before,after);});
+    [
+      ['big-brother-admin-work/user-permissions.html?embed=1&v=1','big-brother-admin-work/user-permissions.html?embed=1&v=20261018-date1'],
+      ['big-brother-admin-work/bank-history.html?embed=1','big-brother-admin-work/bank-history.html?embed=1&v=20261018-date1']
+    ].forEach(([before,after])=>{html=html.replaceAll(before,after);});
+
+    /* =====================================================
+       OPEN FINAL DASHBOARD
+       ===================================================== */
+
+    const dialogBodyClose=html.toLowerCase().lastIndexOf('</body>');
+    if(dialogBodyClose<0)throw Error('Dashboard body closing tag missing for dialog layer.');
+    html=html.slice(0,dialogBodyClose)
+      +'<scr'+'ipt>(function(){const install=function(){const f=document.getElementById("moduleFrame");if(!f)return;const apply=function(){try{window.BBSystemDialog?.installWindow(f.contentWindow);}catch(_){}};f.addEventListener("load",()=>setTimeout(apply,50));apply();};if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",install,{once:true});else install();})();</scr'+'ipt>'
+      +'<scr'+'ipt>(function(){const routes=["stock-control-allocation","stock-control-batch-transfer","stock-control-back-sale"];const original=window.setShellActive;if(typeof original!=="function"||original.__bbStockControlPatched)return;const enhanced=function(moduleName){original.call(this,moduleName);const active=routes.includes(moduleName);const sub=document.getElementById("stockControlSubmenu");const btn=document.getElementById("stockControlMenuButton");if(sub)sub.classList.toggle("open",active);if(btn){btn.classList.toggle("open",active);btn.setAttribute("aria-expanded",String(active));const arrow=btn.querySelector(".nav-arrow");if(arrow)arrow.textContent=active?"▲":"▼";}["navStockAllocation","navBatchTransfer","navBackSale"].forEach(id=>document.getElementById(id)?.classList.remove("active"));if(active){document.getElementById("navDashboard")?.classList.remove("active");const id=moduleName==="stock-control-allocation"?"navStockAllocation":moduleName==="stock-control-batch-transfer"?"navBatchTransfer":"navBackSale";document.getElementById(id)?.classList.add("active");}};enhanced.__bbStockControlPatched=true;window.setShellActive=enhanced;})();</scr'+'ipt>'
+      +html.slice(dialogBodyClose);
+
+    html=html.replace('</body>', '<scr'+'ipt src="dashboard-sidebar-toggle-v1.js?v=20261011-sidebar-expand1"></scr'+'ipt></body>');
+    // Telegram Manager must load as an independent admin menu AFTER the
+    // original Notification Center and all Dashboard feature integrations.
+    html=html.replace('</body>', '<scr'+'ipt src="desktop-telegram-manager-menu-v1.js?v=20261022-workspace-tools1"></scr'+'ipt></body>');
+    // Web Push uses an explicit click permission request, never background polling.
+    html=html.replace('</body>', '<scr'+'ipt src="bb-web-push-client-v1.js?v=20261025-webpush-v1"></scr'+'ipt></body>');
+
+    document.open();
+
+    document.write(
+      html
+    );
+
+    document.close();
+
+
+  }catch(error){
+
+
+    console.error(
+      error
+    );
+
+
+    document.body.innerHTML =
+
+      '<div class="bb-loader">'
+
+      +
+
+      '<div class="bb-card">'
+
+      +
+
+      'Could not open Dashboard'
+
+      +
+
+      '<div class="bb-sub">'
+
+      +
+
+      String(
+        error &&
+        error.message
+          ? error.message
+          : error
+      )
+
+      +
+
+      '</div>'
+
+      +
+
+      '</div>'
+
+      +
+
+      '</div>';
+
+  }
+
+
+})();
+
+</script>
+
+
+</body>
+
+</html>

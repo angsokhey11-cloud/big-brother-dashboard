@@ -1,0 +1,243 @@
+/* BIG BROTHER — Mobile Normal User Overview V3 */
+(function(){
+'use strict';
+
+const SUPABASE_URL='https://sjfhlaclgmkwwofzstok.supabase.co';
+const SUPABASE_KEY='sb_publishable_w762jR65CWwlO30fKQsYOw_6L9grx8S';
+const SESSION_KEY='BB_SUPABASE_DEV_SESSION_V1';
+
+let cached=null;
+let loading=false;
+let lastLoad=0;
+let liveTimer=null;
+let disabledForAdmin=false;
+const LIVE_REFRESH_MS=120000;
+
+const $=id=>document.getElementById(id);
+const num=v=>Number(v||0)||0;
+const money=v=>'$'+num(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const khr=v=>'៛'+Math.round(num(v)).toLocaleString('en-US');
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+
+function readSession(){
+  try{return JSON.parse(localStorage.getItem(SESSION_KEY)||'null')}catch(_){return null}
+}
+function saveSession(value){
+  try{
+    if(!value){localStorage.removeItem(SESSION_KEY);return}
+    if(!value.expires_at&&value.expires_in)value.expires_at=Math.floor(Date.now()/1000)+Number(value.expires_in);
+    localStorage.setItem(SESSION_KEY,JSON.stringify(value));
+  }catch(_){}
+}
+async function parse(response){
+  const text=await response.text();
+  let data={};
+  try{data=text?JSON.parse(text):{}}catch(_){data={message:text}}
+  if(!response.ok)throw new Error(data.message||data.error_description||data.error||('Request failed ('+response.status+')'));
+  return data;
+}
+async function refreshSession(){
+  const current=readSession();
+  if(!current?.refresh_token)throw new Error('Please sign in to BIG BROTHER.');
+  const r=await fetch(SUPABASE_URL+'/auth/v1/token?grant_type=refresh_token',{
+    method:'POST',
+    headers:{apikey:SUPABASE_KEY,'Content-Type':'application/json'},
+    body:JSON.stringify({refresh_token:current.refresh_token}),
+    cache:'no-store'
+  });
+  const next=await parse(r);saveSession(next);return next;
+}
+async function rpc(fn,args={}){
+  let session=readSession();
+  if(!session?.access_token)throw new Error('Please sign in to BIG BROTHER.');
+  if(session.expires_at&&Number(session.expires_at)<Math.floor(Date.now()/1000)+45){
+    session=await refreshSession();
+  }
+  const request=token=>fetch(SUPABASE_URL+'/rest/v1/rpc/'+fn,{
+    method:'POST',
+    headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+token,'Content-Type':'application/json'},
+    body:JSON.stringify(args||{}),
+    cache:'no-store'
+  });
+  let r=await request(session.access_token);
+  if(r.status===401){session=await refreshSession();r=await request(session.access_token)}
+  return parse(r);
+}
+
+function homeVisible(){
+  const home=$('mobileHome');
+  return !!home&&!home.hidden;
+}
+
+function paymentSummary(payment){
+  const list=Array.isArray(payment?.available)?payment.available:[];
+  const usd=list.filter(x=>String(x.currency||'USD').trim().toUpperCase()==='USD').reduce((a,x)=>a+num(x.amount),0);
+  const kh=list.filter(x=>String(x.currency||'USD').trim().toUpperCase()==='KHR').reduce((a,x)=>a+num(x.amount),0);
+  return {count:list.length,usd,khr:kh};
+}
+
+function applyOverview(data,payment){
+  if(!data||!homeVisible())return;
+  const grid=$('kpiGrid');
+  if(!grid)return;
+  grid.removeAttribute('aria-busy');
+
+  const locations=Array.isArray(data.saleLocations)?data.saleLocations:[];
+  const locationNames=locations.map(x=>x.locationName||x.locationCode).filter(Boolean);
+  const locationCount=locations.length;
+  const locationSummary=locationCount===0
+    ?'No assigned sale location'
+    :locationCount===1
+      ?(locationNames[0]||'1 assigned location')
+      :locationCount+' assigned locations';
+
+  const sales=data.monthlySales||{};
+  const ar=data.receivable||{};
+  const stock=data.stock||{};
+  const openBatches=Math.max(0,Math.round(num(stock.openBatchCount)));
+  const earning=paymentSummary(payment);
+
+  const invoiceCount=Math.max(0,Math.round(num(sales.invoiceCount)));
+  const salesSub=locationSummary+' · '+invoiceCount+' invoice'+(invoiceCount===1?'':'s');
+  let earningSub=earning.count+' earning'+(earning.count===1?'':'s')+' available in Your Payment';
+  if(earning.khr>0)earningSub+=' · KHR '+khr(earning.khr);
+
+  const drawIcon=name=>window.BBMobileFunctionIconsV1?.named?.(name)||({ 'chart-line':'📊',wallet:'💰',package:'📦' })[name]||'';
+  const cards=[
+    ['chart-line','Monthly Sales',money(sales.netUSD),salesSub],
+    ['wallet','Receivable',money(ar.equivalentUSD),'USD '+money(ar.USD)+' · KHR '+khr(ar.KHR)],
+    ['package','Stock Qty',String(Math.round(num(stock.physicalQty)*100)/100),openBatches+' assigned open batch'+(openBatches===1?'':'es')],
+    ['wallet','Your Earning',money(earning.usd),earningSub]
+  ];
+
+  const existing=[...grid.querySelectorAll('.sales-kpi')];
+
+  if(existing.length===cards.length){
+    /*
+     * Keep the premium card/button structure created by the mobile home
+     * renderer (including click routes and arrows) and update only live data.
+     */
+    existing.forEach((card,index)=>{
+      const values=cards[index];
+      const icon=card.querySelector('.kpi-icon');
+      const label=card.querySelector('small');
+      const value=card.querySelector('strong');
+      const sub=card.querySelector('em');
+
+      if(icon)icon.innerHTML=drawIcon(values[0]);
+      if(label)label.textContent=values[1];
+      if(value)value.textContent=values[2];
+      if(sub)sub.textContent=values[3];
+    });
+  }else{
+    /* Fallback if the decorated home renderer has not run yet. */
+    grid.innerHTML=cards.map(x=>
+      '<div class="sales-kpi locked">'+
+        '<span class="kpi-icon">'+drawIcon(x[0])+'</span>'+
+        '<small>'+esc(x[1])+'</small>'+
+        '<strong>'+esc(x[2])+'</strong>'+
+        '<em>'+esc(x[3])+'</em>'+
+      '</div>'
+    ).join('');
+  }
+  if($('overviewTitle'))$('overviewTitle').textContent='My Overview';
+  if($('periodLabel'))$('periodLabel').textContent=data.periodLabel||'This Month';
+}
+
+async function refresh(force=false){
+  if(disabledForAdmin||loading||!homeVisible()||!readSession()?.access_token||window.BBMobileOfflineWorkspaceV1?.canUseNetwork()===false)return;
+  if(lastLoad&&Date.now()-lastLoad<LIVE_REFRESH_MS)return;
+
+  /*
+   * Viewer Overview is always refreshed from Supabase when requested.
+   * cached is only the last good render fallback, never a freshness shortcut.
+   */
+  loading=true;
+
+  try{
+    const profile=await rpc('bb_current_access_profile');
+    if(profile?.user?.isAdmin===true){
+      disabledForAdmin=true;
+      if(liveTimer){
+        clearInterval(liveTimer);
+        liveTimer=null;
+      }
+      return;
+    }
+
+    const overview=await rpc('bb_mobile_user_overview');
+
+    let payment=null;
+    try{
+      payment=await rpc('bb_staff_relation_my_payments',{
+        p_from:null,
+        p_to:null,
+        p_salary_month:null
+      });
+    }catch(error){
+      console.warn('Mobile Your Earning:',error?.message||error);
+      payment=cached?.payment||null;
+    }
+
+    cached={overview,payment};
+    void window.BBMobileOfflineWorkspaceV1?.write('staff-overview',cached).then(ok=>{if(ok)void window.BBMobileOfflineWorkspaceV1.success()});
+    lastLoad=Date.now();
+    applyOverview(overview,payment);
+  }catch(error){
+    console.warn('Mobile user overview:',error?.message||error);
+
+    /* Keep last good data visible if a live refresh momentarily fails. */
+    if(cached)applyOverview(cached.overview,cached.payment);
+  }finally{
+    loading=false;
+  }
+}
+
+function start(){
+  void window.BBMobileOfflineWorkspaceV1?.read('staff-overview').then(snapshot=>{
+    if(snapshot?.value){cached=snapshot.value;lastLoad=Number(snapshot.syncedAt)||0;if(homeVisible())applyOverview(cached.overview,cached.payment)}
+  });
+  const home=$('mobileHome');
+  if(!home){setTimeout(start,100);return}
+
+  const observer=new MutationObserver(()=>{
+    if(homeVisible()){
+      /* Returning from any module must immediately pull fresh viewer data. */
+      setTimeout(()=>refresh(true),40);
+    }
+  });
+
+  observer.observe(home,{
+    attributes:true,
+    attributeFilter:['hidden']
+  });
+
+  window.addEventListener('focus',()=>refresh(true));
+
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='visible'&&homeVisible()){
+      refresh(true);
+    }
+  });
+
+  if(!liveTimer){
+    liveTimer=setInterval(()=>{
+      if(
+        homeVisible() &&
+        Date.now()-lastLoad>=LIVE_REFRESH_MS-1000
+      ){
+        refresh(true);
+      }
+    },LIVE_REFRESH_MS);
+  }
+
+  if(homeVisible())refresh(true);
+
+  window.BBMobileUserOverview={
+    refresh:()=>refresh(true)
+  };
+}
+
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});
+else start();
+})();
