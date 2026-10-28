@@ -131,7 +131,12 @@ async function open(name){
     $('bbOffBody').innerHTML='<iframe title="BIG BROTHER Calculator" src="./mobile-offline-calculator.html?mobile=1&view=calculator" style="width:100%;height:calc(100dvh - 104px);min-height:560px;border:0;background:#eef4fa;border-radius:10px"></iframe>';
   }
   else if(name.includes('receivable')||name.startsWith('ar-'))renderReceivables();
-  else renderStock();
+  else {
+    const full=await offline()?.read('offline-stock-report-full');
+    if(full?.value?.success){
+      $('bbOffBody').innerHTML='<iframe title="BIG BROTHER Stock Report" src="./mobile-offline-stock.html?embed=1" style="width:100%;height:calc(100dvh - 104px);min-height:560px;border:0;background:#eef3f8;border-radius:10px"></iframe>';
+    }else renderStock();
+  }
   host.scrollTop=0;
   return true;
 }
@@ -356,7 +361,7 @@ function snapshotFor(key,data){
 let syncing=false;
 async function sync(safeRpc,canRoute,force=false){
   const api=offline();if(!api?.canUseNetwork()||!currentId()||syncing)return;
-  const last=await api.read('offline-modules-last-sync-v3');
+  const last=await api.read('offline-modules-last-sync-v4');
   if(!force&&last?.value?.at&&Date.now()-last.value.at<30*60*1000)return;
   syncing=true;
   const jobs=[];
@@ -376,11 +381,15 @@ async function sync(safeRpc,canRoute,force=false){
       for(let j=0;j<group.length;j++){
         const value=fetched[j].status==='fulfilled'?fetched[j].value:null;
         const minimal=snapshotFor(group[j][0],value);
-        if(minimal&&api.canUseNetwork())await api.write(group[j][0],minimal);
-        else allOK=false;
+        if(minimal&&api.canUseNetwork()){
+          await api.write(group[j][0],minimal);
+          if(group[j][0]==='offline-stock-report'){
+            await api.write('offline-stock-report-full',value);
+          }
+        }else allOK=false;
       }
     }
-    if(api.canUseNetwork())await api.write('offline-modules-last-sync-v3',{at:Date.now(),allOK});
+    if(api.canUseNetwork())await api.write('offline-modules-last-sync-v4',{at:Date.now(),allOK});
   }finally{syncing=false}
 }
 window.BBMobileOfflineModulesV1={open,canOpen,available,sync,close};
