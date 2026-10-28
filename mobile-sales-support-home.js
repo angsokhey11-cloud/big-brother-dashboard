@@ -124,6 +124,7 @@ let pages=[];
 let quickPreferencesReady=false;
 let overview=null;
 let overviewLoading=false;
+let lastOverviewFetch=0;
 let overviewFilter={locationCode:'',year:0,month:0};
 let preferenceSyncBusy=false;
 let preferenceWriteCount=0;
@@ -1219,6 +1220,7 @@ function renderOverview(){
 
 async function refreshOverview(force=false){
   if(overviewLoading||window.BBMobileOfflineWorkspaceV1?.canUseNetwork()===false)return;
+  if(!force&&Date.now()-lastOverviewFetch<120000)return;
   if(!profile)return;
 
   overviewLoading=true;
@@ -1232,6 +1234,7 @@ async function refreshOverview(force=false){
     ]);
     if(nextStockReport?.success)stockReport=nextStockReport;
     if(next?.success){
+      lastOverviewFetch=Date.now();
       overview=next;
       void window.BBMobileOfflineWorkspaceV1?.write('home-overview',{args:overviewArgs(),data:next});
       void window.BBMobileOfflineWorkspaceV1?.success();
@@ -1389,7 +1392,7 @@ async function load(){
   watchNavReplacement();
 
   new MutationObserver(()=>{
-    if(!$('mobileHome')?.hidden){renderHome();refreshOverview(true);refreshAttention(false)}
+    if(!$('mobileHome')?.hidden){renderHome();refreshOverview(false);refreshAttention(false)}
   }).observe($('mobileHome'),{attributes:true,attributeFilter:['hidden']});
   new MutationObserver(()=>{
     if(!$('menuScreen')?.hidden){renderMainMenu();renderNav('menu')}
@@ -1438,6 +1441,7 @@ async function load(){
 
   const overviewPromise=safeRpc('bb_mobile_overview_filtered',overviewArgs()).then(data=>{
     if(data?.success){
+      lastOverviewFetch=Date.now();
       overview=data;
       void offline?.write('home-overview',{args:overviewArgs(),data});
       void offline?.success();
