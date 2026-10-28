@@ -643,6 +643,8 @@ async function sync(safeRpc,canRoute,force=false){
           if(group[j][0]==='offline-stock-report'){
             await api.write('offline-stock-report-full',value);
           }
+          // If a cached view is open, refresh it in place rather than navigating.
+          if(mapRoutes[route]===group[j][0])updateVisibleDataset(group[j][0],minimal);
         }else allOK=false;
       }
     }
@@ -694,6 +696,8 @@ async function refreshRoute(name,safeRpc,canRoute){
     const user=currentId();
     for(const [storeKey,rpcName] of jobs){
       if(!api.canUseNetwork()||currentId()!==user)return any;
+      const existing=await api.read(storeKey);
+      if(existing?.syncedAt&&Date.now()-existing.syncedAt<60000)continue;
       // These are read-only permission-checked RPCs; don't block cached rendering.
       let response;
       try{response=await safeRpc(rpcName)}catch(_){response=null}
