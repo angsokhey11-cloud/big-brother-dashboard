@@ -776,14 +776,16 @@ function renderPicker(){
   host.querySelectorAll('[data-pick-route]').forEach(button=>button.onclick=()=>chooseRoute(button.dataset.pickRoute));
 }
 async function chooseRoute(route){
+  if(window.BBMobileOfflineWorkspaceV1?.canUseNetwork()===false)return toast('Return online to change Quick Actions.');
   if(pickerMode==='quick'){
     quick=quick.includes(route)?quick.filter(x=>x!==route):quick.concat(route);
     await saveQuick();renderQuick();renderPicker();return;
   }
   pages[pickerSlot]=route;await savePages();closePicker();renderNav(currentNavState());toast('Page '+(pickerSlot+1)+' saved');
 }
-async function removePage(){pages[pickerSlot]='';await savePages();closePicker();renderNav(currentNavState());toast('Page removed')}
+async function removePage(){if(window.BBMobileOfflineWorkspaceV1?.canUseNetwork()===false)return toast('Return online to edit pages.');pages[pickerSlot]='';await savePages();closePicker();renderNav(currentNavState());toast('Page removed')}
 async function saveQuick(){
+  if(window.BBMobileOfflineWorkspaceV1?.canUseNetwork()===false)return;
   quick=normalizeQuick(quick);
   writeLocal(quickKey(),quick);
   preferenceWriteCount+=1;
@@ -795,6 +797,7 @@ async function saveQuick(){
   }
 }
 async function savePages(){
+  if(window.BBMobileOfflineWorkspaceV1?.canUseNetwork()===false)return;
   pages=normalizePages(pages);
   writeLocal(pageKey(),pages);
   preferenceWriteCount+=1;
@@ -1233,6 +1236,7 @@ async function refreshOverview(force=false){
       isAdmin()?safeRpc('bb_stock_report_fast'):Promise.resolve(null)
     ]);
     if(nextStockReport?.success)stockReport=nextStockReport;
+    if(window.BBMobileOfflineWorkspaceV1?.canUseNetwork()===false)return;
     if(next?.success){
       lastOverviewFetch=Date.now();
       overview=next;
@@ -1323,6 +1327,7 @@ async function refreshAttention(force=false){
   if(!force&&now-lastAttentionFetch<120000)return;
   lastAttentionFetch=now;
   const next=await safeRpc('bb_mobile_my_attention');
+  if(window.BBMobileOfflineWorkspaceV1?.canUseNetwork()===false)return;
   if(next?.success){attention=next;void window.BBMobileOfflineWorkspaceV1?.write('home-attention',next)}
   renderAttention();
 }
@@ -1421,6 +1426,7 @@ async function load(){
   // Server requests begin together, but each section updates on its own:
   // a slower stock/attention report cannot delay Quick Actions or Sales.
   const prefsPromise=safeRpc('bb_mobile_get_preferences').then(prefs=>{
+    if(offline?.canUseNetwork()===false)return;
     const localStillMatches=
       sameArray(quick,normalizeQuick(readLocal(quickKeyName))) &&
       sameArray(pages,normalizePages(readLocal(pageKeyName)));
@@ -1439,6 +1445,7 @@ async function load(){
   });
 
   const overviewPromise=safeRpc('bb_mobile_overview_filtered',overviewArgs()).then(data=>{
+    if(offline?.canUseNetwork()===false)return;
     if(data?.success){
       lastOverviewFetch=Date.now();
       overview=data;
@@ -1457,11 +1464,13 @@ async function load(){
     ?safeRpc('bb_staff_relation_my_payments',{p_from:null,p_to:null,p_salary_month:null})
     :Promise.resolve(null)
   ).then(data=>{
+    if(offline?.canUseNetwork()===false)return;
     if(data){payment=data;void offline?.write('home-payment',data)}
     if(overview)renderOverview();
   });
 
   const attentionPromise=safeRpc('bb_mobile_my_attention').then(data=>{
+    if(offline?.canUseNetwork()===false)return;
     if(data?.success){attention=data;void offline?.write('home-attention',data)}
     attentionLoaded=true;
     lastAttentionFetch=Date.now();
@@ -1469,6 +1478,7 @@ async function load(){
   });
 
   const stockPromise=(isAdmin()?safeRpc('bb_stock_report_fast'):Promise.resolve(null)).then(data=>{
+    if(offline?.canUseNetwork()===false)return;
     if(data?.success){stockReport=data;void offline?.write('home-stock',data)}
     if(overview)renderOverview();
   });
@@ -1477,6 +1487,20 @@ async function load(){
 }
 
 function start(){
+  window.addEventListener('bb:mobile-offline-mode-changed',()=>{
+    if(!window.BBMobileOfflineWorkspaceV1?.isTestMode?.())return;
+    // Freeze the visible values to the most recent completed snapshot.
+    const offline=window.BBMobileOfflineWorkspaceV1;
+    void Promise.all([offline.read('home-overview'),offline.read('home-attention'),
+      offline.read('home-payment'),offline.read('home-stock')]).then(([savedOverview,savedAttention,savedPayment,savedStock])=>{
+      if(!offline.isTestMode())return;
+      if(savedOverview?.value?.data&&JSON.stringify(savedOverview.value.args)===JSON.stringify(overviewArgs()))overview=savedOverview.value.data;
+      if(savedAttention?.value)attention=savedAttention.value;
+      if(savedPayment?.value)payment=savedPayment.value;
+      if(savedStock?.value)stockReport=savedStock.value;
+      renderHome();
+    });
+  });
   window.addEventListener('bb:mobile-reconnected',()=>{
     if(!profile)return;
     void refreshOverview(true);
