@@ -57,6 +57,51 @@ function createHost(){
     #bbOfflineModulesScreen .bb-off-primary{background:#1267af;color:#fff;border:0;border-radius:9px;padding:11px;font-weight:700}
     #bbOfflineModulesScreen .bb-off-muted{background:#ecf2fa;color:#23496d;border:1px solid #d2e0eb;border-radius:9px;padding:9px}
     #bbOfflineModulesScreen .bb-off-scroll{max-height:56vh;overflow:auto}
+
+    /* Receivable cards follow the same grid and amount-box design as the online mobile A/R. */
+    #bbOfflineModulesScreen .bb-ar-toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+    #bbOfflineModulesScreen .bb-ar-total{color:#17487d;font-size:13px;font-weight:900}
+    #bbOfflineModulesScreen .bb-ar-list{display:grid;gap:8px;margin-top:9px}
+    #bbOfflineModulesScreen .bb-ar-card{background:#fff;border:1px solid #dce6f0;border-radius:13px;padding:10px;display:grid;
+      grid-template-columns:28px minmax(84px,104px) minmax(0,1fr) auto;
+      grid-template-areas:"check inv customer status" ". invdate duedate action" ". location location action" ". total paid outstanding";
+      gap:5px 9px;align-items:start;box-shadow:0 2px 8px #173f770b;min-width:0}
+    #bbOfflineModulesScreen .bb-ar-card>div{min-width:0;overflow:hidden;text-overflow:ellipsis}
+    #bbOfflineModulesScreen .bb-ar-card .check{grid-area:check;color:#93abc1;align-self:center;font-size:17px}
+    #bbOfflineModulesScreen .bb-ar-card .invoice{grid-area:inv;padding-left:3px}
+    #bbOfflineModulesScreen .bb-ar-card .customer{grid-area:customer}
+    #bbOfflineModulesScreen .bb-ar-card .invoice,#bbOfflineModulesScreen .bb-ar-card .customer{font-size:13px;font-weight:900;color:#173f77;white-space:nowrap}
+    #bbOfflineModulesScreen .bb-ar-card .status{grid-area:status;justify-self:end;font-weight:800;font-size:8.5px;padding:4px 6px;border-radius:30px;background:#f1f7ff;color:#2463a1}
+    #bbOfflineModulesScreen .bb-ar-card .invoice-date{grid-area:invdate}
+    #bbOfflineModulesScreen .bb-ar-card .due-date{grid-area:duedate;color:#c94750}
+    #bbOfflineModulesScreen .bb-ar-card .invoice-date,#bbOfflineModulesScreen .bb-ar-card .due-date{font-size:9px;white-space:nowrap;color:#647b92}
+    #bbOfflineModulesScreen .bb-ar-card .due-date{color:#bb4655}
+    #bbOfflineModulesScreen .bb-ar-card .location{grid-area:location;font-size:9px;color:#526b84}
+    #bbOfflineModulesScreen .bb-ar-card .amt{background:#f7f9fc;border-radius:8px;padding:6px 7px;font-size:10px;font-weight:900;color:#173f77}
+    #bbOfflineModulesScreen .bb-ar-card .amt:before{content:attr(data-label);display:block;color:#758599;font-size:7.5px;font-weight:700;margin-bottom:3px}
+    #bbOfflineModulesScreen .bb-ar-card .total{grid-area:total}.bb-ar-card .paid{grid-area:paid}
+    #bbOfflineModulesScreen .bb-ar-card .outstanding{grid-area:outstanding;background:#fff2f3;color:#bd3c49}
+    /* Live Stock uses two-column summary cards and a nine-column product card grid on mobile. */
+    #bbOfflineModulesScreen .bb-stock-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-bottom:10px}
+    #bbOfflineModulesScreen .bb-stock-summary .summary-card{background:#fff;border:1px solid #d9e3ee;border-radius:11px;padding:9px 10px}
+    #bbOfflineModulesScreen .bb-stock-summary small{font-size:7px;font-weight:900;text-transform:uppercase}
+    #bbOfflineModulesScreen .bb-stock-summary strong{font-size:17px;color:#123f73;font-weight:900}
+    #bbOfflineModulesScreen .bb-stock-toolbar{position:sticky;top:49px;z-index:2;display:grid;grid-template-columns:1fr;gap:6px;background:#f9fbfd;
+      padding:8px;border-radius:11px;border:1px solid #d9e3ee}
+    #bbOfflineModulesScreen .bb-stock-line{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid #d9e3ee;border-radius:11px;
+      background:#fff;margin:7px 0;overflow:hidden}
+    #bbOfflineModulesScreen .bb-stock-line .product{grid-column:1/-1;padding:8px 9px;border-bottom:1px solid #e8eff5}
+    #bbOfflineModulesScreen .bb-stock-line .product b{font-size:11px;color:#123f73}
+    #bbOfflineModulesScreen .bb-stock-line .product small{font-size:8px;color:#708397}
+    #bbOfflineModulesScreen .bb-stock-line .metric{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      min-height:44px;min-width:0;padding:16px 3px 4px;border-right:1px solid #edf1f5;border-bottom:1px solid #edf1f5;
+      font-size:10px;font-weight:900;color:#2368bd}
+    #bbOfflineModulesScreen .bb-stock-line .metric:before{content:attr(data-label);position:absolute;top:5px;left:2px;right:2px;overflow:hidden;
+      text-overflow:ellipsis;white-space:nowrap;text-align:center;font-size:6px;font-weight:900;color:#718297;text-transform:uppercase}
+    #bbOfflineModulesScreen .bb-stock-line .metric:nth-child(4n+1){border-right:0}
+    #bbOfflineModulesScreen .bb-stock-line .metric.green{color:#157a51}.bb-stock-line .metric.red{color:#b94141}
+    #bbOfflineModulesScreen .bb-stock-line .metric.purple{color:#7450b5}.bb-stock-line .metric.amber{color:#a96900}
+    #bbOfflineModulesScreen .bb-stock-line .metric.value{color:#123f73}
   `;
   document.head.appendChild(style);
   host.innerHTML='<header class="bb-off-header"><button type="button" class="bb-back" id="bbOffClose">‹ Back</button><strong id="bbOffTitle">Saved Data</strong></header><main class="bb-off-main"><div class="bb-off-note" id="bbOffNote"></div><div id="bbOffBody"></div></main>';
