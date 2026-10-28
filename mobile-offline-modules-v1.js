@@ -167,6 +167,11 @@ function createHost(){
   const screen=$('moduleScreen');
   if(!screen)throw new Error('BIG BROTHER mobile module shell unavailable.');
   screen.appendChild(host);
+  // Hardware Back or bottom-nav changes still use the real navigation stack.
+  // Close a summary modal whenever navigation leaves the module.
+  new MutationObserver(()=>{
+    if(screen.hidden)closeReceivableSummary();
+  }).observe(screen,{attributes:true,attributeFilter:['hidden']});
   return host;
 }
 function close(){
