@@ -165,27 +165,27 @@ function renderCalculator(){
     const q=clean($('bbCalcCustomerSearch').value).toLowerCase();
     const select=$('bbCalcCustomer');
     select.innerHTML='<option value="">Select customer</option>'+customers.filter(c=>[c.name,c.customerId,c.locationCode].some(x=>clean(x).toLowerCase().includes(q))).slice(0,150).map(c=>`<option value="${esc(c.customerId)}">${esc(c.name)} — ${esc(c.locationCode)}</option>`).join('');
-    selectCustomer();
+    selectCustomer();drawCalc(true);
   });
-  $('bbCalcCustomer').addEventListener('change',selectCustomer);
+  $('bbCalcCustomer').addEventListener('change',()=>{selectCustomer();drawCalc(true)});
   $('bbCalcProduct').addEventListener('change',setCalculatorPrice);
-  $('bbCalcCurrency').addEventListener('change',()=>{calcCurrency=$('bbCalcCurrency').value;drawCalc()});
-  $('bbCalcRate').addEventListener('input',drawCalc);
-  $('bbCalcDiscount').addEventListener('input',drawCalc);
+  $('bbCalcCurrency').addEventListener('change',()=>{calcCurrency=$('bbCalcCurrency').value;drawCalc(true)});
+  $('bbCalcRate').addEventListener('input',()=>drawCalc(true));
+  $('bbCalcDiscount').addEventListener('input',()=>drawCalc(true));
   $('bbCalcAdd').addEventListener('click',()=>{
     const code=clean($('bbCalcProduct').value),product=products.find(p=>clean(p.code)===code);
     const qty=num($('bbCalcQty').value),price=num($('bbCalcPrice').value);
     if(!product||qty<=0||price<0){alert('Choose a product with a valid quantity and price.');return}
     calcLines.push({id:'CALC-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),
       productCode:code,productName:product.name,unit:product.unit,qty,usdPrice:price,defaultUsdPrice:num(product.usdPrice),manualPrice:true});
-    drawCalc();
+    drawCalc(true);
   });
   $('bbCalcSave').addEventListener('click',()=>{
     const snapshot=calcState();
     if(!snapshot.customerKey||!calcLines.length){alert('Select a customer and add at least one product.');return}
     const entry={...snapshot,id:'CALCH-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),createdAt:Date.now()};
     const rows=[entry,...history()].slice(0,100);
-    if(saveLocal(historyKey(),rows)){saveLocal(currentKey(),snapshot);drawCalc();alert('Saved locally on this device. No cloud invoice created.')}
+    if(saveLocal(historyKey(),rows)){saveLocal(currentKey(),snapshot);drawCalc(true);alert('Saved locally on this device. No cloud invoice created.')}
     else alert('Local storage unavailable. The calculation was not saved.');
   });
   selectCustomer();drawCalc();
@@ -197,14 +197,14 @@ function calcState(){
     locationCode:clean(customer?.locationCode),customerKey:customer?.customerId?'id:'+clean(customer.customerId):'',customerName:clean(customer?.name),
     customerMapUrl:clean(customer?.googleMapsLink),lines:calcLines.map(x=>({...x}))};
 }
-function drawCalc(){
+function drawCalc(saveDraft=false){
   if(route!=='sales-support-calculator')return;
   const totals=calcLines.reduce((sum,p)=>sum+num(p.qty)*num(p.usdPrice),0);
   const discount=Math.max(0,num($('bbCalcDiscount').value));
   const rate=Math.max(1,num($('bbCalcRate').value)||4100);
   const grand=Math.max(0,totals-discount);
   $('bbCalcLines').innerHTML=calcLines.map((l,i)=>`<div class="bb-off-data" style="padding:7px 0;border-bottom:1px solid #e5edf4"><div><strong>${esc(l.productName)} · ${esc(l.qty)} × ${esc(money(l.usdPrice))}</strong><small>${esc(l.unit)} · ${esc(l.productCode)}</small></div><button class="bb-off-muted" data-remove="${i}">×</button></div>`).join('')||'<small>No products added yet.</small>';
-  $('bbCalcLines').querySelectorAll('[data-remove]').forEach(btn=>btn.onclick=()=>{calcLines.splice(Number(btn.dataset.remove),1);drawCalc()});
+  $('bbCalcLines').querySelectorAll('[data-remove]').forEach(btn=>btn.onclick=()=>{calcLines.splice(Number(btn.dataset.remove),1);drawCalc(true)});
   $('bbCalcTotal').innerHTML='<strong>Grand Total: '+esc(calcCurrency==='KHR'?money(grand*rate,'KHR'):money(grand))+'</strong><small>Subtotal USD '+esc(money(totals))+' · Discount USD '+esc(money(discount))+'</small>';
   $('bbCalcHistory').innerHTML=history().slice(0,25).map(h=>`<div class="bb-off-data" style="padding:8px 0;border-bottom:1px solid #e5edf4"><div><strong>${esc(h.customerName)}</strong><small>${esc(new Date(h.createdAt).toLocaleDateString('en-GB'))} · ${(h.lines||[]).length} items</small></div><button class="bb-off-muted" data-load-history="${esc(h.id)}">Open</button></div>`).join('')||'<small>No saved calculations.</small>';
   $('bbCalcHistory').querySelectorAll('[data-load-history]').forEach(btn=>btn.onclick=()=>{
@@ -214,10 +214,10 @@ function drawCalc(){
     $('bbCalcCurrency').value=calcCurrency=entry.currency==='KHR'?'KHR':'USD';
     $('bbCalcRate').value=entry.rate||4100;
     $('bbCalcDiscount').value=entry.discountUSD||0;
-    selectCustomer();drawCalc();
+    selectCustomer();drawCalc(true);
   });
-  // Current calculation is local only, never a sale or an invoice.
-  saveLocal(currentKey(),calcState());
+  // Opening the offline Calculator must never overwrite an existing draft.
+  if(saveDraft)saveLocal(currentKey(),calcState());
 }
 function snapshotFor(key,data){
   if(!data?.success)return null;
