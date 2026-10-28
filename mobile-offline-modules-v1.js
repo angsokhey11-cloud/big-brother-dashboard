@@ -249,7 +249,7 @@ async function open(name){
     if(name==='sales-support-calculator'||full?.value?.success){
       const url=name==='sales-support-calculator'
         ?'./mobile-offline-calculator.html?mobile=1&view=calculator&v=20261028-unified1'
-        :'./mobile-offline-stock.html?embed=1&v=20261028-unified1';
+        :'./mobile-offline-stock.html?embed=1&v=20261028-cachefirst1';
       if(!openNativeRoute(name,true,restoringAtStart))return false;
       if(frame.getAttribute('src')!==url){
         // Replace the frame rather than pushing its internal navigation history.
