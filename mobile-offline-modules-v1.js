@@ -80,7 +80,11 @@ async function open(name){
   $('bbOffTitle').textContent=name.includes('receivable')||name.startsWith('ar-')?'Receivable · Offline':name.includes('calculator')?'Calculator · Offline':'Stock Report · Offline';
   const date=new Date(rec.syncedAt).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
   notice('Saved snapshot: '+date+' · Cloud transactions cannot be created, cleared or edited offline.');
-  if(name==='sales-support-calculator')renderCalculator();
+  if(name==='sales-support-calculator'){
+    // The exact online Calculator UI is loaded from an offline-cached copy.
+    // It uses the same responsive markup, controls, layout and local history.
+    $('bbOffBody').innerHTML='<iframe title="BIG BROTHER Calculator" src="./mobile-offline-calculator.html?mobile=1&view=calculator" style="width:100%;height:calc(100dvh - 104px);min-height:560px;border:0;background:#eef4fa;border-radius:10px"></iframe>';
+  }
   else if(name.includes('receivable')||name.startsWith('ar-'))renderReceivables();
   else renderStock();
   host.scrollTop=0;
@@ -237,7 +241,9 @@ function snapshotFor(key,data){
     })),totals:{warehouseValue:data?.totals?.warehouseValue||0}};
   }
   if(key==='offline-calc-bootstrap'){
-    return {success:true,customers:(Array.isArray(data.customers)?data.customers:[]).map(c=>({
+    return {success:true,locations:(Array.isArray(data.locations)?data.locations:[]).map(l=>({
+      locationCode:l.locationCode,locationName:l.locationName,salespersonName:l.salespersonName
+    })),customers:(Array.isArray(data.customers)?data.customers:[]).map(c=>({
       customerId:c.customerId,name:c.name,locationCode:c.locationCode,googleMapsLink:c.googleMapsLink
     })),products:(Array.isArray(data.products)?data.products:[]).map(p=>({
       code:p.code,name:p.name,unit:p.unit,usdPrice:p.usdPrice
@@ -248,7 +254,7 @@ function snapshotFor(key,data){
 let syncing=false;
 async function sync(safeRpc,canRoute,force=false){
   const api=offline();if(!api?.canUseNetwork()||!currentId()||syncing)return;
-  const last=await api.read('offline-modules-last-sync');
+  const last=await api.read('offline-modules-last-sync-v2');
   if(!force&&last?.value?.at&&Date.now()-last.value.at<30*60*1000)return;
   syncing=true;
   const jobs=[];
@@ -272,7 +278,7 @@ async function sync(safeRpc,canRoute,force=false){
         else allOK=false;
       }
     }
-    if(api.canUseNetwork())await api.write('offline-modules-last-sync',{at:Date.now(),allOK});
+    if(api.canUseNetwork())await api.write('offline-modules-last-sync-v2',{at:Date.now(),allOK});
   }finally{syncing=false}
 }
 window.BBMobileOfflineModulesV1={open,canOpen,available,sync,close};
