@@ -1426,7 +1426,7 @@ async function load(){
   // Server requests begin together, but each section updates on its own:
   // a slower stock/attention report cannot delay Quick Actions or Sales.
   const prefsPromise=safeRpc('bb_mobile_get_preferences').then(prefs=>{
-    if(offline?.canUseNetwork()===false)return;
+    if(offline?.canUseNetwork()===false){quickPreferencesReady=true;renderQuick();renderNav(currentNavState());return}
     const localStillMatches=
       sameArray(quick,normalizeQuick(readLocal(quickKeyName))) &&
       sameArray(pages,normalizePages(readLocal(pageKeyName)));
