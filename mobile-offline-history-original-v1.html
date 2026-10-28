@@ -1362,43 +1362,11 @@ html,body,input,select,textarea,td{font-family:Arial,Helvetica,'Noto Sans Khmer'
     return HISTORY_DETAIL_CACHE_PREFIX + encodeURIComponent(ref);
   }
 
-  function readHistoryDetailCache(invoiceNo, invoiceId) {
-    try {
-      const raw = localStorage.getItem(historyDetailCacheKey(invoiceNo, invoiceId));
-      if (!raw) return null;
-
-      const parsed = JSON.parse(raw);
-      if (!parsed || !parsed.invoice) return null;
-
-      return parsed;
-    } catch (_) {
-      return null;
-    }
-  }
-
-  function saveHistoryDetailCache(invoiceNo, invoice, revision, invoiceId) {
-    try {
-      const stableId = String(invoiceId || invoice?.invoiceId || "").trim();
-      const payload = {
-        revision: String(revision || historyLastRevision || ""),
-        savedAt: Date.now(),
-        invoice: invoice
-      };
-      localStorage.setItem(
-        historyDetailCacheKey(invoiceNo, stableId),
-        JSON.stringify(payload)
-      );
-    } catch (error) {
-      console.warn("Invoice detail cache unavailable:", error);
-    }
-  }
-
-  function removeHistoryDetailCache(invoiceNo, invoiceId) {
-    try {
-      localStorage.removeItem(historyDetailCacheKey(invoiceNo, invoiceId));
-      if (invoiceNo) localStorage.removeItem(historyDetailCacheKey(invoiceNo, ""));
-    } catch (_) {}
-  }
+  // The parent BIG BROTHER account-scoped IndexedDB is the ONLY offline store.
+  // Avoid duplicating sensitive invoice details in unscoped localStorage keys.
+  function readHistoryDetailCache(){return null}
+  function saveHistoryDetailCache(){}
+  function removeHistoryDetailCache(){}
 
   async function fetchAndCacheInvoiceDetail(invoiceNo, options = {}) {
     const silent = options && options.silent === true;
@@ -1471,32 +1439,8 @@ html,body,input,select,textarea,td{font-family:Arial,Helvetica,'Noto Sans Khmer'
   }
 
 
-  function readHistoryDeviceCache() {
-    try {
-      const raw = localStorage.getItem(HISTORY_DEVICE_CACHE_KEY);
-      if (!raw) return null;
-      const parsed = JSON.parse(raw);
-      if (!parsed || !Array.isArray(parsed.invoices)) return null;
-      return parsed;
-    } catch (_) {
-      return null;
-    }
-  }
-
-  function saveHistoryDeviceCache(invoices, revision) {
-    try {
-      const payload = {
-        filterKey: historyCurrentFilterKey(),
-        revision: String(revision || historyLastRevision || ""),
-        savedAt: Date.now(),
-        invoices: Array.isArray(invoices) ? invoices : []
-      };
-      localStorage.setItem(HISTORY_DEVICE_CACHE_KEY, JSON.stringify(payload));
-      if (payload.revision) historyLastRevision = payload.revision;
-    } catch (error) {
-      console.warn("Invoice History device cache unavailable:", error);
-    }
-  }
+  function readHistoryDeviceCache(){return null}
+  function saveHistoryDeviceCache(){}
 
   function renderHistoryDeviceCache() {
     const cached = readHistoryDeviceCache();
