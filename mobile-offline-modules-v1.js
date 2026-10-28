@@ -246,7 +246,7 @@ async function sync(safeRpc,canRoute,force=false){
         else allOK=false;
       }
     }
-    if(allOK&&api.canUseNetwork())await api.write('offline-modules-last-sync',{at:Date.now()});
+    if(api.canUseNetwork())await api.write('offline-modules-last-sync',{at:Date.now(),allOK});
   }finally{syncing=false}
 }
 window.BBMobileOfflineModulesV1={open,canOpen,available,sync,close};
