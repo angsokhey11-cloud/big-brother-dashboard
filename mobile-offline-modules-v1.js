@@ -565,6 +565,11 @@ function snapshotFor(key,data){
       totalGood:r.totalGood,damaged:r.damaged,averageCost:r.averageCost,totalValue:r.totalValue
     })),totals:{warehouseValue:data?.totals?.warehouseValue||0}};
   }
+  if(key==='offline-calc-batch-scope'){
+    const items=Array.isArray(data.items)?data.items:[];
+    return {success:true,openBatchCount:num(data.openBatchCount),
+      items:items.map(item=>({code:clean(item.code||item.productCode||item.product_code)})).filter(item=>item.code)};
+  }
   if(key==='offline-calc-bootstrap'){
     return {success:true,locations:(Array.isArray(data.locations)?data.locations:[]).map(l=>({
       locationCode:l.locationCode,locationName:l.locationName,salespersonName:l.salespersonName
@@ -579,7 +584,7 @@ function snapshotFor(key,data){
 let syncing=false;
 async function sync(safeRpc,canRoute,force=false){
   const api=offline();if(!api?.canUseNetwork()||!currentId()||syncing)return;
-  const last=await api.read('offline-modules-last-sync-v4');
+  const last=await api.read('offline-modules-last-sync-v5');
   if(!force&&last?.value?.at&&Date.now()-last.value.at<30*60*1000)return;
   syncing=true;
   const jobs=[];
@@ -588,7 +593,10 @@ async function sync(safeRpc,canRoute,force=false){
   }
   if(canRoute('ar-all'))jobs.push(['offline-ar-all','bb_ar_list_all']);
   if(canRoute('stock-report'))jobs.push(['offline-stock-report','bb_stock_report_fast']);
-  if(canRoute('sales-support-calculator'))jobs.push(['offline-calc-bootstrap','bb_sales_support_bootstrap']);
+  if(canRoute('sales-support-calculator')){
+    jobs.push(['offline-calc-bootstrap','bb_sales_support_bootstrap']);
+    jobs.push(['offline-calc-batch-scope','bb_sales_support_calculator_batch_scope']);
+  }
   let allOK=true;
   try{
     // Make at most two concurrent read-only requests.
@@ -607,7 +615,7 @@ async function sync(safeRpc,canRoute,force=false){
         }else allOK=false;
       }
     }
-    if(api.canUseNetwork())await api.write('offline-modules-last-sync-v4',{at:Date.now(),allOK});
+    if(api.canUseNetwork())await api.write('offline-modules-last-sync-v5',{at:Date.now(),allOK});
   }finally{syncing=false}
 }
 window.BBMobileOfflineModulesV1={open,canOpen,available,sync,close};
