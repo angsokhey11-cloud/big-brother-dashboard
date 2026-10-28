@@ -1780,8 +1780,24 @@ window.BBMobileStaffReportsV12=Object.freeze({
   async warm(){
     if(!window.BBMobileOfflineWorkspaceV1?.canUseNetwork())return;
     // Sequential, deliberately no burst of dozens of module requests.
-    if(canRoute('sales-support-your-stock'))await this.syncStock();
-    if(canRoute('sales-support-batch-selling-tracker'))await this.syncTracker();
+    if(canRoute('sales-support-your-stock')){
+      const first=await this.syncStock();
+      // Prefetch at most two other assigned open batches. Never request
+      // warehouse stock or every admin batch on a slow connection.
+      for(const row of (first?.batches||[]).filter(x=>
+        clean(x.batchId)&&clean(x.batchId)!==clean(first?.selectedBatch?.batchId)).slice(0,2)){
+        if(!window.BBMobileOfflineWorkspaceV1?.canUseNetwork())break;
+        await this.syncStock(row.batchId);
+      }
+    }
+    if(canRoute('sales-support-batch-selling-tracker')){
+      const first=await this.syncTracker();
+      for(const row of (first?.batches||[]).filter(x=>
+        clean(x.batchId)&&clean(x.batchId)!==clean(first?.selectedBatch?.batchId)).slice(0,2)){
+        if(!window.BBMobileOfflineWorkspaceV1?.canUseNetwork())break;
+        await this.syncTracker(row.batchId);
+      }
+    }
     if(canRoute('daily-sale-summary'))await this.syncDaily();
   }
 });
