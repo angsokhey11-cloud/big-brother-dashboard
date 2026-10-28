@@ -4,7 +4,7 @@
  */
 (function(){
 'use strict';
-const DB_NAME='BB_MOBILE_OFFLINE_WORKSPACE_V1', STORE='snapshots';
+const DB_NAME='BB_MOBILE_OFFLINE_WORKSPACE_TEST_V1', STORE='snapshots';
 const SESSION_KEY='BB_SUPABASE_DEV_SESSION_V1';
 const MAX_AGE_MS=7*24*60*60*1000; // require a successful sync at least weekly
 let connection=typeof navigator.onLine==='boolean'?navigator.onLine:true;
@@ -91,7 +91,7 @@ function indicator(){
 function updateIndicator(){
   const el=indicator();if(!el)return;
   const stamp=latestSync?new Date(latestSync).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'not yet synced';
-  el.textContent=(canUseNetwork()?'Online · saved dashboard':'Offline · saved read-only dashboard')+' · Dashboard synced: '+stamp;
+  el.textContent='TEST MODE · '+(canUseNetwork()?'Online · saved dashboard':'Offline · saved read-only dashboard')+' · Dashboard synced: '+stamp;
 }
 async function init(){
   const record=await read('last-sync');
