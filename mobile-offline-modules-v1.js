@@ -221,10 +221,10 @@ function drawCalc(){
   saveLocal(currentKey(),calcState());
 }
 let syncing=false;
-async function sync(safeRpc,canRoute){
+async function sync(safeRpc,canRoute,force=false){
   const api=offline();if(!api?.canUseNetwork()||!currentId()||syncing)return;
   const last=await api.read('offline-modules-last-sync');
-  if(last?.value?.at&&Date.now()-last.value.at<30*60*1000)return;
+  if(!force&&last?.value?.at&&Date.now()-last.value.at<30*60*1000)return;
   syncing=true;
   const jobs=[];
   if(canRoute('ar-your')||canRoute('sales-support-your-receivable')){
