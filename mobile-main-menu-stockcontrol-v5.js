@@ -195,7 +195,7 @@ function replaceFrameUrl(frame,url){
  return frame;
 }
 
-function renderDirect(route){
+function renderDirect(route,forceLive=false){
  const offline=window.BBMobileOfflineWorkspaceV1;
  if(offline&&!offline.canUseNetwork()){
    if(window.BBMobileOfflineModulesV1?.canOpen(route)){
@@ -222,8 +222,18 @@ function renderDirect(route){
  replaceFrameUrl(frame,url);
  return true;
 }
-function openDirect(route,push=true){
- if(!renderDirect(route))return false;
+function openDirect(route,push=true,forceLive=false){
+ const cached=window.BBMobileOfflineModulesV1,offline=window.BBMobileOfflineWorkspaceV1;
+ if(!forceLive&&cached?.canOpen(route)){
+   void cached.open(route).then(ok=>{
+     if(!ok){
+       if(offline?.canUseNetwork())openDirect(route,push,true);
+       else{const el=document.getElementById('toast');if(el){el.textContent='No synced data available yet.';el.hidden=false}}
+     }
+   });
+   return true;
+ }
+ if(!renderDirect(route,forceLive))return false;
  const nav=window.BBMobileHistoryV7||window.BBMobileHistoryV6;
  if(nav&&!nav.isRestoring?.()){
    nav.recordModule(route,push);

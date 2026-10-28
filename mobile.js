@@ -352,16 +352,20 @@ function showMenu(tab,clearRoute=true){
   $('menuGrid').innerHTML=items.length?(tab==='stock'?'<div style="grid-column:1/-1;font-weight:800;font-size:17px;padding:12px 2px 4px">📦 Stock Control</div>':'')+items.map(([route,x],i)=>`${tab==='stock'&&route==='stock-keyin'?'<div style="grid-column:1/-1;font-weight:800;font-size:17px;padding:12px 2px 4px">📋 Stock Management</div>':''}<button type="button" class="menu-card" data-route="${route}"><b>${window.BBMobileFunctionIconsV1?.route?.(route)||x.icon}</b><strong>${esc(x.label)}</strong><small>Open function</small></button>`).join(''):'<div class="menu-empty">No functions assigned in this section.</div>';
   bindRouteButtons($('menuGrid'));refreshNav(tab);$('menuGrid').scrollTop=0;
 }
-function openModule(route,updateUrl=true){
+function openModule(route,updateUrl=true,forceLive=false){
   const item=ROUTES[route];if(!item){toast('This mobile route is not ready yet.');return false}if(!canRoute(route)){toast('Access denied for this function.');return false}
   const offline=window.BBMobileOfflineWorkspaceV1;
-  if(offline&&!offline.canUseNetwork()){
-    if(window.BBMobileOfflineModulesV1?.canOpen(route)){
-      void window.BBMobileOfflineModulesV1.open(route).then(ok=>{if(!ok)toast('No saved offline data for this function yet.')});
-      return false;
-    }
-    toast('This function requires internet.');return false;
+  const cached=window.BBMobileOfflineModulesV1;
+  if(!forceLive&&cached?.canOpen(route)){
+    void cached.open(route).then(ok=>{
+      if(!ok){
+        if(offline?.canUseNetwork())openModule(route,updateUrl,true);
+        else toast('No synced data. Open online once.');
+      }
+    });
+    return true;
   }
+  if(offline&&!offline.canUseNetwork()){toast('This function requires internet.');return false}
   window.BBMobileOfflineModulesV1?.close();
   hideAll();$('moduleScreen').hidden=false;$('moduleTitle').textContent=item.label;replaceFrameUrl($('moduleFrame'),item.url);
   $('moduleDesktopLink').href='index.html?module='+encodeURIComponent(route)+'&autoload=1';

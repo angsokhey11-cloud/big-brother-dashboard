@@ -3452,6 +3452,13 @@ loadReport(
   false
 );
 
+// Parent PWA updated its account-scoped offline snapshot in the background.
+// Refresh this exact Stock Report UI without navigating to another page.
+window.addEventListener('message',event=>{
+  if(event.origin!==location.origin||event.source!==window.parent)return;
+  if(event.data?.type==='bb:stock-snapshot-refreshed')void loadReport(true);
+});
+
 
 /* Offline data is a saved snapshot, not a live polling source. */
 
