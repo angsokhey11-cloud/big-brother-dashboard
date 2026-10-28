@@ -1,0 +1,30 @@
+name: Validate BIG BROTHER HTTPS Controller
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tools/BB-HTTPS-Control.ps1'
+      - '.github/workflows/validate-big-brother-controller.yml'
+permissions:
+  contents: read
+jobs:
+  syntax:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse helper safely
+        shell: pwsh
+        run: |
+          $file = Join-Path $PWD 'tools/BB-HTTPS-Control.ps1'
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile($file,[ref]$tokens,[ref]$errors) | Out-Null
+          if ($errors.Count -gt 0) {
+            $errors | Format-List | Out-String | Write-Host
+            throw 'Controller helper has PowerShell syntax errors'
+          }
+          Write-Host 'HTTPS Controller PowerShell syntax valid.'
+      - name: Status read-only smoke test
+        shell: pwsh
+        run: |
+          & (Join-Path $PWD 'tools/BB-HTTPS-Control.ps1') -Action Status
