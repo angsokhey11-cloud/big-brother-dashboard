@@ -197,7 +197,7 @@ function replaceFrameUrl(frame,url){
 
 function renderDirect(route){
  const offline=window.BBMobileOfflineWorkspaceV1;
- if(offline&&!offline.canUseNetwork()&&!offline.offlineRouteAllowed(route)){
+ if(offline&&(offline.previewReadOnly||(!offline.canUseNetwork()&&!offline.offlineRouteAllowed(route)))){
    const toast=document.getElementById('toast');if(toast){toast.textContent='This function requires internet. Saved Overview is available offline.';toast.hidden=false;setTimeout(()=>toast.hidden=true,3000)}
    return false;
  }
