@@ -1,7 +1,7 @@
 /* BIG BROTHER Mobile + Desktop PWA service worker V2.0 — Web Push */
-const CACHE='bb-mobile-shell-v104';
+const CACHE='bb-mobile-shell-v106';
 const MOBILE_FILES=new Set([
-  'mobile.html','mobile-function-icons-v1.js','mobile-home-theme-v5.css','mobile.css','mobile-sales-support.css','pwa-install.css','mobile.js','mobile-offline-workspace-v1.js','mobile-offline-modules-v1.js','mobile-user-overview.js',
+  'mobile.html','mobile-function-icons-v1.js','mobile-home-theme-v5.css','mobile.css','mobile-sales-support.css','pwa-install.css','mobile.js','mobile-offline-workspace-v1.js','mobile-offline-modules-v1.js','mobile-offline-calculator.html','mobile-offline-calculator-source-v1.html','mobile-offline-calculator-dual-currency-v1.js','mobile-offline-calculator-adapter-v1.js','mobile-offline-stock.html','mobile-offline-stock-source-v1.html','mobile-user-overview.js',
   'mobile-sales-support-home.js','pwa-install.js','mobile-main-menu-v3.js','mobile-main-menu-stockcontrol-v5.js','mobile-ui-policy-v1.js',
   'mobile-navigation-v5.js','mobile-module-transition-v3.js','mobile-ios-decimal-v1.js','bb-web-push-client-v1.js','mobile-theme-v1.js','manifest.webmanifest','pwa-icon.svg','pwa-icon-maskable.svg','big-brother-angkor-login.png'
 ]);
@@ -43,7 +43,13 @@ const PRECACHE=[
   './mobile-ios-decimal-v1.js?v=20260920-iosdecimal3',
   './mobile-theme-v1.js?v=20261005-angkor-login16',
   './mobile-sales-support-home.js?v=20261028-offline-modules1',
-  './mobile-offline-modules-v1.js?v=20261028-offline-modules1',
+  './mobile-offline-modules-v1.js?v=20261028-offline-modules3',
+  './mobile-offline-stock.html?v=20261028-sameui1',
+  './mobile-offline-stock-source-v1.html?v=20261028-sameui1',
+  './mobile-offline-calculator.html?v=20261028-sameui1',
+  './mobile-offline-calculator-source-v1.html?v=20261028-sameui1',
+  './mobile-offline-calculator-dual-currency-v1.js?v=20261028-sameui1',
+  './mobile-offline-calculator-adapter-v1.js?v=20261028-sameui1',
   './pwa-install.js?v=20261024-mobileperf1',
   './mobile-module-transition-v3.js?v=20261024-module-transition1',
   './bb-web-push-client-v1.js?v=20261025-webpush-v1',
@@ -78,7 +84,13 @@ self.addEventListener('install',event=>{
       './mobile-main-menu-stockcontrol-v5.js?v=20261028-offline-modules1',
       './mobile-sales-support-home.js?v=20261028-offline-modules1',
       './mobile-user-overview.js?v=20261028-auto-offline3',
-      './mobile-offline-modules-v1.js?v=20261028-offline-modules1'
+      './mobile-offline-modules-v1.js?v=20261028-offline-modules3',
+      './mobile-offline-stock.html?v=20261028-sameui1',
+      './mobile-offline-stock-source-v1.html?v=20261028-sameui1',
+      './mobile-offline-calculator.html?v=20261028-sameui1',
+      './mobile-offline-calculator-source-v1.html?v=20261028-sameui1',
+      './mobile-offline-calculator-dual-currency-v1.js?v=20261028-sameui1',
+      './mobile-offline-calculator-adapter-v1.js?v=20261028-sameui1'
     ]);
     await Promise.all([...critical].map(path=>
       cache.add(new Request(new URL(path,self.registration.scope),{cache:'reload'}))

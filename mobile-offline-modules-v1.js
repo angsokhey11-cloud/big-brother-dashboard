@@ -57,6 +57,51 @@ function createHost(){
     #bbOfflineModulesScreen .bb-off-primary{background:#1267af;color:#fff;border:0;border-radius:9px;padding:11px;font-weight:700}
     #bbOfflineModulesScreen .bb-off-muted{background:#ecf2fa;color:#23496d;border:1px solid #d2e0eb;border-radius:9px;padding:9px}
     #bbOfflineModulesScreen .bb-off-scroll{max-height:56vh;overflow:auto}
+
+    /* Receivable cards follow the same grid and amount-box design as the online mobile A/R. */
+    #bbOfflineModulesScreen .bb-ar-toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+    #bbOfflineModulesScreen .bb-ar-total{color:#17487d;font-size:13px;font-weight:900}
+    #bbOfflineModulesScreen .bb-ar-list{display:grid;gap:8px;margin-top:9px}
+    #bbOfflineModulesScreen .bb-ar-card{background:#fff;border:1px solid #dce6f0;border-radius:13px;padding:10px;display:grid;
+      grid-template-columns:28px minmax(84px,104px) minmax(0,1fr) auto;
+      grid-template-areas:"check inv customer status" ". invdate duedate action" ". location location action" ". total paid outstanding";
+      gap:5px 9px;align-items:start;box-shadow:0 2px 8px #173f770b;min-width:0}
+    #bbOfflineModulesScreen .bb-ar-card>div{min-width:0;overflow:hidden;text-overflow:ellipsis}
+    #bbOfflineModulesScreen .bb-ar-card .check{grid-area:check;color:#93abc1;align-self:center;font-size:17px}
+    #bbOfflineModulesScreen .bb-ar-card .invoice{grid-area:inv;padding-left:3px}
+    #bbOfflineModulesScreen .bb-ar-card .customer{grid-area:customer}
+    #bbOfflineModulesScreen .bb-ar-card .invoice,#bbOfflineModulesScreen .bb-ar-card .customer{font-size:13px;font-weight:900;color:#173f77;white-space:nowrap}
+    #bbOfflineModulesScreen .bb-ar-card .status{grid-area:status;justify-self:end;font-weight:800;font-size:8.5px;padding:4px 6px;border-radius:30px;background:#f1f7ff;color:#2463a1}
+    #bbOfflineModulesScreen .bb-ar-card .invoice-date{grid-area:invdate}
+    #bbOfflineModulesScreen .bb-ar-card .due-date{grid-area:duedate;color:#c94750}
+    #bbOfflineModulesScreen .bb-ar-card .invoice-date,#bbOfflineModulesScreen .bb-ar-card .due-date{font-size:9px;white-space:nowrap;color:#647b92}
+    #bbOfflineModulesScreen .bb-ar-card .due-date{color:#bb4655}
+    #bbOfflineModulesScreen .bb-ar-card .location{grid-area:location;font-size:9px;color:#526b84}
+    #bbOfflineModulesScreen .bb-ar-card .amt{background:#f7f9fc;border-radius:8px;padding:6px 7px;font-size:10px;font-weight:900;color:#173f77}
+    #bbOfflineModulesScreen .bb-ar-card .amt:before{content:attr(data-label);display:block;color:#758599;font-size:7.5px;font-weight:700;margin-bottom:3px}
+    #bbOfflineModulesScreen .bb-ar-card .total{grid-area:total}.bb-ar-card .paid{grid-area:paid}
+    #bbOfflineModulesScreen .bb-ar-card .outstanding{grid-area:outstanding;background:#fff2f3;color:#bd3c49}
+    /* Live Stock uses two-column summary cards and a nine-column product card grid on mobile. */
+    #bbOfflineModulesScreen .bb-stock-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-bottom:10px}
+    #bbOfflineModulesScreen .bb-stock-summary .summary-card{background:#fff;border:1px solid #d9e3ee;border-radius:11px;padding:9px 10px}
+    #bbOfflineModulesScreen .bb-stock-summary small{font-size:7px;font-weight:900;text-transform:uppercase}
+    #bbOfflineModulesScreen .bb-stock-summary strong{font-size:17px;color:#123f73;font-weight:900}
+    #bbOfflineModulesScreen .bb-stock-toolbar{position:sticky;top:49px;z-index:2;display:grid;grid-template-columns:1fr;gap:6px;background:#f9fbfd;
+      padding:8px;border-radius:11px;border:1px solid #d9e3ee}
+    #bbOfflineModulesScreen .bb-stock-line{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid #d9e3ee;border-radius:11px;
+      background:#fff;margin:7px 0;overflow:hidden}
+    #bbOfflineModulesScreen .bb-stock-line .product{grid-column:1/-1;padding:8px 9px;border-bottom:1px solid #e8eff5}
+    #bbOfflineModulesScreen .bb-stock-line .product b{font-size:11px;color:#123f73}
+    #bbOfflineModulesScreen .bb-stock-line .product small{font-size:8px;color:#708397}
+    #bbOfflineModulesScreen .bb-stock-line .metric{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      min-height:44px;min-width:0;padding:16px 3px 4px;border-right:1px solid #edf1f5;border-bottom:1px solid #edf1f5;
+      font-size:10px;font-weight:900;color:#2368bd}
+    #bbOfflineModulesScreen .bb-stock-line .metric:before{content:attr(data-label);position:absolute;top:5px;left:2px;right:2px;overflow:hidden;
+      text-overflow:ellipsis;white-space:nowrap;text-align:center;font-size:6px;font-weight:900;color:#718297;text-transform:uppercase}
+    #bbOfflineModulesScreen .bb-stock-line .metric:nth-child(4n+1){border-right:0}
+    #bbOfflineModulesScreen .bb-stock-line .metric.green{color:#157a51}.bb-stock-line .metric.red{color:#b94141}
+    #bbOfflineModulesScreen .bb-stock-line .metric.purple{color:#7450b5}.bb-stock-line .metric.amber{color:#a96900}
+    #bbOfflineModulesScreen .bb-stock-line .metric.value{color:#123f73}
   `;
   document.head.appendChild(style);
   host.innerHTML='<header class="bb-off-header"><button type="button" class="bb-back" id="bbOffClose">‹ Back</button><strong id="bbOffTitle">Saved Data</strong></header><main class="bb-off-main"><div class="bb-off-note" id="bbOffNote"></div><div id="bbOffBody"></div></main>';
@@ -80,37 +125,101 @@ async function open(name){
   $('bbOffTitle').textContent=name.includes('receivable')||name.startsWith('ar-')?'Receivable · Offline':name.includes('calculator')?'Calculator · Offline':'Stock Report · Offline';
   const date=new Date(rec.syncedAt).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
   notice('Saved snapshot: '+date+' · Cloud transactions cannot be created, cleared or edited offline.');
-  if(name==='sales-support-calculator')renderCalculator();
+  if(name==='sales-support-calculator'){
+    // The exact online Calculator UI is loaded from an offline-cached copy.
+    // It uses the same responsive markup, controls, layout and local history.
+    $('bbOffBody').innerHTML='<iframe title="BIG BROTHER Calculator" src="./mobile-offline-calculator.html?mobile=1&view=calculator" style="width:100%;height:calc(100dvh - 104px);min-height:560px;border:0;background:#eef4fa;border-radius:10px"></iframe>';
+  }
   else if(name.includes('receivable')||name.startsWith('ar-'))renderReceivables();
-  else renderStock();
+  else {
+    const full=await offline()?.read('offline-stock-report-full');
+    if(full?.value?.success){
+      $('bbOffBody').innerHTML='<iframe title="BIG BROTHER Stock Report" src="./mobile-offline-stock.html?embed=1" style="width:100%;height:calc(100dvh - 104px);min-height:560px;border:0;background:#eef3f8;border-radius:10px"></iframe>';
+    }else renderStock();
+  }
   host.scrollTop=0;
   return true;
 }
+
 function renderReceivables(){
   const rows=Array.isArray(dataset?.receivables)?dataset.receivables:[];
+  const locations=[...new Set(rows.map(r=>clean(r.locationName||r.locationCode)).filter(Boolean))].sort();
   const wrap=$('bbOffBody');
-  wrap.innerHTML='<div class="bb-off-card"><strong>'+rows.length+' outstanding invoices</strong><small>Saved values may have changed since synchronization</small></div>'+
-    '<input id="bbOffSearch" placeholder="Search customer / invoice / location" type="search" aria-label="Search saved receivable">'+
-    '<div id="bbOffRows" class="bb-off-scroll"></div>';
+  wrap.innerHTML=
+    '<div class="bb-ar-toolbar"><strong class="bb-ar-total">'+rows.length+' outstanding invoices</strong><small>Saved read-only</small></div>'+
+    '<div class="bb-off-form" style="margin-bottom:8px">'+
+    '<input id="bbOffSearch" class="wide" placeholder="Search customer / invoice" type="search" aria-label="Search saved receivables">'+
+    '<select id="bbOffLocation" aria-label="Filter location"><option value="">All assigned locations</option>'+
+      locations.map(loc=>'<option value="'+esc(loc)+'">'+esc(loc)+'</option>').join('')+'</select>'+
+    '<select id="bbOffStatus" aria-label="Filter status"><option value="">All statuses</option><option>Outstanding</option><option>Overdue</option><option>Processing</option></select>'+
+    '</div><div id="bbOffRows" class="bb-ar-list"></div><div id="bbOffCount" class="bb-off-note"></div>';
+  const fmt=(v,c)=>v==null?'—':money(v,c);
   function draw(){
-    const q=clean($('bbOffSearch').value).toLowerCase();
-    const found=rows.filter(r=>[r.customer,r.invoiceNo,r.locationName,r.locationCode].some(x=>clean(x).toLowerCase().includes(q)));
-    $('bbOffRows').innerHTML=found.slice(0,500).map(r=>`<div class="bb-off-card bb-off-data"><div><strong>${esc(r.customer||'Unknown customer')}</strong><small>${esc(r.invoiceNo)} · ${esc(r.invoiceDate)} · ${esc(r.locationName||r.locationCode)} · ${esc(r.arStatus)}</small></div><b>${esc(money(r.outstanding,r.currency))}</b></div>`).join('')||'<div class="bb-off-card">No matching records in saved data.</div>';
+    const q=clean($('bbOffSearch').value).toLowerCase(),loc=$('bbOffLocation').value,status=$('bbOffStatus').value;
+    const filtered=rows.filter(r=>(!loc||clean(r.locationName||r.locationCode)===loc)&&(!status||clean(r.arStatus)===status)
+      &&[r.customer,r.invoiceNo,r.locationName,r.locationCode].some(x=>clean(x).toLowerCase().includes(q)));
+    $('bbOffRows').innerHTML=filtered.slice(0,500).map(r=>
+      '<article class="bb-ar-card">'+
+        '<div class="check">◻</div>'+
+        '<div class="invoice">'+esc(r.invoiceNo)+'</div>'+
+        '<div class="customer">'+esc(r.customer||'Unknown customer')+'</div>'+
+        '<div class="status">'+esc(r.arStatus||'Outstanding')+'</div>'+
+        '<div class="invoice-date">Invoice: '+esc(r.invoiceDate||'—')+'</div>'+
+        '<div class="due-date">Due: '+esc(r.dueDate||'—')+'</div>'+
+        '<div class="location">📍 '+esc(r.locationName||r.locationCode||'—')+'</div>'+
+        '<div class="amt total" data-label="Total">'+esc(fmt(r.grandTotal,r.currency))+'</div>'+
+        '<div class="amt paid" data-label="Paid">'+esc(fmt(r.amountPaid,r.currency))+'</div>'+
+        '<div class="amt outstanding" data-label="Outstanding">'+esc(fmt(r.outstanding,r.currency))+'</div>'+
+      '</article>'
+    ).join('')||'<div class="bb-off-card">No matching saved invoices.</div>';
+    $('bbOffCount').textContent='Showing '+Math.min(500,filtered.length)+' of '+filtered.length+' matched invoices · saved snapshot only';
   }
-  $('bbOffSearch').addEventListener('input',draw);draw();
+  ['bbOffSearch','bbOffLocation','bbOffStatus'].forEach(id=>$(id).addEventListener(id==='bbOffSearch'?'input':'change',draw));
+  draw();
 }
 function renderStock(){
   const rows=Array.isArray(dataset?.products)?dataset.products:[];
   const wrap=$('bbOffBody'),total=dataset?.totals||{};
-  wrap.innerHTML='<div class="bb-off-card"><strong>'+rows.length+' products</strong><small>Warehouse: '+esc(money(total.warehouseValue))+' · Saved stock snapshot</small></div>'+
-    '<input id="bbOffSearch" placeholder="Search product / code" type="search" aria-label="Search saved stock">'+
-    '<div id="bbOffRows" class="bb-off-scroll"></div>';
+  const aggregate=field=>rows.reduce((sum,row)=>sum+num(row[field]),0);
+  const fmt=v=>v==null?'—':num(v).toLocaleString('en-US',{maximumFractionDigits:2});
+  const categories=[...new Set(rows.map(r=>clean(r.category)).filter(Boolean))].sort();
+  const summary=[
+    ['Purchased WH',aggregate('warehousePurchased')],
+    ['Zero-cost WH',aggregate('warehouseZeroCost')],
+    ['Purchased Batch',aggregate('batchPurchased')],
+    ['Zero-cost Batch',aggregate('batchZeroCost')],
+    ['Total Good',aggregate('totalGood')],
+    ['Stock Value',money(total.warehouseValue||0)]
+  ];
+  wrap.innerHTML=
+    '<div class="bb-stock-summary">'+summary.map(([label,value],index)=>'<div class="summary-card"><small>'+esc(label)+'</small><strong>'+
+      esc(index===5?value:fmt(value))+'</strong></div>').join('')+'</div>'+
+    '<div class="bb-stock-toolbar">'+
+      '<input id="bbOffSearch" placeholder="Search product / code" type="search" aria-label="Search saved stock">'+
+      '<div class="bb-chips" id="bbOffChips" style="display:flex;gap:5px;overflow-x:auto;white-space:nowrap"></div>'+
+    '</div><div id="bbOffRows"></div>';
+  let category='';
+  $('bbOffChips').innerHTML=['',...categories].map(c=>'<button class="bb-off-muted" type="button" data-cat="'+esc(c)+'">'+esc(c||'All Products')+'</button>').join('');
   function draw(){
     const q=clean($('bbOffSearch').value).toLowerCase();
-    const filtered=rows.filter(r=>[r.productName,r.productCode].some(x=>clean(x).toLowerCase().includes(q)));
-    $('bbOffRows').innerHTML=filtered.map(r=>`<div class="bb-off-card"><strong>${esc(r.productName)}</strong><small>${esc(r.productCode)} · ${esc(r.unit)}</small><div class="bb-off-data"><span>Warehouse ${esc(num(r.warehousePhysical))} · Batch ${esc(num(r.batchPhysical))} · Damaged ${esc(num(r.damaged))}</span><b>${esc(money(r.totalValue))}</b></div></div>`).join('')||'<div class="bb-off-card">No matching products.</div>';
+    const selected=rows.filter(r=>(!category||clean(r.category)===category)&&[r.productName,r.productCode].some(x=>clean(x).toLowerCase().includes(q)));
+    const cell=(name,value,variant='')=>'<div class="metric '+variant+'" data-label="'+esc(name)+'">'+esc(value==null?'—':fmt(value))+'</div>';
+    $('bbOffRows').innerHTML=selected.map(r=>
+      '<article class="bb-stock-line">'+
+        '<div class="product"><b>'+esc(r.productName)+'</b><small>'+esc(r.productCode)+' · '+esc(r.unit)+'</small></div>'+
+        cell('Purchased WH',r.warehousePurchased)+cell('Zero-Cost WH',r.warehouseZeroCost,'purple')+
+        cell('Purchased Batch',r.batchPurchased,'amber')+cell('Zero-Cost Batch',r.batchZeroCost,'purple')+
+        cell('Total Good',r.totalGood,'green')+cell('Damaged',r.damaged,'red')+
+        cell('Avg Cost',r.averageCost)+cell('Total Value',r.totalValue,'value')+
+      '</article>'
+    ).join('')||'<div class="bb-off-card">No matching saved products.</div>';
   }
-  $('bbOffSearch').addEventListener('input',draw);draw();
+  $('bbOffSearch').addEventListener('input',draw);
+  $('bbOffChips').querySelectorAll('[data-cat]').forEach(btn=>btn.addEventListener('click',()=>{
+    category=btn.dataset.cat;draw();
+    $('bbOffChips').querySelectorAll('button').forEach(item=>item.style.background=item.dataset.cat===category?'#d9eafd':'#ecf2fa');
+  }));
+  draw();
 }
 function selectCustomer(){
   const id=clean($('bbCalcCustomer').value);
@@ -226,18 +335,22 @@ function snapshotFor(key,data){
       invoiceId:r.invoiceId,invoiceNo:r.invoiceNo,invoiceDate:r.invoiceDate,
       dueDate:r.dueDate,customer:r.customer,customerId:r.customerId,
       locationCode:r.locationCode,locationName:r.locationName,currency:r.currency,
-      outstanding:r.outstanding,arStatus:r.arStatus
+      grandTotal:r.grandTotal,amountPaid:r.amountPaid,outstanding:r.outstanding,arStatus:r.arStatus
     }))};
   }
   if(key==='offline-stock-report'){
     return {success:true,products:(Array.isArray(data.products)?data.products:[]).map(r=>({
-      productCode:r.productCode,productName:r.productName,unit:r.unit,
-      warehousePhysical:r.warehousePhysical,batchPhysical:r.batchPhysical,
-      damaged:r.damaged,totalValue:r.totalValue
+      productCode:r.productCode,productName:r.productName,unit:r.unit,category:r.category,
+      warehousePurchased:r.warehousePurchased,warehouseZeroCost:r.warehouseZeroCost,
+      warehousePhysical:r.warehousePhysical,batchPurchased:r.batchPurchased,
+      batchZeroCost:r.batchZeroCost,batchPhysical:r.batchPhysical,
+      totalGood:r.totalGood,damaged:r.damaged,averageCost:r.averageCost,totalValue:r.totalValue
     })),totals:{warehouseValue:data?.totals?.warehouseValue||0}};
   }
   if(key==='offline-calc-bootstrap'){
-    return {success:true,customers:(Array.isArray(data.customers)?data.customers:[]).map(c=>({
+    return {success:true,locations:(Array.isArray(data.locations)?data.locations:[]).map(l=>({
+      locationCode:l.locationCode,locationName:l.locationName,salespersonName:l.salespersonName
+    })),customers:(Array.isArray(data.customers)?data.customers:[]).map(c=>({
       customerId:c.customerId,name:c.name,locationCode:c.locationCode,googleMapsLink:c.googleMapsLink
     })),products:(Array.isArray(data.products)?data.products:[]).map(p=>({
       code:p.code,name:p.name,unit:p.unit,usdPrice:p.usdPrice
@@ -248,7 +361,7 @@ function snapshotFor(key,data){
 let syncing=false;
 async function sync(safeRpc,canRoute,force=false){
   const api=offline();if(!api?.canUseNetwork()||!currentId()||syncing)return;
-  const last=await api.read('offline-modules-last-sync');
+  const last=await api.read('offline-modules-last-sync-v4');
   if(!force&&last?.value?.at&&Date.now()-last.value.at<30*60*1000)return;
   syncing=true;
   const jobs=[];
@@ -268,11 +381,15 @@ async function sync(safeRpc,canRoute,force=false){
       for(let j=0;j<group.length;j++){
         const value=fetched[j].status==='fulfilled'?fetched[j].value:null;
         const minimal=snapshotFor(group[j][0],value);
-        if(minimal&&api.canUseNetwork())await api.write(group[j][0],minimal);
-        else allOK=false;
+        if(minimal&&api.canUseNetwork()){
+          await api.write(group[j][0],minimal);
+          if(group[j][0]==='offline-stock-report'){
+            await api.write('offline-stock-report-full',value);
+          }
+        }else allOK=false;
       }
     }
-    if(api.canUseNetwork())await api.write('offline-modules-last-sync',{at:Date.now(),allOK});
+    if(api.canUseNetwork())await api.write('offline-modules-last-sync-v4',{at:Date.now(),allOK});
   }finally{syncing=false}
 }
 window.BBMobileOfflineModulesV1={open,canOpen,available,sync,close};
