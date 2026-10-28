@@ -113,7 +113,7 @@ function updateIndicator(){
   // never merely a connected Wi-Fi signal.
   const last=new Date(latestSync);
   const stamp=latestSync&&Number.isFinite(last.getTime())
-    ?last.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).replace(/\\s+/g,'-')+', '+
+    ?last.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).replace(/\s+/g,'-')+', '+
       last.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true})
     :'Not synced';
   el.textContent=(offline?'Offline':'Online')+' · Sync: '+stamp;
