@@ -135,11 +135,11 @@ function stripAttributes(el){
   if(el.matches('[contenteditable]'))el.textContent='';
 }
 async function capture(route,frame){
-  if(!frame||!access(route)||api()?.canUseNetwork()===false)return false;
+  if(!frame||!access(route)||api()?.canUseNetwork()===false||frame.dataset.bbStaticDirty==='1')return false;
   const user=api().currentUserId();
   try{
     const doc=frame.contentDocument;
-    if(!doc||doc.location.origin!==location.origin||doc.readyState==='loading')return false;
+    if(!doc||doc.location.origin!==location.origin||doc.readyState==='loading'||frame.dataset.bbStaticDirty==='1')return false;
     // A reused iframe must never save Route B's private data under Route A.
     const expected=new URL(access(route)),actual=new URL(doc.URL);
     if(expected.origin!==actual.origin||expected.pathname!==actual.pathname)return false;
@@ -157,7 +157,15 @@ function watch(route,frame){
   const seen=frame.dataset.bbStaticWatchRoute;
   if(seen===route)return;
   frame.dataset.bbStaticWatchRoute=route;
+  frame.dataset.bbStaticDirty='0';
   const captured=()=>{
+    const liveDoc=frame.contentDocument;
+    if(liveDoc&&!liveDoc.__bbReadOnlyCaptureWatch){
+      liveDoc.__bbReadOnlyCaptureWatch=true;
+      // Never snapshot unsaved staff work: only the initial, untouched live UI.
+      ['pointerdown','keydown','input','change'].forEach(type=>
+        liveDoc.addEventListener(type,()=>{frame.dataset.bbStaticDirty='1'},{once:true,capture:true}));
+    }
     if(frame.id!=='moduleFrame'||$('moduleFrame')!==frame)return;
     [1600,4800,9500].forEach(ms=>setTimeout(()=>{
       if($('moduleFrame')===frame&&frame.dataset.bbStaticWatchRoute===route&&frame.getAttribute('src')&&!frame.srcdoc)
@@ -220,7 +228,7 @@ function preload(route,url,visible,id){
   if(!screen||screen.hidden)return;
   const frame=visible.cloneNode(false);
   frame.removeAttribute('srcdoc');frame.removeAttribute('sandbox');
-  frame.setAttribute('sandbox','allow-scripts allow-same-origin allow-forms allow-modals allow-downloads allow-top-navigation-by-user-activation');
+  frame.setAttribute('sandbox','allow-scripts allow-same-origin allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-downloads allow-top-navigation-by-user-activation');
   frame.setAttribute('aria-hidden','true');
   frame.style.cssText='position:absolute!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important;width:100%!important;height:100%!important;z-index:-1!important';
   frame.id='bbUniversalStaged';
