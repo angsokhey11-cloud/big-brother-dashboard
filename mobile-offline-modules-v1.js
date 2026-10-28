@@ -321,32 +321,92 @@ function livePageReady(name,frame){
   }catch(_){return false}
   return false;
 }
+/* Reveal an already loaded live iframe without ever moving or reparenting
+ * it. Moving a connected iframe with replaceWith() can destroy its browsing
+ * context and trigger an actual reload (the visible flash reported by staff).
+ */
+function mirrorLiveScroll(fromFrame,toFrame){
+  const sync=(a,b,depth=0)=>{
+    if(!a||!b||depth>3)return;
+    try{
+      const from=a.scrollingElement||a.documentElement;
+      const to=b.scrollingElement||b.documentElement;
+      if(from&&to){
+        to.scrollTop=Math.max(0,from.scrollTop||0);
+        to.scrollLeft=Math.max(0,from.scrollLeft||0);
+      }
+      for(const selector of ['.tablewrap','.mobile-scroll','.bb-off-scroll','#arBody','#invoiceBody','#yourCustomerList']){
+        const previous=a.querySelector(selector),next=b.querySelector(selector);
+        if(previous&&next){
+          next.scrollTop=Math.max(0,previous.scrollTop||0);
+          next.scrollLeft=Math.max(0,previous.scrollLeft||0);
+        }
+      }
+      const oldFrames=a.querySelectorAll('iframe'),newFrames=b.querySelectorAll('iframe');
+      for(let i=0;i<Math.min(oldFrames.length,newFrames.length);i++){
+        try{sync(oldFrames[i].contentDocument,newFrames[i].contentDocument,depth+1)}catch(_){}
+      }
+    }catch(_){}
+  };
+  try{sync(fromFrame?.contentDocument,toFrame?.contentDocument)}catch(_){}
+}
 function commitLivePreload(entry){
   if(livePreload!==entry||entry.interacted)return;
   if(!offline()?.canUseNetwork()||route!==entry.route||currentId()!==entry.userId)return discardLivePreload();
   const screen=$('moduleScreen'),old=$('moduleFrame');
   if(!screen||screen.hidden||!old||!entry.frame?.parentNode)return discardLivePreload();
-  // Do not replace an active selection, summary or calculation in progress.
   if($('bbOfflineSummaryPrint'))return discardLivePreload();
   livePreload=null;
   clearInterval(entry.interval);clearTimeout(entry.timeout);
   const original=entry.frame;
+  const label=window.BBMobileHomeRouteAccessV1?.label(entry.route)||
+    window.BBMobileLiveRoutesV1?.label(entry.route)||'BIG BROTHER';
   try{
-    const label=window.BBMobileHomeRouteAccessV1?.label(entry.route)||
-      window.BBMobileLiveRoutesV1?.label(entry.route)||'BIG BROTHER';
-    close(); // close saved view without adding another navigation history entry
-    old.replaceWith(original);
+    // The ready document remains in its ORIGINAL connected iframe node.
+    // No .src assignment, replaceWith(), appendChild() or navigation occurs.
+    mirrorLiveScroll(old,original);
+    old.id='bbOfflineRetiringFrame';
     original.id='moduleFrame';
+    original.title=label;
     original.inert=false;
     original.removeAttribute('aria-hidden');
     original.removeAttribute('tabindex');
-    original.style.cssText='';
-    screen.hidden=false;
+    // Keep the exact offline viewport geometry while the live workspace
+    // appears. The shell header must not reappear and shift the content.
+    screen.classList.add('bb-offline-native');
     if($('moduleTitle'))$('moduleTitle').textContent=label;
     if($('moduleDesktopLink'))$('moduleDesktopLink').href='index.html?module='+encodeURIComponent(entry.route)+'&autoload=1';
+    original.style.cssText='visibility:visible!important;opacity:0!important;'+
+      'z-index:6!important;pointer-events:none!important;'+
+      'transition:opacity 160ms ease!important;';
+    const done=()=>{
+      // A new navigation may have replaced this frame while fading.
+      if(original.parentNode===screen&&$('moduleFrame')===original){
+        if(host)host.style.display='none';
+        old.remove();
+        original.style.cssText='';
+        original.inert=false;
+        original.removeAttribute('sandbox');
+        route='';dataset=null;openEpoch++;
+      }else old.remove();
+    };
+    // Two paint frames allow the ready, previously hidden document to render
+    // without showing a white intermediate or resetting its JS/scroll state.
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      if(original.parentNode!==screen||$('moduleFrame')!==original)return done();
+      original.style.setProperty('opacity','1','important');
+      original.style.setProperty('pointer-events','auto','important');
+      setTimeout(done,205);
+    }));
   }catch(error){
-    console.warn('BIG BROTHER seamless live handoff:',error);
-    try{original.remove()}catch(_){}
+    console.warn('BIG BROTHER in-place live reveal:',error);
+    try{
+      if(original.parentNode===screen){
+        old.remove();
+        original.style.cssText='';
+        original.inert=false;
+      }
+    }catch(_){}
   }
 }
 function stageLivePage(name){
