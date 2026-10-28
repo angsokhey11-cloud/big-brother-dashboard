@@ -229,7 +229,14 @@ async function open(name){
         ?'./mobile-offline-calculator.html?mobile=1&view=calculator&v=20261028-unified1'
         :'./mobile-offline-stock.html?embed=1&v=20261028-unified1';
       if(!openNativeRoute(name,true,restoringAtStart))return false;
-      if(frame.getAttribute('src')!==url)frame.setAttribute('src',url);
+      if(frame.getAttribute('src')!==url){
+        // Replace the frame rather than pushing its internal navigation history.
+        // Android Back should navigate the parent BIG BROTHER app, not an iframe.
+        const fresh=frame.cloneNode(false);
+        fresh.removeAttribute('src');
+        frame.replaceWith(fresh);
+        fresh.setAttribute('src',url);
+      }
       return true;
     }
   }
