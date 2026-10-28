@@ -53,6 +53,16 @@ async function dailyApi(params={}){
         {...row,items:[]};
     })};
   }
+  if(action==='invoiceDetail'){
+    const no=String(params.invoiceNo||'').trim(),invoices=(await dailyApi({action:'invoiceList'})).invoices;
+    const matches=invoices.filter(row=>String(row.invoiceNo||'').trim()===no);
+    if(!matches.length)throw Error('Invoice was not in synchronized Daily Sale data.');
+    if(matches.length>1)throw Error('Duplicate invoice number: use Invoice History to select the exact customer.');
+    const row=matches[0];
+    const details=await api.read('offline-staff-v12::daily-items::DEFAULT');
+    const full=(details?.value?.invoices||[]).find(x=>String(x.invoiceId||'')===String(row.invoiceId||''));
+    return {success:true,invoice:{...row,...full,items:Array.isArray(full?.items)?full.items:[]}};
+  }
   throw Error('Sending or changing company data requires an online connection.');
 }
 window.BBStaffOfflineV12={rpc,dailyApi,read};
