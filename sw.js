@@ -75,7 +75,8 @@ self.addEventListener('install',event=>{
       './mobile-offline-workspace-v1.js?v=20261028-auto-offline3',
       './mobile.js?v=20261028-auto-offline3',
       './mobile-main-menu-stockcontrol-v5.js?v=20261028-auto-offline3',
-      './mobile-sales-support-home.js?v=20261028-auto-offline3'
+      './mobile-sales-support-home.js?v=20261028-auto-offline3',
+      './mobile-user-overview.js?v=20261028-auto-offline3'
     ]);
     await Promise.all([...critical].map(path=>
       cache.add(new Request(new URL(path,self.registration.scope),{cache:'reload'}))
