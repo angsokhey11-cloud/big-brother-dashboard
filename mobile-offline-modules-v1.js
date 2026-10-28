@@ -45,7 +45,6 @@ function createHost(){
     #moduleScreen.bb-offline-native .module-header{display:none!important}
     #moduleScreen.bb-offline-native .module-frame{top:0!important;bottom:calc(68px + env(safe-area-inset-bottom))!important;
       height:calc(100dvh - 68px - env(safe-area-inset-bottom))!important}
-    #moduleScreen.bb-offline-native #bbOfflineModulesScreen{display:block}
     @media print{
       body.bb-offline-summary-print #mobileApp,body.bb-offline-summary-print #app{display:none!important}
       body.bb-offline-summary-print #bbOfflineSummaryPrint{position:static!important;display:block!important}
@@ -124,6 +123,8 @@ function close(){
   if(host)host.style.display='none';
   const screen=$('moduleScreen');
   if(screen)screen.classList.remove('bb-offline-native');
+  const frame=$('moduleFrame');if(frame)frame.style.display='';
+  const back=$('moduleBack');if(back)back.hidden=false;
   route='';dataset=null;
 }
 function openNativeRoute(name,useLocalFrame=false){
