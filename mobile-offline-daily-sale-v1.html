@@ -15,7 +15,7 @@
 /* Khmer glyph fallback; preserve existing English sizes and layout. */
 html,body,input,select,textarea,td{font-family:Arial,Helvetica,'Noto Sans Khmer',sans-serif}
 </style>
-<script src="mobile-offline-daily-sale-adapter-v1.js?v=20261028-dailyoffline1"></script>
+<script src="mobile-offline-staff-adapter-v12.js?v=20261028-v12"></script>
 <style>
 #shareTelegramBtn,#downloadSummaryBtn,#downloadPictureBtn{display:none!important}
 </style>
@@ -107,7 +107,7 @@ function usd(v){return '$'+num(v).toLocaleString(undefined,{minimumFractionDigit
 function khr(v){return '៛'+num(v).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0})}
 function rate(v){return num(v).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:2})}
 function showError(msg){$('errorBox').textContent=msg||'';$('errorBox').classList.toggle('show',!!msg)}
-async function api(params){return window.BBDailyOfflineAdapter.api(params)}
+async function api(params){return window.BBStaffOfflineV12.dailyApi(params)}
 function groupKey(inv){return [dateOnly(inv.invoiceDate),String(inv.salesperson||'').trim(),String(inv.locationCode||'').trim()].join('|||')}
 function invoiceCompare(a,b){return String(a||'').localeCompare(String(b||''),undefined,{numeric:true,sensitivity:'base'})}
 function getInvoiceRange(invoices){
