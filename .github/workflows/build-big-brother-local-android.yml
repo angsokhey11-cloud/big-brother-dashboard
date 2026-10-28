@@ -18,6 +18,10 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+      - name: Android SDK tools (current version)
+        uses: android-actions/setup-android@v4
+        with:
+          packages: ''
       - name: Compile SDK
         run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
       - name: Gradle
