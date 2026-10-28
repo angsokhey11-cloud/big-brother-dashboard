@@ -124,6 +124,7 @@ let pages=[];
 let quickPreferencesReady=false;
 let overview=null;
 let overviewLoading=false;
+let overviewRefreshQueued=false;
 let lastOverviewFetch=0;
 let overviewFilter={locationCode:'',year:0,month:0};
 let preferenceSyncBusy=false;
@@ -1296,7 +1297,8 @@ function renderOverview(){
 }
 
 async function refreshOverview(force=false){
-  if(overviewLoading||window.BBMobileOfflineWorkspaceV1?.canUseNetwork()===false)return;
+  if(overviewLoading){if(force)overviewRefreshQueued=true;return}
+  if(window.BBMobileOfflineWorkspaceV1?.canUseNetwork()===false)return;
   if(!force&&Date.now()-lastOverviewFetch<120000)return;
   if(!profile)return;
 
@@ -1325,6 +1327,10 @@ async function refreshOverview(force=false){
   }finally{
     overviewLoading=false;
     if(panel)panel.classList.remove('bb-overview-loading');
+    if(overviewRefreshQueued&&window.BBMobileOfflineWorkspaceV1?.canUseNetwork()){
+      overviewRefreshQueued=false;
+      setTimeout(()=>{void refreshOverview(true)},0);
+    }
   }
 }
 
@@ -1548,7 +1554,13 @@ async function load(){
     }
   });
 
-  void overviewPromise.then(()=>{overviewLoading=false},()=>{overviewLoading=false});
+  void overviewPromise.then(()=>{
+    overviewLoading=false;
+    if(overviewRefreshQueued){overviewRefreshQueued=false;void refreshOverview(true)}
+  },()=>{
+    overviewLoading=false;
+    if(overviewRefreshQueued){overviewRefreshQueued=false;void refreshOverview(true)}
+  });
 
   const paymentPromise=(canRoute('staff-relation')
     ?safeRpc('bb_staff_relation_my_payments',{p_from:null,p_to:null,p_salary_month:null})
