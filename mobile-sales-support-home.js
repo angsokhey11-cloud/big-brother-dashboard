@@ -982,6 +982,7 @@ function openRoute(route,navState=''){
     }
     return toast('Online required for this function.');
   }
+  window.BBMobileOfflineModulesV1?.close();
   closePicker();currentRoute=route;fallbackRoute='';
   if(BASE_ROUTES.has(route)&&window.BBMobile?.open){
     try{
