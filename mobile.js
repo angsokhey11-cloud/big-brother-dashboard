@@ -80,7 +80,7 @@ let activeTab='home';
 let adminOverviewLoading=false;
 let adminOverviewLastLoad=0;
 let adminOverviewTimer=null;
-const LIVE_OVERVIEW_MS=20000;
+const LIVE_OVERVIEW_MS=120000;
 
 const $=id=>document.getElementById(id);
 const key=v=>String(v||'').trim().toLowerCase();
@@ -157,6 +157,7 @@ async function signOut(){
   try{await window.BBPush?.disable({silent:true})}catch(_){}
   const current=readSession();
   try{if(current?.access_token)await fetch(SUPABASE_URL+'/auth/v1/logout',{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+current.access_token},cache:'no-store'})}catch(_){}
+  try{await window.BBMobileOfflineWorkspaceV1?.clearUser(current?.user?.id)}catch(_){}
   saveSession(null);profile=null;overview=null;showLogin('');
 }
 
@@ -350,6 +351,8 @@ function showMenu(tab,clearRoute=true){
 }
 function openModule(route,updateUrl=true){
   const item=ROUTES[route];if(!item){toast('This mobile route is not ready yet.');return false}if(!canRoute(route)){toast('Access denied for this function.');return false}
+  const offline=window.BBMobileOfflineWorkspaceV1;
+  if(offline&&!offline.canUseNetwork()&&!offline.offlineRouteAllowed(route)){toast('This function requires internet. Saved Overview is available offline.');return false}
   hideAll();$('moduleScreen').hidden=false;$('moduleTitle').textContent=item.label;replaceFrameUrl($('moduleFrame'),item.url);
   $('moduleDesktopLink').href='index.html?module='+encodeURIComponent(route)+'&autoload=1';
   if(updateUrl){
@@ -398,6 +401,7 @@ async function loadOverview(force=false){
     });
 
     overview=fresh;
+    void window.BBMobileOfflineWorkspaceV1?.write('admin-overview',fresh);
     adminOverviewLastLoad=Date.now();
 
     if(mobileHomeVisible())renderHome();
@@ -413,7 +417,7 @@ function installAdminOverviewLive(){
   if(adminOverviewTimer)return;
 
   window.addEventListener('focus',()=>{
-    if(isAdmin()&&mobileHomeVisible())loadOverview(true);
+    if(isAdmin()&&mobileHomeVisible()&&Date.now()-adminOverviewLastLoad>=LIVE_OVERVIEW_MS)loadOverview(false);
   });
 
   document.addEventListener('visibilitychange',()=>{
@@ -422,7 +426,7 @@ function installAdminOverviewLive(){
       isAdmin() &&
       mobileHomeVisible()
     ){
-      loadOverview(true);
+      if(Date.now()-adminOverviewLastLoad>=LIVE_OVERVIEW_MS)loadOverview(false);
     }
   });
 
@@ -432,13 +436,15 @@ function installAdminOverviewLive(){
       mobileHomeVisible() &&
       Date.now()-adminOverviewLastLoad>=LIVE_OVERVIEW_MS-1000
     ){
-      loadOverview(true);
+      loadOverview(false);
     }
   },LIVE_OVERVIEW_MS);
 }
 
 async function activate(){
   profile=await rpc('bb_current_access_profile');
+  const offline=window.BBMobileOfflineWorkspaceV1;
+  if(offline){void offline.write('access-profile',profile);void offline.success()}
   installAdminOverviewLive();
   const requested=new URLSearchParams(location.search).get('module')||'';
   // Direct module links need authentication and permissions, not a blocking Home overview.
@@ -452,33 +458,41 @@ async function activate(){
 }
 async function boot(){
   hideAll();$('bootScreen').hidden=false;
+  const offline=window.BBMobileOfflineWorkspaceV1;
+  const saved=readSession();
+  let openedFromCache=false;
+  // Show the last signed-in account's verified workspace BEFORE requesting cloud data.
+  if(saved?.access_token&&offline?.currentUserId()){
+    const [savedProfile,savedOverview]=await Promise.all([
+      offline.read('access-profile'),offline.read('admin-overview')
+    ]);
+    if(savedProfile?.value){
+      profile=savedProfile.value;
+      overview=savedOverview?.value||null;
+      showHome(true,true);
+      offline.updateIndicator();
+      openedFromCache=true;
+    }
+  }
   try{
     await ensureSession();
-    await activate();
+    await activate(); // refresh profile/permissions and data without blocking the cached screen
   }catch(error){
     if(isSessionAuthError(error)){
+      try{await offline?.clearUser(saved?.user?.id)}catch(_){}
       saveSession(null);
       showLogin(error?.message==='Please sign in to BIG BROTHER.'?'':(error?.message||''));
       return;
     }
-
-    /* iOS/PWA can briefly lose network while opening or resuming.
-       Keep the saved session and retry once instead of forcing a new login. */
-    try{
-      await new Promise(resolve=>setTimeout(resolve,650));
-      await ensureSession();
-      await activate();
-      return;
-    }catch(retryError){
-      if(isSessionAuthError(retryError))saveSession(null);
-      showLogin(
-        isSessionAuthError(retryError)
-          ? (retryError?.message==='Please sign in to BIG BROTHER.'?'':(retryError?.message||''))
-          : 'Could not reconnect yet. Your saved login is still kept. Check internet and try again.'
-      );
-    }
+    // Network loss must not hide a previously synchronized dashboard.
+    if(openedFromCache){offline?.setConnection(false);return}
+    showLogin('Connect once to sign in and download your offline workspace.');
   }
 }
+// Retry cloud synchronization when a connection returns, while the app is open.
+window.addEventListener('bb:mobile-reconnected',()=>{
+  if(readSession()?.access_token)void activate().catch(()=>window.BBMobileOfflineWorkspaceV1?.setConnection(false));
+});
 
 $('loginForm').addEventListener('submit',async event=>{
   event.preventDefault();
