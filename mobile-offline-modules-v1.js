@@ -313,8 +313,8 @@ function commitLivePreload(entry){
   clearInterval(entry.interval);clearTimeout(entry.timeout);
   const original=entry.frame;
   try{
-    const label=window.BBMobileLiveRoutesV1?.label(entry.route)||
-      window.BBMobileHomeRouteAccessV1?.label(entry.route)||'BIG BROTHER';
+    const label=window.BBMobileHomeRouteAccessV1?.label(entry.route)||
+      window.BBMobileLiveRoutesV1?.label(entry.route)||'BIG BROTHER';
     close(); // close saved view without adding another navigation history entry
     old.replaceWith(original);
     original.id='moduleFrame';
