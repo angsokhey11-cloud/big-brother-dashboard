@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BIG BROTHER — Your Customer</title>
+<style>
+html,body{margin:0;min-height:100%;background:#eef3f8;font-family:Arial,sans-serif}
+.bb-loader{min-height:100vh;display:flex;align-items:center;justify-content:center}
+.bb-card{background:#fff;border:1px solid #d9e2ef;border-radius:14px;padding:22px 28px;color:#17457a;font-weight:800}
+</style></head><body>
+<div class="bb-loader"><div class="bb-card">Loading Your Customer…</div></div>
+<script>
+(async function(){
+  try{
+    const response=await fetch('mobile-offline-calculator-source-v1.html?v=20261028-seamless1',{cache:'default'});
+    if(!response.ok)throw Error('Customer interface unavailable.');
+    let html=await response.text();
+    const adapter='<scr'+'ipt src="mobile-offline-calculator-adapter-v1.js?v=20261028-seamless1"></scr'+'ipt>';
+    const headClose=html.toLowerCase().indexOf('</head>');
+    if(headClose<0)throw Error('Missing Sales Support head.');
+    const css='<style>#tabs,#view-calculator,#view-request-delivery,#view-successful-delivery{display:none!important}'+
+      '.bb-report-share,.bb-delivery-send,.bb-share-btn{display:none!important}'+
+      'body.embed .app{padding-top:8px!important}</style>';
+    html=html.slice(0,headClose)+adapter+css+html.slice(headClose);
+    const marker='  initializePublicMode(false);';
+    if(!html.includes(marker))throw Error('Missing initialization hook.');
+    // Reload the *original* Your Customer list with the authorized account's
+    // data, without ever touching the old all-user PUBLIC cache.
+    html=html.replace(marker,'  jsonp=window.BBSalesSupportAdapter.jsonp;\\n'+
+      '  apiPost=window.BBSalesSupportAdapter.apiPost;\\n'+
+      '  initializePublicMode(true);');
+    html=html.replace('publicMode:true,','publicMode:false,');
+    html=html.replace('function cacheSet(key, value){','function cacheSet(key, value){return;');
+    // Original route resolution picks Your Customer from this frame's query.
+    document.open();document.write(html);document.close();
+  }catch(error){
+    document.body.innerHTML='<div class="bb-loader"><div class="bb-card">'+
+      'Saved customer data is unavailable. Open My Customers online once.</div></div>';
+    console.error('Offline My Customers:',error);
+  }
+})();
+</script>
+</body></html>
