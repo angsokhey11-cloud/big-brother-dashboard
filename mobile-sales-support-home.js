@@ -1749,11 +1749,12 @@ window.BBMobileStaffReportsV12=Object.freeze({
       admin?'bb_sales_support_admin_your_stock':'bb_sales_support_my_stock',
       {p_batch_id:batchId||null},batchId,force);
     const selected=clean(result?.selectedBatch?.batchId);
-    if(result?.success&&selected){
+    if(result?.success){
       const api=window.BBMobileOfflineWorkspaceV1;
-      if(selected!==batchId)await api?.write(staffCacheKey(kind,selected),result);
-      await staffFetch(route,'stock-adjust','bb_sales_support_batch_adjustment_totals',
-        {p_batch_id:selected},selected,force);
+      if(selected&&selected!==batchId)await api?.write(staffCacheKey(kind,selected),result);
+      const adjustment=selected?await staffFetch(route,'stock-adjust','bb_sales_support_batch_adjustment_totals',
+        {p_batch_id:selected},selected,force):{success:true};
+      if(adjustment?.success)await api?.write(staffCacheKey('stock-ready',''),{success:true});
     }
     return result;
   },
