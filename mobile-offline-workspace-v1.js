@@ -52,7 +52,7 @@ async function write(name,value){
     try{
       const tx=db.transaction(STORE,'readwrite');
       tx.objectStore(STORE).put({key:userId+'::'+name,userId,syncedAt:Date.now(),value});
-      tx.oncomplete=()=>{latestSync=Date.now();updateIndicator();resolve(true)};
+      tx.oncomplete=()=>{if(name==='last-sync'){latestSync=Number(value)||Date.now();updateIndicator()}resolve(true)};
       tx.onerror=()=>resolve(false);
       tx.onabort=()=>resolve(false);
     }catch(_){resolve(false)}
@@ -91,7 +91,7 @@ function indicator(){
 function updateIndicator(){
   const el=indicator();if(!el)return;
   const stamp=latestSync?new Date(latestSync).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'not yet synced';
-  el.textContent=(canUseNetwork()?'Online · saved data ready':'Offline · saved read-only view')+' · Last sync: '+stamp;
+  el.textContent=(canUseNetwork()?'Online · saved dashboard':'Offline · saved read-only dashboard')+' · Dashboard synced: '+stamp;
 }
 async function init(){
   const record=await read('last-sync');
