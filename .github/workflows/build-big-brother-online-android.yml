@@ -1,0 +1,42 @@
+name: Build BIG BROTHER Online Android APK
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'android-online-app/**'
+      - '.github/workflows/build-big-brother-online-android.yml'
+permissions:
+  contents: read
+jobs:
+  android-online:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Android SDK tools
+        uses: android-actions/setup-android@v4
+        with:
+          packages: ''
+      - name: Compile SDK
+        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+      - name: Prepare BIG BROTHER launcher icon
+        run: |
+          mkdir -p android-online-app/app/src/main/res/drawable-nodpi
+          cp pwa-icon-192.png android-online-app/app/src/main/res/drawable-nodpi/launcher.png
+      - name: Build online preview APK
+        run: gradle --no-daemon -p android-online-app assembleDebug
+      - name: Upload installable Online APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: BIG-BROTHER-Online-Android-preview-APK
+          path: android-online-app/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
