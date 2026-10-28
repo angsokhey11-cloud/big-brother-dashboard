@@ -69,11 +69,19 @@ self.addEventListener('install',event=>{
     const cache=await caches.open(CACHE);
     // The main shell must be present before an updated worker takes control.
     await cache.add(new Request(SHELL_URL,{cache:'reload'}));
-    // One optional image or script missing must not discard the whole cache.
-    await Promise.allSettled(
-      PRECACHE.filter(path=>path!=='./mobile.html')
-        .map(path=>cache.add(new Request(new URL(path,self.registration.scope),{cache:'reload'})))
-    );
+    // Never activate the new worker unless its critical offline-first scripts exist.
+    // Other decorations remain optional; old worker stays active on failed install.
+    const critical=new Set([
+      './mobile-offline-workspace-v1.js?v=20261028-offline-first1',
+      './mobile.js?v=20261028-offline-first1',
+      './mobile-main-menu-stockcontrol-v5.js?v=20261028-offline-first1',
+      './mobile-sales-support-home.js?v=20261028-offline-first1'
+    ]);
+    await Promise.all([...critical].map(path=>
+      cache.add(new Request(new URL(path,self.registration.scope),{cache:'reload'}))
+    ));
+    await Promise.allSettled(PRECACHE.filter(path=>path!=='./mobile.html'&&!critical.has(path))
+      .map(path=>cache.add(new Request(new URL(path,self.registration.scope),{cache:'reload'}))));
     await self.skipWaiting();
   })());
 });
