@@ -55,15 +55,24 @@ function captureCss(doc,clone){
 function scrub(doc){
   const original=doc?.documentElement;
   if(!original||!doc.body)return null;
-  let meaningful=doc.body.textContent.length>=40;
+  const visible=typeof doc.body.innerText==='string'?doc.body.innerText:doc.body.textContent;
+  let meaningful=visible.trim().length>=40;
   // Some existing BIG BROTHER mobile pages are a tiny wrapper around the
   // real same-origin report iframe. Capture the real inner document as well.
   if(!meaningful){
     for(const child of doc.querySelectorAll('iframe')){
-      try{if(child.contentDocument?.body?.textContent?.length>=40)meaningful=true}catch(_){}
+      try{const body=child.contentDocument?.body;if((body?.innerText||body?.textContent||'').trim().length>=40)meaningful=true}catch(_){}
     }
   }
   if(!meaningful)return null;
+  if(/^(?:loading|connecting|sign in|could not load|failed to fetch)/i.test(visible.trim().slice(0,100)) &&
+     !doc.querySelector('[data-status="ready"]'))return null;
+  const spinner=doc.querySelector('#boot,.bb-loader,#loadingOverlay');
+  if(spinner&&!spinner.hidden){
+    const display=getComputedStyle(spinner);
+    if(display.display!=='none'&&display.visibility!=='hidden'&&Number(display.opacity||1)>0 &&
+       !spinner.classList.contains('hide'))return null;
+  }
   if(doc.querySelector('input[type=password]:focus'))return null;
   // Never persist authentication screens or session-related controls.
   const login=doc.querySelector('#loginOverlay,#loginScreen,#signInScreen');
@@ -167,7 +176,7 @@ function watch(route,frame){
         liveDoc.addEventListener(type,()=>{frame.dataset.bbStaticDirty='1'},{once:true,capture:true}));
     }
     if(frame.id!=='moduleFrame'||$('moduleFrame')!==frame)return;
-    [1600,4800,9500].forEach(ms=>setTimeout(()=>{
+    [1600,4800,9500,18000].forEach(ms=>setTimeout(()=>{
       if($('moduleFrame')===frame&&frame.dataset.bbStaticWatchRoute===route&&frame.getAttribute('src')&&!frame.srcdoc)
         void capture(route,frame);
     },ms));
