@@ -330,14 +330,16 @@ function snapshotFor(key,data){
       invoiceId:r.invoiceId,invoiceNo:r.invoiceNo,invoiceDate:r.invoiceDate,
       dueDate:r.dueDate,customer:r.customer,customerId:r.customerId,
       locationCode:r.locationCode,locationName:r.locationName,currency:r.currency,
-      outstanding:r.outstanding,arStatus:r.arStatus
+      grandTotal:r.grandTotal,amountPaid:r.amountPaid,outstanding:r.outstanding,arStatus:r.arStatus
     }))};
   }
   if(key==='offline-stock-report'){
     return {success:true,products:(Array.isArray(data.products)?data.products:[]).map(r=>({
-      productCode:r.productCode,productName:r.productName,unit:r.unit,
-      warehousePhysical:r.warehousePhysical,batchPhysical:r.batchPhysical,
-      damaged:r.damaged,totalValue:r.totalValue
+      productCode:r.productCode,productName:r.productName,unit:r.unit,category:r.category,
+      warehousePurchased:r.warehousePurchased,warehouseZeroCost:r.warehouseZeroCost,
+      warehousePhysical:r.warehousePhysical,batchPurchased:r.batchPurchased,
+      batchZeroCost:r.batchZeroCost,batchPhysical:r.batchPhysical,
+      totalGood:r.totalGood,damaged:r.damaged,averageCost:r.averageCost,totalValue:r.totalValue
     })),totals:{warehouseValue:data?.totals?.warehouseValue||0}};
   }
   if(key==='offline-calc-bootstrap'){
@@ -354,7 +356,7 @@ function snapshotFor(key,data){
 let syncing=false;
 async function sync(safeRpc,canRoute,force=false){
   const api=offline();if(!api?.canUseNetwork()||!currentId()||syncing)return;
-  const last=await api.read('offline-modules-last-sync-v2');
+  const last=await api.read('offline-modules-last-sync-v3');
   if(!force&&last?.value?.at&&Date.now()-last.value.at<30*60*1000)return;
   syncing=true;
   const jobs=[];
@@ -378,7 +380,7 @@ async function sync(safeRpc,canRoute,force=false){
         else allOK=false;
       }
     }
-    if(api.canUseNetwork())await api.write('offline-modules-last-sync-v2',{at:Date.now(),allOK});
+    if(api.canUseNetwork())await api.write('offline-modules-last-sync-v3',{at:Date.now(),allOK});
   }finally{syncing=false}
 }
 window.BBMobileOfflineModulesV1={open,canOpen,available,sync,close};
