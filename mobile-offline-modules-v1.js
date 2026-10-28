@@ -979,11 +979,11 @@ function snapshotFor(key,data){
 }
 let syncing=false;
 async function sync(safeRpc,canRoute,force=false){
-  const api=offline();if(!api?.canUseNetwork()||!currentId()||syncing)return;
+  const api=offline(),user=currentId();if(!api?.canUseNetwork()||!user||syncing)return;
   const last=await api.read('offline-modules-last-sync-v5');
   const customerMissing=!!canRoute('sales-support-your-customer')&&
     !(await api.read('offline-your-customer-v1'))?.value?.success;
-  const recentlySynced=!force&&last?.value?.at&&Date.now()-last.value.at<30*60*1000;
+  const recentlySynced=!force&&last?.value?.allOK===true&&last?.value?.at&&Date.now()-last.value.at<30*60*1000;
   if(recentlySynced&&!customerMissing)return;
   syncing=true;
   const jobs=[];
@@ -1003,31 +1003,37 @@ async function sync(safeRpc,canRoute,force=false){
   }else if(canRoute('sales-support-your-customer')){
     jobs.push(['offline-your-customer-v1','bb_sales_support_bootstrap']);
   }
-  let allOK=true;
+  let allOK=true,anyOK=false;
   try{
     // Make at most two concurrent read-only requests.
     for(let i=0;i<jobs.length;i+=2){
-      if(!api.canUseNetwork())return;
+      if(!api.canUseNetwork()||currentId()!==user)return;
       const group=jobs.slice(i,i+2);
       const fetched=await Promise.allSettled(group.map(([,fn])=>safeRpc(fn)));
       for(let j=0;j<group.length;j++){
         const value=fetched[j].status==='fulfilled'?fetched[j].value:null;
         const minimal=snapshotFor(group[j][0],value);
-        if(minimal&&api.canUseNetwork()){
-          await api.write(group[j][0],minimal);
+        if(minimal&&api.canUseNetwork()&&currentId()===user){
+          const saved=await api.write(group[j][0],minimal);
+          if(!saved){allOK=false;continue}
+          anyOK=true;
           if(group[j][0]==='offline-calc-bootstrap'&&canRoute('sales-support-your-customer')){
             const directory=snapshotFor('offline-your-customer-v1',value);
-            if(directory)await api.write('offline-your-customer-v1',directory);
+            if(directory&&!await api.write('offline-your-customer-v1',directory))allOK=false;
           }
           if(group[j][0]==='offline-stock-report'){
-            await api.write('offline-stock-report-full',value);
+            if(!await api.write('offline-stock-report-full',value))allOK=false;
           }
           // If a cached view is open, refresh it in place rather than navigating.
           if(mapRoutes[route]===group[j][0])updateVisibleDataset(group[j][0],minimal);
         }else allOK=false;
       }
     }
-    if(api.canUseNetwork())await api.write('offline-modules-last-sync-v5',{at:Date.now(),allOK});
+    if(api.canUseNetwork()&&currentId()===user){
+      if(jobs.length)await api.write('offline-modules-last-sync-v5',{at:Date.now(),allOK});
+      // Last Sync is advanced only after actual authorized data is saved.
+      if(anyOK)await api.success();
+    }
   }finally{syncing=false}
 }
 
@@ -1097,7 +1103,10 @@ async function refreshRoute(name,safeRpc,canRoute){
       any=true;
       if(route===name)updateVisibleDataset(storeKey,minimal);
     }
-    if(any)refreshedAt.set(key,Date.now());
+    if(any&&currentId()===user){
+      refreshedAt.set(key,Date.now());
+      await api.success();
+    }
     return any;
   })();
   refreshPending.set(key,request);
