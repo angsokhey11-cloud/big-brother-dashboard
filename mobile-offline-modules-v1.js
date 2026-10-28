@@ -834,7 +834,8 @@ async function sync(safeRpc,canRoute,force=false){
   const last=await api.read('offline-modules-last-sync-v5');
   const customerMissing=!!canRoute('sales-support-your-customer')&&
     !(await api.read('offline-your-customer-v1'))?.value?.success;
-  if(!force&&!customerMissing&&last?.value?.at&&Date.now()-last.value.at<30*60*1000)return;
+  const recentlySynced=!force&&last?.value?.at&&Date.now()-last.value.at<30*60*1000;
+  if(recentlySynced&&!customerMissing)return;
   syncing=true;
   const jobs=[];
   if(canRoute('ar-your')||canRoute('sales-support-your-receivable')){
@@ -842,7 +843,12 @@ async function sync(safeRpc,canRoute,force=false){
   }
   if(canRoute('ar-all'))jobs.push(['offline-ar-all','bb_ar_list_all']);
   if(canRoute('stock-report'))jobs.push(['offline-stock-report','bb_stock_report_fast']);
-  if(canRoute('sales-support-calculator')){
+  if(recentlySynced&&customerMissing){
+    // Only the newly needed directory is missing; do not refetch every
+    // Receivable/Stock report and increase log ingestion unnecessarily.
+    jobs.length=0;
+    jobs.push(['offline-your-customer-v1','bb_sales_support_bootstrap']);
+  }else if(canRoute('sales-support-calculator')){
     jobs.push(['offline-calc-bootstrap','bb_sales_support_bootstrap']);
     jobs.push(['offline-calc-batch-scope','bb_sales_support_calculator_batch_scope']);
   }else if(canRoute('sales-support-your-customer')){
