@@ -1608,8 +1608,70 @@ async function load(){
 
   // Nonblocking background sync of permitted offline datasets.
   setTimeout(()=>{void window.BBMobileOfflineModulesV1?.sync(safeRpc,canRoute)},1500);
+  setTimeout(()=>{void window.BBMobileReportSyncV1?.warm()},2100);
   await Promise.allSettled([liveProfilePromise,prefsPromise,overviewPromise,paymentPromise,attentionPromise,stockPromise]);
 }
+
+/* Read-only report sync: reusable by original local Monthly Sales and
+   Invoice History pages, permission-gated and isolated by signed-in user. */
+const reportFlights=new Map();
+function reportMonthKey(year,month){return 'offline-monthly::'+year+'-'+String(month).padStart(2,'0')}
+async function reportReadOnlyJob(route,key,fn,args={},force=false){
+  const a=window.BBMobileOfflineWorkspaceV1;
+  if(!a?.canUseNetwork()||!canRoute(route))return null;
+  const user=a.currentUserId();
+  if(!user)return null;
+  if(!force){
+    const stored=await a.read(key);
+    if(stored?.value?.success!==false&&stored?.value&&Date.now()-stored.syncedAt<30*60*1000)return stored.value;
+  }
+  const flight=user+'::'+key;
+  if(reportFlights.has(flight))return reportFlights.get(flight);
+  const work=(async()=>{
+    const response=await safeRpc(fn,args);
+    if(!response||a.currentUserId()!==user||!a.canUseNetwork()||!canRoute(route))return null;
+    // Never write failed/empty query results over the last good report.
+    if(key==='offline-history-list-v1'&&!Array.isArray(response.invoices))return null;
+    if(key.startsWith('offline-monthly::')&&!response.totals)return null;
+    if(key.startsWith('offline-history-detail::')&&!response.invoice)return null;
+    const valid=response.success===false?null:{...response,success:true,syncedAt:Date.now()};
+    if(valid)await a.write(key,valid);
+    return valid;
+  })();
+  reportFlights.set(flight,work);
+  try{return await work}finally{reportFlights.delete(flight)}
+}
+window.BBMobileReportSyncV1=Object.freeze({
+  async refreshMonth(year,month,force=false){
+    year=Number(year);month=Number(month);
+    if(!Number.isInteger(year)||year<2000||year>2100||!Number.isInteger(month)||month<1||month>12)return null;
+    return reportReadOnlyJob('monthly-sales-report',reportMonthKey(year,month),
+      'bb_report_monthly_sales',{p_year:year,p_month:month},force);
+  },
+  async refreshHistory(force=false){
+    return reportReadOnlyJob('history','offline-history-list-v1','bb_invoice_history_mobile_list',{
+      p_invoice_no:'',p_customer:'',p_date_from:null,p_date_to:null,p_invoice_type:''
+    },force);
+  },
+  async refreshDetail(invoiceId,invoiceNo){
+    const id=clean(invoiceId),no=clean(invoiceNo);
+    if(!id&&!no)return null;
+    if(id.length>128||no.length>128)return null;
+    const key='offline-history-detail::'+(id||'NO:'+no);
+    return reportReadOnlyJob('history',key,id?'bb_invoice_history_mobile_detail_by_id':'bb_invoice_history_mobile_detail',
+      id?{p_invoice_id:id}:{p_invoice_no:no});
+  },
+  async refreshHistoryMaster(){
+    return reportReadOnlyJob('history','offline-history-master-v1','bb_invoice_history_mobile_master',{});
+  },
+  async warm(){
+    if(!window.BBMobileOfflineWorkspaceV1?.canUseNetwork())return;
+    const date=new Date();
+    // Only current month and authorized invoice list, not all past periods.
+    if(canRoute('monthly-sales-report'))void this.refreshMonth(date.getFullYear(),date.getMonth()+1);
+    if(canRoute('history'))void this.refreshHistory();
+  }
+});
 
 const calcPriceFlights=new Map();
 window.BBMobileLiveReadBridgeV1=Object.freeze({
@@ -1651,6 +1713,7 @@ function start(){
   window.addEventListener('bb:mobile-reconnected',()=>{
     if(!profile)return;
     setTimeout(()=>{void window.BBMobileOfflineModulesV1?.sync(safeRpc,canRoute,true)},1600);
+    setTimeout(()=>{void window.BBMobileReportSyncV1?.warm()},2600);
     // mobile.js activate() already refreshes Overview: avoid duplicate RPCs.
     void refreshAttention(true);
     void syncPreferencesFromServer(true);
