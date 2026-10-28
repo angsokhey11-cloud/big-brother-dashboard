@@ -352,6 +352,7 @@ function showMenu(tab,clearRoute=true){
 function openModule(route,updateUrl=true){
   const item=ROUTES[route];if(!item){toast('This mobile route is not ready yet.');return false}if(!canRoute(route)){toast('Access denied for this function.');return false}
   const offline=window.BBMobileOfflineWorkspaceV1;
+  if(offline?.previewReadOnly){toast('Test workspace: dashboard preview only. No live modules or transactions.');return false}
   if(offline&&!offline.canUseNetwork()&&!offline.offlineRouteAllowed(route)){toast('This function requires internet. Saved Overview is available offline.');return false}
   hideAll();$('moduleScreen').hidden=false;$('moduleTitle').textContent=item.label;replaceFrameUrl($('moduleFrame'),item.url);
   $('moduleDesktopLink').href='index.html?module='+encodeURIComponent(route)+'&autoload=1';
