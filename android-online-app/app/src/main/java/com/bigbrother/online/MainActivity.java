@@ -43,6 +43,29 @@ public final class MainActivity extends Activity {
     private android.webkit.ValueCallback<Uri[]> fileChooserCallback;
     private boolean failed;
 
+    /**
+     * Android 15 (API 35) enforces edge-to-edge for targetSdk 35 apps.
+     * Apply the device's status/navigation/cutout insets to the native root,
+     * rather than patching each web page's CSS or zooming the WebView.
+     *
+     * After applying system-bar padding, pass a copy with those SAME insets
+     * zeroed to the WebView. Otherwise the WebView may apply the inset twice.
+     * IME (keyboard) insets are deliberately preserved.
+     * On Android 14 and earlier, normal platform content fitting is untouched.
+     */
+    private void protectSystemBars(FrameLayout container) {
+        if (android.os.Build.VERSION.SDK_INT < 35) return;
+        container.setOnApplyWindowInsetsListener((view, insets) -> {
+            int types = android.view.WindowInsets.Type.systemBars()
+                | android.view.WindowInsets.Type.displayCutout();
+            android.graphics.Insets system = insets.getInsets(types);
+            view.setPadding(system.left, system.top, system.right, system.bottom);
+            return new android.view.WindowInsets.Builder(insets)
+                .setInsets(types, android.graphics.Insets.NONE)
+                .build();
+        });
+    }
+
     private int dp(int value) {
         return (int)(getResources().getDisplayMetrics().density * value + 0.5f);
     }
@@ -53,7 +76,11 @@ public final class MainActivity extends Activity {
         getWindow().setNavigationBarColor(Color.rgb(10,36,64));
 
         FrameLayout root = new FrameLayout(this);
-        root.setBackgroundColor(Color.rgb(235,243,251));
+        // Android 15+ draws behind the system status/navigation bars by default.
+        // Give the status-bar icons a dark BIG BROTHER background while keeping
+        // the WebView and its accounting headers BELOW the system bars.
+        root.setBackgroundColor(Color.rgb(10,36,64));
+        protectSystemBars(root);
         browser = new WebView(this);
         browser.setBackgroundColor(Color.WHITE);
         WebSettings config = browser.getSettings();
