@@ -180,8 +180,7 @@ async function refresh(force=false){
     }
 
     cached={overview,payment};
-    void window.BBMobileOfflineWorkspaceV1?.write('staff-overview',cached);
-    void window.BBMobileOfflineWorkspaceV1?.success();
+    void window.BBMobileOfflineWorkspaceV1?.write('staff-overview',cached).then(ok=>{if(ok)void window.BBMobileOfflineWorkspaceV1.success()});
     lastLoad=Date.now();
     applyOverview(overview,payment);
   }catch(error){
