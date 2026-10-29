@@ -88,6 +88,7 @@ public final class MainActivity extends Activity {
     private void publishHostState(boolean ready,boolean recovered){
         if(view==null)return;
         String javascript="(function(){"+
+            "window.__BBNativeV6Health=true;"+
             "var w=window.BBMobileOfflineWorkspaceV1;"+
             "if(w&&typeof w.setConnection==='function')w.setConnection("+ready+");"+
             (recovered?
