@@ -55,6 +55,7 @@ jobs:
             -storepass "$KEYSTORE_PASSWORD" -alias bigbrother >/dev/null
           echo "BB_STABLE_KEYSTORE_FILE=$RUNNER_TEMP/BB-Android-Stable-Release.p12" >> "$GITHUB_ENV"
           echo "BB_STABLE_VERSION_CODE=$((10000 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
+          echo "BB_STABLE_VERSION_NAME=1.1.$GITHUB_RUN_NUMBER" >> "$GITHUB_ENV"
           echo "Permanent signing key verified. Secrets were not printed."
       - name: Use existing BIG BROTHER launcher logo
         run: |
