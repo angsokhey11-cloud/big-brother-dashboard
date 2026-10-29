@@ -224,6 +224,49 @@ FROM (VALUES
 ) AS x(name)
 ORDER BY x.name;
 '@
+ReadOnlySQL 'Batch Editor approved SQL gate — role and driver safety markers (NO function execution)' @'
+WITH target(name,signature) AS (
+ VALUES
+ ('options','public.bb_stock_batch_edit_header_options(text)'),
+ ('save','public.bb_stock_edit_batch_header(jsonb)')
+), funcs AS (
+ SELECT name, to_regprocedure(signature) AS oid,
+        pg_get_functiondef(to_regprocedure(signature)) AS body
+ FROM target
+)
+SELECT name,
+       CASE WHEN oid IS NULL THEN 'FUNCTION_MISSING' ELSE 'FOUND' END AS status,
+       CASE WHEN body IS NULL THEN null ELSE left(md5(body),12) END AS code_fingerprint,
+       CASE WHEN body IS NULL THEN null ELSE
+        (length(body)-length(replace(body,$needle$and lower(coalesce(s.position,''))='driver'$needle$,''))) /
+          length($needle$and lower(coalesce(s.position,''))='driver'$needle$)
+       END AS legacy_driver_only_role_checks,
+       (position('v_drivers' IN coalesce(body,''))>0) AS options_driver_picker,
+       (position('v_driver_id' IN coalesce(body,''))>0) AS save_driver_id,
+       (position('v_driver2_id' IN coalesce(body,''))>0) AS save_driver2_id,
+       (position('Batch Edit access denied' IN coalesce(body,''))>0) AS role_permission_guard,
+       (position('Batch Location access denied' IN coalesce(body,''))>0) AS location_guard,
+       (position('Driver 1 is required' IN coalesce(body,''))>0) AS first_driver_required,
+       (position('Driver 2 must be different from Driver 1' IN coalesce(body,''))>0) AS distinct_drivers_guard,
+       (position('Correction Reason is required' IN coalesce(body,''))>0) AS audit_reason_guard,
+       (position('stock_batch_edit_audit' IN coalesce(body,''))>0) AS save_audit_log,
+       (position($txt$lower(coalesce(s.position,''))='salesman'$txt$ IN coalesce(body,''))>0) AS salesman_role_guard,
+       (position($txt
+$folder=Join-Path $LocalBrainRoot 'brain-backups\sync-diagnostics'
+if(-not(Test-Path -LiteralPath $LocalBrainRoot -PathType Container)){
+    $folder=Join-Path $env:TEMP 'BIG_BROTHER_SYNC_DIAGNOSTICS'
+}
+New-Item -ItemType Directory -Path $folder -Force | Out-Null
+$dest=Join-Path $folder ('LOCAL-STAGE-PAYMENT-DIAGNOSTIC-'+(Get-Date -Format 'yyyyMMdd-HHmmss')+'.txt')
+[System.IO.File]::WriteAllLines($dest,$lines.ToArray(),(New-Object System.Text.UTF8Encoding($true)))
+Write-Host ''
+Write-Host ('READ-ONLY DIAGNOSTIC SAVED: '+$dest) -ForegroundColor Green
+Write-Host 'Upload this .txt report to ChatGPT; do not upload secrets, keys, .env or dump files.' -ForegroundColor Cyan
+canEditDrivers',true$txt$ IN coalesce(body,''))>0) AS used_batch_driver_edit_flag,
+       (position('Driver corrections remain allowed' IN coalesce(body,''))>0) AS used_batch_driver_lock_exception
+FROM funcs
+ORDER BY name;
+'@
 Line
 Report 'END — FILES, INDEXES AND SQL READ ONLY.'
 $folder=Join-Path $LocalBrainRoot 'brain-backups\sync-diagnostics'
