@@ -1,5 +1,5 @@
 /* BIG BROTHER Mobile + Desktop PWA service worker V2.0 — Web Push */
-const CACHE='bb-mobile-shell-v139';
+const CACHE='bb-mobile-shell-v140';
 const MOBILE_FILES=new Set([
   'mobile.html','mobile-function-icons-v1.js','mobile-home-theme-v5.css','mobile.css','mobile-sales-support.css','pwa-install.css','mobile.js','mobile-offline-workspace-v1.js','mobile-original-photo-cache-v1.js','mobile-original-photo-settings-v1.js','mobile-offline-modules-v1.js','mobile-universal-readonly-v1.js','mobile-offline-calculator.html','mobile-offline-your-customer-v1.html','mobile-offline-your-collection-mobile-v1.html','mobile-offline-your-collection-original-v1.html','mobile-offline-your-collection-adapter-v1.js','mobile-offline-your-collection-skin-v1.html','mobile-offline-calculator-source-v1.html','mobile-offline-calculator-dual-currency-v1.js','mobile-offline-calculator-adapter-v1.js','mobile-offline-history-original-v1.html','mobile-offline-history-mobile-v1.html','mobile-offline-history-adapter-v1.js','mobile-offline-monthly-sales-v1.html','mobile-offline-monthly-common-v1.js','mobile-offline-monthly-style-v1.css','mobile-offline-staff-adapter-v12.js','mobile-offline-your-stock-v12.html','mobile-offline-your-stock-source-v12.html','mobile-offline-tracker-v12.html','mobile-offline-tracker-source-v12.html','mobile-offline-daily-sale-v1.html','mobile-offline-stock.html','mobile-offline-stock-source-v1.html','mobile-user-overview.js',
   'mobile-sales-support-home.js','pwa-install.js','mobile-main-menu-v3.js','mobile-main-menu-stockcontrol-v5.js','mobile-ui-policy-v1.js',
@@ -9,7 +9,7 @@ function fileName(url){const parts=url.pathname.split('/');return parts[parts.le
 function isMobileAsset(url){return MOBILE_FILES.has(fileName(url))}
 function injectRouter(html){
   let out=html;
-  if(!out.includes('data-bb-router-v4')&&!out.includes('data-bb-main-menu-v4')){const tag='<script data-bb-router-v4 src="mobile-main-menu-v3.js?v=20261029-staffrequest-fallback2"></script>';out=out.includes('</body>')?out.replace('</body>',tag+'\n</body>'):out+tag}
+  if(!out.includes('data-bb-router-v4')&&!out.includes('data-bb-main-menu-v4')){const tag='<script data-bb-router-v4 src="mobile-main-menu-v3.js?v=20261029-option-b-mobile4"></script>';out=out.includes('</body>')?out.replace('</body>',tag+'\n</body>'):out+tag}
   if(!out.includes('data-bb-user-overview-v4')){const tag='<script data-bb-user-overview-v4 src="mobile-user-overview.js?v=20260920-liveoverview2"></script>';out=out.includes('</body>')?out.replace('</body>',tag+'\n</body>'):out+tag}
   if(!out.includes('data-bb-mobile-policy-v1')){const tag='<script data-bb-mobile-policy-v1 src="mobile-ui-policy-v1.js?v=20260915-2"></script>';out=out.includes('</body>')?out.replace('</body>',tag+'\n</body>'):out+tag}
   if(!out.includes('data-bb-navigation-v5')){const tag='<script data-bb-navigation-v5 src="mobile-navigation-v5.js?v=20260920-history6"></script>';out=out.includes('</body>')?out.replace('</body>',tag+'\n</body>'):out+tag}
@@ -36,8 +36,8 @@ const PRECACHE=[
   './pwa-install.css?v=20260920-ios1',
   './mobile-function-icons-v1.js?v=20261025-receivable-collection-v2',
   './mobile-offline-workspace-v1.js?v=20261029-v6-liveget2',
-  './mobile.js?v=20261029-batch-row-mobile3',
-  './mobile-main-menu-stockcontrol-v5.js?v=20261029-batch-row-mobile3',
+  './mobile.js?v=20261029-option-b-mobile4',
+  './mobile-main-menu-stockcontrol-v5.js?v=20261029-option-b-mobile4',
   './mobile-user-overview.js?v=20261028-auto-offline3',
   './mobile-navigation-v5.js?v=20261008-batchtransfer-mobile1',
   './mobile-ios-decimal-v1.js?v=20260920-iosdecimal3',
@@ -102,8 +102,8 @@ self.addEventListener('install',event=>{
     // Other decorations remain optional; old worker stays active on failed install.
     const critical=new Set([
       './mobile-offline-workspace-v1.js?v=20261029-v6-liveget2',
-      './mobile.js?v=20261029-batch-row-mobile3',
-      './mobile-main-menu-stockcontrol-v5.js?v=20261029-batch-row-mobile3',
+      './mobile.js?v=20261029-option-b-mobile4',
+      './mobile-main-menu-stockcontrol-v5.js?v=20261029-option-b-mobile4',
       './mobile-sales-support-home.js?v=20261028-collection1',
       './mobile-user-overview.js?v=20261028-auto-offline3',
       './mobile-original-photo-cache-v1.js?v=20261028-photo-cache1',
