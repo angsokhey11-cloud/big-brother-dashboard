@@ -1,9 +1,9 @@
 /* BIG BROTHER Mobile + Desktop PWA service worker V2.0 — Web Push */
-const CACHE='bb-mobile-shell-v132';
+const CACHE='bb-mobile-shell-v133';
 const MOBILE_FILES=new Set([
   'mobile.html','mobile-function-icons-v1.js','mobile-home-theme-v5.css','mobile.css','mobile-sales-support.css','pwa-install.css','mobile.js','mobile-offline-workspace-v1.js','mobile-original-photo-cache-v1.js','mobile-original-photo-settings-v1.js','mobile-offline-modules-v1.js','mobile-universal-readonly-v1.js','mobile-offline-calculator.html','mobile-offline-your-customer-v1.html','mobile-offline-your-collection-mobile-v1.html','mobile-offline-your-collection-original-v1.html','mobile-offline-your-collection-adapter-v1.js','mobile-offline-your-collection-skin-v1.html','mobile-offline-calculator-source-v1.html','mobile-offline-calculator-dual-currency-v1.js','mobile-offline-calculator-adapter-v1.js','mobile-offline-history-original-v1.html','mobile-offline-history-mobile-v1.html','mobile-offline-history-adapter-v1.js','mobile-offline-monthly-sales-v1.html','mobile-offline-monthly-common-v1.js','mobile-offline-monthly-style-v1.css','mobile-offline-staff-adapter-v12.js','mobile-offline-your-stock-v12.html','mobile-offline-your-stock-source-v12.html','mobile-offline-tracker-v12.html','mobile-offline-tracker-source-v12.html','mobile-offline-daily-sale-v1.html','mobile-offline-stock.html','mobile-offline-stock-source-v1.html','mobile-user-overview.js',
   'mobile-sales-support-home.js','pwa-install.js','mobile-main-menu-v3.js','mobile-main-menu-stockcontrol-v5.js','mobile-ui-policy-v1.js',
-  'mobile-navigation-v5.js','mobile-module-transition-v3.js','mobile-ios-decimal-v1.js','bb-web-push-client-v1.js','mobile-theme-v1.js','manifest.webmanifest','pwa-icon.svg','pwa-icon-maskable.svg','pwa-icon-192.png','pwa-icon-512.png','big-brother-angkor-login.png'
+  'mobile-navigation-v5.js','mobile-module-transition-v3.js','mobile-ios-decimal-v1.js','bb-web-push-client-v1.js','bb-native-online-push-v1.js','mobile-theme-v1.js','manifest.webmanifest','pwa-icon.svg','pwa-icon-maskable.svg','pwa-icon-192.png','pwa-icon-512.png','big-brother-angkor-login.png'
 ]);
 function fileName(url){const parts=url.pathname.split('/');return parts[parts.length-1]||''}
 function isMobileAsset(url){return MOBILE_FILES.has(fileName(url))}
