@@ -86,7 +86,9 @@ async function clearUser(userId=currentUserId()){
 }
 // navigator.onLine is a hint; do not permanently block retrying cloud reads
 // after a transient request failure while Wi-Fi itself remains connected.
-function canUseNetwork(){return navigator.onLine!==false&&(!LOCAL_MODE||connection)}
+// Connection status is UI state, NOT a permission to make requests.
+// Blocking live requests when V6 is down caused a permanent offline deadlock.
+function canUseNetwork(){return navigator.onLine!==false}
 function setConnection(ok){
   connection=!!ok;
   updateIndicator();
