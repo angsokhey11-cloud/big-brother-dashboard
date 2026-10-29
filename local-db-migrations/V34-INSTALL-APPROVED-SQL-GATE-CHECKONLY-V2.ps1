@@ -60,6 +60,10 @@ $new=@'
     throw ('Real schema guard did not pass: '+$guardStatus)
   }
 '@
+# Git on Windows can check out this installer as CRLF while the active file
+# is normalized to LF. Normalize both reviewed snippets before exact matching.
+$old=$old.Replace(([string][char]13+[char]10),[string][char]10)
+$new=$new.Replace(([string][char]13+[char]10),[string][char]10)
 if($normalized.IndexOf($old,[StringComparison]::Ordinal) -lt 0 -or
    $normalized.IndexOf($old,[StringComparison]::Ordinal) -ne
    $normalized.LastIndexOf($old,[StringComparison]::Ordinal)){
