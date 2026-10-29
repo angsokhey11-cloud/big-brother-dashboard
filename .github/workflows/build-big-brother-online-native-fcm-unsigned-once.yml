@@ -1,0 +1,39 @@
+name: One-shot Online Firebase FCM Stable APK unsigned compile
+on:
+  push:
+    paths:
+      - '.github/workflows/build-big-brother-online-native-fcm-unsigned-once.yml'
+permissions:
+  contents: read
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+        with:
+          packages: ''
+      - run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+      - name: Copy existing BIG BROTHER launcher
+        run: |
+          mkdir -p android-online-app/app/src/main/res/drawable-nodpi
+          cp pwa-icon-192.png android-online-app/app/src/main/res/drawable-nodpi/launcher.png
+      - name: Compile Online Stable v1.0.4 FCM APK
+        run: |
+          set -euo pipefail
+          gradle --no-daemon -p android-online-app assembleRelease
+          test -s android-online-app/app/build/outputs/apk/release/app-release-unsigned.apk
+      - name: Upload internal unsigned APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: BB-Online-v104-FCM-unsigned-internal
+          path: android-online-app/app/build/outputs/apk/release/app-release-unsigned.apk
+          retention-days: 1
