@@ -80,7 +80,20 @@ body{
 
 
   try{
-
+    // Prepare exact A/R customer focus before loading the desktop dashboard.
+    // The dashboard and A/R repository share the same GitHub Pages origin.
+    // No extra database request, account bypass, or automatic read marking.
+    try{
+      const qp=new URLSearchParams(location.search);
+      const route=qp.get('module')||'',notice=qp.get('bb_notice')||'',
+            entity=qp.get('bb_entity')||'';
+      if((route==='ar-your'||route==='ar-all')&&
+         /^(?:AR-OVERDUE:|OVERDUE-CUSTOMER:)/.test(notice)&&
+         /^[a-zA-Z0-9_./:-]{1,120}$/.test(entity)){
+        sessionStorage.setItem('BB_NOTIFICATION_AR_FOCUS_V1',
+          JSON.stringify({route,customerId:entity,view:'Overdue Only',createdAt:Date.now()}));
+      }
+    }catch(_){}
 
     /* =====================================================
        LOAD LEGACY DASHBOARD
