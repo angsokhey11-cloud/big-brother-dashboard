@@ -189,6 +189,7 @@ function createHost(){
 function close(){
   clearLiveRetry();
   liveRetryAttempts=0;
+  liveUserInteracted=false;
   discardLivePreload();
   openEpoch++;
   closeReceivableSummary();
@@ -241,13 +242,13 @@ function announceOpen(name){
  * a user's selected invoice, report filter or in-progress calculation.
  */
 let livePreload=null;
-let liveRetryTimer=null,liveRetryAttempts=0,lastLiveAttempt=0;
+let liveRetryTimer=null,liveRetryAttempts=0,lastLiveAttempt=0,liveUserInteracted=false;
 function clearLiveRetry(){
   if(liveRetryTimer!==null)clearTimeout(liveRetryTimer);
   liveRetryTimer=null;
 }
 function scheduleLiveRetry(name){
-  if(liveRetryTimer!==null||!name||route!==name||!currentId())return;
+  if(liveRetryTimer!==null||liveUserInteracted||!name||route!==name||!currentId())return;
   const delay=Math.min(45000,9000*Math.pow(2,Math.min(liveRetryAttempts++,2)));
   liveRetryTimer=setTimeout(()=>{
     liveRetryTimer=null;
@@ -470,9 +471,13 @@ function stageLivePage(name){
   livePreload=entry;
   // User interaction always wins over a background page swap.
   const mark=event=>{
-    if(livePreload!==entry||event?.isTrusted===false)return;
-    entry.interacted=true;
-    discardLivePreload(true);
+    if(event?.isTrusted===false||route!==entry.route)return;
+    liveUserInteracted=true;
+    clearLiveRetry();
+    if(livePreload===entry){
+      entry.interacted=true;
+      discardLivePreload(true);
+    }
   };
   if(host&&host.style.display!=='none'){
     ['pointerdown','keydown','input','change'].forEach(event=>host.addEventListener(event,mark,{once:true}));
@@ -529,6 +534,7 @@ function showRefreshTime(){
 async function open(name){
   clearLiveRetry();
   liveRetryAttempts=0;
+  liveUserInteracted=false;
   window.BBMobileUniversalReadOnlyV1?.stop();
   if(!canOpen(name)||!currentId())return false;
   discardLivePreload();
@@ -1141,7 +1147,7 @@ async function refreshRoute(name,safeRpc,canRoute){
 
 // A return of connectivity can happen without a browser 'online' event.
 function resumeCachedLive(){
-  if(!route||$('moduleScreen')?.hidden||document.visibilityState==='hidden'||
+  if(!route||liveUserInteracted||$('moduleScreen')?.hidden||document.visibilityState==='hidden'||
      !offline()?.canUseNetwork())return;
   if(livePreload){
     // Do not interrupt a healthy in-progress preload. Only restart a stale one.
