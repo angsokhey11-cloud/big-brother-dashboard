@@ -63,7 +63,7 @@ REVOKE ALL ON public.bb_fcm_deliveries_v1 FROM PUBLIC,anon,authenticated;
 -- no unexpected data are inserted by Code Sync.
 DO $bb_fcm_verify$
 DECLARE t text; spec jsonb; x record; actual_type text; actual_nullable text;
-DECLARE kcount integer; existing_count bigint;
+kcount integer; existing_count bigint;
 BEGIN
  FOR t,spec IN SELECT * FROM (VALUES
   ('bb_fcm_config_v1','{"id":"smallint:NO","enabled":"boolean:NO","updated_at":"timestamp with time zone:NO"}'::jsonb),
@@ -87,6 +87,10 @@ BEGIN
        RAISE EXCEPTION 'CODE_SYNC_STOP: public.%.% differs from Cloud',t,x.key;
      END IF;
    END LOOP;
+   IF has_table_privilege('anon',format('public.%I',t),'SELECT,INSERT,UPDATE,DELETE')
+      OR has_table_privilege('authenticated',format('public.%I',t),'SELECT,INSERT,UPDATE,DELETE') THEN
+     RAISE EXCEPTION 'CODE_SYNC_STOP: public.% exposes FCM data to client roles',t;
+   END IF;
    IF EXISTS(SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename=t) THEN
      RAISE EXCEPTION 'CODE_SYNC_STOP: unexpected FCM local access policy public.%',t;
    END IF;
@@ -122,7 +126,8 @@ BEGIN
    EXECUTE format('ALTER TABLE public.%I ENABLE ALWAYS TRIGGER bb_local_business_only_replay_guard_v1',t);
    IF NOT EXISTS(SELECT 1 FROM pg_trigger WHERE
       tgrelid=format('public.%I',t)::regclass
-      AND tgname='bb_local_business_only_replay_guard_v1' AND tgenabled='A') THEN
+      AND tgname='bb_local_business_only_replay_guard_v1' AND tgenabled='A'
+      AND tgfoid='private.bb_local_reject_infrastructure_replay_v1()'::regprocedure::oid) THEN
      RAISE EXCEPTION 'CODE_SYNC_STOP: FCM ALWAYS replay guard missing on %',t;
    END IF;
  END LOOP;
