@@ -67,6 +67,12 @@ const ROUTES={
   'master-expense-categories':{tab:'more',icon:'💸',label:'Expense Categories',url:'https://angsokhey11-cloud.github.io/big-brother-master-data/expense-categories.html?embed=1&v=21'},
   'master-audit-center':{tab:'more',icon:'🛡️',label:'Audit & Correction Center',url:'https://angsokhey11-cloud.github.io/big-brother-master-data/audit-center.html?embed=1&v=20260927-2'},
   'staff-relation':{tab:'more',icon:'🤝',label:'Staff Relation',url:'https://angsokhey11-cloud.github.io/big-brother-staff-relation/mobile.html?embed=1&v=20261025-admin-onbehalf2'},
+  // Existing admin functions were missing from the mobile routing table.
+  // Only openable by an admin or an explicitly authorized route grant.
+  // Hidden from the regular mobile menu; notification links can use them.
+  'admin-pending-receivable':{tab:'more',notificationOnly:true,icon:'',label:'Review Receivable Request',url:'https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=pending-receivable'},
+  'admin-pending-daily-cash':{tab:'more',notificationOnly:true,icon:'',label:'Review Cash Request',url:'https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=pending-daily-cash'},
+  'admin-staff-request':{tab:'more',notificationOnly:true,icon:'',label:'Review Staff Request',url:'https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=staff-request'},
   'notification-center':{tab:'more',icon:'🔔',label:'Notifications',url:'https://angsokhey11-cloud.github.io/big-brother-admin-work/company-control.html?embed=1&view=notifications&v=20261029-bb-inbox1'}
 };
 
@@ -191,7 +197,7 @@ function canRoute(route){
   if(action==='approve')return g.canApprove===true;
   return g.canView===true;
 }
-function permittedRoutes(tab){return Object.entries(ROUTES).filter(([route,item])=>item.tab===tab&&canRoute(route))}
+function permittedRoutes(tab){return Object.entries(ROUTES).filter(([route,item])=>item.tab===tab&&!item.notificationOnly&&canRoute(route))}
 function availableCount(){return Object.keys(ROUTES).filter(canRoute).length}
 
 function displayName(){return profile?.staff?.staffName||profile?.user?.staffName||profile?.user?.email?.split('@')[0]||'BIG BROTHER User'}
@@ -495,6 +501,10 @@ async function activate(){
   // Direct module links need authentication and permissions, not a blocking Home overview.
   // The unified Home controller still loads independently; returning Home refreshes live data.
   if(requested&&ROUTES[requested]&&canRoute(requested)&&openModule(requested,false))return;
+  // Never silently land on Home for a push targeting an unimplemented
+  // module. Keep the notification event available in Notification Center.
+  if(new URLSearchParams(location.search).has('bb_notice')&&
+     canRoute('notification-center')&&openModule('notification-center',false))return;
   // Display the authenticated shell immediately after access is verified.
   // The live overview can refresh without holding the entire mobile app on
   // its loading screen. Server-side permissions and all writes remain live.
