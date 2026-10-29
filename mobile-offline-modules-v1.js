@@ -187,6 +187,8 @@ function createHost(){
   return host;
 }
 function close(){
+  clearLiveRetry();
+  liveRetryAttempts=0;
   discardLivePreload();
   openEpoch++;
   closeReceivableSummary();
@@ -239,12 +241,30 @@ function announceOpen(name){
  * a user's selected invoice, report filter or in-progress calculation.
  */
 let livePreload=null;
+let liveRetryTimer=null,liveRetryAttempts=0,lastLiveAttempt=0;
+function clearLiveRetry(){
+  if(liveRetryTimer!==null)clearTimeout(liveRetryTimer);
+  liveRetryTimer=null;
+}
+function scheduleLiveRetry(name){
+  if(liveRetryTimer!==null||!name||route!==name||!currentId())return;
+  const delay=Math.min(45000,9000*Math.pow(2,Math.min(liveRetryAttempts++,2)));
+  liveRetryTimer=setTimeout(()=>{
+    liveRetryTimer=null;
+    if(route!==name||livePreload||document.visibilityState==='hidden'||
+       $('moduleScreen')?.hidden||!offline()?.canUseNetwork())return;
+    stageLivePage(name);
+  },delay);
+}
 function discardLivePreload(fallback=false){
   const entry=livePreload;
   if(!entry)return;
   livePreload=null;
   try{clearInterval(entry.interval);clearTimeout(entry.timeout)}catch(_){}
   try{entry.frame?.remove()}catch(_){}
+  // Retry only a timed-out/failed load. A user's interaction must NEVER
+  // trigger a surprise live swap while they are selecting or editing data.
+  if(fallback&&!entry.interacted&&route===entry.route)scheduleLiveRetry(entry.route);
   if(fallback&&route===entry.route&&offline()?.canUseNetwork()&&!$('moduleScreen')?.hidden){
     // The full live page was abandoned (e.g. salesman began editing).
     // Update only this cached view in place, without loading a second full page.
@@ -358,6 +378,8 @@ function commitLivePreload(entry){
   if(!screen||screen.hidden||!old||!entry.frame?.parentNode)return discardLivePreload();
   if($('bbOfflineSummaryPrint'))return discardLivePreload();
   livePreload=null;
+  clearLiveRetry();
+  liveRetryAttempts=0;
   clearInterval(entry.interval);clearTimeout(entry.timeout);
   const original=entry.frame;
   const label=window.BBMobileHomeRouteAccessV1?.label(entry.route)||
@@ -411,6 +433,7 @@ function commitLivePreload(entry){
   }
 }
 function stageLivePage(name){
+  clearLiveRetry();
   discardLivePreload();
   if(!offline()?.canUseNetwork()||!currentId())return;
   // Sales Support extras (including Your Receivable) live in the authorized
@@ -428,6 +451,7 @@ function stageLivePage(name){
   const screen=$('moduleScreen'),current=$('moduleFrame');
   if(!screen||!current||screen.hidden||!route)return;
   const entry={route:name,userId:currentId(),frame:null,interacted:false,interval:null,timeout:null};
+  lastLiveAttempt=Date.now();
   const staged=document.createElement('iframe');
   staged.id='bbLiveStagedFrame';
   staged.className=current.className||'module-frame';
@@ -503,6 +527,8 @@ function showRefreshTime(){
   notice('Data as of '+savedAt);
 }
 async function open(name){
+  clearLiveRetry();
+  liveRetryAttempts=0;
   window.BBMobileUniversalReadOnlyV1?.stop();
   if(!canOpen(name)||!currentId())return false;
   discardLivePreload();
@@ -1113,5 +1139,24 @@ async function refreshRoute(name,safeRpc,canRoute){
   try{return await request}finally{refreshPending.delete(key)}
 }
 
-window.BBMobileOfflineModulesV1={open,canOpen,available,sync,refreshRoute,close};
+// A return of connectivity can happen without a browser 'online' event.
+function resumeCachedLive(){
+  if(!route||$('moduleScreen')?.hidden||document.visibilityState==='hidden'||
+     !offline()?.canUseNetwork())return;
+  if(livePreload){
+    // Do not interrupt a healthy in-progress preload. Only restart a stale one.
+    if(Date.now()-lastLiveAttempt<15000)return;
+    discardLivePreload();
+  }
+  if(Date.now()-lastLiveAttempt<9000)return;
+  stageLivePage(route);
+}
+window.addEventListener('bb:mobile-reconnected',resumeCachedLive);
+window.addEventListener('online',resumeCachedLive);
+window.addEventListener('focus',resumeCachedLive);
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible')resumeCachedLive();
+});
+window.BBMobileOfflineModulesV1={open,canOpen,available,sync,refreshRoute,close,
+  isCachedActive:()=>!!route&&!$('moduleScreen')?.hidden};
 })();
