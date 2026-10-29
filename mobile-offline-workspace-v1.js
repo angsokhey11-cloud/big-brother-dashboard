@@ -146,13 +146,13 @@ function resumeLocalSync(){
   lastLocalResume=now;
   window.dispatchEvent(new Event('bb:mobile-reconnected'));
 }
-/* Reconnect watchdog V3.
- * navigator.onLine may stay TRUE when V6 is stopped or Internet is too slow.
- * HEAD requests are not intercepted by our GET-only service worker, so they
- * test the real HTTPS host instead of receiving the cached mobile shell.
- * In LOCAL mode always check the actual V6 HTTPS host: Wi-Fi can stay online
- * for hours after Caddy shuts down. In CLOUD mode check only on a cached or
- * previously failed screen. These checks never query Supabase or reload. */
+/* Reconnect watchdog V4: a genuine GET, not HEAD.
+ * The local V6 server can reject HEAD while its GET dashboard routes work.
+ * A GET for index.html is deliberately outside MOBILE_FILES and therefore
+ * bypasses our cached mobile service worker: it tests the REAL HTTPS server.
+ * Do not gate any future requests on this status: it is an indicator only.
+ * Cloud mode remains conditional so slow Internet doesn't add background load.
+ */
 let reconnectProbeRunning=false,lastReconnectProbeAt=0;
 function cachedScreenVisible(){
   const screen=document.getElementById('moduleScreen');
@@ -165,22 +165,24 @@ function cachedScreenVisible(){
   return !!frame?.hasAttribute('srcdoc');
 }
 async function probeLiveHost(){
-  if(LOCAL_MODE&&window.__BBNativeV6Health===true)return;
   if(document.visibilityState==='hidden'||reconnectProbeRunning||
      (!LOCAL_MODE&&connection&&!cachedScreenVisible()))return;
   const now=Date.now();
-  if(now-lastReconnectProbeAt<(LOCAL_MODE?9000:12000))return;
+  if(now-lastReconnectProbeAt<(LOCAL_MODE?7000:12000))return;
   lastReconnectProbeAt=now;
   reconnectProbeRunning=true;
   const controller=new AbortController();
   const abort=setTimeout(()=>controller.abort(),6000);
   try{
-    const response=await fetch(new URL('./mobile.html',location.href),{
-      method:'HEAD',cache:'no-store',signal:controller.signal
+    // index.html is a real file in this dashboard, NOT in the mobile SW's
+    // cached-file allowlist. A unique query and no-store bypass HTTP caches.
+    const url=new URL(LOCAL_MODE?'./index.html':'./mobile.html',location.href);
+    url.searchParams.set('bb_live_probe',String(Date.now()));
+    const response=await fetch(url,{
+      method:LOCAL_MODE?'GET':'HEAD',
+      cache:'no-store',redirect:'error',signal:controller.signal
     });
-    // Some V6 GET-only routes reply 405 for HEAD even when the host is healthy.
-    if(!response.ok&&!(LOCAL_MODE&&response.status===405))
-      throw Error('Local/online host not ready');
+    if(!response.ok)throw Error('BIG BROTHER host not ready');
     const wasOffline=!connection;
     setConnection(true);
     // The initial cached page already attempts a seamless live handoff;
@@ -193,7 +195,7 @@ async function probeLiveHost(){
     reconnectProbeRunning=false;
   }
 }
-setInterval(()=>{void probeLiveHost()},12000);
+setInterval(()=>{void probeLiveHost()},LOCAL_MODE?9000:12000);
 window.addEventListener('focus',()=>{
   if(LOCAL_MODE)void probeLiveHost();
   resumeLocalSync();
