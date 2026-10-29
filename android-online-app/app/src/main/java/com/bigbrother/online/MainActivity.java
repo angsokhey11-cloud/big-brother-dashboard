@@ -257,12 +257,19 @@ public final class MainActivity extends Activity {
 
     private String urlFromNotification(Intent intent) {
         if (intent == null) return HOME;
+        // Firebase handles notification+data messages itself when the APK is
+        // backgrounded. Its tap Intent contains the ORIGINAL FCM data names,
+        // while our foreground NotificationManager uses bb_notification_*.
+        // Accept both, with exactly the same trusted route allowlist.
         String route=intent.getStringExtra("bb_notification_route");
+        if(route==null||route.isEmpty())route=intent.getStringExtra("route");
         if(route==null||!route.matches("[a-z0-9-]{2,70}"))return HOME;
         Uri.Builder u=Uri.parse(HOME).buildUpon().appendQueryParameter("module",route);
         String event=intent.getStringExtra("bb_notification_event");
+        if(event==null||event.isEmpty())event=intent.getStringExtra("eventKey");
         if(event!=null && event.matches("[a-zA-Z0-9_./:-]{1,180}"))u.appendQueryParameter("bb_notice",event);
         String entity=intent.getStringExtra("bb_notification_entity");
+        if(entity==null||entity.isEmpty())entity=intent.getStringExtra("entityId");
         if(entity!=null && entity.matches("[a-zA-Z0-9_./:-]{1,120}"))u.appendQueryParameter("bb_entity",entity);
         return u.build().toString();
     }
