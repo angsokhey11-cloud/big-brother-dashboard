@@ -67,18 +67,26 @@ public final class MainActivity extends Activity {
     private boolean checkV6Https(){
         HttpURLConnection con=null;
         try{
-            URL url=new URL(HOME+"&bb_hostcheck=1");
+            // GET the actual app page, not HEAD: some local Caddy routes
+            // reject HEAD even when the server is up. The Android network
+            // client bypasses all WebView HTTP caches and service workers.
+            URL url=new URL(HOME+"&bb_hostcheck="+System.currentTimeMillis());
             con=(HttpURLConnection)url.openConnection();
-            con.setRequestMethod("HEAD");
+            con.setRequestMethod("GET");
             con.setUseCaches(false);
-            con.setInstanceFollowRedirects(false);
-            con.setConnectTimeout(3500);
-            con.setReadTimeout(3500);
-            con.setRequestProperty("Cache-Control","no-store, no-cache");
+            con.setInstanceFollowRedirects(true);
+            con.setConnectTimeout(4000);
+            con.setReadTimeout(4000);
+            con.setRequestProperty("Cache-Control","no-store, no-cache, max-age=0");
+            con.setRequestProperty("Pragma","no-cache");
             int code=con.getResponseCode();
-            // 405 is legitimate if a V6 proxy accepts GET but rejects HEAD.
-            // Redirects, auth failures and server errors are not healthy.
-            return (code>=200&&code<300)||code==405;
+            URL finalUrl=con.getURL();
+            // Never accept redirects to the cloud or an untrusted hostname.
+            // A 200 from the real LOCAL dashboard means Caddy and V6 work.
+            return code==200
+                &&"https".equalsIgnoreCase(finalUrl.getProtocol())
+                &&"bigbrother.local".equalsIgnoreCase(finalUrl.getHost())
+                &&finalUrl.getPort()==8443;
         }catch(Exception ignored){
             // TLS/hostname verification remains mandatory: never bypass SSL.
             return false;
