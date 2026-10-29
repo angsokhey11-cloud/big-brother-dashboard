@@ -3,8 +3,8 @@ setlocal
 title BIG BROTHER - Local Brain Read-Only Sync Diagnostic
 echo.
 echo BIG BROTHER - READ-ONLY LOCAL SYNC DIAGNOSTIC
-echo This checks actual Windows controller files and Local payment indexes.
-echo It does NOT run Code Sync, Cloud-to-Local, or SQL changes.
+echo This checks actual controller, recent sync errors, notification/FCM parity and payment indexes.
+echo It does NOT run Code Sync, Cloud-to-Local, or any database changes.
 echo.
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0V34-READONLY-LOCAL-SYNC-DIAGNOSTIC-V1.ps1"
 if errorlevel 1 (
