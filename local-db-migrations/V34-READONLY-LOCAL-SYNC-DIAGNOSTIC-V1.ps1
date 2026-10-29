@@ -36,6 +36,7 @@ function InspectScripts([string]$filter,[bool]$controller) {
                 'BANK_STAGE_PARITY_STEP_V1',
                 '6A/8 Verify Local and staging payment index compatibility',
                 'BUSINESS_ONLY_STAGE: 4 device infrastructure tables',
+                'BUSINESS_ONLY_STAGE: 8 notification infrastructure tables',
                 'CODE_SYNC_GATE_CHECK_ONLY',
                 'LOCAL_FOUNDATION_READ_ONLY',
                 '08D-CHECK-STAGE-PAYMENTS-INDEX-V1.sql',
@@ -97,6 +98,9 @@ if(-not(Test-Path -LiteralPath $LocalBrainRoot -PathType Container)){
         Report ('ACTIVE_08_SHA256: '+(Get-FileHash -LiteralPath $active08 -Algorithm SHA256).Hash)
         $ctrl=[System.IO.File]::ReadAllText($active08,[System.Text.Encoding]::UTF8)
         Report ('ACTIVE_08_STAGING_REWRITER: '+$ctrl.Contains('Rewrite-CloudDumpForStage'))
+        Report ('ACTIVE_08_EIGHT_INFRA_FILTER: '+$ctrl.Contains('BUSINESS_ONLY_STAGE: 8 notification infrastructure tables'))
+        Report ('ACTIVE_08_CODE_SYNC_ONLY_GATE: '+$ctrl.Contains('CODE_SYNC_GATE_CHECK_ONLY'))
+        Report ('ACTIVE_08_FOUNDATION_READ_ONLY: '+$ctrl.Contains('LOCAL_FOUNDATION_READ_ONLY'))
         foreach($table in $infra){
             Report ('ACTIVE_08_MENTIONS_INFRA_'+$table+': '+$ctrl.Contains($table))
         }
@@ -136,7 +140,7 @@ if(-not(Test-Path -LiteralPath $LocalBrainRoot -PathType Container)){
         Report ('SQL_MIGRATION_REPORT_PATH: '+$file.FullName)
         Report ('  LastWrite: '+$file.LastWriteTime.ToString('yyyy-MM-dd HH:mm:ss'))
         try{
-            $hits=@(Select-String -LiteralPath $file.FullName -Pattern '20261025_payment_transaction_index_cloud_parity_v1','20261025_bank_partial_use_cloud_parity_v1' -SimpleMatch -ErrorAction Stop)
+            $hits=@(Select-String -LiteralPath $file.FullName -Pattern '20261025_payment_transaction_index_cloud_parity_v1','20261025_bank_partial_use_cloud_parity_v1','20261029_android_fcm_local_schema_only_v1' -SimpleMatch -ErrorAction Stop)
             foreach($hit in ($hits | Select-Object -Last 12)){
                 $value=$hit.Line.Trim()
                 if($value.Length -gt 350){$value=$value.Substring(0,350)+'...'}
