@@ -48,11 +48,21 @@ jobs:
         run: |
           set -euo pipefail
           umask 077
-          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/BB-Android-Stable-Release.p12"
-          test -s "$RUNNER_TEMP/BB-Android-Stable-Release.p12"
-          keytool -list -storetype PKCS12 \
+          # Never display the secret, the password or keystore bytes in logs.
+          if ! printf '%s' "$KEYSTORE_B64" | tr -d '\r\n\t ' | base64 --decode > "$RUNNER_TEMP/BB-Android-Stable-Release.p12" 2>/dev/null; then
+            echo "::error::BB_STABLE_KEYSTORE_B64 is invalid Base64. Re-copy only its long value line from the private signing backup."
+            exit 1
+          fi
+          if [[ ! -s "$RUNNER_TEMP/BB-Android-Stable-Release.p12" ]]; then
+            echo "::error::Decoded signing keystore is empty. Re-copy BB_STABLE_KEYSTORE_B64."
+            exit 1
+          fi
+          if ! keytool -list -storetype PKCS12 \
             -keystore "$RUNNER_TEMP/BB-Android-Stable-Release.p12" \
-            -storepass "$KEYSTORE_PASSWORD" -alias bigbrother >/dev/null
+            -storepass "$KEYSTORE_PASSWORD" -alias bigbrother >/dev/null 2>&1; then
+            echo "::error::Signing key cannot unlock. Re-copy BB_STABLE_KEYSTORE_PASSWORD and BB_STABLE_KEYSTORE_B64 from their exact value lines in the private backup."
+            exit 1
+          fi
           echo "BB_STABLE_KEYSTORE_FILE=$RUNNER_TEMP/BB-Android-Stable-Release.p12" >> "$GITHUB_ENV"
           echo "BB_STABLE_VERSION_CODE=$((10000 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
           echo "BB_STABLE_VERSION_NAME=1.1.$GITHUB_RUN_NUMBER" >> "$GITHUB_ENV"
