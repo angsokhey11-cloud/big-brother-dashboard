@@ -37,3 +37,5 @@ jobs:
           name: BB-Local-v104-unsigned-internal
           path: android-local-app/app/build/outputs/apk/release/app-release-unsigned.apk
           retention-days: 1
+
+# Build latest V6 health-state reconciliation fix.
