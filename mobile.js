@@ -72,7 +72,7 @@ const ROUTES={
   // Hidden from the regular mobile menu; notification links can use them.
   'admin-pending-receivable':{tab:'more',notificationOnly:true,icon:'',label:'Review Receivable Request',url:'https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=pending-receivable'},
   'admin-pending-daily-cash':{tab:'more',notificationOnly:true,icon:'',label:'Review Cash Request',url:'https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=pending-daily-cash'},
-  'admin-staff-request':{tab:'more',notificationOnly:true,icon:'',label:'Review Staff Request',url:'https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=staff-request'},
+  'admin-staff-request':{tab:'more',icon:'👥',label:'Staff Request',url:'https://angsokhey11-cloud.github.io/big-brother-admin-work/staff-request-mobile.html?embed=1&v=20261029-mobile-sr1'},
   'notification-center':{tab:'more',icon:'🔔',label:'Notifications',url:'https://angsokhey11-cloud.github.io/big-brother-admin-work/company-control.html?embed=1&view=notifications&v=20261029-bb-inbox1'}
 };
 
