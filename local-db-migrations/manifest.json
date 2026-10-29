@@ -122,6 +122,12 @@
       "file": "20261029_android_fcm_local_schema_only_v1.sql",
       "sha256": "96E0C50DFDB2CC52A16B1C4029CEA3F2832865A3C1DA8112B9337EC8040F7E71",
       "description": "Code Sync ONLY: create empty, protected Android FCM tables and ALWAYS replay guards; preserve salaries, bank, payments, local-only rows; no Firebase device data copied"
+    },
+    {
+      "id": "20261029_your_stock_notification_route_v1",
+      "file": "20261029_your_stock_notification_route_v1.sql",
+      "sha256": "6364CA8227F991D90B5A56CB9FA8122BA07E3ECC842DD14B578A9E2E8A9283CF",
+      "description": "Cloud/Local Stock assignment alerts open staff Your Stock instead of Batch Report; guarded notification-only function route and existing event links; no stock/accounting changes"
     }
   ]
 }
