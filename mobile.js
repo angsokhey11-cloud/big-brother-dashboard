@@ -501,7 +501,31 @@ async function activate(){
   showHome(!requested,true);
   void loadOverview(true);
 }
+// Browser PWA and Android Firebase both supply the same notification keys.
+// Save the exact receivable customer focus before any cached navigation runs.
+function captureNotificationDeepLink(){
+  try{
+    const p=new URLSearchParams(location.search);
+    const route=p.get('module')||'';
+    const eventKey=p.get('bb_notice')||'';
+    const entityId=p.get('bb_entity')||'';
+    if(!eventKey||!ROUTES[route])return;
+    if(!/^[a-zA-Z0-9_./:-]{1,180}$/.test(eventKey))return;
+    if(!/^[a-zA-Z0-9_./:-]{1,120}$/.test(entityId)&&entityId)return;
+    sessionStorage.setItem('BB_NOTIFICATION_TARGET_V2',
+      JSON.stringify({route,entityId,notificationKey:eventKey}));
+    if((route==='ar-your'||route==='ar-all')&&entityId&&
+       /^(?:AR-OVERDUE:|OVERDUE-CUSTOMER:)/.test(eventKey)){
+      sessionStorage.setItem('BB_NOTIFICATION_AR_FOCUS_V1',
+        JSON.stringify({
+          route,customerId:entityId,
+          view:'Overdue Only',createdAt:Date.now()
+        }));
+    }
+  }catch(_){}
+}
 async function boot(){
+  captureNotificationDeepLink();
   hideAll();$('bootScreen').hidden=false;
   const offline=window.BBMobileOfflineWorkspaceV1;
   const saved=readSession();
@@ -514,7 +538,10 @@ async function boot(){
     if(savedProfile?.value){
       profile=savedProfile.value;
       overview=savedOverview?.value||null;
-      showHome(true,true);
+      // A push tap is a one-use deep link. Do not replace its module URL
+      // with Home while rendering the cached profile before live auth.
+      const pushRoute=new URLSearchParams(location.search).get('module')||'';
+      showHome(!pushRoute,true);
       offline.updateIndicator();
       openedFromCache=true;
     }
