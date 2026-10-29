@@ -11,7 +11,7 @@ const LEGACY_TEST_KEY_PREFIX='bb_mobile_offline_test_v1::';
 const MAX_AGE_MS=7*24*60*60*1000;
 const LOCAL_MODE=new URLSearchParams(location.search).get('localbrain')==='1';
 let lastLocalResume=0;
-let connection=navigator.onLine!==false;
+let connection=LOCAL_MODE?false:navigator.onLine!==false;
 let latestSync=0,dbPromise=null,initializedFor='';
 function currentUserId(){
   try{
@@ -86,7 +86,7 @@ async function clearUser(userId=currentUserId()){
 }
 // navigator.onLine is a hint; do not permanently block retrying cloud reads
 // after a transient request failure while Wi-Fi itself remains connected.
-function canUseNetwork(){return navigator.onLine!==false}
+function canUseNetwork(){return navigator.onLine!==false&&(!LOCAL_MODE||connection)}
 function setConnection(ok){
   connection=!!ok;
   updateIndicator();
@@ -148,8 +148,9 @@ function resumeLocalSync(){
  * navigator.onLine may stay TRUE when V6 is stopped or Internet is too slow.
  * HEAD requests are not intercepted by our GET-only service worker, so they
  * test the real HTTPS host instead of receiving the cached mobile shell.
- * Only check when a cached/offline screen is actually visible or a previous
- * live request failed. Never run periodic Supabase RPCs or reload the page. */
+ * In LOCAL mode always check the actual V6 HTTPS host: Wi-Fi can stay online
+ * for hours after Caddy shuts down. In CLOUD mode check only on a cached or
+ * previously failed screen. These checks never query Supabase or reload. */
 let reconnectProbeRunning=false,lastReconnectProbeAt=0;
 function cachedScreenVisible(){
   const screen=document.getElementById('moduleScreen');
@@ -163,9 +164,9 @@ function cachedScreenVisible(){
 }
 async function probeLiveHost(){
   if(document.visibilityState==='hidden'||reconnectProbeRunning||
-     (connection&&!cachedScreenVisible()))return;
+     (!LOCAL_MODE&&connection&&!cachedScreenVisible()))return;
   const now=Date.now();
-  if(now-lastReconnectProbeAt<12000)return;
+  if(now-lastReconnectProbeAt<(LOCAL_MODE?9000:12000))return;
   lastReconnectProbeAt=now;
   reconnectProbeRunning=true;
   const controller=new AbortController();
@@ -175,7 +176,8 @@ async function probeLiveHost(){
       method:'HEAD',cache:'no-store',signal:controller.signal
     });
     // Some V6 GET-only routes reply 405 for HEAD even when the host is healthy.
-    if(!response.ok&&response.status!==405)throw Error('Local/online host not ready');
+    if(!response.ok&&!(LOCAL_MODE&&response.status===405))
+      throw Error('Local/online host not ready');
     const wasOffline=!connection;
     setConnection(true);
     // The initial cached page already attempts a seamless live handoff;
@@ -189,13 +191,29 @@ async function probeLiveHost(){
   }
 }
 setInterval(()=>{void probeLiveHost()},12000);
-window.addEventListener('focus',resumeLocalSync);
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')resumeLocalSync()});
+window.addEventListener('focus',()=>{
+  if(LOCAL_MODE)void probeLiveHost();
+  resumeLocalSync();
+});
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'){
+    if(LOCAL_MODE)void probeLiveHost();
+    resumeLocalSync();
+  }
+});
 window.addEventListener('offline',()=>setConnection(false));
 window.addEventListener('online',()=>{
-  setConnection(true);
-  window.dispatchEvent(new Event('bb:mobile-reconnected'));
+  if(LOCAL_MODE){
+    // Joining Wi-Fi is not proof that V6 has started.
+    void probeLiveHost();
+  }else{
+    setConnection(true);
+    window.dispatchEvent(new Event('bb:mobile-reconnected'));
+  }
 });
+// Local mode starts from a verified HTTPS check, not navigator.onLine.
+// Start right away; don't force staff to wait for the 12-second timer.
+if(LOCAL_MODE)void probeLiveHost();
 window.BBMobileOfflineWorkspaceV1={
   read,write,clearUser,currentUserId,canUseNetwork,setConnection,success,init,updateIndicator,
   offlineRouteAllowed:()=>false
