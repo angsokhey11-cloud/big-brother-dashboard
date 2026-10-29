@@ -7,6 +7,15 @@ import android.os.Build;
 import org.json.JSONObject;
 import com.google.firebase.messaging.FirebaseMessaging;
 import android.content.Intent;
+import android.content.ClipData;
+import android.provider.MediaStore;
+import android.webkit.PermissionRequest;
+import android.webkit.GeolocationPermissions;
+import android.webkit.ValueCallback;
+import androidx.core.content.FileProvider;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.net.Uri;
@@ -42,14 +51,22 @@ public final class MainActivity extends Activity {
     private static final String TRUSTED_HOST = "angsokhey11-cloud.github.io";
     private static final int FILE_CHOOSE_REQUEST = 4127;
     private static final int REQUEST_ANDROID_NOTIFICATIONS = 4128;
+    private static final int REQUEST_CAMERA_CAPTURE = 4129;
+    private static final int REQUEST_WEB_MEDIA = 4130;
+    private static final int REQUEST_WEB_LOCATION = 4131;
     private static final String STABLE_PACKAGE = "com.bigbrother.online.stable";
     private WebView browser;
     private View overlay;
     private TextView overlayTitle;
     private TextView overlayMessage;
     private Button retry;
-    private WebChromeClient.FileChooserParams unusedChooserParams;
-    private android.webkit.ValueCallback<Uri[]> fileChooserCallback;
+    private ValueCallback<Uri[]> fileChooserCallback;
+    private WebChromeClient.FileChooserParams pendingChooserParams;
+    private Uri capturePhotoUri;
+    private File capturePhotoFile;
+    private PermissionRequest pendingMediaPermission;
+    private GeolocationPermissions.Callback pendingGeolocationCallback;
+    private String pendingGeolocationOrigin;
     private boolean failed;
     private final Handler reconnectHandler=new Handler(Looper.getMainLooper());
     private int retryAttempts=0;
@@ -101,6 +118,7 @@ public final class MainActivity extends Activity {
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
+        cleanExpiredCameraFiles();
         getWindow().setStatusBarColor(Color.rgb(10,36,64));
         getWindow().setNavigationBarColor(Color.rgb(10,36,64));
 
@@ -117,30 +135,63 @@ public final class MainActivity extends Activity {
         config.setDomStorageEnabled(true);
         config.setDatabaseEnabled(true);
         config.setAllowFileAccess(false);
-        config.setAllowContentAccess(false);
+        // Gallery and captured photo URIs arrive through the trusted Android picker.
+        // Do not enable broad file:// access or JavaScript-to-native bridges.
+        config.setAllowContentAccess(true);
+        config.setGeolocationEnabled(true);
         config.setJavaScriptCanOpenWindowsAutomatically(false);
         config.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         config.setCacheMode(WebSettings.LOAD_DEFAULT);
         config.setSupportZoom(false);
         CookieManager.getInstance().setAcceptCookie(true);
         browser.setWebChromeClient(new WebChromeClient() {
-            @Override public boolean onShowFileChooser(
-                WebView webView,
-                android.webkit.ValueCallback<Uri[]> callback,
-                FileChooserParams fileChooserParams
-            ) {
+            @Override public boolean onShowFileChooser(WebView webView,
+                ValueCallback<Uri[]> callback, FileChooserParams params) {
+                if (!isTrustedOrigin(webView.getUrl())) {
+                    callback.onReceiveValue(null);
+                    return true;
+                }
                 if (fileChooserCallback != null) fileChooserCallback.onReceiveValue(null);
                 fileChooserCallback = callback;
-                try {
-                    // Android system picker, including gallery/photos/document files.
-                    // No broad storage permission and no JavaScript native bridge.
-                    Intent intent = fileChooserParams.createIntent();
-                    startActivityForResult(intent, FILE_CHOOSE_REQUEST);
-                    return true;
-                } catch (Exception e) {
-                    fileChooserCallback = null;
-                    return false;
+                pendingChooserParams = params;
+                if (params.isCaptureEnabled() && isImageUpload(params)) {
+                    if (hasAndroidPermission(Manifest.permission.CAMERA)) {
+                        openNativeCamera();
+                    } else {
+                        requestPermissions(new String[]{Manifest.permission.CAMERA},
+                            REQUEST_CAMERA_CAPTURE);
+                    }
+                } else {
+                    openFilePicker();
                 }
+                return true;
+            }
+            @Override public void onPermissionRequest(PermissionRequest request) {
+                runOnUiThread(() -> requestTrustedWebMedia(request));
+            }
+            @Override public void onPermissionRequestCanceled(PermissionRequest request) {
+                if (pendingMediaPermission == request) pendingMediaPermission = null;
+            }
+            @Override public void onGeolocationPermissionsShowPrompt(
+                String origin, GeolocationPermissions.Callback callback) {
+                if (!isTrustedOrigin(origin)) {
+                    callback.invoke(origin, false, false);
+                    return;
+                }
+                if (hasAndroidPermission(Manifest.permission.ACCESS_FINE_LOCATION) ||
+                    hasAndroidPermission(Manifest.permission.ACCESS_COARSE_LOCATION)) {
+                    callback.invoke(origin, true, false);
+                    return;
+                }
+                if (pendingGeolocationCallback != null) {
+                    pendingGeolocationCallback.invoke(pendingGeolocationOrigin, false, false);
+                }
+                pendingGeolocationCallback = callback;
+                pendingGeolocationOrigin = origin;
+                requestPermissions(new String[]{
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                }, REQUEST_WEB_LOCATION);
             }
         });
         browser.setWebViewClient(new WebViewClient() {
@@ -255,6 +306,140 @@ public final class MainActivity extends Activity {
         browser.loadUrl(urlFromNotification(getIntent()));
     }
 
+    /** Restrict camera, microphone and location to BIG BROTHER's HTTPS origin. */
+    private boolean isTrustedOrigin(String url) {
+        if (url == null) return false;
+        try {
+            Uri u = Uri.parse(url);
+            return "https".equalsIgnoreCase(u.getScheme())
+                && TRUSTED_HOST.equalsIgnoreCase(u.getHost())
+                && (u.getPort() == -1 || u.getPort() == 443);
+        } catch (Exception e) { return false; }
+    }
+    private boolean isTrustedOrigin(Uri uri) {
+        return uri != null && isTrustedOrigin(uri.toString());
+    }
+    private boolean hasAndroidPermission(String permission) {
+        return checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED;
+    }
+    private boolean isImageUpload(WebChromeClient.FileChooserParams params) {
+        for (String type : params.getAcceptTypes()) {
+            if (type != null && (type.toLowerCase().startsWith("image/")
+                || type.toLowerCase().contains("image/*"))) return true;
+        }
+        return false;
+    }
+    private void finishFileChooser(Uri[] uris) {
+        ValueCallback<Uri[]> cb = fileChooserCallback;
+        fileChooserCallback = null;
+        pendingChooserParams = null;
+        capturePhotoFile = null;
+        capturePhotoUri = null;
+        if (cb != null) cb.onReceiveValue(uris);
+    }
+    private Uri[] filterPickedFiles(Uri[] uris) {
+        if (uris == null || uris.length == 0) return null;
+        ArrayList<Uri> safe = new ArrayList<>();
+        for (Uri uri : uris) {
+            if (uri == null || !"content".equalsIgnoreCase(uri.getScheme())) return null;
+            // The private camera URI is only valid when WE initiated capture.
+            if ((getPackageName() + ".camera.fileprovider").equals(uri.getAuthority()))
+                return null;
+            safe.add(uri);
+        }
+        return safe.toArray(new Uri[0]);
+    }
+    private void openFilePicker() {
+        if (fileChooserCallback == null || pendingChooserParams == null) return;
+        try {
+            Intent pick = pendingChooserParams.createIntent();
+            startActivityForResult(pick, FILE_CHOOSE_REQUEST);
+        } catch (Exception e) {
+            finishFileChooser(null);
+        }
+    }
+    private void openNativeCamera() {
+        if (fileChooserCallback == null || pendingChooserParams == null) return;
+        try {
+            File folder = new File(getCacheDir(), "bb_invoice_camera");
+            if (!folder.isDirectory() && !folder.mkdirs())
+                throw new java.io.IOException("Camera cache unavailable");
+            capturePhotoFile = File.createTempFile("invoice_", ".jpg", folder);
+            capturePhotoUri = FileProvider.getUriForFile(
+                this, getPackageName() + ".camera.fileprovider", capturePhotoFile);
+            Intent camera = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            camera.putExtra(MediaStore.EXTRA_OUTPUT, capturePhotoUri);
+            camera.setClipData(ClipData.newRawUri("BIG BROTHER camera photo", capturePhotoUri));
+            camera.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION |
+                Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            startActivityForResult(camera, FILE_CHOOSE_REQUEST);
+        } catch (Exception e) {
+            if (capturePhotoFile != null) capturePhotoFile.delete();
+            capturePhotoFile = null;
+            capturePhotoUri = null;
+            // Even if the system camera is missing, users can import a photo.
+            openFilePicker();
+        }
+    }
+    private void requestTrustedWebMedia(PermissionRequest request) {
+        if (!isTrustedOrigin(request.getOrigin()) || browser == null) {
+            request.deny();
+            return;
+        }
+        if (pendingMediaPermission != null && pendingMediaPermission != request)
+            pendingMediaPermission.deny();
+        pendingMediaPermission = null;
+        List<String> wanted = new ArrayList<>();
+        List<String> missing = new ArrayList<>();
+        for (String resource : request.getResources()) {
+            String permission;
+            if (PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(resource)) {
+                permission = Manifest.permission.CAMERA;
+            } else if (PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(resource)) {
+                permission = Manifest.permission.RECORD_AUDIO;
+            } else {
+                request.deny(); // Never implicitly grant new/unknown WebView resources.
+                return;
+            }
+            if (!wanted.contains(resource)) wanted.add(resource);
+            if (!hasAndroidPermission(permission) && !missing.contains(permission))
+                missing.add(permission);
+        }
+        if (wanted.isEmpty()) { request.deny(); return; }
+        if (missing.isEmpty()) {
+            request.grant(wanted.toArray(new String[0]));
+            return;
+        }
+        pendingMediaPermission = request;
+        requestPermissions(missing.toArray(new String[0]), REQUEST_WEB_MEDIA);
+    }
+    private void finishWebMediaPermission() {
+        PermissionRequest req = pendingMediaPermission;
+        pendingMediaPermission = null;
+        if (req == null) return;
+        if (!isTrustedOrigin(req.getOrigin())) { req.deny(); return; }
+        ArrayList<String> allowed = new ArrayList<>();
+        for (String resource : req.getResources()) {
+            if (PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(resource)
+                && hasAndroidPermission(Manifest.permission.CAMERA))
+                allowed.add(resource);
+            else if (PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(resource)
+                && hasAndroidPermission(Manifest.permission.RECORD_AUDIO))
+                allowed.add(resource);
+        }
+        if (allowed.isEmpty()) req.deny();
+        else req.grant(allowed.toArray(new String[0]));
+    }
+    private void cleanExpiredCameraFiles() {
+        File folder = new File(getCacheDir(), "bb_invoice_camera");
+        File[] files = folder.listFiles();
+        if (files == null) return;
+        long before = System.currentTimeMillis() - 24L * 60 * 60 * 1000;
+        for (File file : files) {
+            if (file.isFile() && file.lastModified() < before) file.delete();
+        }
+    }
+
     private String urlFromNotification(Intent intent) {
         if (intent == null) return HOME;
         // Firebase handles notification+data messages itself when the APK is
@@ -292,8 +477,29 @@ public final class MainActivity extends Activity {
     }
     @Override public void onRequestPermissionsResult(int code,String[] permissions,int[] grants){
         super.onRequestPermissionsResult(code,permissions,grants);
-        if(code==REQUEST_ANDROID_NOTIFICATIONS && grants.length>0 &&
-           grants[0]==PackageManager.PERMISSION_GRANTED)enableAndroidNotifications();
+        if(code==REQUEST_ANDROID_NOTIFICATIONS) {
+            if(grants.length>0 && grants[0]==PackageManager.PERMISSION_GRANTED)
+                enableAndroidNotifications();
+            return;
+        }
+        if(code==REQUEST_CAMERA_CAPTURE) {
+            if(hasAndroidPermission(Manifest.permission.CAMERA)) openNativeCamera();
+            else openFilePicker(); // Photos/PDF still available if Camera was declined.
+            return;
+        }
+        if(code==REQUEST_WEB_MEDIA) {
+            finishWebMediaPermission();
+            return;
+        }
+        if(code==REQUEST_WEB_LOCATION) {
+            if(pendingGeolocationCallback != null) {
+                boolean granted=hasAndroidPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+                    || hasAndroidPermission(Manifest.permission.ACCESS_COARSE_LOCATION);
+                pendingGeolocationCallback.invoke(pendingGeolocationOrigin,granted,false);
+                pendingGeolocationCallback=null;
+                pendingGeolocationOrigin=null;
+            }
+        }
     }
     private void syncFirebaseToken(){
         if(!STABLE_PACKAGE.equals(getPackageName())||!nativePushEnabled()||browser==null)return;
@@ -326,12 +532,15 @@ public final class MainActivity extends Activity {
     }
     @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode,resultCode,data);
-        if (requestCode == FILE_CHOOSE_REQUEST && fileChooserCallback != null) {
-            fileChooserCallback.onReceiveValue(
-                WebChromeClient.FileChooserParams.parseResult(resultCode,data)
-            );
-            fileChooserCallback = null;
-        }
+        if (requestCode != FILE_CHOOSE_REQUEST || fileChooserCallback == null) return;
+        Uri[] results = null;
+        boolean captured = resultCode == RESULT_OK && capturePhotoUri != null
+            && capturePhotoFile != null && capturePhotoFile.length() > 0L;
+        if (captured) results = new Uri[]{capturePhotoUri};
+        else if (resultCode == RESULT_OK)
+            results = filterPickedFiles(WebChromeClient.FileChooserParams.parseResult(resultCode,data));
+        if (!captured && capturePhotoFile != null) capturePhotoFile.delete();
+        finishFileChooser(results);
     }
     @Override public void onBackPressed() {
         if (browser != null && browser.canGoBack()) browser.goBack();
@@ -349,9 +558,14 @@ public final class MainActivity extends Activity {
     }
     @Override protected void onDestroy() {
         reconnectHandler.removeCallbacks(retryOpen);
-        if (fileChooserCallback != null) {
-            fileChooserCallback.onReceiveValue(null);
-            fileChooserCallback = null;
+        if (fileChooserCallback != null) finishFileChooser(null);
+        if (pendingMediaPermission != null) {
+            pendingMediaPermission.deny();
+            pendingMediaPermission = null;
+        }
+        if (pendingGeolocationCallback != null) {
+            pendingGeolocationCallback.invoke(pendingGeolocationOrigin,false,false);
+            pendingGeolocationCallback = null;
         }
         if (browser != null) {
             browser.stopLoading();
