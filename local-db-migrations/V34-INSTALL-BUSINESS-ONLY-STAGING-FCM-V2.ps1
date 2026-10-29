@@ -139,23 +139,47 @@ if($patched.IndexOf($gateOld) -lt 0 -or $patched.IndexOf($gateOld) -ne $patched.
   throw 'CONTROLLER_UPDATE_STOP: unable to locate SQL code gate for read-only mode.'
 }
 $patched=$patched.Replace($gateOld,$gateNew)
-$foundationOld=@'
-Write-Step "5/8 Install/verify Local permanent-ID foundation"
-Invoke-PsqlFile $dbContainer $foundationSql "/tmp/08A-foundation-v1.2.sql"
-'@
+# Windows CRLF did not match the previous LF-only two-line literal.
+# Identify the unique actual permanent-ID foundation SQL invocation by AST.
+$foundationTokens=$null
+$foundationErrors=$null
+$foundationAst=[System.Management.Automation.Language.Parser]::ParseInput(
+  $patched,[ref]$foundationTokens,[ref]$foundationErrors)
+if($foundationErrors -and $foundationErrors.Count -gt 0){
+  throw 'CONTROLLER_UPDATE_STOP: controller has parse errors before foundation edit.'
+}
+$foundationCalls=@($foundationAst.FindAll({
+  param($node)
+  $node -is [System.Management.Automation.Language.CommandAst] -and
+  $node.GetCommandName() -eq 'Invoke-PsqlFile' -and
+  $node.Extent.Text -match '\$foundationSql\b'
+},$true))
+if($foundationCalls.Count -ne 1){
+  throw "CONTROLLER_UPDATE_STOP: expected one foundation SQL invocation, found $($foundationCalls.Count). No changes made."
+}
+$call=$foundationCalls[0].Extent
 $foundationNew=@'
-Write-Step "5/8 Verify Local permanent-ID foundation (READ ONLY)"
-# LOCAL_FOUNDATION_READ_ONLY: Code Sync installs the foundation, not business sync.
+# LOCAL_FOUNDATION_READ_ONLY: only Code Sync manages the ID foundation.
 $readinessSql="select case when to_regclass('public.bb_id_counters') is not null and to_regclass('public.bb_permanent_id_registry') is not null then 'READY' else 'MISSING' end;"
-$ready=& docker exec $dbContainer psql -U postgres -d postgres -At -v ON_ERROR_STOP=1 -c $readinessSql
-if($LASTEXITCODE -ne 0 -or (($ready -join "`n").Trim() -ne 'READY')){
+$ready=@(& docker exec $dbContainer psql -X -U postgres -d postgres -qAt -v ON_ERROR_STOP=1 -c $readinessSql 2>&1)
+if($LASTEXITCODE -ne 0 -or (($ready -join [Environment]::NewLine).Trim() -ne 'READY')){
   Fail 'Local permanent-ID foundation not ready. Run Code Sync first.'
 }
 '@
-if($patched.IndexOf($foundationOld) -lt 0 -or $patched.IndexOf($foundationOld) -ne $patched.LastIndexOf($foundationOld)){
-  throw 'CONTROLLER_UPDATE_STOP: unable to locate existing foundation installation step.'
+$patched=$patched.Substring(0,$call.StartOffset)+$foundationNew+$patched.Substring($call.EndOffset)
+$patched=$patched.Replace(
+  '5/8 Install/verify Local permanent-ID foundation',
+  '5/8 Verify Local permanent-ID foundation (READ ONLY)')
+if($patched -match '(?im)Invoke-PsqlFile[^\r\n]*\$foundationSql'){
+  throw 'CONTROLLER_UPDATE_STOP: foundation SQL execution still present after patch.'
 }
-$patched=$patched.Replace($foundationOld,$foundationNew)
+$finalTokens=$null
+$finalErrors=$null
+$null=[System.Management.Automation.Language.Parser]::ParseInput(
+  $patched,[ref]$finalTokens,[ref]$finalErrors)
+if($finalErrors -and $finalErrors.Count -gt 0){
+  throw 'CONTROLLER_UPDATE_STOP: final controller parse failed. No changes made.'
+}
 $patched=$patched.Replace("Write-Step '4B/8 Verify approved Local SQL code updates'","Write-Step '4B/8 Verify Code Sync SQL state (READ ONLY)'")
 if(-not ($patched.Contains('BUSINESS_ONLY_STAGE: 8 notification infrastructure tables') -and
          $patched.Contains('CODE_SYNC_GATE_CHECK_ONLY') -and
