@@ -67,7 +67,7 @@ const ROUTES={
   'master-expense-categories':{tab:'more',icon:'💸',label:'Expense Categories',url:'https://angsokhey11-cloud.github.io/big-brother-master-data/expense-categories.html?embed=1&v=21'},
   'master-audit-center':{tab:'more',icon:'🛡️',label:'Audit & Correction Center',url:'https://angsokhey11-cloud.github.io/big-brother-master-data/audit-center.html?embed=1&v=20260927-2'},
   'staff-relation':{tab:'more',icon:'🤝',label:'Staff Relation',url:'https://angsokhey11-cloud.github.io/big-brother-staff-relation/mobile.html?embed=1&v=20261025-admin-onbehalf2'},
-  'notification-center':{tab:'more',icon:'🔔',label:'Notifications',url:'https://angsokhey11-cloud.github.io/big-brother-admin-work/company-control.html?embed=1&view=notifications&v=1'}
+  'notification-center':{tab:'more',icon:'🔔',label:'Notifications',url:'https://angsokhey11-cloud.github.io/big-brother-admin-work/company-control.html?embed=1&view=notifications&v=20261029-bb-inbox1'}
 };
 
 // Authorized original live page URL for the mobile cache-first handoff.
