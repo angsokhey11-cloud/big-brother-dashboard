@@ -517,7 +517,7 @@ function stageLivePage(name){
   screen.appendChild(staged);
   staged.addEventListener('load',check);
   entry.interval=setInterval(check,180);
-  entry.timeout=setTimeout(()=>{if(livePreload===entry)discardLivePreload(true)},90000);
+  entry.timeout=setTimeout(()=>{if(livePreload===entry)discardLivePreload(true)},60000);
   // Start after the cached screen has already appeared. No await or spinner.
   staged.src=url.toString();
   return true;
