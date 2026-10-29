@@ -7,6 +7,7 @@ plugins {
 def stableStorePath = System.getenv('BB_STABLE_KEYSTORE_FILE')
 def stableStorePassword = System.getenv('BB_STABLE_KEYSTORE_PASSWORD')
 def stableVersionCode = System.getenv('BB_STABLE_VERSION_CODE')
+def stableVersionName = System.getenv('BB_STABLE_VERSION_NAME')
 
 android {
     namespace 'com.bigbrother.online'
@@ -16,7 +17,7 @@ android {
         minSdk 26
         targetSdk 35
         versionCode stableVersionCode ? Integer.parseInt(stableVersionCode) : 3
-        versionName '1.0.3'
+        versionName stableVersionName ?: '1.0.3'
     }
     signingConfigs {
         bbStable {
