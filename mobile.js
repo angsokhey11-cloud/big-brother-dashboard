@@ -376,7 +376,10 @@ function openModule(route,updateUrl=true,forceLive=false){
   const item=ROUTES[route];if(!item){toast('This mobile route is not ready yet.');return false}if(!canRoute(route)){toast('Access denied for this function.');return false}
   const offline=window.BBMobileOfflineWorkspaceV1;
   const cached=window.BBMobileOfflineModulesV1;
-  if(!forceLive&&cached?.canOpen(route)){
+  // Approval pages are transactional. Never show a cached read-only copy
+  // when the user taps Review/Approve or opens a notification.
+  const liveApproval=route==='admin-staff-request';
+  if(!forceLive&&!liveApproval&&cached?.canOpen(route)){
     void cached.open(route).then(ok=>{
       if(!ok){
         if(offline?.canUseNetwork())openModule(route,updateUrl,true);
@@ -386,7 +389,7 @@ function openModule(route,updateUrl=true,forceLive=false){
     return true;
   }
   const universal=window.BBMobileUniversalReadOnlyV1;
-  if(!forceLive&&universal&&!['history','monthly-sales-report','sales-support-your-stock','sales-support-batch-selling-tracker','daily-sale-summary'].includes(route)){
+  if(!forceLive&&!liveApproval&&universal&&!['history','monthly-sales-report','sales-support-your-stock','sales-support-batch-selling-tracker','daily-sale-summary'].includes(route)){
     // Every permitted route can use its previously saved, non-executable
     // original UI first, even while internet is slow.
     void universal.open(route).then(ok=>{
