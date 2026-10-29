@@ -174,7 +174,8 @@ async function probeLiveHost(){
     const response=await fetch(new URL('./mobile.html',location.href),{
       method:'HEAD',cache:'no-store',signal:controller.signal
     });
-    if(!response.ok)throw Error('Local/online host not ready');
+    // Some V6 GET-only routes reply 405 for HEAD even when the host is healthy.
+    if(!response.ok&&response.status!==405)throw Error('Local/online host not ready');
     const wasOffline=!connection;
     setConnection(true);
     // The initial cached page already attempts a seamless live handoff;
