@@ -53,4 +53,5 @@ android {
 // FCM operates independently of the WebView's browser-push support.
 dependencies {
     implementation 'com.google.firebase:firebase-messaging:26.0.1'
+    implementation 'androidx.core:core:1.15.0'
 }
