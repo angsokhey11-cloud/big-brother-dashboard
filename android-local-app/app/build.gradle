@@ -1,6 +1,13 @@
 plugins {
     id 'com.android.application'
 }
+
+// Stable release signing is supplied ONLY from protected GitHub Actions secrets.
+// Do not put the private keystore or its password in the public repository.
+def stableStorePath = System.getenv('BB_STABLE_KEYSTORE_FILE')
+def stableStorePassword = System.getenv('BB_STABLE_KEYSTORE_PASSWORD')
+def stableVersionCode = System.getenv('BB_STABLE_VERSION_CODE')
+
 android {
     namespace 'com.bigbrother.localbrain'
     compileSdk 35
@@ -8,12 +15,33 @@ android {
         applicationId 'com.bigbrother.localbrain'
         minSdk 26
         targetSdk 35
-        versionCode 3
-        versionName '1.0.2-auto-reconnect'
+        versionCode stableVersionCode ? Integer.parseInt(stableVersionCode) : 3
+        versionName '1.0.3'
+    }
+    signingConfigs {
+        bbStable {
+            if (stableStorePath && stableStorePassword) {
+                storeFile file(stableStorePath)
+                storePassword stableStorePassword
+                keyAlias 'bigbrother'
+                keyPassword stableStorePassword
+                storeType 'pkcs12'
+            }
+        }
     }
     buildTypes {
+        // Keep the old preview package IDs untouched for data-safe migration.
         debug { minifyEnabled false }
-        release { minifyEnabled false }
+        // A separate permanent app can be installed beside legacy debug APKs.
+        // Future stable releases use the SAME package ID + SAME certificate.
+        release {
+            applicationIdSuffix '.stable'
+            versionNameSuffix '-stable'
+            minifyEnabled false
+            if (stableStorePath && stableStorePassword) {
+                signingConfig signingConfigs.bbStable
+            }
+        }
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
