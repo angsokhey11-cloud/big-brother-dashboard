@@ -16,8 +16,8 @@ android {
         applicationId 'com.bigbrother.online'
         minSdk 26
         targetSdk 35
-        versionCode stableVersionCode ? Integer.parseInt(stableVersionCode) : 3
-        versionName stableVersionName ?: '1.0.3'
+        versionCode stableVersionCode ? Integer.parseInt(stableVersionCode) : 4
+        versionName stableVersionName ?: '1.0.4'
     }
     signingConfigs {
         bbStable {
@@ -43,6 +43,9 @@ android {
                 signingConfig signingConfigs.bbStable
             }
         }
+    }
+    dependencies {
+        implementation 'com.google.firebase:firebase-messaging:26.0.1'
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
