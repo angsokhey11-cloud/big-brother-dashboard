@@ -10,6 +10,31 @@ const api=()=>window.BBMobileOfflineWorkspaceV1;
 const prefix='route-static-ui::';
 const MAX_BYTES=1350000;
 let live=null,epoch=0;
+let cachedEntry=null,retryTimer=null,retryCount=0,lastRetryAt=0;
+function clearRetry(){
+  if(retryTimer!==null)clearTimeout(retryTimer);
+  retryTimer=null;
+}
+function scheduleCachedRetry(){
+  if(retryTimer!==null||!cachedEntry)return;
+  const delay=Math.min(45000,9000*Math.pow(2,Math.min(retryCount++,2)));
+  retryTimer=setTimeout(()=>{
+    retryTimer=null;
+    resumeCachedLive();
+  },delay);
+}
+function resumeCachedLive(){
+  const saved=cachedEntry,screen=$('moduleScreen');
+  if(!saved||live||!screen||screen.hidden||document.visibilityState==='hidden'||
+     !api()?.canUseNetwork()||api().currentUserId()!==saved.user)return;
+  if($('moduleFrame')!==saved.visible||!saved.visible.hasAttribute('srcdoc')){
+    cachedEntry=null;clearRetry();return;
+  }
+  if(Date.now()-lastRetryAt<9000){
+    scheduleCachedRetry();return;
+  }
+  preload(saved.route,saved.url,saved.visible,saved.id);
+}
 const $=id=>document.getElementById(id);
 function access(route){
   const core=window.BBMobileLiveRoutesV1;
@@ -186,6 +211,9 @@ function watch(route,frame){
 }
 function stop(){
   epoch++;
+  cachedEntry=null;
+  retryCount=0;
+  clearRetry();
   if(live){
     clearInterval(live.interval);clearTimeout(live.timeout);
     try{live.frame.remove()}catch(_){}
@@ -235,6 +263,7 @@ async function open(route){
   const menu=$('moduleTitle');if(menu)menu.textContent=window.BBMobileLiveRoutesV1?.label?.(route)||window.BBMobileHomeRouteAccessV1?.label?.(route)||route;
   const nav=window.BBMobileHistoryV7||window.BBMobileHistoryV6;
   if(nav&&!nav.isRestoring?.())nav.recordModule(route,true);
+  cachedEntry={route,url,visible:snapshot,id,user};
   if(!api()?.canUseNetwork())return true;
   // Once the cached read-only UI is painted, load the genuine page out of view.
   requestAnimationFrame(()=>preload(route,url,snapshot,id));
@@ -251,6 +280,7 @@ function preload(route,url,visible,id){
   frame.style.cssText='position:absolute!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important;width:100%!important;height:100%!important;z-index:-1!important';
   frame.id='bbUniversalStaged';
   const entry={frame,route,user,started:Date.now(),interval:0,timeout:0};
+  lastRetryAt=Date.now();
   live=entry;screen.appendChild(frame);
   const cancel=()=>{if(live===entry)stop()};
   visible.addEventListener('pointerdown',cancel,{once:true});
@@ -260,6 +290,7 @@ function preload(route,url,visible,id){
     if(id!==epoch||screen.hidden||!api()?.canUseNetwork()||api().currentUserId()!==user)return stop();
     if(!onlineReady(frame,entry.started))return;
     live=null;clearInterval(entry.interval);clearTimeout(entry.timeout);
+    cachedEntry=null;clearRetry();retryCount=0;
     const liveFrame=frame;const sourceFrame=$('moduleFrame');
     if(!sourceFrame||sourceFrame!==visible){liveFrame.remove();return}
     // Never move the already loaded frame: replaceWith() reparents it and
@@ -290,8 +321,23 @@ function preload(route,url,visible,id){
     }));
   };
   entry.interval=setInterval(check,250);
-  entry.timeout=setTimeout(()=>{if(live===entry)stop()},90000);
+  entry.timeout=setTimeout(()=>{
+    if(live!==entry)return;
+    clearInterval(entry.interval);
+    live=null;
+    try{entry.frame.remove()}catch(_){}
+    // Keep the existing static UI visible and retry the SAME route.
+    // Never reset navigation or overwrite the user's current screen.
+    scheduleCachedRetry();
+  },90000);
   frame.src=url;
 }
-window.BBMobileUniversalReadOnlyV1={available,open,watch,capture,stop};
+window.addEventListener('bb:mobile-reconnected',resumeCachedLive);
+window.addEventListener('online',resumeCachedLive);
+window.addEventListener('focus',resumeCachedLive);
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible')resumeCachedLive();
+});
+window.BBMobileUniversalReadOnlyV1={available,open,watch,capture,stop,
+  isCachedActive:()=>!!cachedEntry&&!$('moduleScreen')?.hidden};
 })();
