@@ -1,6 +1,11 @@
 package com.bigbrother.online;
 
 import android.app.Activity;
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.os.Build;
+import org.json.JSONObject;
+import com.google.firebase.messaging.FirebaseMessaging;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -36,6 +41,8 @@ public final class MainActivity extends Activity {
       "https://angsokhey11-cloud.github.io/big-brother-dashboard/mobile.html?source=android-online";
     private static final String TRUSTED_HOST = "angsokhey11-cloud.github.io";
     private static final int FILE_CHOOSE_REQUEST = 4127;
+    private static final int REQUEST_ANDROID_NOTIFICATIONS = 4128;
+    private static final String STABLE_PACKAGE = "com.bigbrother.online.stable";
     private WebView browser;
     private View overlay;
     private TextView overlayTitle;
@@ -140,6 +147,14 @@ public final class MainActivity extends Activity {
             @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 Uri uri = request.getUrl();
                 if (!request.isForMainFrame()) return false;
+                if ("bb-notify".equalsIgnoreCase(uri.getScheme())) {
+                    // One explicit trusted top-level navigation; NO JS interface.
+                    String current = browser.getUrl();
+                    if (STABLE_PACKAGE.equals(getPackageName()) &&
+                        current != null && current.startsWith("https://" + TRUSTED_HOST + "/big-brother-dashboard/") &&
+                        "enable".equalsIgnoreCase(uri.getHost())) enableAndroidNotifications();
+                    return true;
+                }
                 if ("https".equalsIgnoreCase(uri.getScheme())
                     && TRUSTED_HOST.equalsIgnoreCase(uri.getHost())) return false;
                 if ("https".equalsIgnoreCase(uri.getScheme()) ||
@@ -161,6 +176,8 @@ public final class MainActivity extends Activity {
                     stopRetry();
                     overlay.setVisibility(View.GONE);
                 }
+                if(url!=null && url.startsWith("https://"+TRUSTED_HOST+"/big-brother-dashboard/"))
+                    view.postDelayed(()->syncFirebaseToken(),350);
             }
             @Override public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
                 if (request.isForMainFrame()) {
@@ -235,7 +252,53 @@ public final class MainActivity extends Activity {
         overlay = panel;
         setContentView(root);
         showLoading();
-        browser.loadUrl(HOME);
+        browser.loadUrl(urlFromNotification(getIntent()));
+    }
+
+    private String urlFromNotification(Intent intent) {
+        if (intent == null) return HOME;
+        String route=intent.getStringExtra("bb_notification_route");
+        if(route==null||!route.matches("[a-z0-9-]{2,70}"))return HOME;
+        Uri.Builder u=Uri.parse(HOME).buildUpon().appendQueryParameter("module",route);
+        String event=intent.getStringExtra("bb_notification_event");
+        if(event!=null && event.matches("[a-zA-Z0-9_./:-]{1,180}"))u.appendQueryParameter("bb_notice",event);
+        String entity=intent.getStringExtra("bb_notification_entity");
+        if(entity!=null && entity.matches("[a-zA-Z0-9_./:-]{1,120}"))u.appendQueryParameter("bb_entity",entity);
+        return u.build().toString();
+    }
+    @Override protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        if(browser!=null)browser.loadUrl(urlFromNotification(intent));
+    }
+    private boolean nativePushEnabled(){
+        return getSharedPreferences("bb_online_native_push_v1",MODE_PRIVATE).getBoolean("enabled",false);
+    }
+    private void enableAndroidNotifications(){
+        if(Build.VERSION.SDK_INT>=33 &&
+           checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED){
+            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS},REQUEST_ANDROID_NOTIFICATIONS);
+            return;
+        }
+        getSharedPreferences("bb_online_native_push_v1",MODE_PRIVATE).edit().putBoolean("enabled",true).apply();
+        syncFirebaseToken();
+    }
+    @Override public void onRequestPermissionsResult(int code,String[] permissions,int[] grants){
+        super.onRequestPermissionsResult(code,permissions,grants);
+        if(code==REQUEST_ANDROID_NOTIFICATIONS && grants.length>0 &&
+           grants[0]==PackageManager.PERMISSION_GRANTED)enableAndroidNotifications();
+    }
+    private void syncFirebaseToken(){
+        if(!STABLE_PACKAGE.equals(getPackageName())||!nativePushEnabled()||browser==null)return;
+        if(Build.VERSION.SDK_INT>=33 &&
+           checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED)return;
+        final String page=browser.getUrl();
+        if(page==null || !page.startsWith("https://"+TRUSTED_HOST+"/big-brother-dashboard/"))return;
+        FirebaseMessaging.getInstance().getToken().addOnSuccessListener(token->{
+            if(browser==null || token==null || token.isEmpty())return;
+            String script="window.BBNativePushV1&&window.BBNativePushV1.onToken("+JSONObject.quote(token)+")";
+            browser.evaluateJavascript(script,null);
+        });
     }
 
     private void showLoading() {
@@ -273,6 +336,7 @@ public final class MainActivity extends Activity {
     }
     @Override protected void onResume() {
         super.onResume();
+        if(browser!=null)browser.postDelayed(()->syncFirebaseToken(),750);
         if(overlay!=null&&overlay.getVisibility()==View.VISIBLE&&
            retry!=null&&retry.getVisibility()==View.VISIBLE)scheduleRetry();
     }
