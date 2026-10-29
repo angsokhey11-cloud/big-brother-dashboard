@@ -3,7 +3,7 @@
 -- Sales Support > Your Stock, not the admin-oriented Batch Report.
 -- Notification-only change: never alter stock, invoices, payments, or payroll.
 -- No new events are created; historical assignment alerts are re-pointed.
--- Safe to re-run; fail closed if the notification capture function has drifted.
+-- Local intentionally may lack Cloud capture functions. In that case route-only Code Sync skips them safely.
 
 DO $bb_route_patch$
 DECLARE
@@ -12,11 +12,15 @@ DECLARE
   v_new constant text := '''sales-support-your-stock''';
   v_occurrences integer;
 BEGIN
-  IF to_regprocedure('public.bb_notification_v2_capture()') IS NULL
-     OR to_regclass('public.bb_notification_events_v2') IS NULL THEN
-    RAISE EXCEPTION 'BB_ROUTE_STOP: notification events/capture function missing';
+  IF to_regclass('public.bb_notification_events_v2') IS NULL THEN
+    RAISE EXCEPTION 'BB_ROUTE_STOP: Local notification event table missing; install Local schema prerequisite first';
   END IF;
 
+  -- Local Code Sync deliberately installs protected notification infrastructure
+  -- without copying Cloud notification capture functions/triggers. That is safe.
+  IF to_regprocedure('public.bb_notification_v2_capture()') IS NULL THEN
+    RAISE NOTICE 'BB_ROUTE_LOCAL_NO_CAPTURE: Cloud-only capture function absent on Local. No Local function or trigger installed.';
+  ELSE
   SELECT pg_get_functiondef('public.bb_notification_v2_capture()'::regprocedure)
     INTO v_definition;
 
@@ -34,6 +38,7 @@ BEGIN
   ELSE
     RAISE EXCEPTION 'BB_ROUTE_STOP: expected exactly one old route; found %',v_occurrences;
   END IF;
+  END IF;
 END
 $bb_route_patch$;
 
@@ -47,16 +52,23 @@ UPDATE public.bb_notification_events_v2
 DO $bb_route_verify$
 DECLARE v_definition text;
 BEGIN
-  SELECT pg_get_functiondef('public.bb_notification_v2_capture()'::regprocedure)
-    INTO v_definition;
-  IF position('''sales-support-your-stock''' IN v_definition)=0
-     OR position('''batch-report''' IN v_definition)>0
-     OR EXISTS (
-         SELECT 1 FROM public.bb_notification_events_v2
-          WHERE category='Stock' AND audience='staff'
-            AND event_key LIKE 'ASSIGN:%' AND route='batch-report'
-       ) THEN
-    RAISE EXCEPTION 'BB_ROUTE_STOP: route parity verification failed';
+  -- Existing staff assignment links must always point to Your Stock.
+  IF EXISTS (
+    SELECT 1 FROM public.bb_notification_events_v2
+     WHERE category='Stock' AND audience='staff'
+       AND event_key LIKE 'ASSIGN:%' AND route='batch-report'
+  ) THEN
+    RAISE EXCEPTION 'BB_ROUTE_STOP: historical staff assignment links still point to Batch Report';
+  END IF;
+
+  -- The Cloud-only capture function is optional in Local Brain.
+  IF to_regprocedure('public.bb_notification_v2_capture()') IS NOT NULL THEN
+    SELECT pg_get_functiondef('public.bb_notification_v2_capture()'::regprocedure)
+      INTO v_definition;
+    IF position('''sales-support-your-stock''' IN v_definition)=0
+       OR position('''batch-report''' IN v_definition)>0 THEN
+      RAISE EXCEPTION 'BB_ROUTE_STOP: existing Local capture function still has old route';
+    END IF;
   END IF;
 END
 $bb_route_verify$;
