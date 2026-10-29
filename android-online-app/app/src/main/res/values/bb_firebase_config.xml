@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Client-only Firebase configuration from the registered ONLINE app.
+     These are PUBLIC Firebase app identifiers, not a service-account key.
+     Do not store a Firebase Admin private key in the APK or repository.
+     These string resources are the equivalent of the google-services plugin
+     output and allow the existing debug build to compile. -->
+<resources>
+    <string name="google_app_id" translatable="false">1:991099776240:android:0c97558c1013c5a8016635</string>
+    <string name="gcm_defaultSenderId" translatable="false">991099776240</string>
+    <string name="google_api_key" translatable="false">AIzaSyBE8g_x39SIfLvXcP_IMWmGutgROlq-Q6A</string>
+    <string name="project_id" translatable="false">big-brother-notifications</string>
+    <string name="google_storage_bucket" translatable="false">big-brother-notifications.firebasestorage.app</string>
+</resources>
