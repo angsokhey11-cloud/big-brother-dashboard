@@ -534,10 +534,33 @@ async function boot(){
     showLogin('Connect once to sign in and download your offline workspace.');
   }
 }
-// Retry cloud synchronization when a connection returns, while the app is open.
+// Recheck the LIVE permission profile after host recovery, once at a time.
+// Never call activate() while a module is open: that would navigate back Home
+// and discard staff selections/filters just as their internet returns.
+let reconnectInFlight=false;
 window.addEventListener('bb:mobile-reconnected',()=>{
-  if(window.BBMobileOfflineWorkspaceV1?.canUseNetwork()===false)return;
-  if(readSession()?.access_token)void activate().catch(()=>window.BBMobileOfflineWorkspaceV1?.setConnection(false));
+  const offline=window.BBMobileOfflineWorkspaceV1;
+  if(reconnectInFlight||offline?.canUseNetwork()===false||!readSession()?.access_token)return;
+  reconnectInFlight=true;
+  void (async()=>{
+    try{
+      await ensureSession();
+      if($('moduleScreen')&&!$('moduleScreen').hidden){
+        const verified=await rpc('bb_current_access_profile');
+        if(verified){
+          profile=verified;
+          void offline?.write('access-profile',verified);
+          offline?.setConnection(true);
+        }
+      }else{
+        await activate();
+      }
+    }catch(error){
+      offline?.setConnection(false);
+    }finally{
+      reconnectInFlight=false;
+    }
+  })();
 });
 
 $('loginForm').addEventListener('submit',async event=>{
