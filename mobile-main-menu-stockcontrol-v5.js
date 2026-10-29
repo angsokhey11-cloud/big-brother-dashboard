@@ -166,7 +166,7 @@ const PC={
  'master-expense-categories':'https://angsokhey11-cloud.github.io/big-brother-master-data/expense-categories.html?embed=1&v=21',
  'master-audit-center':'https://angsokhey11-cloud.github.io/big-brother-master-data/audit-center.html?embed=1&v=20260927-1',
  'admin-deposit-history':'https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=deposit-history',
- 'admin-staff-request':'https://angsokhey11-cloud.github.io/big-brother-admin-work/staff-request-mobile.html?embed=1&v=20261029-staffrequest-router2',
+ 'admin-staff-request':'https://angsokhey11-cloud.github.io/big-brother-admin-work/staff-request-mobile.html?embed=1&v=20261029-batch-row-mobile3',
  'admin-request':'https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=admin-request',
  'admin-user-permissions':'https://angsokhey11-cloud.github.io/big-brother-admin-work/user-permissions.html?embed=1&v=20261018-date1',
  'notification-center':'https://angsokhey11-cloud.github.io/big-brother-admin-work/company-control.html?embed=1&view=notifications&v=20261018-date1'
