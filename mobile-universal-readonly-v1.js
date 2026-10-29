@@ -287,7 +287,14 @@ function preload(route,url,visible,id){
   visible.addEventListener('keydown',cancel,{once:true});
   const check=()=>{
     if(live!==entry)return;
-    if(id!==epoch||screen.hidden||!api()?.canUseNetwork()||api().currentUserId()!==user)return stop();
+    if(id!==epoch||screen.hidden||api().currentUserId()!==user)return stop();
+    if(!api()?.canUseNetwork()){
+      // Losing Wi-Fi must NOT forget the saved screen's pending handoff.
+      // The reconnect watcher can restart it when the host returns.
+      live=null;clearInterval(entry.interval);clearTimeout(entry.timeout);
+      try{entry.frame.remove()}catch(_){}
+      return;
+    }
     if(!onlineReady(frame,entry.started))return;
     live=null;clearInterval(entry.interval);clearTimeout(entry.timeout);
     cachedEntry=null;clearRetry();retryCount=0;
