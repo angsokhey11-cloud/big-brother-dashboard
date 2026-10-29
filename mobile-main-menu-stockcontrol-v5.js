@@ -89,6 +89,7 @@ const META={
 };
 
 const MOBILE={
+ 'admin-staff-request':'https://angsokhey11-cloud.github.io/big-brother-admin-work/staff-request-mobile.html?embed=1&v=20261029-option-b-compact4',
  'stock-control-allocation':'https://angsokhey11-cloud.github.io/big-brother-stock-allocation/mobile.html?embed=1&v=20261002-mobile1',
  'stock-control-batch-transfer':'https://angsokhey11-cloud.github.io/big-brother-stock-allocation/batch-transfer-mobile.html?embed=1&v=20261008-mobile1',
  'stock-control-back-sale':'https://angsokhey11-cloud.github.io/big-brother-stock-allocation/back-sale-mobile.html?embed=1&v=20261002-mobile1',
