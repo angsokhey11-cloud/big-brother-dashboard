@@ -11,6 +11,7 @@ const KEY='sb_publishable_w762jR65CWwlO30fKQsYOw_6L9grx8S';
 const SESSION='BB_SUPABASE_DEV_SESSION_V1';
 const SAVED='BB_NATIVE_FCM_REGISTER_V1';
 let ongoing=false;
+let activeToken='';
 function loggedIn(){
   try{
     const session=JSON.parse(localStorage.getItem(SESSION)||'null');
@@ -19,6 +20,7 @@ function loggedIn(){
 }
 async function onToken(token){
   if(typeof token!=='string'||token.length<20||token.length>4096||ongoing)return;
+  activeToken=token;
   const session=loggedIn();
   if(!session)return; // login page: register only when authenticated.
   const deviceKey=session.user.id+'::'+token;
@@ -57,6 +59,19 @@ function install(){
  b.innerHTML='<span aria-hidden="true">🔔</span><div><strong>Enable Android Notifications</strong><small id="bbNativeFCMStatus">Receive BIG BROTHER alerts even when the app is closed.</small></div>';
  signout.parentNode.insertBefore(b,signout);
  b.addEventListener('click',()=>{location.href='bb-notify://enable';});
+ // Capture sign-out before the SPA removes its session. keepalive allows the
+ // authenticated unlink request to finish while the UI changes screens.
+ signout.addEventListener('click',()=>{
+   const session=loggedIn();
+   if(!session || !activeToken)return;
+   try{fetch(BASE+'/rest/v1/rpc/bb_fcm_unregister_v1',{
+     method:'POST',keepalive:true,headers:{
+       'apikey':KEY,'authorization':'Bearer '+session.access_token,
+       'content-type':'application/json'
+     },body:JSON.stringify({p_token:activeToken})
+   }).catch(()=>{});}catch(_){}
+   localStorage.removeItem(SAVED);
+ },{capture:true});
  const web=document.getElementById('bbDevicePushButton');
  if(web)web.hidden=true; // Browser Web Push is not available in Android WebView.
 }
