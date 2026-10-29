@@ -126,8 +126,8 @@
     {
       "id": "20261029_your_stock_notification_route_v1",
       "file": "20261029_your_stock_notification_route_v1.sql",
-      "sha256": "6364CA8227F991D90B5A56CB9FA8122BA07E3ECC842DD14B578A9E2E8A9283CF",
-      "description": "Cloud/Local Stock assignment alerts open staff Your Stock instead of Batch Report; guarded notification-only function route and existing event links; no stock/accounting changes"
+      "sha256": "C18E08599F716BE02BB625DF763A24F94314CAE522D8B8C993A8C1ED2E41E133",
+      "description": "Code Sync notification-only: point batch-assignment alerts to Your Stock. Cloud capture function is optional in Local (protected notification infrastructure is schema-only); no Cloud-only trigger creation; no stock/accounting changes."
     }
   ]
 }
