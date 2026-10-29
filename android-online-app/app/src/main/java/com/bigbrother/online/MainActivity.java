@@ -6,6 +6,8 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.Gravity;
 import android.view.View;
 import android.webkit.CookieManager;
@@ -42,6 +44,26 @@ public final class MainActivity extends Activity {
     private WebChromeClient.FileChooserParams unusedChooserParams;
     private android.webkit.ValueCallback<Uri[]> fileChooserCallback;
     private boolean failed;
+    private final Handler reconnectHandler=new Handler(Looper.getMainLooper());
+    private int retryAttempts=0;
+    private final Runnable retryOpen=new Runnable(){
+        @Override public void run(){
+            if(isFinishing()||browser==null||overlay==null||
+                    overlay.getVisibility()!=View.VISIBLE||
+                    retry.getVisibility()!=View.VISIBLE)return;
+            browser.loadUrl(HOME);
+        }
+    };
+    private void scheduleRetry(){
+        if(isFinishing())return;
+        reconnectHandler.removeCallbacks(retryOpen);
+        long delay=Math.min(15000L,4000L << Math.min(retryAttempts++,2));
+        reconnectHandler.postDelayed(retryOpen,delay);
+    }
+    private void stopRetry(){
+        reconnectHandler.removeCallbacks(retryOpen);
+        retryAttempts=0;
+    }
 
     /**
      * Android 15 (API 35) enforces edge-to-edge for targetSdk 35 apps.
@@ -135,7 +157,10 @@ public final class MainActivity extends Activity {
                 super.onPageStarted(view, url, icon);
             }
             @Override public void onPageFinished(WebView view, String url) {
-                if (!failed) overlay.setVisibility(View.GONE);
+                if (!failed) {
+                    stopRetry();
+                    overlay.setVisibility(View.GONE);
+                }
             }
             @Override public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
                 if (request.isForMainFrame()) {
@@ -198,7 +223,10 @@ public final class MainActivity extends Activity {
         panel.addView(overlayMessage);
         retry = new Button(this);
         retry.setText("RETRY ONLINE");
-        retry.setOnClickListener(v -> browser.loadUrl(HOME));
+        retry.setOnClickListener(v -> {
+            reconnectHandler.removeCallbacks(retryOpen);
+            browser.loadUrl(HOME);
+        });
         LinearLayout.LayoutParams retryParams = new LinearLayout.LayoutParams(-2,-2);
         retryParams.gravity = Gravity.CENTER;
         retryParams.setMargins(0,dp(18),0,0);
@@ -221,9 +249,10 @@ public final class MainActivity extends Activity {
         if (overlay == null) return;
         overlay.setVisibility(View.VISIBLE);
         overlayTitle.setText("Unable to connect");
-        overlayMessage.setText("Check your internet connection and try again. " +
-            "Your BIG BROTHER Online account and existing saved data have not been cleared.");
+        overlayMessage.setText("Waiting for Internet. BIG BROTHER will automatically reconnect. " +
+            "Your account and existing saved data have not been cleared.");
         retry.setVisibility(View.VISIBLE);
+        scheduleRetry();
     }
     @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode,resultCode,data);
@@ -238,7 +267,17 @@ public final class MainActivity extends Activity {
         if (browser != null && browser.canGoBack()) browser.goBack();
         else super.onBackPressed();
     }
+    @Override protected void onPause() {
+        reconnectHandler.removeCallbacks(retryOpen);
+        super.onPause();
+    }
+    @Override protected void onResume() {
+        super.onResume();
+        if(overlay!=null&&overlay.getVisibility()==View.VISIBLE&&
+           retry!=null&&retry.getVisibility()==View.VISIBLE)scheduleRetry();
+    }
     @Override protected void onDestroy() {
+        reconnectHandler.removeCallbacks(retryOpen);
         if (fileChooserCallback != null) {
             fileChooserCallback.onReceiveValue(null);
             fileChooserCallback = null;
