@@ -163,6 +163,7 @@ function cachedScreenVisible(){
   return !!frame?.hasAttribute('srcdoc');
 }
 async function probeLiveHost(){
+  if(LOCAL_MODE&&window.__BBNativeV6Health===true)return;
   if(document.visibilityState==='hidden'||reconnectProbeRunning||
      (!LOCAL_MODE&&connection&&!cachedScreenVisible()))return;
   const now=Date.now();
