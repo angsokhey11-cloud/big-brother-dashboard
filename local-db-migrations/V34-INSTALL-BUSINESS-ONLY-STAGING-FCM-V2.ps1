@@ -1,7 +1,7 @@
 # BIG BROTHER V3.4 — One-time guarded Android FCM business-only controller upgrade after Code Sync.
 # This DOES NOT run SQL, Cloud -> Local, Code Sync or business transactions.
 # It backs up and updates the exact approved 08 PowerShell controller file.
-# Refuses unknown files, multiple copies, and missing Code Sync schema.
+# Refuses unknown controller SHA, missing Code Sync schema and unsafe edits.
 [CmdletBinding()]
 param(
   [string]$LocalBrainRoot = 'D:\BIG BROTHER Local Backup\Local Brain',
@@ -106,11 +106,30 @@ function Rewrite-CloudDumpForStage {
     Write-Host "BUSINESS_ONLY_STAGE: 8 notification infrastructure tables have empty stage data (skipped $skipped rows); Cloud capture unchanged." -ForegroundColor Green
 }
 '@
-$pattern='(?s)function Rewrite-CloudDumpForStage \{.*?(?=\r?\nWrite-Host ""\r?\n)'
-$m=[regex]::Matches($source,$pattern)
-if($m.Count -ne 1){throw "CONTROLLER_UPDATE_STOP: cannot isolate existing stage function safely (matches $($m.Count))."}
-$replacement=$func + [Environment]::NewLine
-$patched=$source.Substring(0,$m[0].Index)+$replacement+$source.Substring($m[0].Index+$m[0].Length)
+# Parse exact function boundaries using PowerShell's own parser. Never
+# splice based on a neighboring Write-Host line or match arbitrary helper code.
+$parseTokens=$null
+$parseErrors=$null
+$ast=[System.Management.Automation.Language.Parser]::ParseInput(
+  $source,[ref]$parseTokens,[ref]$parseErrors)
+if(@($parseErrors).Count -gt 0){
+  throw 'CONTROLLER_UPDATE_STOP: original controller PowerShell parse failed. No changes made.'
+}
+$functions=@($ast.FindAll({
+  param($node)
+  $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and
+  $node.Name -eq 'Rewrite-CloudDumpForStage'
+},$true))
+if($functions.Count -ne 1){
+  throw "CONTROLLER_UPDATE_STOP: expected exactly one stage rewrite function, found $($functions.Count)"
+}
+$start=$functions[0].Extent.StartOffset
+$end=$functions[0].Extent.EndOffset
+if($start -lt 0 -or $end -le $start -or
+   $source.Substring($start,[Math]::Min(31,$end-$start)) -notmatch '^function Rewrite-CloudDumpForStage'){
+  throw 'CONTROLLER_UPDATE_STOP: unsafe function range. No changes made.'
+}
+$patched=$source.Substring(0,$start)+$func+$source.Substring($end)
 $gateOld='if($PreflightOnly){$sqlGateArgs+=''-CheckOnly''}'
 $gateNew=@'
 # CODE_SYNC_GATE_CHECK_ONLY: only verify Code Sync state; never apply SQL code here.
