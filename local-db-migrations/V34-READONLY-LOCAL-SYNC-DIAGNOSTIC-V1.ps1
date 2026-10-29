@@ -81,6 +81,56 @@ if(-not(Test-Path -LiteralPath $LocalBrainRoot -PathType Container)){
     InspectScripts '08D-CHECK-STAGE-PAYMENTS-INDEX-V1.sql' $false
     InspectScripts 'V34-PRE-SYNC-SCHEMA-GUARD.ps1' $false
     InspectScripts 'V34-INSTALL-STAGE-PAYMENTS-PARITY-V2.ps1' $false
+    Line
+    Report 'SECTION 1B: 29-OCT NOTIFICATION / FCM SYNC PREFLIGHT'
+    # Check the actual controller used by BIG BROTHER V3.4, not a guessed copy.
+    $activeFolder=Join-Path $LocalBrainRoot '3.4 Controller\BIG_BROTHER_V34_DEVELOPER\helpers'
+    $active08=Join-Path $activeFolder '08-SYNC-LIVE-TO-LOCAL-PERMANENT-V1.2.ps1'
+    $active08C=Join-Path $activeFolder '08C-MERGE-CLOUD-STAGE-PERMANENT-V1.2.sql'
+    $infra=@(
+        'bb_notification_events_v2','bb_push_config_v1','bb_push_deliveries_v1',
+        'bb_push_subscriptions_v1','bb_fcm_config_v1','bb_fcm_devices_v1',
+        'bb_fcm_deliveries_v1','app_notification_state'
+    )
+    Report ('ACTIVE_V34_HELPERS_FOUND: '+(Test-Path -LiteralPath $activeFolder -PathType Container))
+    if(Test-Path -LiteralPath $active08 -PathType Leaf){
+        Report ('ACTIVE_08_SHA256: '+(Get-FileHash -LiteralPath $active08 -Algorithm SHA256).Hash)
+        $ctrl=[System.IO.File]::ReadAllText($active08,[System.Text.Encoding]::UTF8)
+        Report ('ACTIVE_08_STAGING_REWRITER: '+$ctrl.Contains('Rewrite-CloudDumpForStage'))
+        foreach($table in $infra){
+            Report ('ACTIVE_08_MENTIONS_INFRA_'+$table+': '+$ctrl.Contains($table))
+        }
+    }else{Report 'ACTIVE_08_FILE_MISSING_OR_DIFFERENT_LOCATION'}
+    if(Test-Path -LiteralPath $active08C -PathType Leaf){
+        Report ('ACTIVE_08C_SHA256: '+(Get-FileHash -LiteralPath $active08C -Algorithm SHA256).Hash)
+        $merge=[System.IO.File]::ReadAllText($active08C,[System.Text.Encoding]::UTF8)
+        foreach($table in $infra){
+            Report ('ACTIVE_08C_MENTIONS_INFRA_'+$table+': '+$merge.Contains($table))
+        }
+        Report ('ACTIVE_08C_SALARY_GUARD_PRESENT: '+(
+            $merge.Contains('staff_monthly_salary') -or $merge.Contains('salary_month')))
+    }else{Report 'ACTIVE_08C_FILE_MISSING_OR_DIFFERENT_LOCATION'}
+    # Report exact failure type, table identifiers and timestamps only:
+    # DO NOT print full errors, credentials, SQL dump text, or customer records.
+    foreach($pattern in @('*V34*FAILURE*SUMMARY*.txt','*SCHEMA*GUARD*REPORT*.txt','*SYNC*REPORT*.txt')){
+        $recent=@(SafeFiles $pattern | Sort-Object LastWriteTime -Descending | Select-Object -First 2)
+        foreach($log in $recent){
+            Report ('RECENT_REPORT: '+$log.FullName)
+            Report ('RECENT_REPORT_MODIFIED: '+$log.LastWriteTime.ToString('yyyy-MM-dd HH:mm:ss'))
+            try{
+                foreach($table in $infra){
+                    $matches=@(Select-String -LiteralPath $log.FullName -SimpleMatch -Pattern $table -ErrorAction Stop)
+                    if($matches.Count){Report ('REPORT_MENTIONS_INFRA_'+$table+': '+$matches.Count)}
+                }
+                foreach($errorKey in @('BUSINESS_SCOPE_BLOCKED','MISSING TABLE','SCHEMA_GUARD_FAILED',
+                       'LOCAL_AUTH','duplicate key','foreign key','SYNC_ABORTED','ROLLBACK','ERROR:')){
+                    $matches=@(Select-String -LiteralPath $log.FullName -SimpleMatch -Pattern $errorKey -ErrorAction Stop)
+                    if($matches.Count){Report ('REPORT_ERROR_MARKER ['+$errorKey+']: '+$matches.Count)}
+                }
+            }catch{Report ('RECENT_REPORT_SCAN_ERROR: '+$_.Exception.GetType().Name)}
+        }
+    }
+
     $logs=@(SafeFiles '*CODE*SQL*MIGRATION*REPORT*.txt' | Sort-Object LastWriteTime -Descending | Select-Object -First 3)
     foreach($file in $logs) {
         Report ('SQL_MIGRATION_REPORT_PATH: '+$file.FullName)
@@ -155,6 +205,20 @@ JOIN pg_class t ON t.oid=i.indrelid
 JOIN pg_namespace ns ON ns.oid=t.relnamespace
 WHERE idx.relname LIKE 'payments_lower_idx%'
 ORDER BY 1;
+'@
+ReadOnlySQL '29-Oct notification and Android FCM Local schema parity (table existence only)' @'
+SELECT x.name,
+       CASE WHEN to_regclass('public.'||x.name) IS NULL THEN 'LOCAL_MISSING'
+            ELSE 'LOCAL_PRESENT' END AS local_public,
+       CASE WHEN to_regclass('bb_cloud_stage.'||x.name) IS NULL THEN 'STAGE_MISSING_OR_NOT_PREPARED'
+            ELSE 'STAGE_PRESENT' END AS cloud_stage
+FROM (VALUES
+ ('bb_notification_events_v2'),('bb_push_config_v1'),
+ ('bb_push_deliveries_v1'),('bb_push_subscriptions_v1'),
+ ('bb_fcm_config_v1'),('bb_fcm_devices_v1'),
+ ('bb_fcm_deliveries_v1'),('app_notification_state')
+) AS x(name)
+ORDER BY x.name;
 '@
 Line
 Report 'END — FILES, INDEXES AND SQL READ ONLY.'
