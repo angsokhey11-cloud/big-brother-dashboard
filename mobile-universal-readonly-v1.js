@@ -25,8 +25,16 @@ function scheduleCachedRetry(){
 }
 function resumeCachedLive(){
   const saved=cachedEntry,screen=$('moduleScreen');
-  if(!saved||live||!screen||screen.hidden||document.visibilityState==='hidden'||
+  if(!saved||!screen||screen.hidden||document.visibilityState==='hidden'||
      !api()?.canUseNetwork()||api().currentUserId()!==saved.user)return;
+  if(live){
+    // If an old iframe began while Internet was down, it will NOT recover by
+    // itself. Restart only a stale hidden preload; never touch visible work.
+    if(Date.now()-live.started<15000)return;
+    clearInterval(live.interval);clearTimeout(live.timeout);
+    try{live.frame.remove()}catch(_){}
+    live=null;
+  }
   if($('moduleFrame')!==saved.visible||!saved.visible.hasAttribute('srcdoc')){
     cachedEntry=null;clearRetry();return;
   }
@@ -336,7 +344,7 @@ function preload(route,url,visible,id){
     // Keep the existing static UI visible and retry the SAME route.
     // Never reset navigation or overwrite the user's current screen.
     scheduleCachedRetry();
-  },90000);
+  },60000);
   frame.src=url;
 }
 window.addEventListener('bb:mobile-reconnected',resumeCachedLive);
