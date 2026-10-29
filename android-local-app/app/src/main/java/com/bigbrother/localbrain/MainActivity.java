@@ -47,10 +47,11 @@ public final class MainActivity extends Activity {
                     checkingHost=false;
                     if(!foreground||isFinishing()||view==null)return;
                     final boolean recovered=ready&&(!hostChecked||!hostReachable);
-                    final boolean changed=!hostChecked||hostReachable!=ready;
                     hostChecked=true;
                     hostReachable=ready;
-                    if(changed)publishHostState(ready,recovered);
+                    // Keep the badge true to V6 health even if an older cached
+                    // script falsely changes it back to Online between checks.
+                    publishHostState(ready,recovered);
                     if(ready&&problemOverlay!=null&&
                             problemOverlay.getVisibility()==View.VISIBLE){
                         // A genuine startup error needs a new navigation.
