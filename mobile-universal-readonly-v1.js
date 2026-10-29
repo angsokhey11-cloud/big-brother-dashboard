@@ -282,7 +282,7 @@ function preload(route,url,visible,id){
   const entry={frame,route,user,started:Date.now(),interval:0,timeout:0};
   lastRetryAt=Date.now();
   live=entry;screen.appendChild(frame);
-  const cancel=()=>{if(live===entry)stop()};
+  const cancel=()=>{if(live===entry||cachedEntry?.visible===visible)stop()};
   visible.addEventListener('pointerdown',cancel,{once:true});
   visible.addEventListener('keydown',cancel,{once:true});
   const check=()=>{
