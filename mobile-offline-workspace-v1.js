@@ -88,7 +88,12 @@ async function clearUser(userId=currentUserId()){
 // after a transient request failure while Wi-Fi itself remains connected.
 // Connection status is UI state, NOT a permission to make requests.
 // Blocking live requests when V6 is down caused a permanent offline deadlock.
-function canUseNetwork(){return navigator.onLine!==false}
+function canUseNetwork(){
+  // Android may mark a local-only Wi-Fi network as "no Internet" even when
+  // bigbrother.local is fully available. Always allow Local V6 requests to
+  // attempt; the actual HTTPS probe controls the visible Online/Offline status.
+  return LOCAL_MODE||navigator.onLine!==false;
+}
 function setConnection(ok){
   connection=!!ok;
   updateIndicator();
