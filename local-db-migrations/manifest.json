@@ -116,6 +116,12 @@
       "file": "20261028_mobile_history_offline_product_lines_v1.sql",
       "sha256": "84B58F5E47833548DDF3A6B82E29CBCB632C42AEDA0076312A87FC1A3F62012D",
       "description": "Code Sync V5/V6: one permission-gated read-only RPC to sync original invoice product lines for authorized mobile Invoice History; no business data changes"
+    },
+    {
+      "id": "20261029_android_fcm_local_schema_only_v1",
+      "file": "20261029_android_fcm_local_schema_only_v1.sql",
+      "sha256": "96E0C50DFDB2CC52A16B1C4029CEA3F2832865A3C1DA8112B9337EC8040F7E71",
+      "description": "Code Sync ONLY: create empty, protected Android FCM tables and ALWAYS replay guards; preserve salaries, bank, payments, local-only rows; no Firebase device data copied"
     }
   ]
 }
