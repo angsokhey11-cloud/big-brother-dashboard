@@ -154,6 +154,8 @@ let reconnectProbeRunning=false,lastReconnectProbeAt=0;
 function cachedScreenVisible(){
   const screen=document.getElementById('moduleScreen');
   if(!screen||screen.hidden)return false;
+  if(window.BBMobileOfflineModulesV1?.isCachedActive?.())return true;
+  if(window.BBMobileUniversalReadOnlyV1?.isCachedActive?.())return true;
   const native=document.getElementById('bbOfflineModulesScreen');
   if(native&&native.style.display!=='none')return true;
   const frame=document.getElementById('moduleFrame');
