@@ -144,6 +144,48 @@ function resumeLocalSync(){
   lastLocalResume=now;
   window.dispatchEvent(new Event('bb:mobile-reconnected'));
 }
+/* Reconnect watchdog V3.
+ * navigator.onLine may stay TRUE when V6 is stopped or Internet is too slow.
+ * HEAD requests are not intercepted by our GET-only service worker, so they
+ * test the real HTTPS host instead of receiving the cached mobile shell.
+ * Only check when a cached/offline screen is actually visible or a previous
+ * live request failed. Never run periodic Supabase RPCs or reload the page. */
+let reconnectProbeRunning=false,lastReconnectProbeAt=0;
+function cachedScreenVisible(){
+  const screen=document.getElementById('moduleScreen');
+  if(!screen||screen.hidden)return false;
+  const native=document.getElementById('bbOfflineModulesScreen');
+  if(native&&native.style.display!=='none')return true;
+  const frame=document.getElementById('moduleFrame');
+  return !!frame?.hasAttribute('srcdoc');
+}
+async function probeLiveHost(){
+  if(document.visibilityState==='hidden'||reconnectProbeRunning||
+     (connection&&!cachedScreenVisible()))return;
+  const now=Date.now();
+  if(now-lastReconnectProbeAt<12000)return;
+  lastReconnectProbeAt=now;
+  reconnectProbeRunning=true;
+  const controller=new AbortController();
+  const abort=setTimeout(()=>controller.abort(),6000);
+  try{
+    const response=await fetch(new URL('./mobile.html',location.href),{
+      method:'HEAD',cache:'no-store',signal:controller.signal
+    });
+    if(!response.ok)throw Error('Local/online host not ready');
+    const wasOffline=!connection;
+    setConnection(true);
+    // The initial cached page already attempts a seamless live handoff;
+    // signal ONLY when connectivity has truly changed after a failure.
+    if(wasOffline)window.dispatchEvent(new Event('bb:mobile-reconnected'));
+  }catch(_){
+    setConnection(false);
+  }finally{
+    clearTimeout(abort);
+    reconnectProbeRunning=false;
+  }
+}
+setInterval(()=>{void probeLiveHost()},12000);
 window.addEventListener('focus',resumeLocalSync);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')resumeLocalSync()});
 window.addEventListener('offline',()=>setConnection(false));
