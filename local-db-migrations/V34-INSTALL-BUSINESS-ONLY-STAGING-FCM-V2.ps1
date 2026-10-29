@@ -112,7 +112,7 @@ $parseTokens=$null
 $parseErrors=$null
 $ast=[System.Management.Automation.Language.Parser]::ParseInput(
   $source,[ref]$parseTokens,[ref]$parseErrors)
-if(@($parseErrors).Count -gt 0){
+if($parseErrors -and $parseErrors.Count -gt 0){
   throw 'CONTROLLER_UPDATE_STOP: original controller PowerShell parse failed. No changes made.'
 }
 $functions=@($ast.FindAll({
@@ -126,7 +126,7 @@ if($functions.Count -ne 1){
 $start=$functions[0].Extent.StartOffset
 $end=$functions[0].Extent.EndOffset
 if($start -lt 0 -or $end -le $start -or
-   $source.Substring($start,[Math]::Min(31,$end-$start)) -notmatch '^function Rewrite-CloudDumpForStage'){
+   $source.Substring($start,[Math]::Min(64,$end-$start)) -notmatch '^function Rewrite-CloudDumpForStage'){
   throw 'CONTROLLER_UPDATE_STOP: unsafe function range. No changes made.'
 }
 $patched=$source.Substring(0,$start)+$func+$source.Substring($end)
