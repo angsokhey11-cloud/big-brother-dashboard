@@ -2,6 +2,8 @@ package com.bigbrother.localbrain;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.content.Intent;
 import android.net.Uri;
 import android.graphics.Color;
@@ -27,6 +29,26 @@ public final class MainActivity extends Activity {
     private WebView view;
     private View problemOverlay;
     private boolean loadFailed;
+    private final Handler reconnectHandler=new Handler(Looper.getMainLooper());
+    private int retryAttempts=0;
+    private final Runnable retryOpen=new Runnable(){
+        @Override public void run(){
+            if(isFinishing()||view==null||problemOverlay==null||
+                    problemOverlay.getVisibility()!=View.VISIBLE)return;
+            view.loadUrl(HOME);
+        }
+    };
+    private void scheduleRetry(){
+        if(isFinishing())return;
+        reconnectHandler.removeCallbacks(retryOpen);
+        // 4s -> 8s -> 15s, then stay at 15s until V6 is ready.
+        long delay=Math.min(15000L,4000L << Math.min(retryAttempts++,2));
+        reconnectHandler.postDelayed(retryOpen,delay);
+    }
+    private void stopRetry(){
+        reconnectHandler.removeCallbacks(retryOpen);
+        retryAttempts=0;
+    }
 
     @Override public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -69,15 +91,20 @@ public final class MainActivity extends Activity {
                 if(request.isForMainFrame()) {
                     loadFailed=true;
                     problemOverlay.setVisibility(View.VISIBLE);
+                    scheduleRetry();
                 }
             }
             @Override public void onPageFinished(WebView web,String url) {
-                if (!loadFailed) problemOverlay.setVisibility(View.GONE);
+                if (!loadFailed) {
+                    stopRetry();
+                    problemOverlay.setVisibility(View.GONE);
+                }
             }
             @Override public void onReceivedSslError(WebView web,SslErrorHandler handler,SslError error) {
                 handler.cancel(); // Never accept invalid local HTTPS certificates.
                 loadFailed=true;
                 problemOverlay.setVisibility(View.VISIBLE);
+                scheduleRetry();
             }
         });
         frame.addView(view,new FrameLayout.LayoutParams(-1,-1));
@@ -95,7 +122,7 @@ public final class MainActivity extends Activity {
         title.setGravity(Gravity.CENTER);
         message.addView(title);
         TextView hint = new TextView(this);
-        hint.setText("Local Brain is unavailable. Connect to company Wi-Fi and check V6 and Caddy HTTPS. Do not clear app data; offline cached screens require an initial successful sync in this app.");
+        hint.setText("Local Brain is unavailable. This app will automatically reconnect when V6 and Caddy HTTPS start. Check company Wi-Fi if needed. Do not clear app data; saved offline screens belong to this app.");
         hint.setTextSize(15f);
         hint.setTextColor(Color.rgb(48,63,80));
         hint.setGravity(Gravity.CENTER);
@@ -105,6 +132,7 @@ public final class MainActivity extends Activity {
         Button retry = new Button(this);
         retry.setText("RETRY LOCAL BRAIN");
         retry.setOnClickListener(v -> {
+            reconnectHandler.removeCallbacks(retryOpen);
             problemOverlay.setVisibility(View.GONE);
             view.loadUrl(HOME);
         });
@@ -143,7 +171,16 @@ public final class MainActivity extends Activity {
         if(view!=null && view.canGoBack())view.goBack();
         else super.onBackPressed();
     }
+    @Override protected void onPause(){
+        reconnectHandler.removeCallbacks(retryOpen);
+        super.onPause();
+    }
+    @Override protected void onResume(){
+        super.onResume();
+        if(problemOverlay!=null&&problemOverlay.getVisibility()==View.VISIBLE)scheduleRetry();
+    }
     @Override protected void onDestroy(){
+        reconnectHandler.removeCallbacks(retryOpen);
         if(view!=null){view.stopLoading();view.destroy();view=null;}
         super.onDestroy();
     }
