@@ -166,7 +166,7 @@ const PC={
  'master-expense-categories':'https://angsokhey11-cloud.github.io/big-brother-master-data/expense-categories.html?embed=1&v=21',
  'master-audit-center':'https://angsokhey11-cloud.github.io/big-brother-master-data/audit-center.html?embed=1&v=20260927-1',
  'admin-deposit-history':'https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=deposit-history',
- 'admin-staff-request':'https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=staff-request',
+ 'admin-staff-request':'https://angsokhey11-cloud.github.io/big-brother-admin-work/staff-request-mobile.html?embed=1&v=20261029-staffrequest-router2',
  'admin-request':'https://angsokhey11-cloud.github.io/big-brother-admin-work/?embed=1&view=admin-request',
  'admin-user-permissions':'https://angsokhey11-cloud.github.io/big-brother-admin-work/user-permissions.html?embed=1&v=20261018-date1',
  'notification-center':'https://angsokhey11-cloud.github.io/big-brother-admin-work/company-control.html?embed=1&view=notifications&v=20261018-date1'
@@ -202,7 +202,8 @@ function replaceFrameUrl(frame,url){
 function renderDirect(route,forceLive=false){
  const offline=window.BBMobileOfflineWorkspaceV1;
  if(offline&&!offline.canUseNetwork()){
-   if(window.BBMobileOfflineModulesV1?.canOpen(route)){
+   // Never let the Staff Request approval screen fall back to stale data.
+   if(route!=='admin-staff-request'&&window.BBMobileOfflineModulesV1?.canOpen(route)){
      void window.BBMobileOfflineModulesV1.open(route).then(ok=>{
        if(!ok){
          const notice=document.getElementById('toast');
@@ -225,12 +226,16 @@ function renderDirect(route,forceLive=false){
  if($('moduleTitle'))$('moduleTitle').textContent=routeLabel(route);
  if($('moduleDesktopLink'))$('moduleDesktopLink').href=DASH+'?module='+encodeURIComponent(route)+'&autoload=1';
  const next=replaceFrameUrl(frame,url);
- window.BBMobileUniversalReadOnlyV1?.watch(route,next);
+ // Do not record an approval form as an offline read-only snapshot.
+ if(route!=='admin-staff-request')window.BBMobileUniversalReadOnlyV1?.watch(route,next);
  return true;
 }
 function openDirect(route,push=true,forceLive=false){
  const cached=window.BBMobileOfflineModulesV1,offline=window.BBMobileOfflineWorkspaceV1;
- if(!forceLive&&cached?.canOpen(route)){
+ // Approval actions must always load current live data rather than an
+ // archived read-only page; especially important for notification taps.
+ const liveApproval=route==='admin-staff-request';
+ if(!forceLive&&!liveApproval&&cached?.canOpen(route)){
    void cached.open(route).then(ok=>{
      if(!ok){
        if(offline?.canUseNetwork())openDirect(route,push,true);
@@ -240,7 +245,7 @@ function openDirect(route,push=true,forceLive=false){
    return true;
  }
  const universal=window.BBMobileUniversalReadOnlyV1;
- if(!forceLive&&universal&&!['history','monthly-sales-report','sales-support-your-stock','sales-support-batch-selling-tracker','daily-sale-summary'].includes(route)){
+ if(!forceLive&&!liveApproval&&universal&&!['history','monthly-sales-report','sales-support-your-stock','sales-support-batch-selling-tracker','daily-sale-summary'].includes(route)){
    void universal.open(route).then(ok=>{
      if(!ok){
        if(offline?.canUseNetwork())openDirect(route,push,true);
