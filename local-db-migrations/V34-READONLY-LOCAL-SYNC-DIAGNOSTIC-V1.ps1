@@ -251,18 +251,7 @@ SELECT name,
        (position('Correction Reason is required' IN coalesce(body,''))>0) AS audit_reason_guard,
        (position('stock_batch_edit_audit' IN coalesce(body,''))>0) AS save_audit_log,
        (position($txt$lower(coalesce(s.position,''))='salesman'$txt$ IN coalesce(body,''))>0) AS salesman_role_guard,
-       (position($txt
-$folder=Join-Path $LocalBrainRoot 'brain-backups\sync-diagnostics'
-if(-not(Test-Path -LiteralPath $LocalBrainRoot -PathType Container)){
-    $folder=Join-Path $env:TEMP 'BIG_BROTHER_SYNC_DIAGNOSTICS'
-}
-New-Item -ItemType Directory -Path $folder -Force | Out-Null
-$dest=Join-Path $folder ('LOCAL-STAGE-PAYMENT-DIAGNOSTIC-'+(Get-Date -Format 'yyyyMMdd-HHmmss')+'.txt')
-[System.IO.File]::WriteAllLines($dest,$lines.ToArray(),(New-Object System.Text.UTF8Encoding($true)))
-Write-Host ''
-Write-Host ('READ-ONLY DIAGNOSTIC SAVED: '+$dest) -ForegroundColor Green
-Write-Host 'Upload this .txt report to ChatGPT; do not upload secrets, keys, .env or dump files.' -ForegroundColor Cyan
-canEditDrivers',true$txt$ IN coalesce(body,''))>0) AS used_batch_driver_edit_flag,
+       (position('canEditDrivers' IN coalesce(body,''))>0) AS used_batch_driver_edit_flag,
        (position('Driver corrections remain allowed' IN coalesce(body,''))>0) AS used_batch_driver_lock_exception
 FROM funcs
 ORDER BY name;
