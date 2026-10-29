@@ -1,5 +1,5 @@
 /* BIG BROTHER Mobile + Desktop PWA service worker V2.0 — Web Push */
-const CACHE='bb-mobile-shell-v135';
+const CACHE='bb-mobile-shell-v136';
 const MOBILE_FILES=new Set([
   'mobile.html','mobile-function-icons-v1.js','mobile-home-theme-v5.css','mobile.css','mobile-sales-support.css','pwa-install.css','mobile.js','mobile-offline-workspace-v1.js','mobile-original-photo-cache-v1.js','mobile-original-photo-settings-v1.js','mobile-offline-modules-v1.js','mobile-universal-readonly-v1.js','mobile-offline-calculator.html','mobile-offline-your-customer-v1.html','mobile-offline-your-collection-mobile-v1.html','mobile-offline-your-collection-original-v1.html','mobile-offline-your-collection-adapter-v1.js','mobile-offline-your-collection-skin-v1.html','mobile-offline-calculator-source-v1.html','mobile-offline-calculator-dual-currency-v1.js','mobile-offline-calculator-adapter-v1.js','mobile-offline-history-original-v1.html','mobile-offline-history-mobile-v1.html','mobile-offline-history-adapter-v1.js','mobile-offline-monthly-sales-v1.html','mobile-offline-monthly-common-v1.js','mobile-offline-monthly-style-v1.css','mobile-offline-staff-adapter-v12.js','mobile-offline-your-stock-v12.html','mobile-offline-your-stock-source-v12.html','mobile-offline-tracker-v12.html','mobile-offline-tracker-source-v12.html','mobile-offline-daily-sale-v1.html','mobile-offline-stock.html','mobile-offline-stock-source-v1.html','mobile-user-overview.js',
   'mobile-sales-support-home.js','pwa-install.js','mobile-main-menu-v3.js','mobile-main-menu-stockcontrol-v5.js','mobile-ui-policy-v1.js',
@@ -36,7 +36,7 @@ const PRECACHE=[
   './pwa-install.css?v=20260920-ios1',
   './mobile-function-icons-v1.js?v=20261025-receivable-collection-v2',
   './mobile-offline-workspace-v1.js?v=20261029-v6-liveget2',
-  './mobile.js?v=20261029-bb-inbox-route1',
+  './mobile.js?v=20261029-push-deeplink1',
   './mobile-main-menu-stockcontrol-v5.js?v=20261028-staff-v12',
   './mobile-user-overview.js?v=20261028-auto-offline3',
   './mobile-navigation-v5.js?v=20261008-batchtransfer-mobile1',
@@ -102,7 +102,7 @@ self.addEventListener('install',event=>{
     // Other decorations remain optional; old worker stays active on failed install.
     const critical=new Set([
       './mobile-offline-workspace-v1.js?v=20261029-v6-liveget2',
-      './mobile.js?v=20261029-bb-inbox-route1',
+      './mobile.js?v=20261029-push-deeplink1',
       './mobile-main-menu-stockcontrol-v5.js?v=20261028-staff-v12',
       './mobile-sales-support-home.js?v=20261028-collection1',
       './mobile-user-overview.js?v=20261028-auto-offline3',
@@ -224,9 +224,16 @@ self.addEventListener('notificationclick',event=>{
   event.waitUntil((async()=>{
     const payload=event.notification.data||{};
     const route=/^[a-z0-9-]{2,70}$/.test(String(payload.route||''))?payload.route:'notification-center';
-    const clientsOnOrigin=await self.clients.matchAll({type:'window',includeUncontrolled:true});
-    const home=(clientsOnOrigin.find(c=>new URL(c.url).pathname.endsWith('/mobile.html'))||
-      clientsOnOrigin.find(c=>new URL(c.url).pathname.endsWith('/index.html')));
+    const allClients=await self.clients.matchAll({type:'window',includeUncontrolled:true});
+    const pages=allClients.filter(c=>{
+      try{const url=new URL(c.url);return url.origin===self.location.origin&&
+        url.pathname.startsWith(APP_PREFIX)&&
+        /\/(mobile|index)\.html$/.test(url.pathname)}catch(_){return false}
+    });
+    // Prefer the window that the user is already using, not an unrelated
+    // mobile tab when the desktop PWA was the origin of the notification.
+    const home=pages.find(c=>c.focused)||
+      pages.find(c=>c.visibilityState==='visible')||pages[0]||null;
     const ua=String(self.navigator?.userAgent||'');
     const mobile=home ? new URL(home.url).pathname.endsWith('/mobile.html')
       : /Android|iPhone|iPad|iPod|Mobile/i.test(ua);
@@ -236,7 +243,12 @@ self.addEventListener('notificationclick',event=>{
     if(payload.eventKey)target.searchParams.set('bb_notice',String(payload.eventKey));
     if(payload.entityId)target.searchParams.set('bb_entity',String(payload.entityId));
     if(home){
-      try{await home.navigate(target.href);await home.focus();return}catch(_){}
+      try{
+        // Reload the SAME installed PWA window with an explicit module URL.
+        // A plain focus() opens Home, losing the record link.
+        const navigated=await home.navigate(target.href);
+        if(navigated){await navigated.focus();return}
+      }catch(_){}
     }
     await self.clients.openWindow(target.href);
   })());
