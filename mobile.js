@@ -9,15 +9,25 @@ const LOGIN_EMAIL_KEY='BB_MOBILE_LOGIN_EMAIL_V1';
 /* Real A/R pilot opt-in, available inside the installed Android WebView.
  * This only changes the display path. No financial write or DB changes.
  */
+const BB_REAL_AR_PILOT_KEY='bb_mobile_real_ar_pilot_v1';
+const bbRealArParam=new URLSearchParams(location.search).get('bb_real_ar');
+try{
+  if(bbRealArParam==='1')localStorage.setItem(BB_REAL_AR_PILOT_KEY,'1');
+  if(bbRealArParam==='0')localStorage.removeItem(BB_REAL_AR_PILOT_KEY);
+}catch(_){}
+function bbRealArPilotEnabled(){
+  try{return bbRealArParam==='1'||(bbRealArParam!=='0'&&localStorage.getItem(BB_REAL_AR_PILOT_KEY)==='1')}
+  catch(_){return bbRealArParam==='1'}
+}
+window.BBRealARFastModeV1=Object.freeze({enabled:bbRealArPilotEnabled});
 const bbArPilotToggle=document.getElementById('bbRealArPilotToggle');
 if(bbArPilotToggle){
-  const active=new URLSearchParams(location.search).get('bb_real_ar')==='1';
+  const active=bbRealArPilotEnabled();
   const target=new URL(location.href);
   target.searchParams.delete('module');
   target.searchParams.delete('autoload');
   target.searchParams.delete('bb_cache_pilot');
-  if(active)target.searchParams.delete('bb_real_ar');
-  else target.searchParams.set('bb_real_ar','1');
+  target.searchParams.set('bb_real_ar',active?'0':'1');
   bbArPilotToggle.href=target.pathname+target.search;
   const strong=bbArPilotToggle.querySelector('strong');
   const small=bbArPilotToggle.querySelector('small');
@@ -402,7 +412,7 @@ function openModule(route,updateUrl=true,forceLive=false){
   const liveApproval=route==='admin-staff-request';
   // Opt-in pilot: the ORIGINAL Your Receivable page opens directly.
   // Other routes keep the existing read-only offline fallback unchanged.
-  const realArPilot=route==='ar-your'&&new URLSearchParams(location.search).get('bb_real_ar')==='1';
+  const realArPilot=route==='ar-your'&&bbRealArPilotEnabled();
   if(!forceLive&&!liveApproval&&!realArPilot&&cached?.canOpen(route)){
     void cached.open(route).then(ok=>{
       if(!ok){
