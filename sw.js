@@ -102,9 +102,9 @@ self.addEventListener('install',event=>{
     // Other decorations remain optional; old worker stays active on failed install.
     const critical=new Set([
       './mobile-offline-workspace-v1.js?v=20261029-v6-liveget2',
-      './mobile.js?v=20261029-option-b-mobile4',
+      './mobile.js?v=20261030-real-ar-pilot1',
       './mobile-main-menu-stockcontrol-v5.js?v=20261029-option-b-mobile4',
-      './mobile-sales-support-home.js?v=20261028-collection1',
+      './mobile-sales-support-home.js?v=20261030-real-ar-pilot1',
       './mobile-user-overview.js?v=20261028-auto-offline3',
       './mobile-original-photo-cache-v1.js?v=20261028-photo-cache1',
   './mobile-original-photo-settings-v1.js?v=20261028-photo-cache1',
