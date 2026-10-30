@@ -186,6 +186,7 @@ function liveRouteUrl(route){
   try{
     const u=new URL(raw,location.href);
     u.searchParams.set('bb_cache_pilot','1');
+    if(new URLSearchParams(location.search).get('localbrain')==='1')u.searchParams.set('localbrain','1');
     return u.href;
   }catch(_){return raw}
 }
