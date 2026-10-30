@@ -32,6 +32,10 @@ import java.util.List;
 final class BBNativeFileActions {
     static final int SAVE_REQUEST=4135;
     private static final String ORIGIN="https://bigbrother.local:8443";
+    // Our Local dashboard still embeds the published BIG BROTHER Receivable
+    // route from GitHub Pages. Allow only that trusted source origin when
+    // the TOP frame remains our Local Brain dashboard.
+    private static final String RECEIVABLE_ORIGIN="https://angsokhey11-cloud.github.io";
     private static final int MAX_FILES=12;
     private static final int MAX_FILE=18*1024*1024;
     private static final int MAX_TOTAL=24*1024*1024;
@@ -49,7 +53,7 @@ final class BBNativeFileActions {
             return null;
         BBNativeFileActions helper=new BBNativeFileActions(activity,browser);
         WebViewCompat.addWebMessageListener(browser,"BBNativeFiles",
-            Collections.singleton(ORIGIN),
+            new java.util.HashSet<>(java.util.Arrays.asList(ORIGIN,RECEIVABLE_ORIGIN)),
             (view,message,sourceOrigin,isMainFrame,reply)->{
                 if(!helper.authorized(sourceOrigin))return;
                 if(message.getType()!=androidx.webkit.WebMessageCompat.TYPE_STRING)return;
@@ -65,12 +69,15 @@ final class BBNativeFileActions {
 
     private boolean authorized(Uri source){
         Uri top=Uri.parse(browser.getUrl()==null?"":browser.getUrl());
-        return "https".equalsIgnoreCase(source.getScheme()) &&
-            "bigbrother.local".equalsIgnoreCase(source.getHost()) && source.getPort()==8443 &&
-            "https".equalsIgnoreCase(top.getScheme()) &&
+        boolean localSource="https".equalsIgnoreCase(source.getScheme()) &&
+            "bigbrother.local".equalsIgnoreCase(source.getHost()) && source.getPort()==8443;
+        boolean publishedReceivable="https".equalsIgnoreCase(source.getScheme()) &&
+            "angsokhey11-cloud.github.io".equalsIgnoreCase(source.getHost()) &&
+            (source.getPort()==-1||source.getPort()==443);
+        boolean trustedLocalDashboard="https".equalsIgnoreCase(top.getScheme()) &&
             "bigbrother.local".equalsIgnoreCase(top.getHost()) && top.getPort()==8443 &&
-            top.getPath()!=null &&
-            top.getPath().startsWith("/big-brother-dashboard/");
+            top.getPath()!=null && top.getPath().startsWith("/big-brother-dashboard/");
+        return trustedLocalDashboard && (localSource||publishedReceivable);
     }
 
     private void toast(String msg){
