@@ -50,6 +50,7 @@ public final class MainActivity extends Activity {
     private static final int REQUEST_WEB_MEDIA = 4130;
     private static final int REQUEST_WEB_LOCATION = 4131;
     private WebView browser;
+    private BBNativeFileActions nativeFiles;
     private View overlay;
     private TextView overlayTitle;
     private TextView overlayMessage;
@@ -138,6 +139,8 @@ public final class MainActivity extends Activity {
         config.setCacheMode(WebSettings.LOAD_DEFAULT);
         config.setSupportZoom(false);
         CookieManager.getInstance().setAcceptCookie(true);
+        // Native invoice exports only from Local Brain's HTTPS origin on :8443.
+        nativeFiles = BBNativeFileActions.install(this,browser);
         browser.setWebChromeClient(new WebChromeClient() {
             @Override public boolean onShowFileChooser(WebView webView,
                 ValueCallback<Uri[]> callback, FileChooserParams params) {
@@ -462,6 +465,7 @@ public final class MainActivity extends Activity {
     }
     @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode,resultCode,data);
+        if(nativeFiles!=null&&nativeFiles.onActivityResult(requestCode,resultCode,data))return;
         if (requestCode != FILE_CHOOSE_REQUEST || fileChooserCallback == null) return;
         Uri[] results = null;
         boolean captured = resultCode == RESULT_OK && capturePhotoUri != null
