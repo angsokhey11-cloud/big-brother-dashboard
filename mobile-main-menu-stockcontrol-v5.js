@@ -107,11 +107,11 @@ const MOBILE={
  'sales-support-batch-selling-tracker':'https://angsokhey11-cloud.github.io/big-brother-batch-selling-tracker/mobile.html?embed=1&v=20260925-dashboard1',
  'sales-support-your-collection':'https://angsokhey11-cloud.github.io/big-brother-daily-cash-collection/your-collection-mobile.html?embed=1&v=20260921-owner1',
  'sales-support-your-invoices':'https://angsokhey11-cloud.github.io/invoice-history/your-invoices-mobile.html?embed=1&v=20260925-assigned2',
- 'sales-support-your-receivable':'https://angsokhey11-cloud.github.io/big-brother-ar/your-receivable-mobile.html?embed=1&v=20261030-pdf-native-ack2',
+ 'sales-support-your-receivable':'https://angsokhey11-cloud.github.io/big-brother-ar/your-receivable-mobile.html?embed=1&v=20261030-pdf-handoff3',
 
  'real-invoice':'https://angsokhey11-cloud.github.io/big-brother-real-invoice/?embed=1&v=20261018-date1',
- 'ar-all':'https://angsokhey11-cloud.github.io/big-brother-ar/all-receivable-mobile.html?embed=1&v=20261030-pdf-native-ack2',
- 'ar-your':'https://angsokhey11-cloud.github.io/big-brother-ar/your-receivable-mobile.html?embed=1&v=20261030-pdf-native-ack2',
+ 'ar-all':'https://angsokhey11-cloud.github.io/big-brother-ar/all-receivable-mobile.html?embed=1&v=20261030-pdf-handoff3',
+ 'ar-your':'https://angsokhey11-cloud.github.io/big-brother-ar/your-receivable-mobile.html?embed=1&v=20261030-pdf-handoff3',
  'ar-payment-history':'https://angsokhey11-cloud.github.io/big-brother-payment-history/receivable-mobile.html?embed=1&v=20261018-receivable-date',
 
  'stock-keyin':'https://angsokhey11-cloud.github.io/big-brother-stock-managemenet/mobile.html?embed=1&v=20261006-batchlocationrequired1',
