@@ -415,7 +415,10 @@ function openModule(route,updateUrl=true,forceLive=false){
   universal?.stop();
   hideAll();$('moduleScreen').hidden=false;$('moduleTitle').textContent=item.label;
   const liveUrl=new URL(item.url,location.href);
-  if(realArPilot)liveUrl.searchParams.set('bb_cache_pilot','1');
+  if(realArPilot){
+    liveUrl.searchParams.set('bb_cache_pilot','1');
+    if(new URLSearchParams(location.search).get('localbrain')==='1')liveUrl.searchParams.set('localbrain','1');
+  }
   const liveFrame=replaceFrameUrl($('moduleFrame'),liveUrl.href);
   // Do not capture a redundant offline-screen snapshot for migrated A/R.
   if(!realArPilot)universal?.watch(route,liveFrame);
