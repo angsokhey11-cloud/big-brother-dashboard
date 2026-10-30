@@ -178,7 +178,7 @@ function routeLabel(route){return META[route]?.[2]||route}
 /* Unified Real A/R pilot. The active menu router and Android Back/history
    restoration MUST follow the same route as Mobile Home and core mobile.js. */
 function realArPilot(route){
-  return (route==='ar-your'||route==='sales-support-your-receivable')&&
+  return (route==='ar-your'||route==='ar-all'||route==='sales-support-your-receivable')&&
     window.BBRealARFastModeV1?.enabled?.()===true;
 }
 function liveRouteUrl(route){
