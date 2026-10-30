@@ -175,6 +175,21 @@ const PC={
 
 function routeUrl(route){return MOBILE[route]||PC[route]||(DASH+'?module='+encodeURIComponent(route)+'&autoload=1')}
 function routeLabel(route){return META[route]?.[2]||route}
+/* Unified Real A/R pilot. The active menu router and Android Back/history
+   restoration MUST follow the same route as Mobile Home and core mobile.js. */
+function realArPilot(route){
+  return (route==='ar-your'||route==='sales-support-your-receivable')&&
+    window.BBRealARFastModeV1?.enabled?.()===true;
+}
+function liveRouteUrl(route){
+  const raw=routeUrl(route);
+  if(!realArPilot(route))return raw;
+  try{
+    const u=new URL(raw,location.href);
+    u.searchParams.set('bb_cache_pilot','1');
+    return u.href;
+  }catch(_){return raw}
+}
 
 function replaceFrameUrl(frame,url){
  try{
@@ -202,7 +217,7 @@ function replaceFrameUrl(frame,url){
 
 function renderDirect(route,forceLive=false){
  const offline=window.BBMobileOfflineWorkspaceV1;
- if(offline&&!offline.canUseNetwork()){
+ if(offline&&!offline.canUseNetwork()&&!realArPilot(route)){
    // Never let the Staff Request approval screen fall back to stale data.
    if(route!=='admin-staff-request'&&window.BBMobileOfflineModulesV1?.canOpen(route)){
      void window.BBMobileOfflineModulesV1.open(route).then(ok=>{
@@ -220,7 +235,7 @@ function renderDirect(route,forceLive=false){
  window.BBMobileUniversalReadOnlyV1?.stop();
  const frame=$('moduleFrame'),screen=$('moduleScreen');
  if(!frame||!screen)return false;
- const url=routeUrl(route);
+ const url=liveRouteUrl(route);
  if($('mobileHome'))$('mobileHome').hidden=true;
  if($('menuScreen'))$('menuScreen').hidden=true;
  screen.hidden=false;
@@ -228,7 +243,7 @@ function renderDirect(route,forceLive=false){
  if($('moduleDesktopLink'))$('moduleDesktopLink').href=DASH+'?module='+encodeURIComponent(route)+'&autoload=1';
  const next=replaceFrameUrl(frame,url);
  // Do not record an approval form as an offline read-only snapshot.
- if(route!=='admin-staff-request')window.BBMobileUniversalReadOnlyV1?.watch(route,next);
+ if(route!=='admin-staff-request'&&!realArPilot(route))window.BBMobileUniversalReadOnlyV1?.watch(route,next);
  return true;
 }
 function openDirect(route,push=true,forceLive=false){
@@ -236,7 +251,8 @@ function openDirect(route,push=true,forceLive=false){
  // Approval actions must always load current live data rather than an
  // archived read-only page; especially important for notification taps.
  const liveApproval=route==='admin-staff-request';
- if(!forceLive&&!liveApproval&&cached?.canOpen(route)){
+ const realPilot=realArPilot(route);
+ if(!forceLive&&!liveApproval&&!realPilot&&cached?.canOpen(route)){
    void cached.open(route).then(ok=>{
      if(!ok){
        if(offline?.canUseNetwork())openDirect(route,push,true);
@@ -246,7 +262,7 @@ function openDirect(route,push=true,forceLive=false){
    return true;
  }
  const universal=window.BBMobileUniversalReadOnlyV1;
- if(!forceLive&&!liveApproval&&universal&&!['history','monthly-sales-report','sales-support-your-stock','sales-support-batch-selling-tracker','daily-sale-summary'].includes(route)){
+ if(!forceLive&&!liveApproval&&!realPilot&&universal&&!['history','monthly-sales-report','sales-support-your-stock','sales-support-batch-selling-tracker','daily-sale-summary'].includes(route)){
    void universal.open(route).then(ok=>{
      if(!ok){
        if(offline?.canUseNetwork())openDirect(route,push,true);
