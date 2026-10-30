@@ -195,6 +195,8 @@ async function capture(route,frame){
   }catch(_){return false}
 }
 function watch(route,frame){
+  // Migrated A/R routes must use the real UI, never a DOM-snapshot imitation.
+  if(['ar-your','ar-all','sales-support-your-receivable'].includes(route))return;
   if(!frame||!access(route))return;
   const seen=frame.dataset.bbStaticWatchRoute;
   if(seen===route)return;
@@ -246,6 +248,8 @@ function onlineReady(frame,started){
 }
 async function open(route){
   stop();
+  // Keep A/R data snapshots, but never display the obsolete read-only UI.
+  if(['ar-your','ar-all','sales-support-your-receivable'].includes(route))return false;
   const user=api()?.currentUserId();
   const id=++epoch,record=await saved(route);
   // A superseded request is not an uncached route: do not start a stale live
