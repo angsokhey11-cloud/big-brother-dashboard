@@ -175,11 +175,10 @@ const PC={
 
 function routeUrl(route){return MOBILE[route]||PC[route]||(DASH+'?module='+encodeURIComponent(route)+'&autoload=1')}
 function routeLabel(route){return META[route]?.[2]||route}
-/* Unified Real A/R pilot. The active menu router and Android Back/history
-   restoration MUST follow the same route as Mobile Home and core mobile.js. */
+/* Original cached Receivable UI is the default for APK and installed PWA.
+   Menu taps and history restoration must never show the duplicate offline UI. */
 function realArPilot(route){
-  return (route==='ar-your'||route==='ar-all'||route==='sales-support-your-receivable')&&
-    window.BBRealARFastModeV1?.enabled?.()===true;
+  return route==='ar-your'||route==='ar-all'||route==='sales-support-your-receivable';
 }
 function liveRouteUrl(route){
   const raw=routeUrl(route);
