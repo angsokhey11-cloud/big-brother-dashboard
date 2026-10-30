@@ -6,6 +6,27 @@ const SUPABASE_URL='https://sjfhlaclgmkwwofzstok.supabase.co';
 const SUPABASE_KEY='sb_publishable_w762jR65CWwlO30fKQsYOw_6L9grx8S';
 const SESSION_KEY='BB_SUPABASE_DEV_SESSION_V1';
 const LOGIN_EMAIL_KEY='BB_MOBILE_LOGIN_EMAIL_V1';
+/* Real A/R pilot opt-in, available inside the installed Android WebView.
+ * This only changes the display path. No financial write or DB changes.
+ */
+const bbArPilotToggle=document.getElementById('bbRealArPilotToggle');
+if(bbArPilotToggle){
+  const active=new URLSearchParams(location.search).get('bb_real_ar')==='1';
+  const target=new URL(location.href);
+  target.searchParams.delete('module');
+  target.searchParams.delete('autoload');
+  target.searchParams.delete('bb_cache_pilot');
+  if(active)target.searchParams.delete('bb_real_ar');
+  else target.searchParams.set('bb_real_ar','1');
+  bbArPilotToggle.href=target.pathname+target.search;
+  const strong=bbArPilotToggle.querySelector('strong');
+  const small=bbArPilotToggle.querySelector('small');
+  if(strong)strong.textContent=active?'Return to Standard Receivable':'Try Real Receivable Fast Mode';
+  if(small)small.textContent=active?
+    'Disable pilot and restore existing offline-first routing':
+    'Original A/R UI, cached data, automatic live refresh';
+}
+
 
 const REQUIRED_ACTION={
   'customers-add':'create','clients-add':'create','products-add':'create',
