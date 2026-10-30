@@ -978,8 +978,11 @@ function openRoute(route,navState='',forceLive=false){
   if(!canRoute(route))return toast('Access denied.');
   const offline=window.BBMobileOfflineWorkspaceV1;
   const cached=window.BBMobileOfflineModulesV1;
+  // Opt-in real A/R pilot bypasses the duplicate offline screen entirely.
+  const realArPilot=(route==='ar-your'||route==='sales-support-your-receivable')&&
+    new URLSearchParams(location.search).get('bb_real_ar')==='1';
   // Cache first even when navigator.onLine=true; slow mobile data must not block taps.
-  if(!forceLive&&cached?.canOpen(route)){
+  if(!forceLive&&!realArPilot&&cached?.canOpen(route)){
     void cached.open(route).then(ok=>{
       if(!ok){
         if(offline?.canUseNetwork())openRoute(route,navState,true);
@@ -992,7 +995,7 @@ function openRoute(route,navState='',forceLive=false){
     return;
   }
   const universal=window.BBMobileUniversalReadOnlyV1;
-  if(!forceLive&&universal&&!['history','monthly-sales-report','sales-support-your-stock','sales-support-batch-selling-tracker','daily-sale-summary'].includes(route)){
+  if(!forceLive&&!realArPilot&&universal&&!['history','monthly-sales-report','sales-support-your-stock','sales-support-batch-selling-tracker','daily-sale-summary'].includes(route)){
     void universal.open(route).then(ok=>{
       if(!ok){
         if(offline?.canUseNetwork())openRoute(route,navState,true);
@@ -1004,7 +1007,7 @@ function openRoute(route,navState='',forceLive=false){
     });
     return;
   }
-  if(offline&&!offline.canUseNetwork())return toast('Online required for this function.');
+  if(offline&&!offline.canUseNetwork()&&!realArPilot)return toast('Online required for this function.');
   window.BBMobileOfflineModulesV1?.close();
   universal?.stop();
   closePicker();currentRoute=route;fallbackRoute='';
@@ -1021,7 +1024,9 @@ function openRoute(route,navState='',forceLive=false){
   if($('menuScreen'))$('menuScreen').hidden=true;
   if($('moduleScreen'))$('moduleScreen').hidden=false;
   if($('moduleTitle'))$('moduleTitle').textContent=item.label;
-  if($('moduleFrame'))universal?.watch(route,replaceFrameUrl($('moduleFrame'),item.url));
+  const liveUrl=new URL(item.url,location.href);
+  if(realArPilot)liveUrl.searchParams.set('bb_cache_pilot','1');
+  if($('moduleFrame'))universal?.watch(route,replaceFrameUrl($('moduleFrame'),liveUrl.href));
   try{
     const nav=window.BBMobileHistoryV7||window.BBMobileHistoryV6;
     if(nav&&!nav.isRestoring?.())nav.recordModule(route,true);
