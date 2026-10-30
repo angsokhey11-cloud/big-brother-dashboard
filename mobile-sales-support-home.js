@@ -978,9 +978,8 @@ function openRoute(route,navState='',forceLive=false){
   if(!canRoute(route))return toast('Access denied.');
   const offline=window.BBMobileOfflineWorkspaceV1;
   const cached=window.BBMobileOfflineModulesV1;
-  // Opt-in real A/R pilot bypasses the duplicate offline screen entirely.
-  const realArPilot=(route==='ar-your'||route==='ar-all'||route==='sales-support-your-receivable')&&
-    window.BBRealARFastModeV1?.enabled?.()===true;
+  // Real cached A/R UI is now the default: never stage the old offline screen.
+  const realArPilot=route==='ar-your'||route==='ar-all'||route==='sales-support-your-receivable';
   // Cache first even when navigator.onLine=true; slow mobile data must not block taps.
   if(!forceLive&&!realArPilot&&cached?.canOpen(route)){
     void cached.open(route).then(ok=>{
@@ -1026,7 +1025,10 @@ function openRoute(route,navState='',forceLive=false){
   if($('moduleTitle'))$('moduleTitle').textContent=item.label;
   const liveUrl=new URL(item.url,location.href);
   if(realArPilot)liveUrl.searchParams.set('bb_cache_pilot','1');
-  if($('moduleFrame'))universal?.watch(route,replaceFrameUrl($('moduleFrame'),liveUrl.href));
+  if($('moduleFrame')){
+    const opened=replaceFrameUrl($('moduleFrame'),liveUrl.href);
+    if(!realArPilot)universal?.watch(route,opened);
+  }
   try{
     const nav=window.BBMobileHistoryV7||window.BBMobileHistoryV6;
     if(nav&&!nav.isRestoring?.())nav.recordModule(route,true);
