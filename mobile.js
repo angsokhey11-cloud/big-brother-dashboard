@@ -6,36 +6,12 @@ const SUPABASE_URL='https://sjfhlaclgmkwwofzstok.supabase.co';
 const SUPABASE_KEY='sb_publishable_w762jR65CWwlO30fKQsYOw_6L9grx8S';
 const SESSION_KEY='BB_SUPABASE_DEV_SESSION_V1';
 const LOGIN_EMAIL_KEY='BB_MOBILE_LOGIN_EMAIL_V1';
-/* Real A/R pilot opt-in, available inside the installed Android WebView.
- * This only changes the display path. No financial write or DB changes.
+/* My / All / Sales Support Receivable now use the real cached web UI by default.
+ * Kept as a compatibility signal for other existing mobile routers.
+ * No user toggle, localStorage opt-in or dependency on PWA start_url.
  */
-const BB_REAL_AR_PILOT_KEY='bb_mobile_real_ar_pilot_v1';
-const bbRealArParam=new URLSearchParams(location.search).get('bb_real_ar');
-try{
-  if(bbRealArParam==='1')localStorage.setItem(BB_REAL_AR_PILOT_KEY,'1');
-  if(bbRealArParam==='0')localStorage.removeItem(BB_REAL_AR_PILOT_KEY);
-}catch(_){}
-function bbRealArPilotEnabled(){
-  try{return bbRealArParam==='1'||(bbRealArParam!=='0'&&localStorage.getItem(BB_REAL_AR_PILOT_KEY)==='1')}
-  catch(_){return bbRealArParam==='1'}
-}
+function bbRealArPilotEnabled(){return true}
 window.BBRealARFastModeV1=Object.freeze({enabled:bbRealArPilotEnabled});
-const bbArPilotToggle=document.getElementById('bbRealArPilotToggle');
-if(bbArPilotToggle){
-  const active=bbRealArPilotEnabled();
-  const target=new URL(location.href);
-  target.searchParams.delete('module');
-  target.searchParams.delete('autoload');
-  target.searchParams.delete('bb_cache_pilot');
-  target.searchParams.set('bb_real_ar',active?'0':'1');
-  bbArPilotToggle.href=target.pathname+target.search;
-  const strong=bbArPilotToggle.querySelector('strong');
-  const small=bbArPilotToggle.querySelector('small');
-  if(strong)strong.textContent=active?'Return to Standard Receivable':'Try Real Receivable Fast Mode';
-  if(small)small.textContent=active?
-    'Disable pilot and restore existing offline-first routing':
-    'Original A/R UI, cached data, automatic live refresh';
-}
 
 
 const REQUIRED_ACTION={
@@ -410,9 +386,9 @@ function openModule(route,updateUrl=true,forceLive=false){
   // Approval pages are transactional. Never show a cached read-only copy
   // when the user taps Review/Approve or opens a notification.
   const liveApproval=route==='admin-staff-request';
-  // Opt-in pilot: the ORIGINAL Your Receivable page opens directly.
-  // Other routes keep the existing read-only offline fallback unchanged.
-  const realArPilot=(route==='ar-your'||route==='ar-all')&&bbRealArPilotEnabled();
+  // All three A/R routes use the original cached UI, even in installed PWA.
+  // Other routes retain their current offline fallback until migrated.
+  const realArPilot=['ar-your','ar-all','sales-support-your-receivable'].includes(route);
   if(!forceLive&&!liveApproval&&!realArPilot&&cached?.canOpen(route)){
     void cached.open(route).then(ok=>{
       if(!ok){
@@ -441,7 +417,8 @@ function openModule(route,updateUrl=true,forceLive=false){
   const liveUrl=new URL(item.url,location.href);
   if(realArPilot)liveUrl.searchParams.set('bb_cache_pilot','1');
   const liveFrame=replaceFrameUrl($('moduleFrame'),liveUrl.href);
-  universal?.watch(route,liveFrame);
+  // Do not capture a redundant offline-screen snapshot for migrated A/R.
+  if(!realArPilot)universal?.watch(route,liveFrame);
   $('moduleDesktopLink').href='index.html?module='+encodeURIComponent(route)+'&autoload=1';
   if(updateUrl){
     if((window.BBMobileHistoryV7||window.BBMobileHistoryV6))(window.BBMobileHistoryV7||window.BBMobileHistoryV6).recordModule(route,true);
