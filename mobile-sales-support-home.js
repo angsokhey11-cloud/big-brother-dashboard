@@ -980,7 +980,7 @@ function openRoute(route,navState='',forceLive=false){
   const cached=window.BBMobileOfflineModulesV1;
   // Opt-in real A/R pilot bypasses the duplicate offline screen entirely.
   const realArPilot=(route==='ar-your'||route==='sales-support-your-receivable')&&
-    new URLSearchParams(location.search).get('bb_real_ar')==='1';
+    window.BBRealARFastModeV1?.enabled?.()===true;
   // Cache first even when navigator.onLine=true; slow mobile data must not block taps.
   if(!forceLive&&!realArPilot&&cached?.canOpen(route)){
     void cached.open(route).then(ok=>{
