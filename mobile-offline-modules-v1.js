@@ -11,12 +11,11 @@ const clean=v=>String(v??'').trim();
 const num=v=>{const x=Number(v);return Number.isFinite(x)?x:0};
 const money=(n,c='USD')=>c==='KHR'?'៛'+Math.round(num(n)).toLocaleString('en-US'):'$'+num(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 const esc=v=>clean(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+// The old duplicate A/R screen is retired. A/R snapshots continue to be
+// refreshed under offline-ar-your / offline-ar-all for the original real UI.
 const mapRoutes={
-  'ar-your':'offline-ar-your',
-  'sales-support-your-receivable':'offline-ar-your',
   'sales-support-your-collection':'offline-your-collection-v1',
   'sales-support-your-customer':'offline-your-customer-v1',
-  'ar-all':'offline-ar-all',
   'stock-report':'offline-stock-report',
   'sales-support-calculator':'offline-calc-bootstrap',
   'history':'offline-history-list-v1',
