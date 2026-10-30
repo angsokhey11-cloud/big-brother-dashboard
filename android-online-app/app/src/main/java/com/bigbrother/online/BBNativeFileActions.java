@@ -58,7 +58,7 @@ final class BBNativeFileActions {
                     helper.toast("Export too large. Select fewer invoices.");
                     return;
                 }
-                new Thread(()->helper.process(content),"BB-File-Export").start();
+                new Thread(()->helper.process(content,reply),"BB-File-Export").start();
             });
         return helper;
     }
@@ -95,9 +95,27 @@ final class BBNativeFileActions {
         throw new IllegalArgumentException("Unsupported file type for export.");
     }
 
-    private void process(String json){
+    private void report(androidx.webkit.JavaScriptReplyProxy reply,
+        int requestId,boolean accepted,String message){
+        if(requestId<0)return;
+        try{
+            JSONObject status=new JSONObject();
+            status.put("requestId",requestId);
+            status.put("ok",accepted);
+            status.put("message",message==null?"":message);
+            String payload=status.toString();
+            ui.post(()->{
+                try{reply.postMessage(payload);}
+                catch(Exception ignored){}
+            });
+        }catch(Exception ignored){}
+    }
+
+    private void process(String json,androidx.webkit.JavaScriptReplyProxy reply){
+        int requestId=-1;
         try{
             JSONObject command=new JSONObject(json);
+            requestId=command.optInt("requestId",-1);
             String action=command.optString("action","");
             if(!"save".equals(action)&&!"share".equals(action)&&!"open".equals(action))
                 throw new IllegalArgumentException("Unsupported action.");
@@ -127,16 +145,21 @@ final class BBNativeFileActions {
                 }
                 files.add(output);types.add(type);
             }
+            final int request=requestId;
             ui.post(()->{
                 try{
                     if("save".equals(action))saveFile(files.get(0),types.get(0));
                     else if("open".equals(action))openFile(files.get(0),types.get(0));
                     else shareFiles(files,types);
+                    // Accepted means chooser opened, not that a recipient received it.
+                    report(reply,request,true,"Android file chooser opened.");
                 }catch(Exception error){
+                    report(reply,request,false,error.getMessage());
                     Toast.makeText(activity,"Export: "+error.getMessage(),Toast.LENGTH_LONG).show();
                 }
             });
         }catch(Exception error){
+            report(reply,requestId,false,error.getMessage());
             toast("Export unavailable: "+error.getMessage());
         }
     }
