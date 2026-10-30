@@ -77,22 +77,62 @@ final class BBNativeFileActions {
         ui.post(()->Toast.makeText(activity,msg,Toast.LENGTH_LONG).show());
     }
 
-    private String safeName(String value){
-        String v=(value==null?"BIG-BROTHER-export":value)
-            .replaceAll("[\\\\/:*?\"<>|\\p{Cntrl}]","_").trim();
-        return v.length()>145?v.substring(0,145):(v.isEmpty()?"BIG-BROTHER-export":v);
+    private String supportedMime(String type,String name){
+        String mime=(type==null?"":type).split(";",2)[0].trim().toLowerCase(java.util.Locale.ROOT);
+        String lower=(name==null?"":name).toLowerCase(java.util.Locale.ROOT);
+        String byName="";
+        if(lower.endsWith(".pdf"))byName="application/pdf";
+        else if(lower.endsWith(".png"))byName="image/png";
+        else if(lower.endsWith(".jpg")||lower.endsWith(".jpeg"))byName="image/jpeg";
+        else if(lower.endsWith(".webp"))byName="image/webp";
+        else if(lower.endsWith(".gif"))byName="image/gif";
+        else if(lower.endsWith(".zip"))byName="application/zip";
+        else if(lower.endsWith(".txt"))byName="text/plain";
+        boolean allowed=mime.equals("application/pdf")||mime.equals("image/png")||
+            mime.equals("image/jpeg")||mime.equals("image/webp")||
+            mime.equals("image/gif")||mime.equals("application/zip")||
+            mime.equals("text/plain");
+        if(allowed){
+            if(!byName.isEmpty()&&!byName.equals(mime))
+                throw new IllegalArgumentException("File name and MIME type disagree.");
+            return mime;
+        }
+        if(!byName.isEmpty()&&(mime.isEmpty()||mime.equals("application/octet-stream")))
+            return byName;
+        throw new IllegalArgumentException("Unsupported export MIME type.");
     }
 
-    private String supportedMime(String type,String fileName){
-        String ext=fileName.toLowerCase(java.util.Locale.ROOT);
-        if(ext.endsWith(".pdf"))return "application/pdf";
-        if(ext.endsWith(".png"))return "image/png";
-        if(ext.endsWith(".jpg")||ext.endsWith(".jpeg"))return "image/jpeg";
-        if(ext.endsWith(".webp"))return "image/webp";
-        if(ext.endsWith(".gif"))return "image/gif";
-        if(ext.endsWith(".zip"))return "application/zip";
-        if(ext.endsWith(".txt"))return "text/plain";
-        throw new IllegalArgumentException("Unsupported file type for export.");
+    private String safeName(String value,String type){
+        String stem=(value==null?"BIG-BROTHER-export":value)
+            .replaceAll("[\\\\/:*?\"<>|\\p{Cntrl}]","_").trim()
+            .replaceFirst("(?i)\\.(pdf|png|jpe?g|webp|gif|zip|txt)$","");
+        stem=stem.replaceAll("[.\\s]+$","").trim();
+        if(stem.isEmpty())stem="BIG-BROTHER-export";
+        String ext;
+        switch(type){
+            case "application/pdf":ext=".pdf";break;
+            case "image/png":ext=".png";break;
+            case "image/jpeg":ext=".jpg";break;
+            case "image/webp":ext=".webp";break;
+            case "image/gif":ext=".gif";break;
+            case "application/zip":ext=".zip";break;
+            case "text/plain":ext=".txt";break;
+            default:throw new IllegalArgumentException("Unsupported export MIME type.");
+        }
+        // Truncate the BASE, not the full filename. Keep UTF-8 under 175
+        // bytes and preserve the extension even with long Khmer names.
+        int used=ext.getBytes(java.nio.charset.StandardCharsets.UTF_8).length;
+        StringBuilder shortened=new StringBuilder();
+        for(int pos=0;pos<stem.length();){
+            int cp=stem.codePointAt(pos);
+            String character=new String(Character.toChars(cp));
+            int next=character.getBytes(java.nio.charset.StandardCharsets.UTF_8).length;
+            if(used+next>175)break;
+            shortened.append(character);
+            used+=next;pos+=Character.charCount(cp);
+        }
+        if(shortened.length()==0)shortened.append("BIG-BROTHER-export");
+        return shortened.toString()+ext;
     }
 
     private void report(androidx.webkit.JavaScriptReplyProxy reply,
@@ -138,8 +178,9 @@ final class BBNativeFileActions {
             int total=0;
             for(int i=0;i<entries.length();i++){
                 JSONObject entry=entries.getJSONObject(i);
-                String name=safeName(entry.getString("name"));
-                String type=supportedMime(entry.optString("type"),name);
+                String originalName=entry.getString("name");
+                String type=supportedMime(entry.optString("type"),originalName);
+                String name=safeName(originalName,type);
                 byte[] bytes=Base64.decode(entry.getString("data"),Base64.DEFAULT);
                 if(bytes.length<1||bytes.length>MAX_FILE)
                     throw new IllegalArgumentException("Generated file too large.");
