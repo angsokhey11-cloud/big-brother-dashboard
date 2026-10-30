@@ -379,7 +379,10 @@ function openModule(route,updateUrl=true,forceLive=false){
   // Approval pages are transactional. Never show a cached read-only copy
   // when the user taps Review/Approve or opens a notification.
   const liveApproval=route==='admin-staff-request';
-  if(!forceLive&&!liveApproval&&cached?.canOpen(route)){
+  // Opt-in pilot: the ORIGINAL Your Receivable page opens directly.
+  // Other routes keep the existing read-only offline fallback unchanged.
+  const realArPilot=route==='ar-your'&&new URLSearchParams(location.search).get('bb_real_ar')==='1';
+  if(!forceLive&&!liveApproval&&!realArPilot&&cached?.canOpen(route)){
     void cached.open(route).then(ok=>{
       if(!ok){
         if(offline?.canUseNetwork())openModule(route,updateUrl,true);
@@ -389,7 +392,7 @@ function openModule(route,updateUrl=true,forceLive=false){
     return true;
   }
   const universal=window.BBMobileUniversalReadOnlyV1;
-  if(!forceLive&&!liveApproval&&universal&&!['history','monthly-sales-report','sales-support-your-stock','sales-support-batch-selling-tracker','daily-sale-summary'].includes(route)){
+  if(!forceLive&&!liveApproval&&!realArPilot&&universal&&!['history','monthly-sales-report','sales-support-your-stock','sales-support-batch-selling-tracker','daily-sale-summary'].includes(route)){
     // Every permitted route can use its previously saved, non-executable
     // original UI first, even while internet is slow.
     void universal.open(route).then(ok=>{
@@ -400,11 +403,13 @@ function openModule(route,updateUrl=true,forceLive=false){
     });
     return true;
   }
-  if(offline&&!offline.canUseNetwork()){toast('This function requires internet.');return false}
+  if(offline&&!offline.canUseNetwork()&&!realArPilot){toast('This function requires internet.');return false}
   window.BBMobileOfflineModulesV1?.close();
   universal?.stop();
   hideAll();$('moduleScreen').hidden=false;$('moduleTitle').textContent=item.label;
-  const liveFrame=replaceFrameUrl($('moduleFrame'),item.url);
+  const liveUrl=new URL(item.url,location.href);
+  if(realArPilot)liveUrl.searchParams.set('bb_cache_pilot','1');
+  const liveFrame=replaceFrameUrl($('moduleFrame'),liveUrl.href);
   universal?.watch(route,liveFrame);
   $('moduleDesktopLink').href='index.html?module='+encodeURIComponent(route)+'&autoload=1';
   if(updateUrl){
