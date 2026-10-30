@@ -124,6 +124,12 @@ final class BBNativeFileActions {
             JSONObject command=new JSONObject(json);
             requestId=command.optInt("requestId",-1);
             String action=command.optString("action","");
+            // Read-only health check: confirms trusted frame origin, listener,
+            // and reply channel without receiving customer data or opening files.
+            if("ping".equals(action)){
+                report(reply,requestId,true,"BIG BROTHER native file bridge active");
+                return;
+            }
             if(!"save".equals(action)&&!"share".equals(action)&&!"open".equals(action))
                 throw new IllegalArgumentException("Unsupported action.");
             JSONArray entries=command.getJSONArray("files");
