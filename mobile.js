@@ -412,7 +412,7 @@ function openModule(route,updateUrl=true,forceLive=false){
   const liveApproval=route==='admin-staff-request';
   // Opt-in pilot: the ORIGINAL Your Receivable page opens directly.
   // Other routes keep the existing read-only offline fallback unchanged.
-  const realArPilot=route==='ar-your'&&bbRealArPilotEnabled();
+  const realArPilot=(route==='ar-your'||route==='ar-all')&&bbRealArPilotEnabled();
   if(!forceLive&&!liveApproval&&!realArPilot&&cached?.canOpen(route)){
     void cached.open(route).then(ok=>{
       if(!ok){
