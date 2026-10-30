@@ -1024,7 +1024,10 @@ function openRoute(route,navState='',forceLive=false){
   if($('moduleScreen'))$('moduleScreen').hidden=false;
   if($('moduleTitle'))$('moduleTitle').textContent=item.label;
   const liveUrl=new URL(item.url,location.href);
-  if(realArPilot)liveUrl.searchParams.set('bb_cache_pilot','1');
+  if(realArPilot){
+    liveUrl.searchParams.set('bb_cache_pilot','1');
+    if(new URLSearchParams(location.search).get('localbrain')==='1')liveUrl.searchParams.set('localbrain','1');
+  }
   if($('moduleFrame')){
     const opened=replaceFrameUrl($('moduleFrame'),liveUrl.href);
     if(!realArPilot)universal?.watch(route,opened);
