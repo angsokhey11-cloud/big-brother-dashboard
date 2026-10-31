@@ -5365,7 +5365,7 @@ begin
         and sa.product_code=v_code
         and split_part(sa.client_request_id,':',1)='BATCH-INVOICE'
         and split_part(sa.client_request_id,':',2)=new.line_id;
-      if v_purchase_cost is null then
+      if v_purchase_cost is null or v_purchase_cost<=0 then
         raise exception 'Historical Purchased COGS missing for %; audit review required',v_code;
       end if;
 
