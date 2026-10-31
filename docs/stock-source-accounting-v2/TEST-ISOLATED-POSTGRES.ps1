@@ -8,7 +8,7 @@
 param(
   [Parameter(Mandatory=$true)][string]$BackupFile,
   [Parameter(Mandatory=$true)][string]$StagedDir,
-  [string]$Image='postgres:16',
+  [string]$Image='public.ecr.aws/supabase/postgres:17.6.1.166',
   [string]$ContainerName='bb-stock-source-v2-isolated-test'
 )
 Set-StrictMode -Version Latest
@@ -23,7 +23,7 @@ function RunSql([string]$FileName) {
   Write-Host "Checking in isolated database: $FileName" -ForegroundColor Cyan
   docker cp "$file" "$($ContainerName):/tmp/$FileName" | Out-Null
   Check-LastExit 'Docker copy'
-  docker exec $ContainerName psql -X -v ON_ERROR_STOP=1 -U postgres -d postgres -f "/tmp/$FileName"
+  docker exec $ContainerName psql -X -v ON_ERROR_STOP=1 -U postgres -d bb_stock_v2_sandbox -f "/tmp/$FileName"
   Check-LastExit "SQL $FileName"
 }
 $files=@(
@@ -65,7 +65,9 @@ try {
   Write-Host 'Restoring backup COPY into isolated container (source remains unchanged).' -ForegroundColor Cyan
   docker cp "$BackupFile" "$($ContainerName):/tmp/local-source.backup" | Out-Null
   Check-LastExit 'Copy PostgreSQL dump'
-  docker exec $ContainerName pg_restore --exit-on-error --no-owner --no-acl -U postgres -d postgres /tmp/local-source.backup
+  docker exec $ContainerName createdb -U postgres bb_stock_v2_sandbox
+  Check-LastExit 'Create sandbox-only database'
+  docker exec $ContainerName pg_restore --exit-on-error --no-owner --no-acl -U postgres -d bb_stock_v2_sandbox /tmp/local-source.backup
   Check-LastExit 'Restore isolated database'
   foreach($f in $files){ RunSql $f }
   Write-Host 'COMPILE + READ-ONLY SQL SMOKE COMPLETE in temporary database.' -ForegroundColor Green
