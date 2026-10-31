@@ -14,14 +14,15 @@ WITH cases(name,batch_p,batch_z,sale_p,sale_z,back_p,back_z,reverse_p,reverse_z,
  ('back exceeds available purchased',20,10,4,1,17,0,0,0,0.45,0,0,0,false),
  ('back exceeds available zero',20,10,4,1,0,10,0,0,0.45,0,0,0,false),
  ('negative source sale',20,10,-1,2,0,0,0,0,0.45,0,0,0,false),
- ('zero original purchased cost',20,10,3,0,0,0,1,0,0,18,10,0,true),
+ ('zero original purchased cost requires audit',20,10,3,0,0,0,1,0,0,0,0,0,false),
  ('reversal exceeds purchased source sold',20,10,1,2,0,0,2,0,0.45,0,0,0,false)
 ), evaluated AS (
  SELECT name,should_accept,
    (sale_p>=0 AND sale_z>=0 AND back_p>=0 AND back_z>=0 AND reverse_p>=0 AND reverse_z>=0
      AND sale_p<=batch_p AND sale_z<=batch_z
      AND back_p<=batch_p-sale_p AND back_z<=batch_z-sale_z
-     AND reverse_p<=sale_p AND reverse_z<=sale_z) accepted,
+     AND reverse_p<=sale_p AND reverse_z<=sale_z
+     AND (reverse_p<=0 OR original_unit_cost>0)) accepted,
    batch_p-sale_p-back_p+reverse_p actual_p,
    batch_z-sale_z-back_z+reverse_z actual_z,
    round((sale_p-reverse_p)*original_unit_cost,2) actual_cogs,
