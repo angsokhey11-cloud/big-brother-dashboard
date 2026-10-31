@@ -66,10 +66,18 @@ $beforeQty=Query("SELECT batch_pending FROM public.bb_stock_product_rows_zero_co
 $beforeCost=Query("SELECT average_cost FROM public.bb_stock_product_rows_zero_cost_v1_internal() WHERE product_code='AF-2L';")
 $beforeProductValue=Query("SELECT total_value FROM public.bb_stock_product_rows_zero_cost_v1_internal() WHERE product_code='AF-2L';")
 $beforeCompanyValue=Query("SELECT round(sum(total_value),2) FROM public.bb_stock_product_rows_zero_cost_v1_internal();")
-if([decimal]$beforeQty -ne 3860 -or [decimal]$beforeCost -ne [decimal]'3.988749'
-   -or [decimal]$beforeProductValue -ne [decimal]'18116.90'
-   -or [decimal]$beforeCompanyValue -ne [decimal]'75346.90') {
-  throw "Local baseline changed (qty=$beforeQty cost=$beforeCost product=$beforeProductValue company=$beforeCompanyValue). Stop."
+# PowerShell 5.1-safe checks: never break an -or expression across lines.
+if ([decimal]$beforeQty -ne [decimal]3860) {
+  throw "Local AF-2L batch qty changed ($beforeQty). Stop."
+}
+if ([decimal]$beforeCost -ne [decimal]'3.988749') {
+  throw "Local AF-2L average cost changed ($beforeCost). Stop."
+}
+if ([decimal]$beforeProductValue -ne [decimal]'18116.90') {
+  throw "Local AF-2L inventory value changed ($beforeProductValue). Stop."
+}
+if ([decimal]$beforeCompanyValue -ne [decimal]'75346.90') {
+  throw "Local company stock value changed ($beforeCompanyValue). Stop."
 }
 # Preserve complete row evidence OUTSIDE DB before any optional repair.
 $csvSql="COPY (SELECT * FROM public.stock_activity WHERE transaction_id IN ('TRX-000973','TRX-002412') ORDER BY transaction_id) TO STDOUT WITH CSV HEADER;"
