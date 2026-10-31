@@ -62,11 +62,16 @@ try {
     Start-Sleep -Seconds 1
   }
   if(-not $ready){ throw 'Isolated PostgreSQL was not ready.' }
+  # Supabase postgres role is NOT a superuser; ALTER SYSTEM requires
+  # the isolated cluster's supabase_admin role. Never try this on V5/V6.
+  $adminCheck=(docker exec $ContainerName psql -X -U postgres -d postgres -tAc "SELECT rolsuper AND rolcanlogin FROM pg_roles WHERE rolname='supabase_admin';").Trim()
+  Check-LastExit 'Inspect isolated supabase_admin role'
+  if($adminCheck -ne 't'){ throw 'Isolated supabase_admin role is not a login superuser' }
   # pg_cron only installs into cron.database_name (postgres by default).
   # Configure only this disposable container; disable restored scheduled jobs.
-  docker exec $ContainerName psql -X -v ON_ERROR_STOP=1 -U postgres -d postgres -c "ALTER SYSTEM SET cron.database_name = 'bb_stock_v2_sandbox';"
+  docker exec $ContainerName psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d postgres -c "ALTER SYSTEM SET cron.database_name = 'bb_stock_v2_sandbox';"
   Check-LastExit 'Set sandbox pg_cron database'
-  docker exec $ContainerName psql -X -v ON_ERROR_STOP=1 -U postgres -d postgres -c "ALTER SYSTEM SET cron.launch_active_jobs = off;"
+  docker exec $ContainerName psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d postgres -c "ALTER SYSTEM SET cron.launch_active_jobs = off;"
   Check-LastExit 'Disable sandbox cron execution'
   docker restart $ContainerName | Out-Null
   Check-LastExit 'Restart isolated container for pg_cron setting'
