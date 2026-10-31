@@ -128,6 +128,12 @@
       "file": "20261029_your_stock_notification_route_v1.sql",
       "sha256": "C18E08599F716BE02BB625DF763A24F94314CAE522D8B8C993A8C1ED2E41E133",
       "description": "Code Sync notification-only: point batch-assignment alerts to Your Stock. Cloud capture function is optional in Local (protected notification infrastructure is schema-only); no Cloud-only trigger creation; no stock/accounting changes."
+    },
+    {
+      "id": "20261031_report_damage_counts_v1",
+      "file": "20261031_report_damage_counts_v1.sql",
+      "sha256": "03133CCD06B65667F3E3832B55B736CF82036823E7A9BDBBA97662805E0ED830",
+      "description": "Report Damage: permission-scoped, read-only per-batch completed-report transaction counts; no stock or business-data writes; Local Brain V5/V6 Cloud parity"
     }
   ]
 }
