@@ -36,3 +36,16 @@ with the same sum and availability validation. Purchased returns go to WAREHOUSE
 A batch has Purchased 20 and Zero-Cost 10. Invoice sells Purchased 3 + Zero-Cost 2. Remaining is Purchased 17 + Zero-Cost 8. Back Sale returns Purchased 1 + Zero-Cost 3. Warehouse receives purchased 1 and zero-cost 3; the batch remains Purchased 16 + Zero-Cost 5. Sold purchased 3 carries average cost; sold zero-cost 2 carries zero cost.
 
 **Release status: BLOCKED (prototype only)** until reversal and Local regression tests pass.
+
+## Reversal provenance investigation (31-Oct-2026)
+- Confirmed pre-close reversal `bb_batch_return_stock_internal` restores PURCHASED first and values its return with **today's** average cost; both need replacement to faithfully reverse the original sale.
+- Confirmed post-close `bb_postclose_reversal_stock_v1` already reads the original sale cost, but for a mixed-source *partial* return still chooses PURCHASED first; this must become accountant-selected when both sources remain.
+- Confirmed BEFORE trigger `bb_batch_return_allocate_internal` rewrites the return `stock_allocation_json`, so the selected quantities must be propagated through this trigger too.
+- In a read-only live ledger reconciliation, 2,643 original per-product sale records could be linked to their invoice lines; 2 records used both sources on one invoice line. These historical transactions must remain untouched pending audit.
+- Added **STAGED ONLY** read-only `20261031_reversal_source_snapshot_STAGED.sql` to provide each physical product's original Purchased/Zero-Cost sales, prior returns, remaining source quantities, historical Purchased cost, and mismatch flag.
+- Invoice Reversal app staged separately: source snapshot displayed by invoice line, with mismatch warnings, no change to current save function.
+
+### Additional release blocker
+- Implement an explicit **reversal-source picker** for mixed Batch Invoice lines and group-member products. Send exact return source quantities per physical product to all reversal save paths, and ensure BEFORE/AFTER and post-close stock triggers validate original per-line sale provenance and previous returns.
+- Use the **historical purchase sale cost** for both pre-close and post-close COGS reversal, never current average cost.
+- Include the Invoice Reversal repository in Cloud/Local code parity and end-to-end regression.
