@@ -62,6 +62,24 @@ try {
     Start-Sleep -Seconds 1
   }
   if(-not $ready){ throw 'Isolated PostgreSQL was not ready.' }
+  # pg_cron only installs into cron.database_name (postgres by default).
+  # Configure only this disposable container; disable restored scheduled jobs.
+  docker exec $ContainerName psql -X -v ON_ERROR_STOP=1 -U postgres -d postgres -c "ALTER SYSTEM SET cron.database_name = 'bb_stock_v2_sandbox';"
+  Check-LastExit 'Set sandbox pg_cron database'
+  docker exec $ContainerName psql -X -v ON_ERROR_STOP=1 -U postgres -d postgres -c "ALTER SYSTEM SET cron.launch_active_jobs = off;"
+  Check-LastExit 'Disable sandbox cron execution'
+  docker restart $ContainerName | Out-Null
+  Check-LastExit 'Restart isolated container for pg_cron setting'
+  $ready=$false
+  for($attempt=0;$attempt -lt 30;$attempt++){
+    docker exec $ContainerName pg_isready -U postgres *> $null
+    if($LASTEXITCODE -eq 0){ $ready=$true; break }
+    Start-Sleep -Seconds 1
+  }
+  if(-not $ready){ throw 'Isolated PostgreSQL was not ready after pg_cron restart.' }
+  $cronDatabase=(docker exec $ContainerName psql -X -U postgres -d postgres -tAc 'SHOW cron.database_name;').Trim()
+  Check-LastExit 'Read sandbox pg_cron database'
+  if($cronDatabase -ne 'bb_stock_v2_sandbox'){ throw "Unsafe cron database: $cronDatabase" }
   Write-Host 'Restoring backup COPY into isolated container (source remains unchanged).' -ForegroundColor Cyan
   docker cp "$BackupFile" "$($ContainerName):/tmp/local-source.backup" | Out-Null
   Check-LastExit 'Copy PostgreSQL dump'
