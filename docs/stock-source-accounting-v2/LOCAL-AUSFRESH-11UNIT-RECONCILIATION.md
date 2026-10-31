@@ -43,3 +43,11 @@ Status: **ISOLATED DRY RUN PASSED; REAL LOCAL DATABASE NOT REPAIRED**
 - Cloud `stock_activity` currently has no declared inbound foreign keys, but application-level references are not ruled out.
 - `stock_activity` has an AFTER DELETE audit trigger; retain separate external transaction evidence because audit logging can have exceptions.
 - The two candidates are historic Local-only sale deductions, not new inventory or purchase valuation adjustments. A correction must preserve invoice revenue, cash/bank payments, receivables and proper record provenance.
+
+## Guarded real-Local reconciliation preparation (31-Oct-2026)
+- Staged file: LOCAL-AUSFRESH-CORRECTION-GUARDED.ps1. NOT run against real Local yet.
+- `-Mode Preview` is the default: checks the existing Desktop backup, local activity count 4,247, exact movement IDs/quantity/source, canonical TRX-004408, invoice INV-2346, baseline AF-2L 3,860 / average 3.988749 / value $18,116.90, and company total $75,346.90. Exports the two original full stock_activity rows separately.
+- `-Mode Apply` requires an exact typed phrase and then executes a locked, atomic delete of only those two source-matched rows. It checks that AF-2L becomes 3,871 / 3.988650 / $18,160.32, company total $75,390.32 and stock movement count 4,245, otherwise aborts transaction.
+- This new wrapper/script has passed only static checks; the earlier isolated transaction's accounting result passed, but the final wrapper has not run. Preflight first and review output before executing Apply.
+- A new Cloud read-only recheck still finds 4,245 stock_activity records and one canonical sale line; no Cloud edits were made.
+- Do not run Code Sync or Local→Cloud Upload before the Local-only ledger correction is confirmed.
