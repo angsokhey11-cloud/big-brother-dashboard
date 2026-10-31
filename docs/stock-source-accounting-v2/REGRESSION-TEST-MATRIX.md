@@ -42,3 +42,19 @@
 6. Register a checksum-verified Local V5/V6 SQL migration and guard against Cloud→Local schema drift. Test local read/save without internet.
 7. Apply Cloud backend and frontend under a maintenance gate or atomic-compatible release. Verify read-only reconciliations before and after. Ensure export/rollback definitions exist.
 8. Review three historically purchased-source zero-value lines. **Do not automatically edit earlier invoice amounts, COGS or stock.**
+
+## 31-Oct-2026 continued pre-release verification (READ-ONLY)
+- Synthetic PostgreSQL source arithmetic SQL: **12/12 passed**. Reproducible via `SOURCE-ARITHMETIC-SMOKE-READONLY.sql`. Tests arithmetic and input rejection **only**, not actual PL/pgSQL function execution.
+- Live schema catalog: **31/31 expected stock/invoice/return fields present**.
+- Invoice Generator staged `normalizeSimpleBatchRows` was executed on exact and grouped sample data: Purchased and Zero-Cost source availability were preserved for both.
+- All ordinary, split-payment and multi-bank invoices reach `bb_sales_save_invoice_bundle_core_access_v1` then `bb_sales_save_invoice_bundle_core_v1`.
+- Supabase branch list returned **main only**, so there is no existing isolated development database. Do **not** create a billable Supabase development branch without approval.
+- Pre-close staged reversal now **blocks** an original purchased-cost record with zero/null historical cost for manual accounting review, consistent with post-close safeguard. This is not a historical write-off or automatic COGS correction.
+- **No staging SQL deployed** to production, no migration manifest registration, no stock or financial data writes.
+
+### Remaining NOT TESTED (hard blockers)
+- Actual PostgreSQL `CREATE OR REPLACE FUNCTION` parsing/type resolution and trigger integration in an isolated clone. SQL syntax/compilation cannot be claimed as passed.
+- Branch simulation for Live→Local V5/V6 Code Sync, schema guard, offline invoice/Back Sale/reversal flows, and cloud ↔ local merge integrity.
+- Cached/stale online PWA, APK, mobile, and other older clients must be blocked or upgraded before strict explicit-source backend activation.
+- Group service/non-stock line reversal edge cases, source return report editing, and cross-device concurrent batch updates still require integration regression testing.
+- Verify historical sourced COGS ledger and monitor three original purchased-source zero-value sales; manual review only.
