@@ -7,9 +7,26 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
 $container='supabase_db_Local_Brain'
 $db='postgres'
-$backup=Join-Path ([Environment]::GetFolderPath('Desktop')) 'BIG-BROTHER-LOCAL-BACKUP-20261031-175347.dump'
+# The user's PostgreSQL backup was saved to the physical Desktop; Windows may
+# redirect GetFolderPath('Desktop') to OneDrive. Check both locations, fail closed.
+$backupName='BIG-BROTHER-LOCAL-BACKUP-20261031-175347.dump'
+$desktopCandidates=@(
+  (Join-Path $env:USERPROFILE 'Desktop')
+  ([Environment]::GetFolderPath('Desktop'))
+) | Select-Object -Unique
+$backup=$null
+foreach($desktop in $desktopCandidates) {
+  $candidate=Join-Path $desktop $backupName
+  if(Test-Path -LiteralPath $candidate -PathType Leaf) {
+    $backup=$candidate
+    break
+  }
+}
+if(-not $backup) {
+  throw "Backup not found in physical or redirected Desktop. Do not proceed; keep original backup safe."
+}
 $stamp=Get-Date -Format 'yyyyMMdd-HHmmss'
-$archive=Join-Path ([Environment]::GetFolderPath('Desktop')) ("AUSFRESH-TWO-ORIGINAL-STOCK-ROWS-$stamp.csv")
+$archive=Join-Path (Split-Path -Parent $backup) ("AUSFRESH-TWO-ORIGINAL-STOCK-ROWS-$stamp.csv")
 $sqlFile=Join-Path $env:TEMP ("bb-af2l-local-correction-$stamp.sql")
 $source='BATCH-INVOICE:LINE-1791033509925-ba44r4:AF-2L:PURCHASED'
 $answer='REPAIR LOCAL AUSFRESH 11 UNITS'
