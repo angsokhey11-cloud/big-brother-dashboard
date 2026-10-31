@@ -58,3 +58,16 @@
 - Cached/stale online PWA, APK, mobile, and other older clients must be blocked or upgraded before strict explicit-source backend activation.
 - Group service/non-stock line reversal edge cases, source return report editing, and cross-device concurrent batch updates still require integration regression testing.
 - Verify historical sourced COGS ledger and monitor three original purchased-source zero-value sales; manual review only.
+
+## 31-Oct-2026 Warehouse + Pending Batch valuation audit (READ-ONLY)
+- Existing official valuation source: `bb_stock_product_rows_zero_cost_v1_internal` values **Purchased Warehouse** and **Purchased Pending Batch** together using `bb_stock_average_cost_internal`, while Zero-Cost quantities contribute $0 to financial stock value.
+- **27 products checked**. Current Cloud stock valuation at the time of audit: Warehouse $11,638.60 + Pending Batch $63,751.72 = **total company inventory $75,390.32**. These are current ledger balances, not a guarantee of historical COGS correctness.
+- Source balances: Warehouse Purchased 6,457; Warehouse Zero-Cost 3; Batch Purchased 22,877; Batch Zero-Cost 563 (units across different product types; do not use combined unit count as a business KPI).
+- **0** source bucket sum mismatches; **0** open-batch snapshot mismatches; **0** closed batch pending-stock products; **0** products with negative company good-stock balances. Repeat with `WAREHOUSE-BATCH-VALUATION-RECONCILIATION-READONLY.sql` on Cloud and Local.
+- Historic Back Sale ledger: **311** movements (306 Purchased, 5 Zero-Cost), **0** unexpected source buckets, **0** monetary-value Zero-Cost movements, **0** Purchased line values outside recorded 4-decimal unit-cost / cent rounding tolerance. **One** Purchased return recorded a zero unit cost; flag for manual audit only. Repeat with `BACK-SALE-SOURCE-LEDGER-AUDIT-READONLY.sql`.
+- Total company stock value MUST NOT move just because Back Sale transfers unsold stock from Batch to Warehouse; Warehouse and Batch Purchased values should offset at the common current average cost. Invoice sale and reversal legitimately change total unsold stock value and COGS.
+- **No production SQL deployed or stock/financial rows modified** during this check.
+
+### Next mandatory release test
+- Execute all staged PL/pgSQL definitions and real stock transfers on a **nonproduction copy**, check financial transaction boundaries, effects on ledger/report and rollback, then rerun both audits before/after.
+- Do not add migration to Local V5/V6 manifest or merge branches until isolated integration tests pass and the deployment is coordinated for APK/PWA compatibility.
