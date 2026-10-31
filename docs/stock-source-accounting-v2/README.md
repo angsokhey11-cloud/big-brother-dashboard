@@ -49,3 +49,12 @@ A batch has Purchased 20 and Zero-Cost 10. Invoice sells Purchased 3 + Zero-Cost
 - Implement an explicit **reversal-source picker** for mixed Batch Invoice lines and group-member products. Send exact return source quantities per physical product to all reversal save paths, and ensure BEFORE/AFTER and post-close stock triggers validate original per-line sale provenance and previous returns.
 - Use the **historical purchase sale cost** for both pre-close and post-close COGS reversal, never current average cost.
 - Include the Invoice Reversal repository in Cloud/Local code parity and end-to-end regression.
+
+## Disposable offline PostgreSQL compile test (31-Oct-2026)
+- A staged Windows PowerShell runner is available: TEST-ISOLATED-POSTGRES.ps1.
+- Requires an already exported PostgreSQL pg_dump -Fc backup and a locally available postgres:16 Docker image; does NOT connect to Cloud or live Local V5/V6.
+- Refuses an existing container of the target name; creates an isolated --network none / no-ports container, imports supplied backup, compiles three staged SQL scripts, runs three read-only audit scripts, then deletes its own temporary container.
+- A Local Brain Control Center Snapshot is NOT necessarily a PostgreSQL custom-format backup. Verify format separately.
+- Runner has NOT been executed here: this environment has no Docker/PostgreSQL engine or backup. SQL compilation and real transaction tests remain unverified.
+- SQL parsing alone does NOT validate authenticated source choices, actual stock transactions, payment methods, mixed/group reversals, rollbacks, or Cloud/Local parity.
+- Never run the staged SQL on Cloud production or the existing Local V5/V6 databases.
