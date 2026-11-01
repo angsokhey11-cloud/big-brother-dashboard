@@ -118,3 +118,9 @@
 - Disposable `postgres:17` Docker container with `--network none` ran `SOURCE-ARITHMETIC-SMOKE-READONLY.sql`: **12/12 PASS**, container removed.
 - This automatic feature-branch CI provides continuous grammar + pure arithmetic coverage without Supabase Branching cost or repeated Windows screenshots. It **does not** establish live trigger correctness, API authorization, stock-history regression, or Local migration safety.
 - Production remains untouched. Existing 01-Nov isolated Local PostgreSQL Invoice Sale tests remain separately verified 6/6; Back Sale and Reversal pending.
+
+## 01-Nov-2026 — Automatic CI extended to PowerShell schema export and Step 2B runners
+- Workflow [run 41276832799](https://github.com/angsokhey11-cloud/big-brother-dashboard/actions/runs/41276832799) **SUCCESS** on feature commit `50f36d93d4ba4a83728db4402b0d4d29cce73b07`.
+- Checks: PostgreSQL grammar for 10 staged functions; PowerShell parser for schema-only export, Back Sale test launcher and isolated runner; PostgreSQL 17 synthetic arithmetic **12/12 PASS**. Disposable test container removed.
+- Added one-time schema-only export helper `EXTRACT-LOCAL-SCHEMA-ONLY-NONDESTRUCTIVE.ps1`; uses existing Local snapshot in `--network none` Docker; no real database access, no data rows, and no automatic publish. Function text may contain secrets; review before sharing.
+- Still **NOT** a complete branch migration-replay fix or actual Back Sale / Reversal trigger integration test.
