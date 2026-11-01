@@ -1,6 +1,8 @@
 # BIG BROTHER — Stock Source Accounting V2 isolated PostgreSQL compile/smoke test
 # STAGING ONLY. Runs against a separate throwaway Docker container; no Cloud or V5/V6 connection.
 # Requires an existing local PostgreSQL custom-format .dump/.backup exported separately.
+# The isolated Supabase image requires its supabase_admin superuser for restore/function compilation.
+# This runner ONLY verifies SQL compilation and read-only audits; it does NOT run real sale/reversal fixtures.
 # Does not create or merge any Supabase branch.
 # Usage:
 # .\TEST-ISOLATED-POSTGRES.ps1 -BackupFile 'C:\Path\LocalBrainV6.backup' -StagedDir 'C:\Path\stock-source-accounting-v2'
@@ -23,7 +25,7 @@ function RunSql([string]$FileName) {
   Write-Host "Checking in isolated database: $FileName" -ForegroundColor Cyan
   docker cp "$file" "$($ContainerName):/tmp/$FileName" | Out-Null
   Check-LastExit 'Docker copy'
-  docker exec $ContainerName psql -X -v ON_ERROR_STOP=1 -U postgres -d bb_stock_v2_sandbox -f "/tmp/$FileName"
+  docker exec $ContainerName psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d bb_stock_v2_sandbox -f "/tmp/$FileName"
   Check-LastExit "SQL $FileName"
 }
 $files=@(
@@ -90,8 +92,13 @@ try {
   Check-LastExit 'Copy PostgreSQL dump'
   docker exec $ContainerName createdb -U postgres bb_stock_v2_sandbox
   Check-LastExit 'Create sandbox-only database'
-  docker exec $ContainerName pg_restore --exit-on-error --no-owner --no-acl -U postgres -d bb_stock_v2_sandbox /tmp/local-source.backup
+  docker exec $ContainerName pg_restore --exit-on-error --no-owner --no-acl -U supabase_admin -d bb_stock_v2_sandbox /tmp/local-source.backup
   Check-LastExit 'Restore isolated database'
+  # All writes below are inside the throwaway no-network Docker database.
+  # The source dump is historical, so its pre-correction stock totals may differ.
+  $restoredCount=(docker exec $ContainerName psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d bb_stock_v2_sandbox -tAc 'SELECT count(*) FROM public.stock_activity;').Trim()
+  Check-LastExit 'Count isolated restored stock ledger'
+  Write-Host "Isolated restored stock movements: $restoredCount (historical backup baseline)" -ForegroundColor DarkCyan
   foreach($f in $files){ RunSql $f }
   Write-Host 'COMPILE + READ-ONLY SQL SMOKE COMPLETE in temporary database.' -ForegroundColor Green
   Write-Host 'NOTE: This alone does NOT validate authenticated UI, transactional transfers, reversals, or Local sync.' -ForegroundColor Yellow
