@@ -1,0 +1,65 @@
+name: Stock Source V2 — staged SQL safety
+on:
+  push:
+    branches:
+      - feature/stock-source-accounting-20261031
+    paths:
+      - 'docs/stock-source-accounting-v2/**'
+      - '.github/workflows/stock-source-v2-safety-ci.yml'
+  pull_request:
+    paths:
+      - 'docs/stock-source-accounting-v2/**'
+      - '.github/workflows/stock-source-v2-safety-ci.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  isolated-safety:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify staged SQL parses as PostgreSQL statements
+        run: |
+          python3 -m pip install --user 'pglast>=7,<8'
+          python3 - <<'PY'
+          from pathlib import Path
+          from pglast import parse_sql
+          root = Path('docs/stock-source-accounting-v2')
+          for name, expected in [
+            ('20261031_source_aware_batch_sale_and_back_sale_STAGED.sql', 3),
+            ('20261031_exact_batch_reversal_sources_STAGED.sql', 6),
+            ('20261031_reversal_source_snapshot_STAGED.sql', 3),
+          ]:
+            sql = (root / name).read_text(encoding='utf-8')
+            parsed = parse_sql(sql)
+            functions = sql.upper().count('CREATE OR REPLACE FUNCTION')
+            if functions != expected:
+              raise AssertionError(f'{name}: expected {expected} functions, got {functions}')
+            if len(parsed) < expected:
+              raise AssertionError(f'{name}: parsed {len(parsed)} statements, expected >= {expected}')
+            print(f'PASS {name}: {functions} definitions; {len(parsed)} SQL statements')
+          PY
+      - name: Start no-network ephemeral PostgreSQL for synthetic arithmetic
+        run: |
+          docker run -d --name bb-stock-v2-safety-test --network none             -e POSTGRES_PASSWORD=disposable-local-ci-only postgres:17
+          for i in $(seq 1 35); do
+            if docker exec bb-stock-v2-safety-test psql -U postgres -d postgres -tAc 'SELECT 1;' >/dev/null 2>&1; then
+              break
+            fi
+            sleep 2
+          done
+          docker exec bb-stock-v2-safety-test psql -U postgres -d postgres -tAc 'SELECT 1;'
+          docker cp docs/stock-source-accounting-v2/SOURCE-ARITHMETIC-SMOKE-READONLY.sql             bb-stock-v2-safety-test:/tmp/source-smoke.sql
+          docker exec bb-stock-v2-safety-test psql -X -v ON_ERROR_STOP=1 -A -t -F '|'             -U postgres -d postgres -f /tmp/source-smoke.sql > /tmp/bb-v2-arithmetic-result.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          rows = [r.split('|') for r in Path('/tmp/bb-v2-arithmetic-result.txt').read_text().splitlines() if '|' in r]
+          assert len(rows) == 12, f'Expected 12 arithmetic cases, got {len(rows)}'
+          bad = [r for r in rows if len(r) < 4 or r[3] != 't']
+          assert not bad, f'Failed source arithmetic cases: {bad}'
+          print('PASS: 12/12 synthetic stock-source arithmetic cases')
+          PY
+      - name: Remove only ephemeral CI PostgreSQL
+        if: always()
+        run: docker rm -f bb-stock-v2-safety-test || true
