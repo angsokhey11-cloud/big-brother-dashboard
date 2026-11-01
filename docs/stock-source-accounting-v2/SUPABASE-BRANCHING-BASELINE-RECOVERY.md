@@ -17,7 +17,7 @@ The failed branch was deleted; `list_branches` confirmed production `main` only.
 ## Read-only migration coverage (checked directly against production)
 
 - 342 recorded migrations; 342 non-null SQL statement arrays.
-- 143 current `public` BASE TABLEs.
+- 143 current `public` BASE TABLEs, **2,017 columns**, 18 views, 552 public routines, 169 public triggers, and 10 public RLS policies.
 - 71 tables have a syntactic `CREATE TABLE` match in recorded migrations.
 - **72 current public tables have no recorded CREATE TABLE match** (includes foundational clients, products, invoices, invoice_lines, stock_activity, stock_batches, payments, salary tables).
 - This is a **screening result**; it does not guarantee the 71 other tables, functions, triggers, RLS rules or non-public schemas are replayable in order. Some objects might have been renamed or created outside tracked migrations.
@@ -56,3 +56,8 @@ This method does not fix Cloud branching, but lets product testing continue with
 ## Reference
 
 Supabase official [Local development workflow](https://supabase.com/docs/guides/local-development/cli-workflows) describes using `supabase db pull` to build an initial baseline from an existing project, reviewing the generated schema, creating synthetic seed data, and verifying `supabase db reset`. For BIG BROTHER's already-populated 342-migration history, that general guidance alone is insufficient to justify any production history rewrite.
+
+## Automated coverage added 01-Nov-2026
+- A no-network GitHub Actions safety job now validates **3 + 6 + 1** staged Stock Source V2 SQL function definitions with PostgreSQL grammar and runs all **12** synthetic source arithmetic cases on an ephemeral PostgreSQL 17 container.
+- Verified green CI run: https://github.com/angsokhey11-cloud/big-brother-dashboard/actions/runs/41276642239
+- It uses neither billable Supabase branches nor real company data. It does not replace authenticated RPC / trigger integration using the actual business schema.
