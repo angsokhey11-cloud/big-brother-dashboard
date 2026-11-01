@@ -327,13 +327,14 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for n in CI-REFUND-FUNDING-SYNTHETIC-SETUP.sql CI-REFUND-EXECUTE-SYNTHETIC-ONLY.sql CI-REFUND-EXECUTE-SYNTHETIC-ASSERTIONS.sql; do
+          for n in CI-REFUND-FUNDING-SYNTHETIC-SETUP.sql CI-REFUND-EXECUTE-SYNTHETIC-ONLY.sql CI-REFUND-RECONCILIATION-SYNTHETIC-ONLY.sql CI-REFUND-EXECUTE-SYNTHETIC-ASSERTIONS.sql; do
             docker cp docs/stock-source-accounting-v2/$n bb-v2-back-sale-synthetic:/tmp/$n
           done
-          for n in CI-REFUND-FUNDING-SYNTHETIC-SETUP.sql CI-REFUND-EXECUTE-SYNTHETIC-ONLY.sql CI-REFUND-EXECUTE-SYNTHETIC-ASSERTIONS.sql; do
+          for n in CI-REFUND-FUNDING-SYNTHETIC-SETUP.sql CI-REFUND-EXECUTE-SYNTHETIC-ONLY.sql CI-REFUND-RECONCILIATION-SYNTHETIC-ONLY.sql CI-REFUND-EXECUTE-SYNTHETIC-ASSERTIONS.sql; do
             docker exec bb-v2-back-sale-synthetic psql -X -v ON_ERROR_STOP=1 -U postgres -d bb_stock_v2_sandbox -f /tmp/$n 2>&1 | tee /tmp/$n.log
           done
           grep -q 'PASS REFUND CASE 9/9' /tmp/CI-REFUND-EXECUTE-SYNTHETIC-ASSERTIONS.sql.log
+          grep -q 'PASS REFUND HISTORY: approved Cash $100' /tmp/CI-REFUND-EXECUTE-SYNTHETIC-ASSERTIONS.sql.log
           grep -q 'PASS: 9/9 synthetic cash refund posting tests rolled back' /tmp/CI-REFUND-EXECUTE-SYNTHETIC-ASSERTIONS.sql.log
           echo 'PASS 9/9 synthetic refund posting; Bank transfer remains blocked until integrated'
       - name: Remove ONLY synthetic CI PostgreSQL
