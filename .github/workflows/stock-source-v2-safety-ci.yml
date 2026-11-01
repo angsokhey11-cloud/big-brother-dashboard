@@ -160,6 +160,56 @@ jobs:
           grep -q 'PASS REVERSAL SOURCE CASE 4/4' /tmp/reversal-results.log
           grep -q 'PASS: 4/4 real reversal snapshot function tests' /tmp/reversal-results.log
           echo 'PASS 4/4 staged read-only reversal-source history snapshot tests'
+
+      - name: Execute actual OPEN Batch reversal stock AFTER INSERT trigger
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('docs/stock-source-accounting-v2/20261031_exact_batch_reversal_sources_STAGED.sql').read_text(encoding='utf8')
+          needle='CREATE OR REPLACE FUNCTION public.bb_batch_return_stock_internal()'
+          assert s.count(needle)==1, 'Expected one real staged return-stock trigger function'
+          i=s.index(needle)
+          end=s.index('$function
+      - name: Remove ONLY synthetic CI PostgreSQL
+        if: always()
+        run: docker rm -f bb-v2-back-sale-synthetic || true
+,s.index('AS $function
+      - name: Remove ONLY synthetic CI PostgreSQL
+        if: always()
+        run: docker rm -f bb-v2-back-sale-synthetic || true
+,i)+len('AS $function
+      - name: Remove ONLY synthetic CI PostgreSQL
+        if: always()
+        run: docker rm -f bb-v2-back-sale-synthetic || true
+))+len('$function
+      - name: Remove ONLY synthetic CI PostgreSQL
+        if: always()
+        run: docker rm -f bb-v2-back-sale-synthetic || true
+)
+          chosen=s[i:end].strip()
+          Path('/tmp/bb-ci-preclose-trigger.sql').write_text(chosen+';\n',encoding='utf8')
+          print('Selected exact staged open-Batch stock Reversal trigger function')
+          PY
+          docker cp docs/stock-source-accounting-v2/CI-REVERSAL-PRECLOSE-SYNTHETIC-SETUP.sql \
+            bb-v2-back-sale-synthetic:/tmp/preclose-setup.sql
+          docker cp /tmp/bb-ci-preclose-trigger.sql \
+            bb-v2-back-sale-synthetic:/tmp/preclose-trigger.sql
+          docker cp docs/stock-source-accounting-v2/CI-REVERSAL-PRECLOSE-SYNTHETIC-ASSERTIONS.sql \
+            bb-v2-back-sale-synthetic:/tmp/preclose-assert.sql
+          docker exec bb-v2-back-sale-synthetic psql -X -v ON_ERROR_STOP=1 \
+            -U postgres -d bb_stock_v2_sandbox -f /tmp/preclose-setup.sql
+          docker exec bb-v2-back-sale-synthetic psql -X -v ON_ERROR_STOP=1 \
+            -U postgres -d bb_stock_v2_sandbox -f /tmp/preclose-trigger.sql
+          docker exec bb-v2-back-sale-synthetic psql -X -v ON_ERROR_STOP=1 \
+            -U postgres -d bb_stock_v2_sandbox \
+            -c 'CREATE TRIGGER bb_ci_real_reversal_stock AFTER INSERT ON public.sales_returns FOR EACH ROW EXECUTE FUNCTION public.bb_batch_return_stock_internal();'
+          docker exec bb-v2-back-sale-synthetic psql -X -v ON_ERROR_STOP=1 \
+            -U postgres -d bb_stock_v2_sandbox -f /tmp/preclose-assert.sql 2>&1 | tee /tmp/preclose-results.log
+          grep -q 'PASS RECOVERY POSTING CASE 3/3' /tmp/preclose-results.log
+          grep -q 'actual open-Batch reversal posting 3/3 cases' /tmp/preclose-results.log
+          echo 'PASS 3/3 actual preclose reversal stock-trigger posting (synthetic)'
       - name: Remove ONLY synthetic CI PostgreSQL
         if: always()
         run: docker rm -f bb-v2-back-sale-synthetic || true
