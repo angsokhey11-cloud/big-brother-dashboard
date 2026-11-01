@@ -9,6 +9,7 @@ DECLARE
   v_err text; blocked boolean; n integer;
   vault_amount numeric; wallet_amount numeric;
   history jsonb;
+  cash_report jsonb;
 BEGIN
  IF current_database()<>'bb_stock_v2_sandbox' THEN
    RAISE EXCEPTION 'Cash refund CI refused outside isolated database';
@@ -176,6 +177,29 @@ BEGIN
    RAISE EXCEPTION 'REFUND CASE9 approved cash historical receipt mutated';
  END IF;
  RAISE NOTICE 'PASS REFUND CASE 9/9: Insufficient account balance rejected, approved original history still intact';
+
+ -- HISTORICAL RECONCILIATION: approved gross cash stays $100, separately
+ -- verified Vault OUT $30 + Daily Cash OUT $20; net kept $50, unpaid
+ -- refundable excess $30. Not included in selectable Close Selected.
+ cash_report:=public.bb_ci_refund_reconciliation_v1();
+ IF cash_report->>'viewType'<>'APPROVED_DAILY_CASH_HISTORY_NOT_SELECTABLE'
+ OR NOT EXISTS(
+  SELECT 1 FROM jsonb_array_elements(cash_report->'cashClosings') x
+  WHERE x->>'invoiceId'='BB-CI-DCC-CASH'
+    AND (x->>'originalApprovedCashUSD')::numeric=100
+    AND (x->>'reversalUSD')::numeric=80
+    AND (x->>'netSaleUSD')::numeric=20
+    AND (x->>'vaultRefundOUTUSD')::numeric=30
+    AND (x->>'dailyCashRefundOUTUSD')::numeric=20
+    AND (x->>'totalRefundOUTUSD')::numeric=50
+    AND (x->>'netCashRetainedUSD')::numeric=50
+    AND (x->>'refundReviewRemainingUSD')::numeric=30
+    AND (x->>'selectableForClose')::boolean IS FALSE
+ ) THEN
+   RAISE EXCEPTION 'CI refund reconciliation failed to preserve gross Cash or paid OUT events: %',cash_report;
+ END IF;
+ RAISE NOTICE 'PASS REFUND HISTORY: approved Cash $100 - executed Vault $30 - executed Daily $20 = $50 held; $30 refund review; NOT selectable';
+
 END;
 $refund_cases$;
 ROLLBACK;
