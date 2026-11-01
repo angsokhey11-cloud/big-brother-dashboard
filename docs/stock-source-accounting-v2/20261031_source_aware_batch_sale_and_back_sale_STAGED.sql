@@ -3402,7 +3402,7 @@ begin
 
         case
           when p_type = 'BACK_SALE'
-          then 'PURCHASED_REMAINING_FIRST_ZERO_COST_REMAINDER'
+          then 'EXPLICIT_PURCHASED_ZERO_COST_SELECTION_V2'
           else 'PURCHASED_DAMAGE_ONLY_V1'
         end,
 
@@ -3426,7 +3426,7 @@ begin
           when p_type = 'BACK_SALE'
 
           then
-            'Back Sale saved with automatic Purchased / Zero-Cost return allocation.'
+            'Back Sale saved with selected Purchased / Zero-Cost return quantities.'
 
           else
             'Batch Damage saved successfully.'
