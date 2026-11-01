@@ -22,6 +22,25 @@ Instead, the separate **approved-only, nonselectable** `bb_v2_dcc_approved_cash_
 
 **Release restrictions:** These functions are staged in GitHub only, never applied to Cloud or real Local V5/V6. Access grants, full Supabase RLS, legacy historical returns, cash close/selected UI, actual refund OUT ledger and approved bank balance adjustments still require integration and accounting sign-off.
 
+## 01-Nov-2026 — Actual source-specific Cash OUT proof (synthetic 9/9 PASS)
+
+**Verified autonomous CI:** [run 41282545879](https://github.com/angsokhey11-cloud/big-brother-dashboard/actions/runs/41282545879), PostgreSQL 17 `--network none`. Both jobs SUCCESS; synthetic refund rows and ledgers rolled back and container removed.
+
+The new file `CI-REFUND-EXECUTE-SYNTHETIC-ONLY.sql` is deliberately **not a production implementation**: its functions refuse to run outside `bb_stock_v2_sandbox`, never call bank APIs, and only support simple original **USD Cash** invoices. The experiment tests correct funding math, invoice identity, approval, ledger isolation and idempotency.
+
+- Approved DCC cash receipt: $100, deposited to Cash Vault. $40 is transferred from Vault to Daily Cash. Source balances: Vault $60, Daily Cash $40.
+- Recorded partial Invoice Reversal: $80, leaving $20 net sale; eligible excess after reversal $80.
+- Explicitly approved Vault cash refund: **$30 OUT**. Explicitly approved Daily Cash wallet refund: **$20 OUT**. No double deduction, no automatic refund, and original approved cash/receipt records unchanged. Combined remaining account cash: **$50**.
+- Separate nonselectable `bb_ci_refund_reconciliation_v1()` history confirms **gross $100, refund OUT $50, cash retained $50, remaining excess review $30**. This is not added to active `Close Selected`.
+- Idempotency, unauthorized approval, Pending payout, over-refund, insufficient source-specific cash, wrong original payment method and unverified outgoing Bank transfer all reject atomically.
+- Bank refund attempt is **blocked**. There is no verified outgoing-bank ledger/bank transaction integration, so creating a bank refund would falsely record money movement. Do not infer a bank payout from `company_deposits` (incoming) or customer bank wallet (receipt/credit).
+
+### Additional release constraints for settlement
+- Production implementation must distinguish a **requesting employee** from a separate approver/payer; test harness currently has one synthetic admin.
+- Real refund authorization must use approved roles, recorded payment-source allocations, the exact immutable `invoice_id`, actual bank external transaction IDs, and currency conversions. Mixed Cash + Bank and USD/KHR are NOT covered by the test-only USD Cash proof.
+- Production balances and approvals are not modified; no refund table/migration is deployed. A/R reversal that would create overpayment is currently blocked until an approved settlement/credit sequence exists; the eventual combined workflow must be transactionally safe.
+- Test-ledger references are not sufficient alone for a production audit: complete permission/RLS review, cash vault/daily wallet concurrency, cash close selection/exports and Local V5/V6 synchronization remain pending.
+
 ## Verified current Cloud accounting behavior
 
 Audited live production definitions read-only (`pg_get_functiondef`) and copied **only** `bb_credit_invoice_net_balance_guard`, `bb_sync_invoice_reversal_receivable`, and `bb_dcc_invoice_list` into feature-branch isolated test reference `CI-CLOUD-AR-DCC-CURRENT-FUNCTIONS-READONLY.sql`. No live schema change.
