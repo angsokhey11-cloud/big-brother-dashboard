@@ -194,6 +194,40 @@ jobs:
           grep -q 'PASS RECOVERY POSTING CASE 4/4' /tmp/preclose-results.log
           grep -q 'actual open-Batch reversal posting 4/4 cases' /tmp/preclose-results.log
           echo 'PASS 4/4 actual preclose reversal stock-trigger posting (synthetic)'
+
+      - name: Execute actual CLOSED Batch reversal route trigger (warehouse / open Batch)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('docs/stock-source-accounting-v2/20261031_exact_batch_reversal_sources_STAGED.sql').read_text(encoding='utf8')
+          needle='CREATE OR REPLACE FUNCTION public.bb_postclose_reversal_stock_v1()'
+          assert s.count(needle)==1, 'Missing staged postclose trigger function'
+          i=s.index(needle)
+          start=s.index('AS $function$',i)+len('AS $function$')
+          end=s.index('$function$',start)+len('$function$')
+          Path('/tmp/bb-ci-postclose-trigger.sql').write_text(s[i:end].strip()+';\n',encoding='utf8')
+          print('Extracted actual staged post-close stock trigger for synthetic integration')
+          PY
+          docker cp docs/stock-source-accounting-v2/CI-REVERSAL-POSTCLOSE-SYNTHETIC-SETUP.sql \
+            bb-v2-back-sale-synthetic:/tmp/postclose-setup.sql
+          docker cp /tmp/bb-ci-postclose-trigger.sql \
+            bb-v2-back-sale-synthetic:/tmp/postclose-trigger.sql
+          docker cp docs/stock-source-accounting-v2/CI-REVERSAL-POSTCLOSE-SYNTHETIC-ASSERTIONS.sql \
+            bb-v2-back-sale-synthetic:/tmp/postclose-assert.sql
+          docker exec bb-v2-back-sale-synthetic psql -X -v ON_ERROR_STOP=1 \
+            -U postgres -d bb_stock_v2_sandbox -f /tmp/postclose-setup.sql
+          docker exec bb-v2-back-sale-synthetic psql -X -v ON_ERROR_STOP=1 \
+            -U postgres -d bb_stock_v2_sandbox -f /tmp/postclose-trigger.sql
+          docker exec bb-v2-back-sale-synthetic psql -X -v ON_ERROR_STOP=1 \
+            -U postgres -d bb_stock_v2_sandbox \
+            -c 'CREATE TRIGGER bb_ci_postclose_reversal AFTER INSERT ON public.sales_returns FOR EACH ROW EXECUTE FUNCTION public.bb_postclose_reversal_stock_v1();'
+          docker exec bb-v2-back-sale-synthetic psql -X -v ON_ERROR_STOP=1 \
+            -U postgres -d bb_stock_v2_sandbox -f /tmp/postclose-assert.sql 2>&1 | tee /tmp/postclose-results.log
+          grep -q 'PASS POSTCLOSE CASE 4/4' /tmp/postclose-results.log
+          grep -q 'PASS: 4/4 postclose actual trigger scenarios and ROLLBACK verified' /tmp/postclose-results.log
+          echo 'PASS 4/4 actual closed-Batch reversal stock routing and rollback (synthetic)'
       - name: Remove ONLY synthetic CI PostgreSQL
         if: always()
         run: docker rm -f bb-v2-back-sale-synthetic || true
