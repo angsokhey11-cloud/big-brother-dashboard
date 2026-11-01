@@ -5,7 +5,7 @@ param([string]$ExistingSnapshot='')
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $live = 'supabase_db_Local_Brain'
-$base = 'https://raw.githubusercontent.com/angsokhey11-cloud/big-brother-dashboard/ece4c22b108bf7c7376f9db5721359a0e09932c5/docs/stock-source-accounting-v2'
+$base = 'https://raw.githubusercontent.com/angsokhey11-cloud/big-brother-dashboard/58f407cbafb82d7db84a53339aca3aec7bed6427/docs/stock-source-accounting-v2'
 $work = Join-Path $env:USERPROFILE 'Desktop\BB-STOCK-SOURCE-V2-STEP1'
 $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 $backup = Join-Path $work "LOCAL-V2-READONLY-SNAPSHOT-$stamp.dump"
@@ -13,7 +13,7 @@ $log = Join-Path $work "V2-STEP1-COMPILE-$stamp.log"
 $dumpInContainer = "/tmp/bb-v2-readonly-snapshot-$stamp.dump"
 
 $expected = [ordered]@{
-  'TEST-ISOLATED-POSTGRES.ps1' = 'e5be274a6da8efa73dd6f5ff615721da35601ff5'
+  'TEST-ISOLATED-POSTGRES.ps1' = '69545308fd9d7156621d433902d71ed9c5415bda'
   '20261031_source_aware_batch_sale_and_back_sale_STAGED.sql' = '8f8bafe3ea0d430c265c701a46eb97f379cee30d'
   '20261031_exact_batch_reversal_sources_STAGED.sql' = 'efd42b5e39c119aaa34195e23db0e6e69f14d17d'
   '20261031_reversal_source_snapshot_STAGED.sql' = '6b29ca6bb270e3b269b4526eab2a3eb29b79780d'
