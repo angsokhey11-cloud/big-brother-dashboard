@@ -42,12 +42,11 @@ try {
   if (-not (Get-Command docker -ErrorAction SilentlyContinue)) { throw 'Docker Desktop is required.' }
   if (-not [string]::IsNullOrWhiteSpace($ExistingSnapshot)) {
     $backup = $ExistingSnapshot
-    if (-not (Test-Path -LiteralPath $backup -PathType Leaf)) { throw "Existing snapshot missing: $backup" }
-    if ([IO.Path]::GetExtension($backup).ToLowerInvariant() -ne '.dump') { throw 'Existing snapshot must be a .dump file.' }
-    if ((Get-Item -LiteralPath $backup).Length -lt 1000000) { throw 'Existing snapshot too small. Stop.' }
-    Write-Host "REUSING previous read-only snapshot (no new access to live Local): $backup" -ForegroundColor Green
+    if (-not (Test-Path -LiteralPath $backup -PathType Leaf)) { throw "Previous snapshot missing: $backup" }
+    if ([IO.Path]::GetExtension($backup).ToLowerInvariant() -ne '.dump') { throw 'Expected an existing .dump snapshot file.' }
+    if ((Get-Item -LiteralPath $backup).Length -lt 1000000) { throw 'Previous snapshot too small. Stop.' }
+    Write-Host "REUSING previous snapshot, without contacting live Local: $backup" -ForegroundColor Green
   } else {
-
   $names = @(docker ps --format '{{.Names}}')
   Assert-Exit 'List running containers'
   if ($live -notin $names) { throw 'Local Brain database container is not running. Stop.' }
@@ -74,30 +73,12 @@ try {
     if ((Get-GitBlobSha1 $dest) -ne $expected[$name]) { throw "Hash mismatch: $name. Stop." }
     Write-Host "Verified: $name" -ForegroundColor DarkGreen
   }
-  # Fail early on missing SQL definition terminators before starting Docker.
-  $reversal = Get-Content -LiteralPath (Join-Path $work '20261031_exact_batch_reversal_sources_STAGED.sql') -Raw
-  $fnCount = [regex]::Matches($reversal, '(?m)^CREATE OR REPLACE FUNCTION ').Count
-  $endCount = [regex]::Matches($reversal, '(?m)^\$function\$;\r?
-  $tokens = $null
-  $errors = $null
-  [System.Management.Automation.Language.Parser]::ParseFile($runner, [ref]$tokens, [ref]$errors) | Out-Null
-  if ($errors.Count -gt 0) { $errors | Format-List; throw 'PowerShell runner syntax invalid. Stop.' }
-  & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $runner -BackupFile $backup -StagedDir $work
-  Assert-Exit 'Isolated SQL compile and audit'
-  Write-Host 'STEP 1 PASSED: STAGED SQL COMPILED + READ-ONLY AUDITS RAN IN ISOLATED DATABASE' -ForegroundColor Green
-  Write-Host 'Actual sale, Back Sale and reversal integration tests remain pending.' -ForegroundColor Yellow
-} catch {
-  Write-Host "STEP 1 FAILED: $($_.Exception.Message)" -ForegroundColor Red
-  throw
-} finally {
-  Write-Host "Test transcript: $log" -ForegroundColor Cyan
-  Stop-Transcript | Out-Null
-}
-).Count
-  if ($fnCount -ne 6 -or $endCount -ne 6) {
-    throw "Staged reversal SQL function delimiters inconsistent ($fnCount definitions; $endCount terminators). Stop."
-  }
-  Write-Host "Reversal SQL terminators verified: $endCount/6" -ForegroundColor Green
+  # Reject a malformed staged reversal SQL before launching the test Docker container.
+  $revFile = Join-Path $work '20261031_exact_batch_reversal_sources_STAGED.sql'
+  $openCount = @(Select-String -LiteralPath $revFile -Pattern '^CREATE OR REPLACE FUNCTION ').Count
+  $endCount = @(Select-String -LiteralPath $revFile -Pattern '^\$function\$;$').Count
+  if ($openCount -ne 6 -or $endCount -ne 6) { throw "Reversal SQL delimiter mismatch: $openCount starts / $endCount ends" }
+  Write-Host "Reversal SQL statement delimiters passed: $endCount/6" -ForegroundColor Green
   $runner = Join-Path $work 'TEST-ISOLATED-POSTGRES.ps1'
   $tokens = $null
   $errors = $null
