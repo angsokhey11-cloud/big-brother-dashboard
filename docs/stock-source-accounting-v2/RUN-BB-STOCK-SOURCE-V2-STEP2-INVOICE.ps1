@@ -4,7 +4,7 @@
 param([Parameter(Mandatory=$true)][string]$ExistingSnapshot)
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
-$base = 'https://raw.githubusercontent.com/angsokhey11-cloud/big-brother-dashboard/a3bdde65d4c6361261fead63dc14a2acd92b88a2/docs/stock-source-accounting-v2'
+$base = 'https://raw.githubusercontent.com/angsokhey11-cloud/big-brother-dashboard/6f6a1b3f408e3ef6d7cdb210acb793acb32b0a10/docs/stock-source-accounting-v2'
 $work = Join-Path $env:USERPROFILE 'Desktop\BB-STOCK-SOURCE-V2-STEP2-INVOICE'
 $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 $backup = $ExistingSnapshot
@@ -12,13 +12,13 @@ $log = Join-Path $work "V2-STEP2-INVOICE-$stamp.log"
 
 $expected = [ordered]@{
   'TEST-ISOLATED-POSTGRES-STEP2-INVOICE.ps1' = '9c967601edbf4daf379826533af90bfb5a9f674f'
-  '20261031_source_aware_batch_sale_and_back_sale_STAGED.sql' = '8f8bafe3ea0d430c265c701a46eb97f379cee30d'
+  '20261031_source_aware_batch_sale_and_back_sale_STAGED.sql' = '05ac68af720e44702bf0c326cf68d8b50e2d0761'
   '20261031_exact_batch_reversal_sources_STAGED.sql' = 'efd42b5e39c119aaa34195e23db0e6e69f14d17d'
   '20261031_reversal_source_snapshot_STAGED.sql' = '6b29ca6bb270e3b269b4526eab2a3eb29b79780d'
   'SOURCE-ARITHMETIC-SMOKE-READONLY.sql' = '101ee862d38269841dd286f121724996bc91f6fa'
   'WAREHOUSE-BATCH-VALUATION-RECONCILIATION-READONLY.sql' = '9a46841fa3b2595457bf8b0745a34cd3036e4a3a'
   'BACK-SALE-SOURCE-LEDGER-AUDIT-READONLY.sql' = 'e58e5b352480510d69035afd52b6205e5ce11c21'
-  'ACTUAL-BATCH-INVOICE-SOURCE-ROLLBACK-ISOLATED.sql' = '87165d8dd930eee031b8feb9b8caaa1edfeea7f5'
+  'ACTUAL-BATCH-INVOICE-SOURCE-ROLLBACK-ISOLATED.sql' = '5ee654a48b5928f9ad2d3d9cdb5994fed88edc19'
 }
 function Assert-Exit([string]$action) {
   if ($LASTEXITCODE -ne 0) { throw "$action failed (exit code $LASTEXITCODE). Do NOT sync or deploy." }
