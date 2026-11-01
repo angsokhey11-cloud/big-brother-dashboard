@@ -87,10 +87,10 @@
 
 **STILL BLOCKED:** SQL compilation does not establish transactional correctness. Before release, run source-specific invoice sale / Back Sale / partial and post-close reversal **through the actual staged functions/triggers** in a disposable database; verify warehouse/batch ledgers, COGS at original purchase cost, invalid-source rollback, duplicate submission, multi-bank/split/offline paths, old APK/PWA compatibility, Local V5/V6 migrations, Salary V2 payment regression, and post-transaction reconciliation. Do not deploy staged SQL or merge frontend PRs yet.
 
-## 01-Nov-2026 — Step 2A actual invoice-trigger test PREPARED (NOT YET RUN)
+## 01-Nov-2026 — Step 2A actual invoice-trigger test VERIFIED (6/6 PASS)
 - Test SQL: `ACTUAL-BATCH-INVOICE-SOURCE-ROLLBACK-ISOLATED.sql`. Uses an existing OPEN mixed-source Batch and existing invoice header from the restored sandbox only.
 - Tests the actual `invoice_lines` AFTER INSERT stock trigger and stock_activity/batch snapshots: mixed Purchased 3 + Zero-Cost 2 with source cost validation, Purchased-only 2, Zero-Cost-only 2 at $0, invalid split, Purchased oversell, missing explicit source.
 - Each rejected insert uses a PL/pgSQL exception subtransaction; checks no rejected invoice, movement, or stock-balance changes remain.
 - Whole fixture runs under explicit SQL BEGIN/ROLLBACK, then separately checks that no synthetic invoice-line or ledger rows survived.
 - Dedicated no-network Docker runner and launcher are pinned to GitHub blob hashes. They reuse the verified 01-Nov `LOCAL-V2-READONLY-SNAPSHOT-20261101-112831.dump`. No real Local or Cloud DB connectivity.
-- **Tests are staged, NOT executed.** Back Sale and pre/post-close Reversal real trigger tests remain release blockers.
+- **Test executed successfully on 01-Nov-2026.** All six notices passed, full transaction rolled back, post-ROLLBACK verified no synthetic invoice lines or stock ledger rows remained; isolated Docker container removed. Historical read-only stock valuation still $75,390.32. Evidence: operator screenshot on 01-Nov-2026 (Step 2A) and prior Step 2A log. Original assertion was over-precise; verified column storage is stock_activity.unit_cost numeric(18,4), line_value numeric(18,2), and replaced assertion with correct 4dp/2dp checks. No stock accounting logic was changed. **Back Sale and pre/post-close Reversal real trigger tests remain release blockers.**
