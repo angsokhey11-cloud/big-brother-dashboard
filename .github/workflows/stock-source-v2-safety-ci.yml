@@ -246,24 +246,8 @@ jobs:
             needle='CREATE OR REPLACE FUNCTION '+name+'('
             assert source.count(needle)==1, f'Missing or duplicate source: {name}'
             i=source.index(needle)
-            opening=source.index('AS $function
-      - name: Remove ONLY synthetic CI PostgreSQL
-        if: always()
-        run: docker rm -f bb-v2-back-sale-synthetic || true
-,i)+len('AS $function
-      - name: Remove ONLY synthetic CI PostgreSQL
-        if: always()
-        run: docker rm -f bb-v2-back-sale-synthetic || true
-)
-            close=source.index('$function
-      - name: Remove ONLY synthetic CI PostgreSQL
-        if: always()
-        run: docker rm -f bb-v2-back-sale-synthetic || true
-,opening)+len('$function
-      - name: Remove ONLY synthetic CI PostgreSQL
-        if: always()
-        run: docker rm -f bb-v2-back-sale-synthetic || true
-)
+            opening=source.index('AS $function$',i)+len('AS $function$')
+            close=source.index('$function$',opening)+len('$function$')
             chunks.append(source[i:close].strip()+';')
           Path('/tmp/bb-ci-rpc-functions.sql').write_text('\n\n'.join(chunks)+'\n',encoding='utf8')
           print('Extracted 3 actual staged functions: BEFORE validation, by-ID RPC and post-close RPC')
