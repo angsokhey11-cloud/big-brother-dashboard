@@ -138,3 +138,10 @@
 - Additional Cloud-only triggers: 15 (notification 8, cron 4, FCM/push 2, staff-assistant 1). Local-only: seven infrastructure replay guards. These are intentional environment differences; do **not** treat net difference of eight as eight missing triggers.
 - Exact evidence: `LOCAL-CLOUD-SCHEMA-BASELINE-COMPARISON-20261101.md`. Database writes: **none**; real Local/Cloud unchanged.
 - Branching remains BLOCKED until clean-baseline replay and function/default/RLS/permission tests. Actual Back Sale and Reversal transaction integration remains pending.
+
+## 01-Nov-2026 — Step 2B actual Back Sale SYNTHETIC transaction test VERIFIED
+- GitHub Actions run [41278491705](https://github.com/angsokhey11-cloud/big-brother-dashboard/actions/runs/41278491705), feature commit `55f1568e2be808647af1e65344bee7c335df947b`. The `Actual Back Sale function (synthetic isolated PostgreSQL)` job **SUCCESS**.
+- CI creates disposable **PostgreSQL 17 with `--network none`**, no Cloud/Local database access or business records. Test-only support tables and helpers are in `CI-BACKSALE-SYNTHETIC-SCHEMA.sql`; synthetic actor, warehouse, batch and purchased/zero-cost quantities; runs **actual staged `bb_stock_save_batch_reference_internal` function from `20261031_source_aware_batch_sale_and_back_sale_STAGED.sql`**.
+- All **7/7** executed: Mixed Purchased 3 / Zero-Cost 2; Purchased-only 2; Zero-Cost-only 2; duplicate request idempotency; invalid split rejection; Purchased oversell rejection; missing source rejection. Real function's writes to ledger, batch source snapshots, cost and response were asserted.
+- CI log confirms `ROLLBACK` and **post-ROLLBACK synthetic ledger and request rows absent**. Test container removed.
+- **Limitations**: This was **not** the existing Local snapshot (Windows Step2B remains unrun). CI uses limited synthetic schema and test-only ID/auth/status/revision support implementations; real Supabase/Local permission, legacy triggers and true schema replay not tested. Do not mark full Back Sale released; do not deploy staged PRs. Source-specific Reversal before/after Batch Close and complete Cloud branch baseline remain blockers.
