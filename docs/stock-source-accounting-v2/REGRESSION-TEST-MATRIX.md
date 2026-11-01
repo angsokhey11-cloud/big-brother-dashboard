@@ -110,3 +110,11 @@
 - Branch migrations list and public tables were empty when checked. **No V2 test was performed against the branch**; no branch migrations were merged.
 - The failed branch was deleted successfully and subsequent `list_branches` confirmed **main only**. Production was not modified.
 - **Separate prerequisite:** safely reconcile migration history with live schema (e.g., baseline schema captured from actual production/Local schema, then independently replay and verify), before creating a new Supabase test branch. Do not repair migrations on production merely to make a test pass. Keep Stock Source V2 SQL staged.
+
+## 01-Nov-2026 — Automated no-network GitHub Actions safety check VERIFIED
+- Workflow: `.github/workflows/stock-source-v2-safety-ci.yml` (feature branch only; no production credentials).
+- GitHub Actions run [41276642239](https://github.com/angsokhey11-cloud/big-brother-dashboard/actions/runs/41276642239) completed SUCCESS on commit `e325685c5f76f31045e6ae452db532e25cd2eebd`.
+- `pglast` SQL grammar: 3 source-aware functions, 6 reversal functions, 1 source snapshot function all parsed successfully.
+- Disposable `postgres:17` Docker container with `--network none` ran `SOURCE-ARITHMETIC-SMOKE-READONLY.sql`: **12/12 PASS**, container removed.
+- This automatic feature-branch CI provides continuous grammar + pure arithmetic coverage without Supabase Branching cost or repeated Windows screenshots. It **does not** establish live trigger correctness, API authorization, stock-history regression, or Local migration safety.
+- Production remains untouched. Existing 01-Nov isolated Local PostgreSQL Invoice Sale tests remain separately verified 6/6; Back Sale and Reversal pending.
