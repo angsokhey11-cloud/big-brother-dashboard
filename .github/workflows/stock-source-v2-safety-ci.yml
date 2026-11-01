@@ -171,23 +171,7 @@ jobs:
           needle='CREATE OR REPLACE FUNCTION public.bb_batch_return_stock_internal()'
           assert s.count(needle)==1, 'Expected one real staged return-stock trigger function'
           i=s.index(needle)
-          end=s.index('$function
-      - name: Remove ONLY synthetic CI PostgreSQL
-        if: always()
-        run: docker rm -f bb-v2-back-sale-synthetic || true
-,s.index('AS $function
-      - name: Remove ONLY synthetic CI PostgreSQL
-        if: always()
-        run: docker rm -f bb-v2-back-sale-synthetic || true
-,i)+len('AS $function
-      - name: Remove ONLY synthetic CI PostgreSQL
-        if: always()
-        run: docker rm -f bb-v2-back-sale-synthetic || true
-))+len('$function
-      - name: Remove ONLY synthetic CI PostgreSQL
-        if: always()
-        run: docker rm -f bb-v2-back-sale-synthetic || true
-)
+          end=s.index('$function$',s.index('AS $function$',i)+len('AS $function$'))+len('$function$')
           chosen=s[i:end].strip()
           Path('/tmp/bb-ci-preclose-trigger.sql').write_text(chosen+';\n',encoding='utf8')
           print('Selected exact staged open-Batch stock Reversal trigger function')
