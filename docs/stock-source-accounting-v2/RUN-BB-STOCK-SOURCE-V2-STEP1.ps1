@@ -4,7 +4,7 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $live = 'supabase_db_Local_Brain'
-$base = 'https://raw.githubusercontent.com/angsokhey11-cloud/big-brother-dashboard/3f541cd778de660e380b7c61b392260f8e891b29/docs/stock-source-accounting-v2'
+$base = 'https://raw.githubusercontent.com/angsokhey11-cloud/big-brother-dashboard/3dc69203602e512625d2fd67348b41491867f07c/docs/stock-source-accounting-v2'
 $work = Join-Path $env:USERPROFILE 'Desktop\BB-STOCK-SOURCE-V2-STEP1'
 $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 $backup = Join-Path $work "LOCAL-V2-READONLY-SNAPSHOT-$stamp.dump"
@@ -14,7 +14,7 @@ $dumpInContainer = "/tmp/bb-v2-readonly-snapshot-$stamp.dump"
 $expected = [ordered]@{
   'TEST-ISOLATED-POSTGRES.ps1' = 'afeebe7adf1be720bc20fdc03b6956d416a96735'
   '20261031_source_aware_batch_sale_and_back_sale_STAGED.sql' = '8f8bafe3ea0d430c265c701a46eb97f379cee30d'
-  '20261031_exact_batch_reversal_sources_STAGED.sql' = 'f9dd81fb336763e5dbd5b33a156e7373ff3b3ec3'
+  '20261031_exact_batch_reversal_sources_STAGED.sql' = 'efd42b5e39c119aaa34195e23db0e6e69f14d17d'
   '20261031_reversal_source_snapshot_STAGED.sql' = '6b29ca6bb270e3b269b4526eab2a3eb29b79780d'
   'SOURCE-ARITHMETIC-SMOKE-READONLY.sql' = '101ee862d38269841dd286f121724996bc91f6fa'
   'WAREHOUSE-BATCH-VALUATION-RECONCILIATION-READONLY.sql' = '9a46841fa3b2595457bf8b0745a34cd3036e4a3a'
@@ -64,6 +64,30 @@ try {
     if ((Get-GitBlobSha1 $dest) -ne $expected[$name]) { throw "Hash mismatch: $name. Stop." }
     Write-Host "Verified: $name" -ForegroundColor DarkGreen
   }
+  # Fail early on missing SQL definition terminators before starting Docker.
+  $reversal = Get-Content -LiteralPath (Join-Path $work '20261031_exact_batch_reversal_sources_STAGED.sql') -Raw
+  $fnCount = [regex]::Matches($reversal, '(?m)^CREATE OR REPLACE FUNCTION ').Count
+  $endCount = [regex]::Matches($reversal, '(?m)^\$function\$;\r?
+  $tokens = $null
+  $errors = $null
+  [System.Management.Automation.Language.Parser]::ParseFile($runner, [ref]$tokens, [ref]$errors) | Out-Null
+  if ($errors.Count -gt 0) { $errors | Format-List; throw 'PowerShell runner syntax invalid. Stop.' }
+  & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $runner -BackupFile $backup -StagedDir $work
+  Assert-Exit 'Isolated SQL compile and audit'
+  Write-Host 'STEP 1 PASSED: STAGED SQL COMPILED + READ-ONLY AUDITS RAN IN ISOLATED DATABASE' -ForegroundColor Green
+  Write-Host 'Actual sale, Back Sale and reversal integration tests remain pending.' -ForegroundColor Yellow
+} catch {
+  Write-Host "STEP 1 FAILED: $($_.Exception.Message)" -ForegroundColor Red
+  throw
+} finally {
+  Write-Host "Test transcript: $log" -ForegroundColor Cyan
+  Stop-Transcript | Out-Null
+}
+).Count
+  if ($fnCount -ne 6 -or $endCount -ne 6) {
+    throw "Staged reversal SQL function delimiters inconsistent ($fnCount definitions; $endCount terminators). Stop."
+  }
+  Write-Host "Reversal SQL terminators verified: $endCount/6" -ForegroundColor Green
   $runner = Join-Path $work 'TEST-ISOLATED-POSTGRES.ps1'
   $tokens = $null
   $errors = $null
