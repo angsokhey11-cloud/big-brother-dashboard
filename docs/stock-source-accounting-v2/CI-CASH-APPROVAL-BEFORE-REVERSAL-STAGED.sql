@@ -63,6 +63,9 @@ BEGIN
 END;
 $function$;
 
+-- Trigger-only helper; no need to expose EXECUTE to public app callers.
+REVOKE ALL ON FUNCTION public.bb_v2_reversal_require_approved_cash_close() FROM PUBLIC;
+
 -- NOTE: install this trigger ONLY as part of a future reviewed migration.
 -- Testing creates this trigger in a disposable synthetic database, not here.
 -- CREATE TRIGGER trg_bb_v2_reversal_cash_approval
