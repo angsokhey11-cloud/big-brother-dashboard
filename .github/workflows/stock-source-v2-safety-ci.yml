@@ -238,6 +238,7 @@ jobs:
           source=Path('docs/stock-source-accounting-v2/20261031_exact_batch_reversal_sources_STAGED.sql').read_text(encoding='utf8')
           names=[
             'public.bb_batch_return_allocate_internal',
+            'public.bb_invoice_reversal_save_v2',
             'public.bb_invoice_reversal_save_by_id_v2',
             'public.bb_invoice_reversal_postclose_save_v1'
           ]
@@ -250,7 +251,7 @@ jobs:
             close=source.index('$function$',opening)+len('$function$')
             chunks.append(source[i:close].strip()+';')
           Path('/tmp/bb-ci-rpc-functions.sql').write_text('\n\n'.join(chunks)+'\n',encoding='utf8')
-          print('Extracted 3 actual staged functions: BEFORE validation, by-ID RPC and post-close RPC')
+          print('Extracted 4 staged functions: source BEFORE, number-only, by-ID, postclose')
           PY
           docker cp docs/stock-source-accounting-v2/CI-REVERSAL-SAVE-RPC-SYNTHETIC-SETUP.sql \
             bb-v2-back-sale-synthetic:/tmp/rpc-setup.sql
@@ -267,9 +268,9 @@ jobs:
             -c 'CREATE TRIGGER bb_ci_origin_source_before BEFORE INSERT ON public.sales_returns FOR EACH ROW EXECUTE FUNCTION public.bb_batch_return_allocate_internal();'
           docker exec bb-v2-back-sale-synthetic psql -X -v ON_ERROR_STOP=1 \
             -U postgres -d bb_stock_v2_sandbox -f /tmp/rpc-assert.sql 2>&1 | tee /tmp/rpc-results.log
-          grep -q 'PASS RPC CASE 4/4' /tmp/rpc-results.log
-          grep -q '4/4 real Reversal SAVE RPC transaction tests rolled back' /tmp/rpc-results.log
-          echo 'PASS 4/4 staged by-ID / postclose SAVE RPC with real BEFORE and AFTER stock triggers'
+          grep -q 'PASS RPC CASE 6/6' /tmp/rpc-results.log
+          grep -q '6/6 real Reversal SAVE RPC transaction tests rolled back' /tmp/rpc-results.log
+          echo 'PASS 6/6 staged legacy / by-ID / postclose SAVE RPC with real BEFORE and AFTER stock triggers'
       - name: Remove ONLY synthetic CI PostgreSQL
         if: always()
         run: docker rm -f bb-v2-back-sale-synthetic || true
