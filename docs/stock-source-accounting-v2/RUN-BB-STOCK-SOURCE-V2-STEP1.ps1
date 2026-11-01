@@ -1,6 +1,7 @@
 # BIG BROTHER - Stock Source Accounting V2 Step 1 (ISOLATED ONLY)
 # Real Local: read-only pg_dump. Cloud: never connected. SQL runs in no-network Docker.
 # NO migration, V2 deployment, Cloud->Local sync, or production changes.
+param([string]$ExistingSnapshot='')
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $live = 'supabase_db_Local_Brain'
@@ -39,6 +40,14 @@ try {
   Write-Host 'BIG BROTHER - Stock Source V2 ISOLATED compilation' -ForegroundColor Cyan
   Write-Host 'Production Local is read only; Cloud is not connected.' -ForegroundColor Yellow
   if (-not (Get-Command docker -ErrorAction SilentlyContinue)) { throw 'Docker Desktop is required.' }
+  if (-not [string]::IsNullOrWhiteSpace($ExistingSnapshot)) {
+    $backup = $ExistingSnapshot
+    if (-not (Test-Path -LiteralPath $backup -PathType Leaf)) { throw "Existing snapshot missing: $backup" }
+    if ([IO.Path]::GetExtension($backup).ToLowerInvariant() -ne '.dump') { throw 'Existing snapshot must be a .dump file.' }
+    if ((Get-Item -LiteralPath $backup).Length -lt 1000000) { throw 'Existing snapshot too small. Stop.' }
+    Write-Host "REUSING previous read-only snapshot (no new access to live Local): $backup" -ForegroundColor Green
+  } else {
+
   $names = @(docker ps --format '{{.Names}}')
   Assert-Exit 'List running containers'
   if ($live -notin $names) { throw 'Local Brain database container is not running. Stop.' }
@@ -58,6 +67,7 @@ try {
   docker exec $live rm -f $dumpInContainer
   Assert-Exit 'Remove only the temporary dump file'
   Write-Host "Snapshot saved: $backup" -ForegroundColor Green
+  }
   foreach ($name in $expected.Keys) {
     $dest = Join-Path $work $name
     Invoke-WebRequest -Uri "$base/$name" -OutFile $dest -UseBasicParsing -ErrorAction Stop
