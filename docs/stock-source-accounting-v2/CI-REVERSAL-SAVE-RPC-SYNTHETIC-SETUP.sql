@@ -77,4 +77,42 @@ INSERT INTO public.stock_activity(
  'BATCH_PENDING','EXTERNAL','BATCH_SALE','BATCH-INVOICE:BB-CI-RPC-LINE-CLOSED:BB-CI-PRODUCT:PURCHASED',3.2825,9.85),
 ('BB-CI-RPC-CLOSED-Z','BB-CI-RPC-CLOSED',CURRENT_DATE,'Invoice','BB-CI-PRODUCT','BB-CI-DUPLICATE-9','BB-CI-CUSTOMER-2',2,
  'BATCH_ZERO_COST','EXTERNAL','BATCH_SALE','BATCH-INVOICE:BB-CI-RPC-LINE-CLOSED:BB-CI-PRODUCT:ZERO',0,0);
+-- A separately numbered original Batch invoice ensures the legacy number-only
+-- RPC continues to support *unambiguous* invoice numbers.
+INSERT INTO public.stock_batches(
+ batch_id,batch_date,location_code,location_name_snapshot,status,issued_qty,sold_qty
+) VALUES('BB-CI-RPC-UNIQUE-BATCH',CURRENT_DATE,'BB-SALES-TEST','Synthetic Route','Open',5,5);
+INSERT INTO public.stock_batch_items(
+ batch_id,product_code,product_name_snapshot,unit_snapshot,
+ issued_qty,sold_qty_snapshot,pending_qty_snapshot,
+ purchased_issued_qty,zero_cost_issued_qty,
+ purchased_sold_qty_snapshot,zero_cost_sold_qty_snapshot,
+ purchased_pending_qty_snapshot,zero_cost_pending_qty_snapshot
+) VALUES('BB-CI-RPC-UNIQUE-BATCH','BB-CI-PRODUCT',
+ 'Synthetic 2L Milk','bottle',5,5,0,3,2,3,2,0,0);
+INSERT INTO public.invoices(invoice_id,invoice_no,customer_id,
+ customer_name_snapshot,location_code,batch_id)
+VALUES('BB-CI-RPC-INV-UNIQUE','BB-CI-UNIQUE-INVOICE',
+ 'BB-CI-CUSTOMER-3','Synthetic Customer 3',
+ 'BB-SALES-TEST','BB-CI-RPC-UNIQUE-BATCH');
+INSERT INTO public.invoice_lines(
+ line_id,invoice_id,product_code,qty,line_no,unit_price,
+ product_name_snapshot,display_product_code,entry_type
+) VALUES('BB-CI-RPC-LINE-UNIQUE','BB-CI-RPC-INV-UNIQUE',
+ 'BB-CI-PRODUCT',5,1,2.50,'Synthetic 2L Milk',
+ 'BB-CI-PRODUCT','EXACT');
+INSERT INTO public.stock_activity(
+ transaction_id,batch_id,activity_date,activity_type,product_code,
+ related_invoice_no,customer_id,qty,from_bucket,to_bucket,movement_type,
+ client_request_id,unit_cost,line_value
+) VALUES
+('BB-CI-RPC-UNIQUE-P','BB-CI-RPC-UNIQUE-BATCH',CURRENT_DATE,'Invoice',
+ 'BB-CI-PRODUCT','BB-CI-UNIQUE-INVOICE','BB-CI-CUSTOMER-3',3,
+ 'BATCH_PENDING','EXTERNAL','BATCH_SALE',
+ 'BATCH-INVOICE:BB-CI-RPC-LINE-UNIQUE:BB-CI-PRODUCT:PURCHASED',3.2825,9.85),
+('BB-CI-RPC-UNIQUE-Z','BB-CI-RPC-UNIQUE-BATCH',CURRENT_DATE,'Invoice',
+ 'BB-CI-PRODUCT','BB-CI-UNIQUE-INVOICE','BB-CI-CUSTOMER-3',2,
+ 'BATCH_ZERO_COST','EXTERNAL','BATCH_SALE',
+ 'BATCH-INVOICE:BB-CI-RPC-LINE-UNIQUE:BB-CI-PRODUCT:ZERO',0,0);
+
 \echo 'CI synthetic full-save RPC fixture prepared (same Invoice No, DIFFERENT invoice IDs/customers)'
