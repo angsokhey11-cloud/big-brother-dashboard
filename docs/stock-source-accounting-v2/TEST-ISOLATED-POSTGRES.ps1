@@ -66,15 +66,45 @@ try {
   if(-not $ready){ throw 'Isolated PostgreSQL was not ready.' }
   # Supabase postgres role is NOT a superuser; ALTER SYSTEM requires
   # the isolated cluster's supabase_admin role. Never try this on V5/V6.
-  $adminCheck=(docker exec $ContainerName psql -X -U postgres -d postgres -tAc "SELECT rolsuper AND rolcanlogin FROM pg_roles WHERE rolname='supabase_admin';").Trim()
-  Check-LastExit 'Inspect isolated supabase_admin role'
-  if($adminCheck -ne 't'){ throw 'Isolated supabase_admin role is not a login superuser' }
+  # This read may land in the transient bootstrap-server shutdown window.
+  $adminCheck=''
+  for($attempt=1;$attempt -le 18;$attempt++){
+    $checkRows=@(docker exec $ContainerName psql -X -v ON_ERROR_STOP=1 -U postgres -d postgres -tAc "SELECT rolsuper AND rolcanlogin FROM pg_roles WHERE rolname='supabase_admin';" 2>$null)
+    if($LASTEXITCODE -eq 0){$adminCheck=($checkRows -join '').Trim();break}
+    Start-Sleep -Seconds 3
+  }
+  if($adminCheck -ne 't'){ throw 'Sandbox supabase_admin role unavailable or not a login superuser; stop.' }
   # pg_cron only installs into cron.database_name (postgres by default).
   # Configure only this disposable container; disable restored scheduled jobs.
-  docker exec $ContainerName psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d postgres -c "ALTER SYSTEM SET cron.database_name = 'bb_stock_v2_sandbox';"
-  Check-LastExit 'Set sandbox pg_cron database'
-  docker exec $ContainerName psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d postgres -c "ALTER SYSTEM SET cron.launch_active_jobs = off;"
-  Check-LastExit 'Disable sandbox cron execution'
+  # On first boot, the Supabase Postgres image temporarily accepts connections
+  # during initdb, then shuts that bootstrap server down and starts the final one.
+  # pg_isready may succeed during this brief transition. Two ALTER SYSTEM calls
+  # must both succeed on the sandbox, otherwise wait for stable startup and retry.
+  # Every command here targets ONLY this new --network none throwaway container.
+  $cronConfigured=$false
+  for($attempt=1;$attempt -le 18;$attempt++){
+    docker exec $ContainerName psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d postgres -c "ALTER SYSTEM SET cron.database_name = 'bb_stock_v2_sandbox';" 2>$null | Out-Null
+    $firstExit=$LASTEXITCODE
+    if($firstExit -eq 0){
+      docker exec $ContainerName psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d postgres -c "ALTER SYSTEM SET cron.launch_active_jobs = off;" 2>$null | Out-Null
+      if($LASTEXITCODE -eq 0){
+        $cronConfigured=$true
+        break
+      }
+    }
+    Write-Host "Isolated container startup still transitioning; retrying pg_cron sandbox setup ($attempt/18)." -ForegroundColor DarkYellow
+    Start-Sleep -Seconds 3
+  }
+  if(-not $cronConfigured){
+    docker logs --tail 30 $ContainerName
+    throw 'Sandbox-only PostgreSQL did not stabilize during cron setup. Stop; no production database was touched.'
+  }
+  # Allow Docker entrypoint's bootstrap/final-server transition to finish before restart.
+  Start-Sleep -Seconds 6
+  $stableCheck=(docker exec $ContainerName psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d postgres -tAc 'SELECT current_database();' 2>$null)
+  Check-LastExit 'Verify sandbox PostgreSQL stabilized before restart'
+  if(($stableCheck -join '').Trim() -ne 'postgres'){throw 'Unexpected sandbox database before restart.'}
+  Write-Host 'Sandbox pg_cron settings applied; restarting isolated container.' -ForegroundColor Green
   docker restart $ContainerName | Out-Null
   Check-LastExit 'Restart isolated container for pg_cron setting'
   $ready=$false
