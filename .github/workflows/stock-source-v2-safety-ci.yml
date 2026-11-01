@@ -302,6 +302,25 @@ jobs:
           grep -q 'PASS FINANCE PROTOTYPE: $100 original cash remains visible' /tmp/ar-dcc-results.log
           grep -q 'Finance 4/4 current implementation tests rolled back' /tmp/ar-dcc-results.log
           echo 'PASS 4/4 current Cloud A/R behavior verified; DCC refund visibility remains release-blocking'
+      - name: Cash Reversal requires approved Daily Cash Close
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in SETUP GUARD ASSERT; do
+            case $name in
+              SETUP) p=CI-CASH-APPROVAL-SYNTHETIC-SETUP.sql;;
+              GUARD) p=CI-CASH-APPROVAL-BEFORE-REVERSAL-STAGED.sql;;
+              ASSERT) p=CI-CASH-APPROVAL-SYNTHETIC-ASSERTIONS.sql;;
+            esac
+            docker cp docs/stock-source-accounting-v2/$p bb-v2-back-sale-synthetic:/tmp/$p
+          done
+          for n in CI-CASH-APPROVAL-SYNTHETIC-SETUP.sql CI-CASH-APPROVAL-BEFORE-REVERSAL-STAGED.sql; do
+            docker exec bb-v2-back-sale-synthetic psql -X -v ON_ERROR_STOP=1 -U postgres -d bb_stock_v2_sandbox -f /tmp/$n
+          done
+          docker exec bb-v2-back-sale-synthetic psql -X -v ON_ERROR_STOP=1 -U postgres -d bb_stock_v2_sandbox -c 'CREATE TRIGGER bb_ci_cash_approval BEFORE INSERT ON public.sales_returns FOR EACH ROW EXECUTE FUNCTION public.bb_v2_reversal_require_approved_cash_close();'
+          docker exec bb-v2-back-sale-synthetic psql -X -v ON_ERROR_STOP=1 -U postgres -d bb_stock_v2_sandbox -f /tmp/CI-CASH-APPROVAL-SYNTHETIC-ASSERTIONS.sql 2>&1 | tee /tmp/bb-cash-gate.log
+          grep -q 'PASS CASH GATE CASE 6/6' /tmp/bb-cash-gate.log
+          grep -q '6/6 Cash approval Reversal guard tests and transaction ROLLBACK verified' /tmp/bb-cash-gate.log
       - name: Remove ONLY synthetic CI PostgreSQL
         if: always()
         run: docker rm -f bb-v2-back-sale-synthetic || true
