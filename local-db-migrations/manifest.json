@@ -134,6 +134,12 @@
       "file": "20261031_report_damage_counts_v1.sql",
       "sha256": "03133CCD06B65667F3E3832B55B736CF82036823E7A9BDBBA97662805E0ED830",
       "description": "Report Damage: permission-scoped, read-only per-batch completed-report transaction counts; no stock or business-data writes; Local Brain V5/V6 Cloud parity"
+    },
+    {
+      "id": "20261101_local_refund_schema_guard_repair_v1",
+      "file": "20261101_local_refund_schema_guard_repair_v1.sql",
+      "sha256": "928688269D37F8E77541F187056EFF24151AF286022E9AED439C10736D6F1476",
+      "description": "Apply five refund-related additive tables, keys, RLS and daily cash refund columns to Local PostgreSQL through existing Code Sync with full backup"
     }
   ]
 }
