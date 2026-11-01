@@ -1,16 +1,14 @@
-# BIG BROTHER - Stock Source Accounting V2 Step 1 (ISOLATED ONLY)
-# Real Local: read-only pg_dump. Cloud: never connected. SQL runs in no-network Docker.
+# BIG BROTHER - Stock Source Accounting V2 Step 2 / Real Invoice Trigger (ISOLATED ONLY)
+# ONLY an existing pg_dump is read. Neither Cloud nor real Local are connected.
 # NO migration, V2 deployment, Cloud->Local sync, or production changes.
 param([Parameter(Mandatory=$true)][string]$ExistingSnapshot)
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
-$live = 'supabase_db_Local_Brain'
-$base = 'https://raw.githubusercontent.com/angsokhey11-cloud/big-brother-dashboard/9d0583e671cdd108311ea0275e96214c9fee7ea5/docs/stock-source-accounting-v2'
+$base = 'https://raw.githubusercontent.com/angsokhey11-cloud/big-brother-dashboard/a3bdde65d4c6361261fead63dc14a2acd92b88a2/docs/stock-source-accounting-v2'
 $work = Join-Path $env:USERPROFILE 'Desktop\BB-STOCK-SOURCE-V2-STEP2-INVOICE'
 $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
-$backup = Join-Path $work "LOCAL-V2-READONLY-SNAPSHOT-$stamp.dump"
-$log = Join-Path $work "V2-STEP1-COMPILE-$stamp.log"
-$dumpInContainer = "/tmp/bb-v2-readonly-snapshot-$stamp.dump"
+$backup = $ExistingSnapshot
+$log = Join-Path $work "V2-STEP2-INVOICE-$stamp.log"
 
 $expected = [ordered]@{
   'TEST-ISOLATED-POSTGRES-STEP2-INVOICE.ps1' = '9c967601edbf4daf379826533af90bfb5a9f674f'
@@ -19,8 +17,8 @@ $expected = [ordered]@{
   '20261031_reversal_source_snapshot_STAGED.sql' = '6b29ca6bb270e3b269b4526eab2a3eb29b79780d'
   'SOURCE-ARITHMETIC-SMOKE-READONLY.sql' = '101ee862d38269841dd286f121724996bc91f6fa'
   'WAREHOUSE-BATCH-VALUATION-RECONCILIATION-READONLY.sql' = '9a46841fa3b2595457bf8b0745a34cd3036e4a3a'
-  'BACK-SALE-SOURCE-LEDGER-AUDIT-READONLY.sql' = 'e58e5b352480510d69035afd52b6205e5ce11c21',
-  'ACTUAL-BATCH-INVOICE-SOURCE-ROLLBACK-ISOLATED.sql' = '1ba5622bc3fa82f1d212210bc38be15e1b97f173'
+  'BACK-SALE-SOURCE-LEDGER-AUDIT-READONLY.sql' = 'e58e5b352480510d69035afd52b6205e5ce11c21'
+  'ACTUAL-BATCH-INVOICE-SOURCE-ROLLBACK-ISOLATED.sql' = '87165d8dd930eee031b8feb9b8caaa1edfeea7f5'
 }
 function Assert-Exit([string]$action) {
   if ($LASTEXITCODE -ne 0) { throw "$action failed (exit code $LASTEXITCODE). Do NOT sync or deploy." }
@@ -68,7 +66,7 @@ try {
   Write-Host 'STEP 2 INVOICE: STAGED FUNCTIONS COMPILED + REAL INVOICE TRIGGER TEST COMPLETED' -ForegroundColor Green
   Write-Host 'Back Sale, Reversal and UI integration tests remain pending.' -ForegroundColor Yellow
 } catch {
-  Write-Host "STEP 1 FAILED: $($_.Exception.Message)" -ForegroundColor Red
+  Write-Host "STEP 2 INVOICE FAILED: $($_.Exception.Message)" -ForegroundColor Red
   throw
 } finally {
   Write-Host "Test transcript: $log" -ForegroundColor Cyan
