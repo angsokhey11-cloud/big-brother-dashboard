@@ -348,6 +348,17 @@ jobs:
           grep -q 'PASS STOCK SYNC CASE 7/7' /tmp/CI-LOCAL-SYNC-SOURCE-GUARD-V2-ASSERTIONS.sql.log
           grep -q '7/7 local sync Purchased+Zero-Cost source collision tests rolled back' /tmp/CI-LOCAL-SYNC-SOURCE-GUARD-V2-ASSERTIONS.sql.log
           echo 'PASS Cloud-to-Local stock source protection: 7/7 synthetic cases, rollback verified'
+      - name: Candidate unique index blocks duplicate Purchased and Zero-Cost invoice sales
+        shell: bash
+        run: |
+          set -euo pipefail
+          for n in CI-STOCK-SALE-SOURCE-UNIQUE-INDEX-CANDIDATE.sql CI-STOCK-SALE-SOURCE-UNIQUE-INDEX-ASSERTIONS.sql; do
+            docker cp docs/stock-source-accounting-v2/$n bb-v2-back-sale-synthetic:/tmp/$n
+            docker exec bb-v2-back-sale-synthetic psql -X -v ON_ERROR_STOP=1 -U postgres -d bb_stock_v2_sandbox -f /tmp/$n 2>&1 | tee /tmp/$n.log
+          done
+          grep -q 'PASS SOURCE UNIQUE CASE 5/5' /tmp/CI-STOCK-SALE-SOURCE-UNIQUE-INDEX-ASSERTIONS.sql.log
+          grep -q '5/5 selective unique stock-source index proof' /tmp/CI-STOCK-SALE-SOURCE-UNIQUE-INDEX-ASSERTIONS.sql.log
+          echo 'PASS selective Purchased and Zero-Cost invoice source key unique constraint proof'
       - name: Remove ONLY synthetic CI PostgreSQL
         if: always()
         run: docker rm -f bb-v2-back-sale-synthetic || true
