@@ -1753,7 +1753,7 @@ begin
 
 end;
 
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION public.bb_invoice_reversal_save_by_id_v2(p_payload jsonb)
@@ -3371,7 +3371,7 @@ begin
 
 end;
 
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION public.bb_invoice_reversal_postclose_save_v1(p_payload jsonb)
@@ -5023,7 +5023,7 @@ begin
 
 end;
 
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION public.bb_batch_return_stock_internal()
@@ -5715,7 +5715,7 @@ begin
 
 end;
 
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION public.bb_postclose_reversal_stock_v1()
@@ -5933,5 +5933,5 @@ BEGIN
  PERFORM public.bb_stock_touch_revision_internal();
  RETURN new;
 END;
-$function$
+$function$;
 
