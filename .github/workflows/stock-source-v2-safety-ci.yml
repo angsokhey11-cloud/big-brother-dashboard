@@ -40,6 +40,24 @@ jobs:
               raise AssertionError(f'{name}: parsed {len(parsed)} statements, expected >= {expected}')
             print(f'PASS {name}: {functions} definitions; {len(parsed)} SQL statements')
           PY
+      - name: Validate Windows PowerShell helper syntax
+        shell: pwsh
+        run: |
+          $files = @(
+            'docs/stock-source-accounting-v2/EXTRACT-LOCAL-SCHEMA-ONLY-NONDESTRUCTIVE.ps1',
+            'docs/stock-source-accounting-v2/RUN-BB-STOCK-SOURCE-V2-STEP2-BACKSALE.ps1',
+            'docs/stock-source-accounting-v2/TEST-ISOLATED-POSTGRES-STEP2-BACKSALE.ps1'
+          )
+          foreach($file in $files){
+            $tokens=$null
+            $errors=$null
+            [System.Management.Automation.Language.Parser]::ParseFile($file,[ref]$tokens,[ref]$errors) | Out-Null
+            if($errors.Count -gt 0){
+              $errors | Format-List | Out-String | Write-Host
+              throw "PowerShell syntax invalid: $file"
+            }
+            Write-Host "PASS PowerShell syntax: $file"
+          }
       - name: Start no-network ephemeral PostgreSQL for synthetic arithmetic
         run: |
           docker run -d --name bb-stock-v2-safety-test --network none             -e POSTGRES_PASSWORD=disposable-local-ci-only postgres:17
