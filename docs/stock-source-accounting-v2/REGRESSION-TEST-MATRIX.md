@@ -124,3 +124,10 @@
 - Checks: PostgreSQL grammar for 10 staged functions; PowerShell parser for schema-only export, Back Sale test launcher and isolated runner; PostgreSQL 17 synthetic arithmetic **12/12 PASS**. Disposable test container removed.
 - Added one-time schema-only export helper `EXTRACT-LOCAL-SCHEMA-ONLY-NONDESTRUCTIVE.ps1`; uses existing Local snapshot in `--network none` Docker; no real database access, no data rows, and no automatic publish. Function text may contain secrets; review before sharing.
 - Still **NOT** a complete branch migration-replay fix or actual Back Sale / Reversal trigger integration test.
+
+## 01-Nov-2026 — Uploaded Local schema-only audit: structural table parity VERIFIED
+- Received `BIG-BROTHER-LOCAL-SCHEMA-ONLY.sql` from the existing nonproduction Local snapshot. **Raw DDL and function bodies NOT committed to GitHub**.
+- Cloud vs Local share **143 PUBLIC base tables, 1,803 columns**. Exact ordered fingerprints match for column names, data types, NOT NULL flags, and DEFAULT presence. Local has one extra table `bb_local_sync_history` (13 columns), which must remain Local-only.
+- Cloud has 552 public functions vs 520 local declarations; 38 private vs 37; 169 public triggers vs 161 local declarations. Differences need signature and security review. Full Cloud branching schema parity **NOT yet established**.
+- Uploaded SQL is schema-only (`COPY` rows: 0); contains Supabase-managed schemas and extension setup, so **not safe to execute wholesale** on a new Supabase branch. No raw SQL, sensitive literals, customer/bank/staff records were published.
+- See `LOCAL-CLOUD-SCHEMA-BASELINE-COMPARISON-20261101.md` for evidence and repair gates. No production/Local writes; no new billable branch opened. Back Sale/Reversal transaction integration remains pending.
