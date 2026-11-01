@@ -191,9 +191,9 @@ jobs:
             -c 'CREATE TRIGGER bb_ci_real_reversal_stock AFTER INSERT ON public.sales_returns FOR EACH ROW EXECUTE FUNCTION public.bb_batch_return_stock_internal();'
           docker exec bb-v2-back-sale-synthetic psql -X -v ON_ERROR_STOP=1 \
             -U postgres -d bb_stock_v2_sandbox -f /tmp/preclose-assert.sql 2>&1 | tee /tmp/preclose-results.log
-          grep -q 'PASS RECOVERY POSTING CASE 3/3' /tmp/preclose-results.log
-          grep -q 'actual open-Batch reversal posting 3/3 cases' /tmp/preclose-results.log
-          echo 'PASS 3/3 actual preclose reversal stock-trigger posting (synthetic)'
+          grep -q 'PASS RECOVERY POSTING CASE 4/4' /tmp/preclose-results.log
+          grep -q 'actual open-Batch reversal posting 4/4 cases' /tmp/preclose-results.log
+          echo 'PASS 4/4 actual preclose reversal stock-trigger posting (synthetic)'
       - name: Remove ONLY synthetic CI PostgreSQL
         if: always()
         run: docker rm -f bb-v2-back-sale-synthetic || true
