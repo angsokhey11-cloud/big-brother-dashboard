@@ -130,6 +130,36 @@ jobs:
           grep -q 'PASS CASE 7/7' /tmp/back-sale-results.log
           grep -q 'PASS: post-ROLLBACK Back Sale synthetic ledger/request absent' /tmp/back-sale-results.log
           echo 'PASS 7/7 Back Sale actual-function synthetic cases, post-ROLLBACK verified'
+
+      - name: Execute actual staged reversal-source snapshot with historical synthetic ledger
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('docs/stock-source-accounting-v2/20261031_reversal_source_snapshot_STAGED.sql').read_text(encoding='utf8')
+          needle='CREATE OR REPLACE FUNCTION public.bb_invoice_reversal_batch_source_snapshot_v2('
+          assert s.count(needle)==1, 'Missing or ambiguous reversal source function'
+          chosen=s[s.index(needle):].split('REVOKE ALL ON FUNCTION',1)[0].strip()
+          assert chosen.endswith('$function$;'), 'Unexpected function termination'
+          Path('/tmp/bb-ci-reversal-source-function.sql').write_text(chosen+'\n',encoding='utf8')
+          print('Actual staged reversal source snapshot function extracted')
+          PY
+          docker cp docs/stock-source-accounting-v2/CI-REVERSAL-SOURCE-SYNTHETIC-SETUP.sql \
+            bb-v2-back-sale-synthetic:/tmp/reversal-setup.sql
+          docker cp /tmp/bb-ci-reversal-source-function.sql \
+            bb-v2-back-sale-synthetic:/tmp/reversal-function.sql
+          docker cp docs/stock-source-accounting-v2/CI-REVERSAL-SOURCE-SYNTHETIC-ASSERTIONS.sql \
+            bb-v2-back-sale-synthetic:/tmp/reversal-assert.sql
+          docker exec bb-v2-back-sale-synthetic psql -X -v ON_ERROR_STOP=1 \
+            -U postgres -d bb_stock_v2_sandbox -f /tmp/reversal-setup.sql
+          docker exec bb-v2-back-sale-synthetic psql -X -v ON_ERROR_STOP=1 \
+            -U postgres -d bb_stock_v2_sandbox -f /tmp/reversal-function.sql
+          docker exec bb-v2-back-sale-synthetic psql -X -v ON_ERROR_STOP=1 \
+            -U postgres -d bb_stock_v2_sandbox -f /tmp/reversal-assert.sql 2>&1 | tee /tmp/reversal-results.log
+          grep -q 'PASS REVERSAL SOURCE CASE 4/4' /tmp/reversal-results.log
+          grep -q 'PASS: 4/4 real reversal snapshot function tests' /tmp/reversal-results.log
+          echo 'PASS 4/4 staged read-only reversal-source history snapshot tests'
       - name: Remove ONLY synthetic CI PostgreSQL
         if: always()
         run: docker rm -f bb-v2-back-sale-synthetic || true
