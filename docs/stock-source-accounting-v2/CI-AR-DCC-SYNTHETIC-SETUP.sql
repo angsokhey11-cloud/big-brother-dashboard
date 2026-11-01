@@ -5,6 +5,8 @@
 \set ON_ERROR_STOP on
 
 ALTER TABLE public.invoices
+ ADD COLUMN discount numeric(18,2) DEFAULT 0 NOT NULL,
+ ADD COLUMN note text,
  ADD COLUMN subtotal numeric(18,2) DEFAULT 0 NOT NULL,
  ADD COLUMN grand_total numeric(18,2) DEFAULT 0 NOT NULL,
  ADD COLUMN reversal_amount numeric(18,2) DEFAULT 0 NOT NULL,
