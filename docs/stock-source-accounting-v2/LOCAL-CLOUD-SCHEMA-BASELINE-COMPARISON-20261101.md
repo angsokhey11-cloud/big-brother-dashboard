@@ -42,6 +42,30 @@ Function/trigger count differences could include Cloud-only functions or Local-o
 
 The Local dump includes `auth`, `storage`, `realtime`, `pg_cron`, `pg_net`, `bb_local_maintenance`, and multiple Supabase-managed schemas, grants and extensions. **Never restore this whole dump directly onto an existing Supabase branch or production**. Managed schemas would conflict with the initialized Supabase platform, and local-only sync maintenance logic does not belong in Cloud.
 
+## Exact Local vs Cloud routine and trigger inventory (read-only verification)
+
+Cross-checked the uploaded schema-only `pg_dump` FUNCTION/TRIGGER names with the Cloud `pg_proc`/`pg_trigger` catalog (excluding PostgreSQL internal triggers). The comparison uses 20-bit MD5 lookup prefixes of object names as a private analysis aid; verified no Cloud hash collisions. The 49 renamed permanent-ID triggers were **independently checked by a complete table-name + primary-ID-column checksum**.
+
+**Functions (names, not executable bodies):**
+- Common names: **556** (Cloud 590; Local 557).
+- Cloud-only function names: **34**, including:
+  - Notification/FCM/push: `bb_notification_v2_capture`, `bb_notification_v2_extra_capture`, `bb_notification_v2_feed`, `bb_fcm_*`, `bb_push_*`, overdue inbox;
+  - Staff relation: `bb_staff_relation_admin_*`, `bb_staff_relation_sync_due_salary_months`, staff assistant workflow;
+  - Cloud linking / infrastructure: `bb_local_cloud_link_*`, bot cron gates;
+  - Accounting-sensitive: `bb_purchase_edit_costs` (MUST separately review), plus photo-expiration handling.
+- Local-only function name: **`private.bb_local_reject_infrastructure_replay_v1()`**. Keep it Local-only.
+- Names matching does **NOT** prove function bodies/security attributes match. The 34 Cloud-only functions are not automatically safe to install on Local.
+
+**Triggers (actual table + trigger-name inventory):**
+- **105** exact table/trigger-name matches.
+- **49** Local `bb_pid_<hash>` triggers vs Cloud `bb_permanent_id_<table>` trigger names: ALL 49 verified **semantically equivalent in their permanent-ID capture target**. Both are AFTER INSERT and invoke the same `bb_capture_permanent_primary_id(column)` function; all table/column mappings match. Sorted table + column SHA-compatible MD5 (independent local/cloud computation): `a83d85c680d92ec6e9ae777fce5ef4b7`. They should NOT both be installed on one database.
+- **15** remaining Cloud-only triggers: eight notification-v2 triggers (including `stock_activity.bb_notify_v2_stock`), four bot cron gates, two FCM/push queue hooks, one staff assistant request-status hook.
+- **7** remaining Local-only triggers: `bb_local_business_only_replay_guard_v1` on notification, FCM and push infrastructure tables. These protect Local from copying Cloud-only infrastructure records.
+- Totals: Cloud = **105 + 49 + 15 = 169**; Local = **105 + 49 + 7 = 161**. Net count difference = 8, but there are 22 genuinely environment-specific triggers plus 49 naming variants.
+- Reconstructing a Cloud test baseline must use **Cloud-style trigger identities** and Cloud notification semantics, not blindly load Local-specific guard triggers.
+
+**Conclusion:** The count discrepancy is explained at the object-name/trigger-target level. A full comparison of function bodies, function security settings, CHECK/FK/default expressions, policies and reproducible fresh migration replay remains **NOT DONE**. Do not merge or deploy V2 yet.
+
 ## Data / secrets risk screening
 
 - `COPY` top-level data-copy sections: 0.
