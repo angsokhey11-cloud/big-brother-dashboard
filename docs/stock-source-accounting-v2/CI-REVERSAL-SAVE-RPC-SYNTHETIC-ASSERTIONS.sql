@@ -52,7 +52,7 @@ BEGIN
     (SELECT count(*) FROM public.sales_database_edit_history)<>audit_before THEN
    RAISE EXCEPTION 'CI SAVE CASE 1 rejected mismatch produced stock or audit entries';
  END IF;
- RAISE NOTICE 'PASS RPC CASE 1/4: wrong Invoice ID/No pair rejected atomically';
+ RAISE NOTICE 'PASS RPC CASE 1/6: wrong Invoice ID/No pair rejected atomically';
 
  -- CASE 2: real by-ID RPC -> BEFORE origin-source guard -> open-Batch stock
  -- AFTER trigger -> record return amount + audit. Duplicate invoice numbers
@@ -101,7 +101,7 @@ BEGIN
  IF EXISTS(SELECT 1 FROM public.sales_returns WHERE invoice_id='BB-CI-RPC-INV-CLOSED') THEN
    RAISE EXCEPTION 'CI SAVE CASE 2 duplicate invoice number contaminated different Invoice ID';
  END IF;
- RAISE NOTICE 'PASS RPC CASE 2/4: by-ID SAVE + BEFORE guard + OPEN stock + audit + $5 partial return, duplicate invoice numbers isolated';
+ RAISE NOTICE 'PASS RPC CASE 2/6: by-ID SAVE + BEFORE guard + OPEN stock + audit + $5 partial return, duplicate invoice numbers isolated';
 
  -- CASE 3: postclose save RPC -> route row -> BEFORE guard ->
  -- two AFTER triggers, original CLOSED Batch unchanged.
@@ -140,7 +140,7 @@ BEGIN
  IF (SELECT count(*) FROM public.sales_database_edit_history)<>audit_before+2 THEN
    RAISE EXCEPTION 'CI SAVE CASE 3 missing audit record';
  END IF;
- RAISE NOTICE 'PASS RPC CASE 3/4: postclose SAVE + routes + warehouse P/Z + historical cost + audit';
+ RAISE NOTICE 'PASS RPC CASE 3/6: postclose SAVE + routes + warehouse P/Z + historical cost + audit';
 
  -- CASE 4: second postclose request to a wrong-location OPEN Batch must fail
  -- BEFORE anything reaches ledger; subtransaction rollback includes route/audit.
@@ -171,7 +171,65 @@ BEGIN
        WHERE invoice_id='BB-CI-RPC-INV-CLOSED')<>1 THEN
    RAISE EXCEPTION 'CI SAVE CASE 4 invalid request left routes/audit';
  END IF;
- RAISE NOTICE 'PASS RPC CASE 4/4: invalid destination rejected, no extra routes or audit';
+
+ RAISE NOTICE 'PASS RPC CASE 4/6: invalid destination rejected, no extra routes or audit';
+
+ -- CASE 5: legacy Invoice No-only RPC must reject duplicated invoice numbers,
+ -- without creating returns for either customer.
+ rejected:=false;err:='';
+ BEGIN
+   PERFORM public.bb_invoice_reversal_save_v2(jsonb_build_object(
+    'invoiceNo','BB-CI-DUPLICATE-9',
+    'returnDate',current_date::text,
+    'reason','Synthetic legacy ambiguity rejection',
+    'returnType','Partial Reversal',
+    'lines',jsonb_build_array(jsonb_build_object(
+      'lineId','BB-CI-RPC-LINE-OPEN','qty',1,
+      'stockAllocations',jsonb_build_array(jsonb_build_object(
+        'productCode','BB-CI-PRODUCT','qty',1,'purchasedQty',1,'zeroCostQty',0))
+    ))
+   ));
+ EXCEPTION WHEN OTHERS THEN
+   GET STACKED DIAGNOSTICS err=MESSAGE_TEXT;
+   IF position('Duplicate Invoice No; use Invoice ID' IN err)=0 THEN
+     RAISE EXCEPTION 'CI SAVE CASE 5 unexpected error: %',err;
+   END IF;
+   rejected:=true;
+ END;
+ IF NOT rejected THEN
+    RAISE EXCEPTION 'CI SAVE CASE 5 ambiguous legacy invoice-number-only reversal accepted';
+ END IF;
+ IF (SELECT count(*) FROM public.sales_database_edit_history)<>audit_before+2 OR
+    (SELECT count(*) FROM public.sales_returns WHERE invoice_id='BB-CI-RPC-INV-OPEN')<>1 OR
+    (SELECT count(*) FROM public.sales_returns WHERE invoice_id='BB-CI-RPC-INV-CLOSED')<>1 THEN
+    RAISE EXCEPTION 'CI SAVE CASE 5 ambiguity attempted a financial change';
+ END IF;
+ RAISE NOTICE 'PASS RPC CASE 5/6: duplicate invoice number legacy RPC rejected safely';
+
+ -- CASE 6: legacy Invoice No-only RPC still works with a unique invoice number.
+ resp:=public.bb_invoice_reversal_save_v2(jsonb_build_object(
+    'invoiceNo','BB-CI-UNIQUE-INVOICE',
+    'returnDate',current_date::text,
+    'reason','Synthetic unique number compatibility',
+    'returnType','Partial Reversal',
+    'lines',jsonb_build_array(jsonb_build_object(
+      'lineId','BB-CI-RPC-LINE-UNIQUE','qty',1,
+      'stockAllocations',jsonb_build_array(jsonb_build_object(
+        'productCode','BB-CI-PRODUCT','qty',1,'purchasedQty',1,'zeroCostQty',0))
+    ))
+ ));
+ rid:=resp->'returns'->0->>'returnId';
+ IF resp->>'success'<>'true' OR (resp->>'totalAmount')::numeric<>2.50 OR
+    rid IS NULL OR NOT EXISTS(SELECT 1 FROM public.sales_returns
+      WHERE return_id=rid AND invoice_id='BB-CI-RPC-INV-UNIQUE'
+        AND return_amount=2.50) OR
+    NOT EXISTS(SELECT 1 FROM public.stock_activity
+      WHERE reference_no=rid AND to_bucket='BATCH_PENDING'
+        AND line_value=3.28) OR
+    (SELECT count(*) FROM public.sales_database_edit_history)<>audit_before+3 THEN
+     RAISE EXCEPTION 'CI SAVE CASE 6 unique legacy RPC incompatible: %',resp;
+ END IF;
+ RAISE NOTICE 'PASS RPC CASE 6/6: legacy unique-number save works; source and financial records correct';
 END;
 $bb_ci_rpc$;
 ROLLBACK;
@@ -186,6 +244,6 @@ BEGIN
  OR EXISTS(SELECT 1 FROM public.stock_activity WHERE reference_no LIKE 'REV-%') THEN
    RAISE EXCEPTION 'CI Reversal RPC ROLLBACK left created return, route, audit, or stock';
  END IF;
- RAISE NOTICE 'PASS: 4/4 real Reversal SAVE RPC transaction tests rolled back with no synthetic changes';
+ RAISE NOTICE 'PASS: 6/6 real Reversal SAVE RPC transaction tests rolled back with no synthetic changes';
 END;
 $bb_ci_rpc_after$;
