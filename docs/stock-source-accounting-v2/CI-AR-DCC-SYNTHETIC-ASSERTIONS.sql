@@ -87,6 +87,21 @@ BEGIN
  END IF;
  IF cash_post THEN RAISE EXCEPTION 'CI audit assumption changed; explicitly review DCC accounting policy'; END IF;
  RAISE NOTICE 'PASS FINANCE CASE 4/4: DCC cash-disappearance risk reproducibly flagged; cash payment unchanged';
+
+ -- Reporting-only PROTOTYPE (NOT production-ready): preserving the cash receipt
+ -- while visibly flagging that reversal/refund reconciliation is outstanding.
+ r:=public.bb_dcc_invoice_list_v2_staged();
+ IF NOT EXISTS(SELECT 1 FROM jsonb_array_elements(r->'invoices') x
+   WHERE x->>'invoiceId'='BB-CI-DCC-CASH'
+     AND x->>'reportEventType'='CASH_RECEIPT'
+     AND (x->>'cashAmount')::numeric=100
+     AND (x->>'reversalAmount')::numeric=100
+     AND (x->>'netInvoiceValue')::numeric=0
+     AND (x->>'cashRefundReviewRequired')::boolean IS TRUE) THEN
+   RAISE EXCEPTION 'CI finance report prototype still hides cash or mislabels refund review: %',r;
+ END IF;
+ RAISE NOTICE 'PASS FINANCE PROTOTYPE: $100 original cash remains visible and flagged for refund review; NO refund booked';
+
 END;
 $bb_ci_finance$;
 ROLLBACK;
