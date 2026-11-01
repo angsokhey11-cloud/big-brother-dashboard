@@ -71,3 +71,18 @@
 ### Next mandatory release test
 - Execute all staged PL/pgSQL definitions and real stock transfers on a **nonproduction copy**, check financial transaction boundaries, effects on ledger/report and rollback, then rerun both audits before/after.
 - Do not add migration to Local V5/V6 manifest or merge branches until isolated integration tests pass and the deployment is coordinated for APK/PWA compatibility.
+
+
+## 01-Nov-2026 — Isolated PostgreSQL Step 1 VERIFIED
+
+**Test evidence:** Windows PowerShell transcript `V2-STEP1-COMPILE-20261101-113936.log`, saved by operator on Desktop. This section supersedes older statements above that SQL compilation was untested.
+
+- Reused the previously captured read-only Local `pg_dump -Fc` snapshot. Test launched a new `--network none` Docker PostgreSQL container with no published ports; no live Local, Cloud, or controller changes.
+- PostgreSQL bootstrap/stability checks and sandbox-only cron disable succeeded. Isolated restored stock_activity: **4,245** rows.
+- All **10 staged PostgreSQL functions compiled** successfully: **3** source-aware Invoice/Back Sale, **6** source-aware Reversal, **1** read-only Reversal Source Snapshot.
+- Synthetic arithmetic smoke: **12/12 PASS** (this proves input arithmetic, not real function execution).
+- Warehouse/Batch read-only valuation: **27** products; WH Purchased **6,457**, WH Zero **3**, Batch Purchased **22,877**, Batch Zero **563**; WH value **$11,638.60**, Batch value **$63,751.72**, company inventory value **$75,390.32**. Snapshot/source/closed-batch/negative-stock mismatches: **0**.
+- Back Sale historical audit: **311** movements (306 Purchased, 5 Zero-Cost); **0** invalid source buckets, **0** Zero-Cost monetary values, **0** Purchased display-rounding discrepancies; **1** Purchased Back Sale without recorded cost remains for separate manual audit (no automatic accounting edit).
+- Test reported `STEP 1 PASSED: STAGED SQL COMPILED + READ-ONLY AUDITS RAN IN ISOLATED DATABASE`. Throwaway test container removed.
+
+**STILL BLOCKED:** SQL compilation does not establish transactional correctness. Before release, run source-specific invoice sale / Back Sale / partial and post-close reversal **through the actual staged functions/triggers** in a disposable database; verify warehouse/batch ledgers, COGS at original purchase cost, invalid-source rollback, duplicate submission, multi-bank/split/offline paths, old APK/PWA compatibility, Local V5/V6 migrations, Salary V2 payment regression, and post-transaction reconciliation. Do not deploy staged SQL or merge frontend PRs yet.
