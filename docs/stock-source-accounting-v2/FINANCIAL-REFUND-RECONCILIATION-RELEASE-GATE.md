@@ -3,6 +3,25 @@
 **Status: ACCOUNTING RECONCILIATION 4/4 verified; Daily Cash refund workflow NOT RELEASE-READY.**
 **Date:** 01-Nov-2026. **Environment:** synthetic PostgreSQL 17, isolated GitHub Actions, no network / production records.
 
+## 01-Nov-2026 — Accountant clarification: Approved Daily Cash Close is mandatory BEFORE Reversal
+
+**Separate workflows:** Invoice Reversal is a genuine return / accounting correction against an issued sale; future Invoice Cancellation for a completely misissued invoice and safe number reuse is **out of scope** for this Stock Source V2 work.
+
+The accountant explicitly defines **Daily Cash Collection cleared = Daily Cash Close approved**. Verified against Cloud schema and data structure:
+- `daily_cash_closes.status = 'Approved'`, associated by `daily_cash_close_invoices.close_id` and exact `invoice_id`, not by duplicate-prone Invoice No.
+- Other statuses such as Pending and Rejected do **not** clear the cash.
+- Original invoice Cash, Cash + Bank and Partially Paid in Cash cannot be reversed until their DCC close is approved. The staged BEFORE INSERT guard also handles original `payments.payment_source='Invoice'` cash records.
+- Credit invoices later paid with Cash through Receivables are **not** mistaken for original Cash invoices; bank-only sales are unaffected.
+- After approval, reversing stock/sales may proceed but the approved cash-close row and original cash receipt are preserved; **cash refund or credit remains a separate authorized financial transaction**.
+
+**Automated evidence:** [GitHub Actions run 41281784893](https://github.com/angsokhey11-cloud/big-brother-dashboard/actions/runs/41281784893) **SUCCESS**. The staged actual `bb_v2_reversal_require_approved_cash_close()` BEFORE INSERT trigger passed **6/6** synthetic cases: unapproved, Pending, Rejected blocked; Approved allowed with close history and original cash intact; Bank-only allowed; Credit A/R cash not blocked. Full `ROLLBACK` passed.
+
+**Critical correction to earlier proposed reporting fix:** Do **NOT** add reversed approved receipts back to the active DCC `Close Selected` invoice list: this may let staff collect the same approved cash again. The former `CI-DCC-CASH-RECEIPT-VISIBILITY-PROTOTYPE.sql` is **SUPERSEDED, forensic-only and NOT DEPLOYABLE**.
+
+Instead, the separate **approved-only, nonselectable** `bb_v2_dcc_approved_cash_history_staged()` was added in `CI-DCC-APPROVED-CASH-HISTORY-STAGED.sql`. The same CI test confirms a fully reversed $100 cash invoice remains in approved close history with its original $100 receipt, $100 reversal, $0 net sale, and a **reconciliation review flag**, while Pending / Rejected close invoices are excluded. No fictitious refund is generated.
+
+**Release restrictions:** These functions are staged in GitHub only, never applied to Cloud or real Local V5/V6. Access grants, full Supabase RLS, legacy historical returns, cash close/selected UI, actual refund OUT ledger and approved bank balance adjustments still require integration and accounting sign-off.
+
 ## Verified current Cloud accounting behavior
 
 Audited live production definitions read-only (`pg_get_functiondef`) and copied **only** `bb_credit_invoice_net_balance_guard`, `bb_sync_invoice_reversal_receivable`, and `bb_dcc_invoice_list` into feature-branch isolated test reference `CI-CLOUD-AR-DCC-CURRENT-FUNCTIONS-READONLY.sql`. No live schema change.
