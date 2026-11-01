@@ -2058,7 +2058,11 @@ begin
 
   end if;
 
-
+  -- Require exact invoice identity even when invoice numbers are reused.
+  -- Without this gate an old client could submit a mismatched pair.
+  if v_invoice.invoice_no is distinct from v_invoice_no then
+    raise exception 'Invoice No / ID mismatch';
+  end if;
 
   if not public.bb_has_location_access(
     v_invoice.location_code
