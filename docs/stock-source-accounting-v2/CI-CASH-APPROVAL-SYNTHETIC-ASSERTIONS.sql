@@ -7,6 +7,7 @@ DO $bb_ci_cash_gate$
 DECLARE
  err text; blocked boolean;
  amount_before numeric;
+ approved_history jsonb;
  n_payments integer;
  returned_count integer;
 BEGIN
@@ -86,6 +87,30 @@ BEGIN
       AND invoice_cash_amount=100) THEN
     RAISE EXCEPTION 'CASH GATE CASE 4 changed original approved cash receipt / status';
  END IF;
+ -- The approved cash receipt is retained in HISTORY, not the selectable
+ -- active invoice-list endpoint. It is not a refund or second cash collection.
+ approved_history:=public.bb_v2_dcc_approved_cash_history_staged();
+ IF NOT EXISTS(
+    SELECT 1 FROM jsonb_array_elements(approved_history->'history') h
+     WHERE h->>'invoice_id'='BB-CI-DCC-CASH'
+       AND h->>'approval_status'='Approved'
+       AND (h->>'approved_cash_close_amount')::numeric=100
+       AND (h->>'original_cash_received')::numeric=100
+       AND (h->>'reversal_amount')::numeric=100
+       AND (h->>'net_invoice_value')::numeric=0
+       AND (h->>'reversal_reconciliation_review')::boolean=true
+       AND h->>'record_type'='APPROVED_CASH_CLOSE_HISTORY'
+ ) THEN
+    RAISE EXCEPTION 'CASH GATE CASE4 approved history incorrectly missing or reported: %',approved_history;
+ END IF;
+ IF EXISTS(
+   SELECT 1 FROM jsonb_array_elements(approved_history->'history') h
+   WHERE h->>'invoice_id' IN ('BB-CI-CASH-PENDING','BB-CI-CASH-REJECTED')
+ ) THEN
+    RAISE EXCEPTION 'CASH GATE CASE4 Pending/Rejected close leaked into approved history';
+ END IF;
+ RAISE NOTICE 'PASS CASH HISTORY: Approved original receipt retained after full Reversal, no Pending/Rejected shown and NO refund invented';
+
  RAISE NOTICE 'PASS CASH GATE CASE 4/6: Approved original Cash may reverse; close history intact; no refund invented';
 
  -- CASE 5: Bank-only invoice is not subject to cash close approval.
