@@ -1,3 +1,10 @@
+-- SUPERSEDED (01-Nov-2026): DO NOT DEPLOY OR WIRE INTO CLOSE SELECTED.
+-- Earlier forensic prototype intentionally retains reversed cash in the old
+-- invoice-list SHAPE; that shape risks making approved cash selectable again.
+-- The approved-only historical display design is now in
+-- CI-DCC-APPROVED-CASH-HISTORY-STAGED.sql, tested against approved Close IDs.
+-- Keep this older function only as a regression comparison for disappearing
+-- cash receipts. It is not a valid production Daily Cash Collection endpoint.
 -- BIG BROTHER V2: STAGED REPORTING-ONLY DCC PROTOTYPE; NONPRODUCTION.
 -- Derived from CURRENT Cloud bb_dcc_invoice_list() 01-Nov-2026.
 -- Does NOT post or infer any refund. Cash receipt remains gross.
