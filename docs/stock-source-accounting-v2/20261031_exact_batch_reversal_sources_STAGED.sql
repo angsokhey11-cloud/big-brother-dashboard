@@ -412,6 +412,13 @@ begin
      LOCK INVOICE
      ========================================================== */
 
+  -- Invoice numbers are NOT unique. Legacy number-only callers must not
+  -- select an arbitrary customer invoice when two rows share that number.
+  if (select count(*) from public.invoices i
+      where lower(i.invoice_no)=lower(v_invoice_no)) > 1 then
+    raise exception 'Duplicate Invoice No; use Invoice ID to select exact Invoice';
+  end if;
+
   select *
 
   into
