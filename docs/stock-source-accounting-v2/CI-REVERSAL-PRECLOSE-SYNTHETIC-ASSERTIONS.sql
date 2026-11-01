@@ -17,7 +17,26 @@ BEGIN
  END IF;
  PERFORM set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000001',true);
  baseline:=(SELECT count(*) FROM public.stock_activity);
- -- CASE 1: Actual partial reversal 1 Purchased / 1 Zero-Cost to open Batch.
+ -- CASE 1: source-specific oversell while total sold quantity is sufficient.
+ rejected:=false;v_err:='';
+ BEGIN
+   INSERT INTO public.sales_returns(return_id,invoice_id,line_id,return_date,stock_allocation_json)
+   VALUES ('BB-CI-BAD-PRECLOSE-SOURCE','BB-CI-INV','BB-CI-LINE',current_date,
+     jsonb_build_array(jsonb_build_object(
+      'productCode','BB-CI-PRODUCT','qty',3,'purchasedQty',3,'zeroCostQty',0)));
+ EXCEPTION WHEN OTHERS THEN
+   GET STACKED DIAGNOSTICS v_err=MESSAGE_TEXT;
+   IF position('Purchased returned exceeds current Purchased sold balance' IN v_err)=0 THEN
+      RAISE EXCEPTION 'CI REVERSAL CASE1 unexpected source error: %',v_err;
+   END IF;
+   rejected:=true;
+ END;
+ IF NOT rejected OR EXISTS(SELECT 1 FROM public.sales_returns WHERE return_id='BB-CI-BAD-PRECLOSE-SOURCE') THEN
+   RAISE EXCEPTION 'CI REVERSAL CASE1 source-specific over-return accepted';
+ END IF;
+ RAISE NOTICE 'PASS RECOVERY POSTING CASE 1/4: Purchased source over-return rejected without ledger writes';
+
+ -- CASE 2: Actual partial reversal 1 Purchased / 1 Zero-Cost to open Batch.
  INSERT INTO public.sales_returns(return_id,invoice_id,line_id,return_date,stock_allocation_json)
  VALUES ('BB-CI-ACTUAL-PRECLOSE','BB-CI-INV','BB-CI-LINE',current_date,
    jsonb_build_array(jsonb_build_object(
@@ -47,28 +66,28 @@ BEGIN
  IF (SELECT sold_qty FROM public.stock_batches WHERE batch_id='BB-CI-BATCH')<>1 THEN
    RAISE EXCEPTION 'CI REVERSAL posting CASE 1 batch aggregate mismatch';
  END IF;
- RAISE NOTICE 'PASS RECOVERY POSTING CASE 1/3: historical COGS 3.28 + exact P1/Z1 restored to OPEN Batch';
+ RAISE NOTICE 'PASS RECOVERY POSTING CASE 2/4: historical COGS 3.28 + exact P1/Z1 restored to OPEN Batch';
 
- -- CASE 2: Invalid source split (1 + 0 != 2) MUST rollback line and stock.
+ -- CASE 3: Invalid source split (0 + 0 != 1) MUST rollback line and stock.
  rejected:=false;v_err:='';
  BEGIN
    INSERT INTO public.sales_returns(return_id,invoice_id,line_id,return_date,stock_allocation_json)
    VALUES ('BB-CI-BAD-PRECLOSE-SPLIT','BB-CI-INV','BB-CI-LINE',current_date,
      jsonb_build_array(jsonb_build_object(
-      'productCode','BB-CI-PRODUCT','qty',2,'purchasedQty',1,'zeroCostQty',0)));
+      'productCode','BB-CI-PRODUCT','qty',1,'purchasedQty',0,'zeroCostQty',0)));
  EXCEPTION WHEN OTHERS THEN
    GET STACKED DIAGNOSTICS v_err=MESSAGE_TEXT;
    IF position('invalid Purchased / Zero-Cost Reversal source quantities' IN v_err)=0 THEN
-      RAISE EXCEPTION 'CI REVERSAL posting CASE 2 unexpected error: %',v_err;
+      RAISE EXCEPTION 'CI REVERSAL posting CASE 4 unexpected error: %',v_err;
    END IF;
    rejected:=true;
  END;
  IF NOT rejected OR EXISTS(SELECT 1 FROM public.sales_returns WHERE return_id='BB-CI-BAD-PRECLOSE-SPLIT') THEN
    RAISE EXCEPTION 'CI REVERSAL posting CASE 2 incorrect source split accepted';
  END IF;
- RAISE NOTICE 'PASS RECOVERY POSTING CASE 2/3: bad Purchased/Zero-Cost split rejected and rolled back';
+ RAISE NOTICE 'PASS RECOVERY POSTING CASE 3/4: bad Purchased/Zero-Cost split rejected and rolled back';
 
- -- CASE 3: oversell purchased previously sold balance must rollback.
+ -- CASE 4: over-return above currently sold Qty must rollback.
  rejected:=false;v_err:='';
  BEGIN
    INSERT INTO public.sales_returns(return_id,invoice_id,line_id,return_date,stock_allocation_json)
@@ -77,13 +96,13 @@ BEGIN
       'productCode','BB-CI-PRODUCT','qty',2,'purchasedQty',2,'zeroCostQty',0)));
  EXCEPTION WHEN OTHERS THEN
    GET STACKED DIAGNOSTICS v_err=MESSAGE_TEXT;
-   IF position('Purchased returned exceeds current Purchased sold balance' IN v_err)=0 THEN
-     RAISE EXCEPTION 'CI REVERSAL posting CASE 3 unexpected error: %',v_err;
+   IF position('exceeds Batch sold Qty' IN v_err)=0 THEN
+     RAISE EXCEPTION 'CI REVERSAL posting CASE 4 unexpected error: %',v_err;
    END IF;
    rejected:=true;
  END;
  IF NOT rejected OR EXISTS(SELECT 1 FROM public.sales_returns WHERE return_id='BB-CI-BAD-PRECLOSE-OVER') THEN
-   RAISE EXCEPTION 'CI REVERSAL posting CASE 3 over-return accepted';
+   RAISE EXCEPTION 'CI REVERSAL posting CASE 4 over-return accepted';
  END IF;
  IF (SELECT count(*) FROM public.stock_activity)<>baseline+2 THEN
    RAISE EXCEPTION 'CI REVERSAL failed: rejected rows mutated stock ledger';
@@ -93,7 +112,7 @@ BEGIN
     (v->'sources'->0->>'remainingZeroCostQty')::numeric<>0 THEN
    RAISE EXCEPTION 'CI REVERSAL after posting source snapshot wrong: %',v;
  END IF;
- RAISE NOTICE 'PASS RECOVERY POSTING CASE 3/3: Purchased over-return rejected; source history reconciles';
+ RAISE NOTICE 'PASS RECOVERY POSTING CASE 4/4: Sold-quantity over-return rejected; source history reconciles';
 END;
 $bb_ci_reversal$;
 ROLLBACK;
@@ -112,6 +131,6 @@ BEGIN
               OR purchased_sold_qty_snapshot<>2 OR zero_cost_sold_qty_snapshot<>1)) THEN
     RAISE EXCEPTION 'CI Reversal posting rollback failed: source snapshots changed';
  END IF;
- RAISE NOTICE 'PASS: actual open-Batch reversal posting 3/3 cases; synthetic transaction ROLLBACK verified';
+ RAISE NOTICE 'PASS: actual open-Batch reversal posting 4/4 cases; synthetic transaction ROLLBACK verified';
 END;
 $bb_ci_after$;
