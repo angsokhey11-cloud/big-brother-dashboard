@@ -51,7 +51,7 @@ BEGIN
  WHERE reference_no='BB-CI-ACTUAL-PRECLOSE'
    AND movement_type='BATCH_SALE_RETURN' AND from_bucket='EXTERNAL';
  IF n<>2 OR p<>1 OR z<>1 OR pv<>3.28 OR pc<>3.2833 THEN
-   RAISE EXCEPTION 'CI REVERSAL posting CASE 1 ledger error: %,%,%,%,%',n,p,z,pv,pc;
+   RAISE EXCEPTION 'CI REVERSAL posting CASE 2 ledger error: %,%,%,%,%',n,p,z,pv,pc;
  END IF;
  SELECT sold_qty_snapshot,pending_qty_snapshot,
   purchased_sold_qty_snapshot,zero_cost_sold_qty_snapshot,
@@ -61,10 +61,10 @@ BEGIN
  IF snap.sold_qty_snapshot<>1 OR snap.pending_qty_snapshot<>39
    OR snap.purchased_sold_qty_snapshot<>1 OR snap.zero_cost_sold_qty_snapshot<>0
    OR snap.purchased_pending_qty_snapshot<>19 OR snap.zero_cost_pending_qty_snapshot<>20 THEN
-   RAISE EXCEPTION 'CI REVERSAL posting CASE 1 batch snapshots incorrect: %',to_jsonb(snap);
+   RAISE EXCEPTION 'CI REVERSAL posting CASE 2 batch snapshots incorrect: %',to_jsonb(snap);
  END IF;
  IF (SELECT sold_qty FROM public.stock_batches WHERE batch_id='BB-CI-BATCH')<>1 THEN
-   RAISE EXCEPTION 'CI REVERSAL posting CASE 1 batch aggregate mismatch';
+   RAISE EXCEPTION 'CI REVERSAL posting CASE 2 batch aggregate mismatch';
  END IF;
  RAISE NOTICE 'PASS RECOVERY POSTING CASE 2/4: historical COGS 3.28 + exact P1/Z1 restored to OPEN Batch';
 
@@ -78,12 +78,12 @@ BEGIN
  EXCEPTION WHEN OTHERS THEN
    GET STACKED DIAGNOSTICS v_err=MESSAGE_TEXT;
    IF position('invalid Purchased / Zero-Cost Reversal source quantities' IN v_err)=0 THEN
-      RAISE EXCEPTION 'CI REVERSAL posting CASE 4 unexpected error: %',v_err;
+      RAISE EXCEPTION 'CI REVERSAL posting CASE 3 unexpected error: %',v_err;
    END IF;
    rejected:=true;
  END;
  IF NOT rejected OR EXISTS(SELECT 1 FROM public.sales_returns WHERE return_id='BB-CI-BAD-PRECLOSE-SPLIT') THEN
-   RAISE EXCEPTION 'CI REVERSAL posting CASE 2 incorrect source split accepted';
+   RAISE EXCEPTION 'CI REVERSAL posting CASE 3 incorrect source split accepted';
  END IF;
  RAISE NOTICE 'PASS RECOVERY POSTING CASE 3/4: bad Purchased/Zero-Cost split rejected and rolled back';
 
