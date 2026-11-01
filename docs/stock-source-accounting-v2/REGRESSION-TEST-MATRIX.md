@@ -131,3 +131,10 @@
 - Cloud has 552 public functions vs 520 local declarations; 38 private vs 37; 169 public triggers vs 161 local declarations. Differences need signature and security review. Full Cloud branching schema parity **NOT yet established**.
 - Uploaded SQL is schema-only (`COPY` rows: 0); contains Supabase-managed schemas and extension setup, so **not safe to execute wholesale** on a new Supabase branch. No raw SQL, sensitive literals, customer/bank/staff records were published.
 - See `LOCAL-CLOUD-SCHEMA-BASELINE-COMPARISON-20261101.md` for evidence and repair gates. No production/Local writes; no new billable branch opened. Back Sale/Reversal transaction integration remains pending.
+
+## 01-Nov-2026 — Exact routine/trigger inventory classification VERIFIED
+- Read-only Local `pg_dump` DDL vs Cloud system catalogs: **556** shared function names, **34** Cloud-only function names, **1** Local-only (`private.bb_local_reject_infrastructure_replay_v1`). No overload names detected on either side. Function body/security parity still unverified.
+- Trigger identity diff: 105 exact matches, **49** Local hash-named vs Cloud table-named permanent-ID capture triggers; 49/49 match exact table+ID-column mapping (MD5 `a83d85c680d92ec6e9ae777fce5ef4b7`). Cloud 49/49 independently checked as AFTER INSERT ROW and calling `bb_capture_permanent_primary_id`; Local 49/49 schema declarations have the same action/handler.
+- Additional Cloud-only triggers: 15 (notification 8, cron 4, FCM/push 2, staff-assistant 1). Local-only: seven infrastructure replay guards. These are intentional environment differences; do **not** treat net difference of eight as eight missing triggers.
+- Exact evidence: `LOCAL-CLOUD-SCHEMA-BASELINE-COMPARISON-20261101.md`. Database writes: **none**; real Local/Cloud unchanged.
+- Branching remains BLOCKED until clean-baseline replay and function/default/RLS/permission tests. Actual Back Sale and Reversal transaction integration remains pending.
