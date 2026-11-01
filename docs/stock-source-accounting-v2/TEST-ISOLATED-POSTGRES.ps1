@@ -99,11 +99,22 @@ try {
     docker logs --tail 30 $ContainerName
     throw 'Sandbox-only PostgreSQL did not stabilize during cron setup. Stop; no production database was touched.'
   }
-  # Allow Docker entrypoint's bootstrap/final-server transition to finish before restart.
-  Start-Sleep -Seconds 6
-  $stableCheck=(docker exec $ContainerName psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d postgres -tAc 'SELECT current_database();' 2>$null)
-  Check-LastExit 'Verify sandbox PostgreSQL stabilized before restart'
-  if(($stableCheck -join '').Trim() -ne 'postgres'){throw 'Unexpected sandbox database before restart.'}
+  # Confirm consecutive successful connections to the SAME postmaster.
+  # The first-boot bootstrap server sometimes shuts down after pg_isready=true.
+  $stable=$false
+  for($attempt=1;$attempt -le 18;$attempt++){
+    $first=@(docker exec $ContainerName psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d postgres -tAc 'SELECT pg_postmaster_start_time()::text;' 2>$null)
+    $firstExit=$LASTEXITCODE
+    Start-Sleep -Seconds 3
+    $second=@(docker exec $ContainerName psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d postgres -tAc 'SELECT pg_postmaster_start_time()::text;' 2>$null)
+    if($firstExit -eq 0 -and $LASTEXITCODE -eq 0 -and
+       ($first -join '').Trim() -ne '' -and
+       ($first -join '').Trim() -eq ($second -join '').Trim()){
+      $stable=$true
+      break
+    }
+  }
+  if(-not $stable){throw 'Sandbox-only PostgreSQL failed consecutive stability checks before restart.'}
   Write-Host 'Sandbox pg_cron settings applied; restarting isolated container.' -ForegroundColor Green
   docker restart $ContainerName | Out-Null
   Check-LastExit 'Restart isolated container for pg_cron setting'
