@@ -279,12 +279,16 @@ jobs:
             bb-v2-back-sale-synthetic:/tmp/ar-dcc-setup.sql
           docker cp docs/stock-source-accounting-v2/CI-CLOUD-AR-DCC-CURRENT-FUNCTIONS-READONLY.sql \
             bb-v2-back-sale-synthetic:/tmp/ar-dcc-current-functions.sql
+          docker cp docs/stock-source-accounting-v2/CI-DCC-CASH-RECEIPT-VISIBILITY-PROTOTYPE.sql \
+            bb-v2-back-sale-synthetic:/tmp/ar-dcc-prototype.sql
           docker cp docs/stock-source-accounting-v2/CI-AR-DCC-SYNTHETIC-ASSERTIONS.sql \
             bb-v2-back-sale-synthetic:/tmp/ar-dcc-assert.sql
           docker exec bb-v2-back-sale-synthetic psql -X -v ON_ERROR_STOP=1 \
             -U postgres -d bb_stock_v2_sandbox -f /tmp/ar-dcc-setup.sql
           docker exec bb-v2-back-sale-synthetic psql -X -v ON_ERROR_STOP=1 \
             -U postgres -d bb_stock_v2_sandbox -f /tmp/ar-dcc-current-functions.sql
+          docker exec bb-v2-back-sale-synthetic psql -X -v ON_ERROR_STOP=1 \
+            -U postgres -d bb_stock_v2_sandbox -f /tmp/ar-dcc-prototype.sql
           docker exec bb-v2-back-sale-synthetic psql -X -v ON_ERROR_STOP=1 \
             -U postgres -d bb_stock_v2_sandbox \
             -c 'CREATE TRIGGER bb_ci_credit_reversal_net BEFORE UPDATE OF payment_method,grand_total,amount_paid,outstanding,credit_amount,reversal_amount ON public.invoices FOR EACH ROW EXECUTE FUNCTION public.bb_credit_invoice_net_balance_guard();'
@@ -295,6 +299,7 @@ jobs:
             -U postgres -d bb_stock_v2_sandbox -f /tmp/ar-dcc-assert.sql 2>&1 | tee /tmp/ar-dcc-results.log
           grep -q 'PASS FINANCE CASE 4/4' /tmp/ar-dcc-results.log
           grep -q 'RELEASE BLOCKER VERIFIED: DCC hides' /tmp/ar-dcc-results.log
+          grep -q 'PASS FINANCE PROTOTYPE: $100 original cash remains visible' /tmp/ar-dcc-results.log
           grep -q 'Finance 4/4 current implementation tests rolled back' /tmp/ar-dcc-results.log
           echo 'PASS 4/4 current Cloud A/R behavior verified; DCC refund visibility remains release-blocking'
       - name: Remove ONLY synthetic CI PostgreSQL
