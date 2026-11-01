@@ -228,4 +228,18 @@ BEGIN
 END;
 $bb_v2_test$;
 ROLLBACK;
-\echo 'V2 STEP2 INVOICE REAL-TRIGGER TEST ROLLED BACK; no sandbox fixture committed.'
+-- Verify that the forced rollback removed every synthetic invoice line and ledger
+-- movement. This check runs after the test transaction has ended.
+DO $bb_v2_after$
+BEGIN
+  IF current_database()<>'bb_stock_v2_sandbox' THEN
+    RAISE EXCEPTION 'V2 rollback verification refused outside sandbox';
+  END IF;
+  IF EXISTS(SELECT 1 FROM public.invoice_lines WHERE line_id LIKE 'BB-V2-ISOLATED-%') OR
+     EXISTS(SELECT 1 FROM public.stock_activity WHERE client_request_id LIKE 'BATCH-INVOICE:BB-V2-ISOLATED-%') THEN
+    RAISE EXCEPTION 'V2 rollback verification failed: synthetic stock or invoice line survived';
+  END IF;
+  RAISE NOTICE 'PASS: post-ROLLBACK invoice-line and stock-ledger fixtures absent';
+END;
+$bb_v2_after$;
+\echo 'V2 STEP2 INVOICE REAL-TRIGGER TEST ROLLED BACK + VERIFIED; 6/6 cases if all PASS notices above.'
