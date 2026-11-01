@@ -81,3 +81,55 @@ jobs:
       - name: Remove only ephemeral CI PostgreSQL
         if: always()
         run: docker rm -f bb-stock-v2-safety-test || true
+  back-sale-synthetic-integration:
+    name: Actual Back Sale function (synthetic isolated PostgreSQL)
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select ONLY real staged Back Sale function for isolated execution
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('docs/stock-source-accounting-v2/20261031_source_aware_batch_sale_and_back_sale_STAGED.sql').read_text(encoding='utf8')
+          needle='CREATE OR REPLACE FUNCTION public.bb_stock_save_batch_reference_internal('
+          assert s.count(needle)==1, 'Expected single staged Back Sale function'
+          selected=s[s.index(needle):].strip()
+          assert selected.endswith(';'), 'Staged SQL must terminate with semicolon'
+          assert selected.count('CREATE OR REPLACE FUNCTION')==1, 'Unexpected SQL in isolated selection'
+          Path('/tmp/bb-ci-staged-back-sale.sql').write_text(selected+'\n',encoding='utf8')
+          print('Real staged Back Sale PL/pgSQL function selected (NOT a mocked function)')
+          PY
+      - name: Start NO NETWORK synthetic PostgreSQL 17 and run real Back Sale 7 cases
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run -d --name bb-v2-back-sale-synthetic --network none \
+            -e POSTGRES_PASSWORD=ci-disposable postgres:17
+          for i in $(seq 1 40); do
+            if docker exec bb-v2-back-sale-synthetic psql -X -U postgres -d postgres -tAc 'SELECT 1;' >/dev/null 2>&1; then
+              break
+            fi
+            sleep 2
+          done
+          docker exec bb-v2-back-sale-synthetic psql -X -v ON_ERROR_STOP=1 -U postgres \
+            -d postgres -c 'CREATE DATABASE bb_stock_v2_sandbox;'
+          docker cp docs/stock-source-accounting-v2/CI-BACKSALE-SYNTHETIC-SCHEMA.sql \
+            bb-v2-back-sale-synthetic:/tmp/schema.sql
+          docker cp /tmp/bb-ci-staged-back-sale.sql \
+            bb-v2-back-sale-synthetic:/tmp/staged.sql
+          docker cp docs/stock-source-accounting-v2/ACTUAL-BACK-SALE-SOURCE-ROLLBACK-ISOLATED.sql \
+            bb-v2-back-sale-synthetic:/tmp/cases.sql
+          docker exec bb-v2-back-sale-synthetic psql -X -v ON_ERROR_STOP=1 \
+            -U postgres -d bb_stock_v2_sandbox -f /tmp/schema.sql
+          docker exec bb-v2-back-sale-synthetic psql -X -v ON_ERROR_STOP=1 \
+            -U postgres -d bb_stock_v2_sandbox -f /tmp/staged.sql
+          docker exec bb-v2-back-sale-synthetic psql -X -v ON_ERROR_STOP=1 \
+            -U postgres -d bb_stock_v2_sandbox -f /tmp/cases.sql 2>&1 | tee /tmp/back-sale-results.log
+          grep -q 'PASS CASE 7/7' /tmp/back-sale-results.log
+          grep -q 'PASS: post-ROLLBACK Back Sale synthetic ledger/request absent' /tmp/back-sale-results.log
+          echo 'PASS 7/7 Back Sale actual-function synthetic cases, post-ROLLBACK verified'
+      - name: Remove ONLY synthetic CI PostgreSQL
+        if: always()
+        run: docker rm -f bb-v2-back-sale-synthetic || true
