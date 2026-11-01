@@ -102,3 +102,11 @@
 - One-command runner `RUN-BB-STOCK-SOURCE-V2-STEP2-BACKSALE.ps1`, pinned to matching SHA source files, executes BOTH Step 2A invoice test and Step 2B Back Sale test with `--network none`, no published ports, full SQL rollback, and explicit DB-name guard. Uses existing 01-Nov read-only Local backup; no new production database connections.
 - Staged backend Back Sale response metadata corrected to say explicit source allocation rather than automatic Purchased-first. No production code deployed.
 - **Step 2B has NOT run yet.** Pre/post-close Reversal, stale client compatibility, Salary V2/Local migration, and live deployment remain blocked.
+
+## 01-Nov-2026 — Supabase Branching validation BLOCKED by historical migrations
+- User approved temporary Supabase Branch compute quoted by Supabase at USD **0.01344/hour** (+ usage); branch `stock-source-v2-validation-20261101` was created from production main.
+- Supabase branch status reported `MIGRATIONS_FAILED` **before Stock Source V2 SQL was installed**.
+- Branch Postgres logs identified first replay failure: `relation "public.clients" does not exist` while executing function `public.bb_client_editor_revision()` in initial `clients_editor_auth_rls_rpc_v1` migration. This function assumes business tables already existed on main, but fresh branches do not clone the live schema.
+- Branch migrations list and public tables were empty when checked. **No V2 test was performed against the branch**; no branch migrations were merged.
+- The failed branch was deleted successfully and subsequent `list_branches` confirmed **main only**. Production was not modified.
+- **Separate prerequisite:** safely reconcile migration history with live schema (e.g., baseline schema captured from actual production/Local schema, then independently replay and verify), before creating a new Supabase test branch. Do not repair migrations on production merely to make a test pass. Keep Stock Source V2 SQL staged.
