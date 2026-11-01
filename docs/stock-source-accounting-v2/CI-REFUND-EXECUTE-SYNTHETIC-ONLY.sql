@@ -86,9 +86,9 @@ BEGIN
  IF coalesce(inv.reversal_amount,0)<=0 THEN
    RAISE EXCEPTION 'Refund requires recorded Reversal before settlement';
  END IF;
- SELECT coalesce(sum(p.amount),0) FILTER (WHERE
+ SELECT coalesce(sum(p.amount) FILTER (WHERE
    lower(trim(coalesce(p.payment_method,'')))='cash'
-   AND lower(trim(coalesce(p.payment_source,'')))='invoice'),
+   AND lower(trim(coalesce(p.payment_source,'')))='invoice'),0),
    coalesce(sum(p.amount),0)
  INTO paid_cash,paid_all
  FROM public.payments p
