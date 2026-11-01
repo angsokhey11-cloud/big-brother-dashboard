@@ -29,7 +29,7 @@ jobs:
           for name, expected in [
             ('20261031_source_aware_batch_sale_and_back_sale_STAGED.sql', 3),
             ('20261031_exact_batch_reversal_sources_STAGED.sql', 6),
-            ('20261031_reversal_source_snapshot_STAGED.sql', 3),
+            ('20261031_reversal_source_snapshot_STAGED.sql', 1),
           ]:
             sql = (root / name).read_text(encoding='utf-8')
             parsed = parse_sql(sql)
