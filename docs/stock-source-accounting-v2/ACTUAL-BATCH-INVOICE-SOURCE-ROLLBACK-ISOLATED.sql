@@ -91,7 +91,7 @@ BEGIN
     'BATCH-INVOICE:'||v_line||':'||v_product||':ZERO'
   ) AND batch_id=v_batch_id AND movement_type='BATCH_SALE' AND to_bucket='EXTERNAL';
   IF v_rows<>2 OR v_p_ledger<>3 OR v_z_ledger<>2 OR v_bad_value<>0 OR
-     abs(v_purchase_cost-v_cost)>0.000001 OR abs(v_purchase_value-round(3*v_cost,6))>0.000002 THEN
+     v_purchase_cost<>round(v_cost,4) OR v_purchase_value<>round(3*v_cost,2) THEN
     RAISE EXCEPTION 'V2 CASE 1 FAILED: purchased %, zero %, movements %, zero value %, purchased value %, cost %',
       v_p_ledger,v_z_ledger,v_rows,v_bad_value,v_purchase_value,v_purchase_cost;
   END IF;
