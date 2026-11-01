@@ -59,7 +59,7 @@ begin
 
   return new;
 end;
-$function$
+$function$;
 
 -- Current Cloud function: public.bb_dcc_invoice_list
 CREATE OR REPLACE FUNCTION public.bb_dcc_invoice_list()
@@ -140,7 +140,7 @@ begin
     'access',public.bb_dcc_access_profile()
   );
 end;
-$function$
+$function$;
 
 -- Current Cloud function: public.bb_sync_invoice_reversal_receivable
 CREATE OR REPLACE FUNCTION public.bb_sync_invoice_reversal_receivable()
@@ -205,4 +205,4 @@ begin
 
   return coalesce(new,old);
 end;
-$function$
+$function$;
