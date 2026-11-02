@@ -55,7 +55,7 @@
   };
   const safeEmojiPrefix=/^\s*(?:[\p{Extended_Pictographic}\u2600-\u27BF\u2190-\u21FF][\uFE0E\uFE0F\u200D\u20E3\p{Extended_Pictographic}\u2600-\u27BF\u2190-\u21FF]*)(?:\s+|(?=[A-Za-z]))/u;
   const svg=(name)=>iconApi()?.named?.(name)||'';
-  const routeIcon=(route)=>iconApi()?.route?.(route)||svg('layers');
+  const routeIcon=(route)=>route==='home'?svg('home'):(iconApi()?.route?.(route)||svg('layers'));
   const groupIcon=(group)=>iconApi()?.group?.(group)||svg('layers');
   function glyph(markup, cls){
     const span=document.createElement('span');
@@ -82,7 +82,14 @@
       key.includes('activity')?'calendar':key.includes('purchase')?'shopping-cart':
       key.includes('report')?'chart-column':key.includes('request')?'clipboard-list':
       key.includes('customer')?'users':key.includes('location')?'map-pin':
-      key.includes('earning')?'wallet':'layers'
+      key.includes('earning')?'wallet':key.includes('refresh')?'rotate-ccw':
+      key.includes('save')||key.includes('approve')||key.includes('submit')?'circle-check':
+      key.includes('add')||key.includes('create')||key.includes('new ')?'file-plus':
+      key.includes('edit')?'clipboard-list':key.includes('search')?'search':
+      key.includes('print')||key.includes('download')?'file-text':
+      key.includes('export')||key.includes('upload')?'upload':
+      key.includes('sync')?'arrow-left-right':key.includes('filter')?'list-filter':
+      key.includes('paid')?'wallet':key.includes('delete')||key.includes('reject')?'alert-triangle':'layers'
     );
   }
   function iconizeText(el,iconName,cls){
@@ -234,14 +241,22 @@
       '.bb-ov-act:hover{transform:translateY(-2px);box-shadow:0 5px 16px #144e7b19}',
       '.bb-ov-act .ic{font-size:0!important;color:#27629c}',
       '.bb-ov-act .ic svg,.bb-staff-kpi .ic svg,.bb-staff-action .ic svg{width:25px;height:25px;stroke:currentColor}',
+      '.bb-staff-kpis{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important}',
+      '.bb-staff-kpi{min-height:125px!important;padding:15px 16px!important;border-radius:15px!important;display:grid!important;grid-template-columns:46px minmax(0,1fr)!important;grid-template-rows:auto auto 1fr!important;column-gap:11px!important;align-items:center!important;box-shadow:0 4px 14px #173b6010!important}',
+      '.bb-staff-kpi .ic{grid-row:1/4!important;grid-column:1!important;width:44px;height:44px;border-radius:12px;background:#edf5ff;display:grid!important;place-items:center!important}',
+      '.bb-staff-kpi small{grid-column:2!important;margin:0!important;font-size:10px!important}',
+      '.bb-staff-kpi strong{grid-column:2!important;margin:3px 0!important;font-size:20px!important}',
+      '.bb-staff-kpi em{grid-column:2!important;margin:0!important;font-size:10px!important;white-space:normal!important}',
+      '.bb-staff-action{border-radius:14px!important;transition:transform .15s ease,box-shadow .15s ease}',
+      '.bb-staff-action:hover{transform:translateY(-2px);box-shadow:0 6px 18px #174a7e17}',
       '.bb-staff-kpi .ic,.bb-staff-action .ic{font-size:0!important;display:inline-flex;align-items:center;color:#2868a4}',
       '.bb-ov-link,.bb-ov-btn{border-radius:10px!important;transition:filter .16s ease,transform .16s ease}',
       '.bb-ov-link:hover,.bb-ov-btn:hover{filter:brightness(.97)}',
       '.bb-ov-kpi:focus-visible,.bb-ov-act:focus-visible,.bb-staff-action:focus-visible{outline:2px solid #2f6fed!important;outline-offset:3px}',
       '@media(min-width:1900px){.bb-ov-kpis{grid-template-columns:repeat(5,minmax(0,1fr))!important}}',
       '@media(max-width:1350px){.bb-ov-kpis{grid-template-columns:repeat(3,minmax(0,1fr))!important}}',
-      '@media(max-width:980px){.bb-ov-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}.bb-ov-kpi{min-height:116px!important}}',
-      '@media(max-width:620px){.bb-ov-kpis{grid-template-columns:1fr!important}.bb-ov-kpi{min-height:96px!important}.bb-ov-kpi strong{font-size:21px!important}}',
+      '@media(max-width:980px){.bb-ov-kpis,.bb-staff-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}.bb-ov-kpi{min-height:116px!important}}',
+      '@media(max-width:620px){.bb-ov-kpis,.bb-staff-kpis{grid-template-columns:1fr!important}.bb-ov-kpi{min-height:96px!important}.bb-ov-kpi strong{font-size:21px!important}}',
       '@media(prefers-reduced-motion:reduce){.bb-ov-kpi,.bb-ov-act,.sidebar button{transition:none!important}}'
     ].join('\n');
     document.head.appendChild(css);
