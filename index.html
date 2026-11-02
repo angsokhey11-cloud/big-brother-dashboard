@@ -1327,6 +1327,11 @@ body{
     html=html.replace('</body>', '<scr'+'ipt src="desktop-telegram-manager-menu-v1.js?v=20261022-workspace-tools1"></scr'+'ipt></body>');
     // Web Push uses an explicit click permission request, never background polling.
     html=html.replace('</body>', '<scr'+'ipt src="bb-web-push-client-v1.js?v=20261025-webpush-v1"></scr'+'ipt></body>');
+    // Shared professional icons: desktop overview, navigation, and same-origin module UI.
+    // Purely visual and independent of finance/request RPCs.
+    html=html.replace('</body>',
+      '<scr'+'ipt src="mobile-function-icons-v1.js?v=20261102-desktop-shared1"></scr'+'ipt>'+
+      '<scr'+'ipt src="desktop-professional-ui-v1.js?v=20261102-desktop-icons1"></scr'+'ipt></body>');
 
     document.open();
 
