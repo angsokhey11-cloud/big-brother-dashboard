@@ -140,6 +140,12 @@
       "file": "20261101_local_refund_schema_guard_repair_v1.sql",
       "sha256": "928688269D37F8E77541F187056EFF24151AF286022E9AED439C10736D6F1476",
       "description": "Apply five refund-related additive tables, keys, RLS and daily cash refund columns to Local PostgreSQL through existing Code Sync with full backup"
+    },
+    {
+      "id": "20261102_staff_salary_month_ambiguity_v1",
+      "file": "20261102_staff_salary_month_ambiguity_v1.sql",
+      "sha256": "2319870C6945B1E7DAA70DE6DB97DD3A91F24B4C0C1B94BDEF842C4D39D80FAC",
+      "description": "Qualify salary_month in staff salary save RPC advance lookup; fixes PostgreSQL ambiguous column error; no salary or payment data changed"
     }
   ]
 }
