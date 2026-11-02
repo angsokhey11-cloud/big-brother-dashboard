@@ -53,7 +53,7 @@
     'your monthly overview':'chart-line','quick actions':'clipboard-list',
     'account receivable':'receivable-all','your collection':'collection-hand'
   };
-  const safeEmojiPrefix=/^\s*(?:[\p{Extended_Pictographic}\u2600-\u27BF\u2190-\u21FF][\uFE0E\uFE0F\u200D\u20E3\p{Extended_Pictographic}\u2600-\u27BF\u2190-\u21FF]*)(?:\s+|(?=[A-Za-z]))/u;
+  const safeEmojiPrefix=/^\s*(?:[\p{Extended_Pictographic}\u2600-\u27BF\u2190-\u21FF＋✓✔✕][\uFE0E\uFE0F\u200D\u20E3\p{Extended_Pictographic}\u2600-\u27BF\u2190-\u21FF＋✓✔✕]*)(?:\s+|(?=[A-Za-z]))/u;
   const svg=(name)=>iconApi()?.named?.(name)||'';
   const routeIcon=(route)=>route==='home'?svg('home'):(iconApi()?.route?.(route)||svg('layers'));
   const groupIcon=(group)=>iconApi()?.group?.(group)||svg('layers');
@@ -134,6 +134,26 @@
           el.insertBefore(glyph(svg(nameIcon(label)),'bb-desktop-nav-icon'),el.firstChild);
           el.dataset.bbDesktopIcon='1';
         }
+      }
+    });
+  }
+  function shellButtons(){
+    document.querySelectorAll('.bb-mobile-switch,.topbar button,.topbar a,.dashboard-home > button').forEach(el=>{
+      if(el.dataset.bbDesktopIcon==='1')return;
+      const t=firstText(el);
+      if(t&&safeEmojiPrefix.test(t.textContent)){
+        const label=t.textContent;
+        t.textContent=t.textContent.replace(safeEmojiPrefix,'');
+        el.insertBefore(glyph(svg(nameIcon(label)),'bb-desktop-section-icon'),el.firstChild);
+        el.dataset.bbDesktopIcon='1';
+        return;
+      }
+      const first=el.firstElementChild;
+      if(first&&first.tagName==='SPAN'&&safeEmojiPrefix.test(first.textContent)){
+        first.innerHTML=svg(nameIcon(textValue(el)));
+        first.classList.add('bb-desktop-section-icon');
+        first.setAttribute('aria-hidden','true');
+        el.dataset.bbDesktopIcon='1';
       }
     });
   }
@@ -262,7 +282,7 @@
     document.head.appendChild(css);
   }
   function refresh(){
-    styles();nav();overview();frame();
+    styles();nav();shellButtons();overview();frame();
   }
   function init(){
     refresh();
@@ -272,7 +292,7 @@
     const observer=new MutationObserver(()=>{
       if(queued)return;
       queued=true;
-      requestAnimationFrame(()=>{queued=false;nav();overview();frame()});
+      requestAnimationFrame(()=>{queued=false;nav();shellButtons();overview();frame()});
     });
     observer.observe(root,{subtree:true,childList:true});
     window.BBDesktopProfessionalUIRefresh=refresh;
