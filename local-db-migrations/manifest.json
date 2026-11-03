@@ -170,6 +170,12 @@
       "file": "20261103_c_warehouse_damage_source_split_v1.sql",
       "sha256": "B82EEDE0CB07F5884BF0FFF9E0FAFD6938064611A3F2A50048CEF122A29D6030",
       "description": "Separate Purchased/Zero-Cost Warehouse Damage stock source, strict physical warehouse balance and cost validation, idempotent movement; preserves Staff Allowance and Batch Damage"
+    },
+    {
+      "id": "20261103_d_warehouse_damage_zero_cost_valuation_v1",
+      "file": "20261103_d_warehouse_damage_zero_cost_valuation_v1.sql",
+      "sha256": "90D4983C6DD1B50CFC65E58B97C3E34252A3F0BDCE9FABD9A68E8D9E090DD98E",
+      "description": "Keep zero-cost damaged stock at $0 in Damage Report and later cleared/exchanged cost; original purchased damage cost remains intact; no historical stock changes"
     }
   ]
 }
