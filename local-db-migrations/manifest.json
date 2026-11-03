@@ -176,6 +176,18 @@
       "file": "20261103_d_warehouse_damage_zero_cost_valuation_v1.sql",
       "sha256": "90D4983C6DD1B50CFC65E58B97C3E34252A3F0BDCE9FABD9A68E8D9E090DD98E",
       "description": "Keep zero-cost damaged stock at $0 in Damage Report and later cleared/exchanged cost; original purchased damage cost remains intact; no historical stock changes"
+    },
+    {
+      "id": "20261103_e_damage_clearance_source_fifo_v1",
+      "file": "20261103_e_damage_clearance_source_fifo_v1.sql",
+      "sha256": "2D5F39A2C0F6A1C68EA895061B0B8212102E7732C19202485590E58480B8BCC4",
+      "description": "Damaged Stock Cleared selected Purchased/Zero-Cost original-source split and FIFO audit attribution; zero source never valued using purchased average"
+    },
+    {
+      "id": "20261103_f_damage_clearance_zero_cost_writeoff_v1",
+      "file": "20261103_f_damage_clearance_zero_cost_writeoff_v1.sql",
+      "sha256": "6271E2BB30BF368BA9E25811CD98682A1730026E1BB396BFD56DB8F40B32C98F",
+      "description": "Admin Deduct-as-Cost for zero-cost damaged stock creates a $0 noncash writeoff register with no fabricated expense"
     }
   ]
 }
