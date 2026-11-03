@@ -164,6 +164,12 @@
       "file": "20261103_b_damage_exchange_cost_cogs_v1.sql",
       "sha256": "FF11B1445D9D463AF8C001073BCB142C4F92CBB9084FC409CE6CE65551426351",
       "description": "Damage Exchange documented original purchase cost and header value; restore Champei exchanges and sales COGS with audit; replay-safe if Cloud data already corrected or not yet imported"
+    },
+    {
+      "id": "20261103_c_warehouse_damage_source_split_v1",
+      "file": "20261103_c_warehouse_damage_source_split_v1.sql",
+      "sha256": "B82EEDE0CB07F5884BF0FFF9E0FAFD6938064611A3F2A50048CEF122A29D6030",
+      "description": "Separate Purchased/Zero-Cost Warehouse Damage stock source, strict physical warehouse balance and cost validation, idempotent movement; preserves Staff Allowance and Batch Damage"
     }
   ]
 }
