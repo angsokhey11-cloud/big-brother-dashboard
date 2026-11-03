@@ -152,6 +152,18 @@
       "file": "20261102_staff_salary_advance_alias_v2.sql",
       "sha256": "4A70D07778658D186A4CD03C493D36DA42B606A4439211D73885D03CEBDD7C71",
       "description": "Qualify missing salary-advance table alias in staff salary save RPC; fixes missing FROM-clause entry for table a. SQL function only; no staff/payment data changes"
+    },
+    {
+      "id": "20261103_a_direct_sale_warehouse_source_v1",
+      "file": "20261103_a_direct_sale_warehouse_source_v1.sql",
+      "sha256": "D6CCB7E7152B2B7D869E8F2EFD392292B1D353D1297077A987BFEE8A9EF64438",
+      "description": "No Batch/Direct Sale only: physical default-warehouse Purchased/Zero-Cost source, historical wrong-location audit/repair, batch stock never deducted; V5/V6 fail-closed safeguards"
+    },
+    {
+      "id": "20261103_b_damage_exchange_cost_cogs_v1",
+      "file": "20261103_b_damage_exchange_cost_cogs_v1.sql",
+      "sha256": "FF11B1445D9D463AF8C001073BCB142C4F92CBB9084FC409CE6CE65551426351",
+      "description": "Damage Exchange documented original purchase cost and header value; restore Champei exchanges and sales COGS with audit; replay-safe if Cloud data already corrected or not yet imported"
     }
   ]
 }
