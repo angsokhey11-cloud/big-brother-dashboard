@@ -1298,10 +1298,10 @@ body{
       'big-brother-stock-allocation/back-sale.html?embed=1&v=20261003-shared-desktop1'
     );
 
-    /* Display-only October 18 date refresh: preserve route injection anchors above. */
+    /* Version-pinned module routes: keep external Batch Report in sync with its deployed JS; preserve earlier injection anchors. */
     [
-      ['big-brother-stock-report/batch-report.html?embed=1&v=20260923-batchedit1','big-brother-stock-report/batch-report.html?embed=1&v=20261018-date1'],
-      ['big-brother-stock-report/closed-batch.html?embed=1&v=20260912-zero-cost-3','big-brother-stock-report/closed-batch.html?embed=1&v=20261018-date1'],
+      ['big-brother-stock-report/batch-report.html?embed=1&v=20260923-batchedit1','big-brother-stock-report/batch-report.html?embed=1&v=20261103-batch-live-remaining-v1'],
+      ['big-brother-stock-report/closed-batch.html?embed=1&v=20260912-zero-cost-3','big-brother-stock-report/closed-batch.html?embed=1&v=20261103-batch-live-remaining-v1'],
       ['big-brother-stock-report/transactions.html?embed=1&v=20260912-zero-cost-3','big-brother-stock-report/transactions.html?embed=1&v=20261018-date1'],
       ['big-brother-stock-managemenet/pending-borrowed-stock.html?embed=1&v=20261001-compactreceipt3','big-brother-stock-managemenet/pending-borrowed-stock.html?embed=1&v=20261018-date1']
     ].forEach(([before,after])=>{html=html.replaceAll(before,after);});
