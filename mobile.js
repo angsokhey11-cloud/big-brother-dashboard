@@ -23,6 +23,7 @@ const ROUTES={
   'sales-support-calculator':{tab:'sales',icon:'🧮',label:'Calculator',url:'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&mobile=1&view=calculator&v=20260923-locationname1'},
   'sales-support-request-delivery':{tab:'sales',icon:'🚚',label:'Request Delivery',url:'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=request-delivery&v=110'},
   'sales-support-your-customer':{tab:'sales',icon:'👥',label:'My Customers',url:'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=your-customer&v=110'},
+  'sales-support-batch-selling-tracker':{tab:'sales',icon:'🔎',label:'Batch Selling Tracker',url:'https://angsokhey11-cloud.github.io/big-brother-batch-selling-tracker/mobile.html?embed=1&v=20261106-editor-all-pending-v5'},
   'sales-support-successful-delivery':{tab:'sales',icon:'✅',label:'Successful Delivery',url:'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=successful-delivery&v=110'},
   'invoice':{tab:'sales',icon:'🧾',label:'Create Invoice',url:'https://angsokhey11-cloud.github.io/big-brother-invoice-generator/mobile.html?embed=1&v=20261106-complete-focus-location-fix2'},
   'history':{tab:'sales',icon:'📚',label:'Invoice History',url:'https://angsokhey11-cloud.github.io/invoice-history/invoice-history-mobile.html?embed=1&v=20261001-creditdigitalfix4'},
@@ -196,6 +197,8 @@ function grantFor(moduleKey){
 function canRoute(route){
   if(!ROUTES[route])return false;
   if(isAdmin())return true;
+  // Editor can view Batch Selling Tracker, but no other Admin permissions.
+  if(route==='sales-support-batch-selling-tracker'&&key(profile?.user?.role)==='editor')return true;
   const g=grantFor('route.'+route);
   if(!g)return false;
   const action=REQUIRED_ACTION[route]||'view';
