@@ -101,7 +101,7 @@ body{
 
     const response =
       await fetch(
-        "legacy-dashboard-v3.40.html?v=20261106-allowance-hide-route1",
+        "legacy-dashboard-v3.40.html?v=20261107-ar-customer-totals-route1",
         {
           cache:"no-store"
         }
@@ -1272,10 +1272,10 @@ body{
     /* Refresh only the desktop A/R workspace URLs after all route injections. */
     html=html.replaceAll(
       'big-brother-ar/?embed=1&view=your&v=20261001-ar-layout3',
-      'big-brother-ar/?embed=1&view=your&v=20261104-summary-fit1'
+      'big-brother-ar/?embed=1&view=your&v=20261107-ar-customer-totals-v1'
     ).replaceAll(
       'big-brother-ar/?embed=1&view=all&v=20261001-ar-layout3',
-      'big-brother-ar/?embed=1&view=all&v=20261104-summary-fit1'
+      'big-brother-ar/?embed=1&view=all&v=20261107-ar-customer-totals-v1'
     );
 
     /* Preserve the original working Stock Key-In button. Force the existing
