@@ -133,6 +133,8 @@ let preferenceUpdatedAt='';
 let preferenceSyncTimer=null;
 let payment=null;
 let stockReport=null;
+let stockReportInFlight=null;
+let stockReportLoadedAt=0;
 let attention=null;
 let attentionLoaded=false;
 let lastAttentionFetch=0;
@@ -1331,6 +1333,25 @@ function renderOverview(){
   $('kpiGrid').querySelectorAll('[data-overview-action="location"]').forEach(button=>button.onclick=openOverviewLocationPicker);
 }
 
+// Expensive Stock Report is background-only; never block sales overview
+// painting or duplicate a request already in progress.
+function refreshStockReportBackground(){
+ if(!isAdmin()||window.BBMobileOfflineWorkspaceV1?.canUseNetwork()===false)return Promise.resolve(null);
+ if(stockReportInFlight)return stockReportInFlight;
+ if(stockReport&&Date.now()-stockReportLoadedAt<5*60*1000)return Promise.resolve(stockReport);
+ stockReportInFlight=safeRpc('bb_stock_report_fast').then(data=>{
+  if(window.BBMobileOfflineWorkspaceV1?.canUseNetwork()===false)return null;
+  if(data?.success){
+   stockReport=data;
+   stockReportLoadedAt=Date.now();
+   void window.BBMobileOfflineWorkspaceV1?.write('home-stock',data);
+   if(overview&&$('mobileHome')&&!$('mobileHome').hidden)renderOverview();
+  }
+  return data;
+ }).finally(()=>{stockReportInFlight=null});
+ return stockReportInFlight;
+}
+
 async function refreshOverview(force=false){
   if(overviewLoading){if(force)overviewRefreshQueued=true;return}
   if(window.BBMobileOfflineWorkspaceV1?.canUseNetwork()===false)return;
@@ -1343,11 +1364,9 @@ async function refreshOverview(force=false){
 
   try{
     const requestArgs=overviewArgs();
-    const [next,nextStockReport]=await Promise.all([
-      safeRpc('bb_mobile_overview_filtered',requestArgs),
-      isAdmin()?safeRpc('bb_stock_report_fast'):Promise.resolve(null)
-    ]);
-    if(nextStockReport?.success)stockReport=nextStockReport;
+    // Display the sales overview as soon as IT finishes. The slower Stock
+    // Report must not hold the entire Overview spinner open.
+    const next=await safeRpc('bb_mobile_overview_filtered',requestArgs);
     if(window.BBMobileOfflineWorkspaceV1?.canUseNetwork()===false)return;
     if(next?.success){
       lastOverviewFetch=Date.now();
@@ -1358,6 +1377,8 @@ async function refreshOverview(force=false){
       void window.BBMobileOfflineWorkspaceV1?.write(overviewSnapshotKey(fetchedArgs),next);
       void window.BBMobileOfflineWorkspaceV1?.write('home-overview',{args:fetchedArgs,data:next}).then(ok=>{if(ok)void window.BBMobileOfflineWorkspaceV1.success()});
       renderOverview();
+      // Refresh the stock KPI in the background only if its 5-minute cache is stale.
+      void refreshStockReportBackground();
     }
   }finally{
     overviewLoading=false;
@@ -1614,11 +1635,8 @@ async function load(){
     renderAttention();
   });
 
-  const stockPromise=(isAdmin()?safeRpc('bb_stock_report_fast'):Promise.resolve(null)).then(data=>{
-    if(offline?.canUseNetwork()===false)return;
-    if(data?.success){stockReport=data;void offline?.write('home-stock',data)}
-    if(overview)renderOverview();
-  });
+  // Shares the same in-flight request as Overview refresh; cached and independent.
+  const stockPromise=refreshStockReportBackground();
 
   // Nonblocking background sync of permitted offline datasets.
   setTimeout(()=>{void window.BBMobileOfflineModulesV1?.sync(safeRpc,canRoute)},1500);
