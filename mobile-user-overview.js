@@ -222,17 +222,8 @@ function start(){
     }
   });
 
-  if(!liveTimer){
-    liveTimer=setInterval(()=>{
-      if(
-        homeVisible() &&
-        Date.now()-lastLoad>=LIVE_REFRESH_MS-1000
-      ){
-        refresh(true);
-      }
-    },LIVE_REFRESH_MS);
-  }
-
+  // No recurring background polling. Entering Home, returning to the tab,
+  // or a manual refresh still requests fresh data under the existing throttle.
   if(homeVisible())refresh(true);
 
   window.BBMobileUserOverview={

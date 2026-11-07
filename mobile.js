@@ -23,7 +23,7 @@ const ROUTES={
   'sales-support-calculator':{tab:'sales',icon:'🧮',label:'Calculator',url:'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&mobile=1&view=calculator&v=20260923-locationname1'},
   'sales-support-request-delivery':{tab:'sales',icon:'🚚',label:'Request Delivery',url:'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=request-delivery&v=110'},
   'sales-support-your-customer':{tab:'sales',icon:'👥',label:'My Customers',url:'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=your-customer&v=110'},
-  'sales-support-batch-selling-tracker':{tab:'sales',icon:'🔎',label:'Batch Selling Tracker',url:'https://angsokhey11-cloud.github.io/big-brother-batch-selling-tracker/mobile.html?embed=1&v=20261106-editor-all-pending-v5'},
+  'sales-support-batch-selling-tracker':{tab:'sales',icon:'🔎',label:'Batch Selling Tracker',url:'https://angsokhey11-cloud.github.io/big-brother-batch-selling-tracker/mobile.html?embed=1&v=20261107-no-10sec-tracker-poll-v6'},
   'sales-support-successful-delivery':{tab:'sales',icon:'✅',label:'Successful Delivery',url:'https://angsokhey11-cloud.github.io/big-brother-sales-support/?embed=1&view=successful-delivery&v=110'},
   'invoice':{tab:'sales',icon:'🧾',label:'Create Invoice',url:'https://angsokhey11-cloud.github.io/big-brother-invoice-generator/mobile.html?embed=1&v=20261106-complete-focus-location-fix2'},
   'history':{tab:'sales',icon:'📚',label:'Invoice History',url:'https://angsokhey11-cloud.github.io/invoice-history/invoice-history-mobile.html?embed=1&v=20261001-creditdigitalfix4'},
@@ -103,7 +103,7 @@ let overview=null;
 let activeTab='home';
 let adminOverviewLoading=false;
 let adminOverviewLastLoad=0;
-let adminOverviewTimer=null;
+let adminOverviewListenersInstalled=false;
 const LIVE_OVERVIEW_MS=120000;
 
 const $=id=>document.getElementById(id);
@@ -486,7 +486,8 @@ async function loadOverview(force=false){
 }
 
 function installAdminOverviewLive(){
-  if(adminOverviewTimer)return;
+  if(adminOverviewListenersInstalled)return;
+  adminOverviewListenersInstalled=true;
 
   window.addEventListener('focus',()=>{
     if(isAdmin()&&mobileHomeVisible()&&Date.now()-adminOverviewLastLoad>=LIVE_OVERVIEW_MS)loadOverview(false);
@@ -502,15 +503,8 @@ function installAdminOverviewLive(){
     }
   });
 
-  adminOverviewTimer=setInterval(()=>{
-    if(
-      isAdmin() &&
-      mobileHomeVisible() &&
-      Date.now()-adminOverviewLastLoad>=LIVE_OVERVIEW_MS-1000
-    ){
-      loadOverview(false);
-    }
-  },LIVE_OVERVIEW_MS);
+  // No periodic overview polling. Focus, visibility, Home entry and manual
+  // refresh still update a stale overview without background request churn.
 }
 
 async function activate(){
