@@ -103,7 +103,7 @@ let overview=null;
 let activeTab='home';
 let adminOverviewLoading=false;
 let adminOverviewLastLoad=0;
-let adminOverviewTimer=null;
+let adminOverviewListenersInstalled=false;
 const LIVE_OVERVIEW_MS=120000;
 
 const $=id=>document.getElementById(id);
@@ -486,7 +486,8 @@ async function loadOverview(force=false){
 }
 
 function installAdminOverviewLive(){
-  if(adminOverviewTimer)return;
+  if(adminOverviewListenersInstalled)return;
+  adminOverviewListenersInstalled=true;
 
   window.addEventListener('focus',()=>{
     if(isAdmin()&&mobileHomeVisible()&&Date.now()-adminOverviewLastLoad>=LIVE_OVERVIEW_MS)loadOverview(false);
@@ -502,15 +503,8 @@ function installAdminOverviewLive(){
     }
   });
 
-  adminOverviewTimer=setInterval(()=>{
-    if(
-      isAdmin() &&
-      mobileHomeVisible() &&
-      Date.now()-adminOverviewLastLoad>=LIVE_OVERVIEW_MS-1000
-    ){
-      loadOverview(false);
-    }
-  },LIVE_OVERVIEW_MS);
+  // No periodic overview polling. Focus, visibility, Home entry and manual
+  // refresh still update a stale overview without background request churn.
 }
 
 async function activate(){
