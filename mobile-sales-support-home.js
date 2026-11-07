@@ -96,7 +96,7 @@ const MOBILE_URLS={
   'sales-support-add-customer':'big-brother-sales-support/add-customer-mobile.html?embed=1&v=20260914-2',
   'sales-support-customer-map':'big-brother-customers-editor/sales-support-customer-map-mobile.html?embed=1&v=20260914-2',
   'sales-support-your-stock':'big-brother-sales-support/your-stock-mobile.html?embed=1&v=20261017-date-display1',
-  'sales-support-batch-selling-tracker':'big-brother-batch-selling-tracker/mobile.html?embed=1&v=20260925-dashboard1',
+  'sales-support-batch-selling-tracker':'big-brother-batch-selling-tracker/mobile.html?embed=1&v=20261107-no-10sec-tracker-poll-v6',
   'sales-support-your-collection':'big-brother-daily-cash-collection/your-collection-mobile.html?embed=1&v=20261017-crossday1',
   'sales-support-your-invoices':'invoice-history/your-invoices-mobile.html?embed=1&v=20260925-assigned2',
   'sales-support-your-receivable':'big-brother-ar/your-receivable-mobile.html?embed=1&view=your&v=20261030-pwa-share-ready1',
