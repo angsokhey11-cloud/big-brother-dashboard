@@ -16,7 +16,24 @@ BEGIN
   JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace
   WHERE n.nspname='bb_cloud_stage'
     AND c.relkind IN ('r','p')
-    AND c.relname NOT IN ('sync_plan','sync_audit','sync_metadata');
+    AND c.relname NOT IN (
+      -- These Cloud notification/device infrastructure tables are deliberately
+      -- excluded from the V3.4 business-only merge.
+      'sync_plan','sync_audit','sync_metadata',
+      'bb_notification_events_v2','bb_push_config_v1',
+      'bb_fcm_config_v1','bb_fcm_deliveries_v1','bb_fcm_devices_v1',
+      'bb_push_deliveries_v1','bb_push_subscriptions_v1',
+      'app_notification_state'
+    )
+    AND NOT EXISTS (
+      -- Honor 08C's protected local-only infrastructure replay guard.
+      SELECT 1 FROM pg_catalog.pg_class pc
+      JOIN pg_catalog.pg_namespace pn ON pn.oid=pc.relnamespace AND pn.nspname='public'
+      JOIN pg_catalog.pg_trigger tg ON tg.tgrelid=pc.oid AND NOT tg.tgisinternal
+      JOIN pg_catalog.pg_proc fn ON fn.oid=tg.tgfoid
+      WHERE pc.relname=c.relname
+        AND fn.proname='bb_local_reject_infrastructure_replay_v1'
+    );
   IF v_stage_tables=0 THEN
     RAISE EXCEPTION USING
       MESSAGE='BB_PREMERGE_SCHEMA_BLOCKED: No business tables found in bb_cloud_stage.',
@@ -28,7 +45,24 @@ BEGIN
     FROM pg_catalog.pg_class c
     JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace
     WHERE n.nspname='bb_cloud_stage' AND c.relkind IN ('r','p')
-      AND c.relname NOT IN ('sync_plan','sync_audit','sync_metadata')
+      AND c.relname NOT IN (
+      -- These Cloud notification/device infrastructure tables are deliberately
+      -- excluded from the V3.4 business-only merge.
+      'sync_plan','sync_audit','sync_metadata',
+      'bb_notification_events_v2','bb_push_config_v1',
+      'bb_fcm_config_v1','bb_fcm_deliveries_v1','bb_fcm_devices_v1',
+      'bb_push_deliveries_v1','bb_push_subscriptions_v1',
+      'app_notification_state'
+    )
+    AND NOT EXISTS (
+      -- Honor 08C's protected local-only infrastructure replay guard.
+      SELECT 1 FROM pg_catalog.pg_class pc
+      JOIN pg_catalog.pg_namespace pn ON pn.oid=pc.relnamespace AND pn.nspname='public'
+      JOIN pg_catalog.pg_trigger tg ON tg.tgrelid=pc.oid AND NOT tg.tgisinternal
+      JOIN pg_catalog.pg_proc fn ON fn.oid=tg.tgfoid
+      WHERE pc.relname=c.relname
+        AND fn.proname='bb_local_reject_infrastructure_replay_v1'
+    )
   )
   SELECT string_agg(format('public.%I',st.relname),', ' ORDER BY st.relname)
   INTO v_missing_tables
@@ -48,7 +82,24 @@ BEGIN
     FROM pg_catalog.pg_class c
     JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace
     WHERE n.nspname='bb_cloud_stage' AND c.relkind IN ('r','p')
-      AND c.relname NOT IN ('sync_plan','sync_audit','sync_metadata')
+      AND c.relname NOT IN (
+      -- These Cloud notification/device infrastructure tables are deliberately
+      -- excluded from the V3.4 business-only merge.
+      'sync_plan','sync_audit','sync_metadata',
+      'bb_notification_events_v2','bb_push_config_v1',
+      'bb_fcm_config_v1','bb_fcm_deliveries_v1','bb_fcm_devices_v1',
+      'bb_push_deliveries_v1','bb_push_subscriptions_v1',
+      'app_notification_state'
+    )
+    AND NOT EXISTS (
+      -- Honor 08C's protected local-only infrastructure replay guard.
+      SELECT 1 FROM pg_catalog.pg_class pc
+      JOIN pg_catalog.pg_namespace pn ON pn.oid=pc.relnamespace AND pn.nspname='public'
+      JOIN pg_catalog.pg_trigger tg ON tg.tgrelid=pc.oid AND NOT tg.tgisinternal
+      JOIN pg_catalog.pg_proc fn ON fn.oid=tg.tgfoid
+      WHERE pc.relname=c.relname
+        AND fn.proname='bb_local_reject_infrastructure_replay_v1'
+    )
   ),
   stage_columns AS (
     SELECT t.relname, a.attname
