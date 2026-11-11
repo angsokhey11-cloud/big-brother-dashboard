@@ -115,7 +115,7 @@ begin
    used_payment_id=new.payment_id,used_at=now() where transaction_id=reg.transaction_id;
  end if;
  return new;
-end $function$
+end $function$;
 
 
 CREATE OR REPLACE FUNCTION public.bb_bank_customer_available_transactions(p_customer_id text)
@@ -168,7 +168,7 @@ begin
     and b.status='AVAILABLE' and b.remaining_amount>0
   order by t.received_date asc,t.created_at asc;
 end
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION public.bb_bank_customer_has_available(p_customer_id text)
@@ -181,7 +181,7 @@ begin
 if not public.bb_has_module_access('invoice_generator','create') then raise exception 'Invoice Generator access required';end if;
 if public.bb_is_admin() or nullif(trim(coalesce(p_customer_id,'')),'') is null then return false;end if;
 return exists(select 1 from public.bb_bank_balance_snapshot b where b.customer_id=p_customer_id and b.status='AVAILABLE' and b.remaining_amount>0);
-end $function$
+end $function$;
 
 
 CREATE OR REPLACE FUNCTION public.bb_invoice_bank_bulk_sync()
@@ -210,7 +210,7 @@ begin
  where b.status='AVAILABLE' and b.remaining_amount>0
  and (public.bb_is_admin() or public.bb_has_location_access(coalesce(c.location_code,'')));
  return v_data;
-end $function$
+end $function$;
 
 
 CREATE OR REPLACE FUNCTION public.bb_sales_save_invoice_multi_bank_v1(p_invoice jsonb, p_payment jsonb)
@@ -446,7 +446,7 @@ begin
    (request_id,actor_user_id,payload_fingerprint,invoice_id,response)
   values(v_req,v_actor,v_fingerprint,v_invoice.invoice_id,v_result);
   return v_result;
-end $function$
+end $function$;
 
 
 CREATE OR REPLACE FUNCTION public.bb_sales_save_invoice_bundle_core_v1(p_invoice jsonb, p_payment jsonb DEFAULT NULL::jsonb)
@@ -797,7 +797,7 @@ exception
       raise;
     end if;
 end;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION public.bb_sales_save_invoice_split_payment(p_invoice jsonb, p_payment jsonb)
@@ -1004,5 +1004,5 @@ exception
       raise;
     end if;
 end;
-$function$
+$function$;
 
