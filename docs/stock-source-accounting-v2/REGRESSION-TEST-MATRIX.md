@@ -1,0 +1,199 @@
+# Source-specific stock / COGS regression matrix — STAGED (31-Oct-2026)
+**No production deployment.** Live ledger audited read-only; no data changed.
+
+## Preflight snapshot
+- 2,643 original physical-product sale-line records are traceable by invoice line ID.
+- 2 mixed Purchased+Zero-Cost original invoice-product sales.
+- 7 sale-line records already have recorded source returns.
+- 0 historical return-source overages found.
+- 3 purchased-source sale lines have zero original line_value; preserve **recorded** COGS ($0) and flag for manual historical audit; do not replace using today's average.
+
+## Functional fixture scenarios
+| Scenario | Inputs | Expected | Status |
+|---|---|---|---|
+| Purchased Batch Sale | Batch P=20 Z=10, sell P=3 Z=0 | Batch P=17 Z=10; 3× original moving avg COGS | Test on isolated DB |
+| Zero-Cost Batch Sale | P=20 Z=10, sell P=0 Z=2 | P=20 Z=8, COGS 0 | Test on isolated DB |
+| Mixed Batch Sale | P=20 Z=10, sell P=3 Z=2 | P=17 Z=8, COGS only 3 purchased | Test on isolated DB |
+| Purchased Back Sale | P=17 Z=8, return P=2 Z=0 | Batch P=15 Z=8; Warehouse purchased +2 | Test on isolated DB |
+| Zero-Cost Back Sale | P=17 Z=8, return P=0 Z=3 | Batch P=17 Z=5; Warehouse zero-cost +3 | Test on isolated DB |
+| Mixed Back Sale | P=17 Z=8, return P=2 Z=3 | Batch P=15 Z=5; Warehouse P+2 Z+3 | Test on isolated DB |
+| Partial Invoice Reversal | Original sale P=3 Z=2, return P=1 Z=1 | Batch P+1 Z+1; COGS reverse original purchased cost ×1 | Test on isolated DB |
+| Later Partial Reversal | Original P=3 Z=2, previously reversed P=1 Z=1, now return P=2 Z=1 | Original source remaining exhausted; no over-return | Test on isolated DB |
+| Invalid split | Qty=5, P=3 Z=1 | Hard reject; no stock or invoice committed | Test on isolated DB |
+| Wrong product | Invoice line Product A, return Product B | Hard reject | Test on isolated DB |
+| Insufficient source | Only zero 2 remains, choose zero 3 | Hard reject atomically | Test on isolated DB |
+| Group invoice | Original Group A allocated Product X P2 Z1 and Product Y P1 Z0 | Reversal source selection separately on X and Y | Test on isolated DB |
+| COGS changed since sale | Sale cost $0.45, today's average $0.50 | Reversal COGS uses $0.45, never $0.50 | Test on isolated DB |
+| Legacy exact one-source | Old invoice only original P sold, no source payload | Auto fill original sole source, validate original record | Test on isolated DB |
+| Legacy exact mixed-source | Old invoice P+Z sold, no explicit source | Hard reject; accountant must select | Test on isolated DB |
+| Legacy group without source | No physical-product source selections | Hard reject; no guessed group product | Test on isolated DB |
+| Closed Batch | Return source to Warehouse or new same-location Batch | Original Closed Batch unchanged | Test on isolated DB |
+| Duplicate invoice number | Different invoice IDs with same invoice_no | Only original line_id's ledger records count | Test on isolated DB |
+| Selling units | 2 cartons × 12 units, mixed source P18/Z6 | Allocations and COGS in base units, Invoice Qty matches base | Test on isolated DB |
+| Rapid double-submit | Same invoice/return submitted twice | Existing request/return uniqueness blocks duplicates | Test on isolated DB |
+| Offline migration | Local V5/V6 Code Sync then local-only Back Sale and Sale | No cloud dependency; Cloud ↔ Local stays reconciled | Test after migration |
+
+## Release gates
+1. SQL **not deployed**; 2 staged SQL files + source preview, no schema changes yet.
+2. The original-source reversal interface and BEFORE/AFTER triggers are staged; validate with a **throwaway PostgreSQL copy** to catch syntax/type errors and concurrency.
+3. Confirm the history detail, account reports and post-close destination receipt preserve split values.
+4. Legacy APK/PWA clients still loading a cached source-agnostic save must be updated or blocked by explicit compatibility check. Never silently fall back to source order.
+5. Verify existing damage, batch transfer, adjustment, purchase receiving, borrow clearance, stock close and inventory reports don't break.
+6. Register a checksum-verified Local V5/V6 SQL migration and guard against Cloud→Local schema drift. Test local read/save without internet.
+7. Apply Cloud backend and frontend under a maintenance gate or atomic-compatible release. Verify read-only reconciliations before and after. Ensure export/rollback definitions exist.
+8. Review three historically purchased-source zero-value lines. **Do not automatically edit earlier invoice amounts, COGS or stock.**
+
+## 31-Oct-2026 continued pre-release verification (READ-ONLY)
+- Synthetic PostgreSQL source arithmetic SQL: **12/12 passed**. Reproducible via `SOURCE-ARITHMETIC-SMOKE-READONLY.sql`. Tests arithmetic and input rejection **only**, not actual PL/pgSQL function execution.
+- Live schema catalog: **31/31 expected stock/invoice/return fields present**.
+- Invoice Generator staged `normalizeSimpleBatchRows` was executed on exact and grouped sample data: Purchased and Zero-Cost source availability were preserved for both.
+- All ordinary, split-payment and multi-bank invoices reach `bb_sales_save_invoice_bundle_core_access_v1` then `bb_sales_save_invoice_bundle_core_v1`.
+- Supabase branch list returned **main only**, so there is no existing isolated development database. Do **not** create a billable Supabase development branch without approval.
+- Pre-close staged reversal now **blocks** an original purchased-cost record with zero/null historical cost for manual accounting review, consistent with post-close safeguard. This is not a historical write-off or automatic COGS correction.
+- **No staging SQL deployed** to production, no migration manifest registration, no stock or financial data writes.
+
+### Remaining NOT TESTED (hard blockers)
+- Actual PostgreSQL `CREATE OR REPLACE FUNCTION` parsing/type resolution and trigger integration in an isolated clone. SQL syntax/compilation cannot be claimed as passed.
+- Branch simulation for Live→Local V5/V6 Code Sync, schema guard, offline invoice/Back Sale/reversal flows, and cloud ↔ local merge integrity.
+- Cached/stale online PWA, APK, mobile, and other older clients must be blocked or upgraded before strict explicit-source backend activation.
+- Group service/non-stock line reversal edge cases, source return report editing, and cross-device concurrent batch updates still require integration regression testing.
+- Verify historical sourced COGS ledger and monitor three original purchased-source zero-value sales; manual review only.
+
+## 31-Oct-2026 Warehouse + Pending Batch valuation audit (READ-ONLY)
+- Existing official valuation source: `bb_stock_product_rows_zero_cost_v1_internal` values **Purchased Warehouse** and **Purchased Pending Batch** together using `bb_stock_average_cost_internal`, while Zero-Cost quantities contribute $0 to financial stock value.
+- **27 products checked**. Current Cloud stock valuation at the time of audit: Warehouse $11,638.60 + Pending Batch $63,751.72 = **total company inventory $75,390.32**. These are current ledger balances, not a guarantee of historical COGS correctness.
+- Source balances: Warehouse Purchased 6,457; Warehouse Zero-Cost 3; Batch Purchased 22,877; Batch Zero-Cost 563 (units across different product types; do not use combined unit count as a business KPI).
+- **0** source bucket sum mismatches; **0** open-batch snapshot mismatches; **0** closed batch pending-stock products; **0** products with negative company good-stock balances. Repeat with `WAREHOUSE-BATCH-VALUATION-RECONCILIATION-READONLY.sql` on Cloud and Local.
+- Historic Back Sale ledger: **311** movements (306 Purchased, 5 Zero-Cost), **0** unexpected source buckets, **0** monetary-value Zero-Cost movements, **0** Purchased line values outside recorded 4-decimal unit-cost / cent rounding tolerance. **One** Purchased return recorded a zero unit cost; flag for manual audit only. Repeat with `BACK-SALE-SOURCE-LEDGER-AUDIT-READONLY.sql`.
+- Total company stock value MUST NOT move just because Back Sale transfers unsold stock from Batch to Warehouse; Warehouse and Batch Purchased values should offset at the common current average cost. Invoice sale and reversal legitimately change total unsold stock value and COGS.
+- **No production SQL deployed or stock/financial rows modified** during this check.
+
+### Next mandatory release test
+- Execute all staged PL/pgSQL definitions and real stock transfers on a **nonproduction copy**, check financial transaction boundaries, effects on ledger/report and rollback, then rerun both audits before/after.
+- Do not add migration to Local V5/V6 manifest or merge branches until isolated integration tests pass and the deployment is coordinated for APK/PWA compatibility.
+
+
+## 01-Nov-2026 — Isolated PostgreSQL Step 1 VERIFIED
+
+**Test evidence:** Windows PowerShell transcript `V2-STEP1-COMPILE-20261101-113936.log`, saved by operator on Desktop. This section supersedes older statements above that SQL compilation was untested.
+
+- Reused the previously captured read-only Local `pg_dump -Fc` snapshot. Test launched a new `--network none` Docker PostgreSQL container with no published ports; no live Local, Cloud, or controller changes.
+- PostgreSQL bootstrap/stability checks and sandbox-only cron disable succeeded. Isolated restored stock_activity: **4,245** rows.
+- All **10 staged PostgreSQL functions compiled** successfully: **3** source-aware Invoice/Back Sale, **6** source-aware Reversal, **1** read-only Reversal Source Snapshot.
+- Synthetic arithmetic smoke: **12/12 PASS** (this proves input arithmetic, not real function execution).
+- Warehouse/Batch read-only valuation: **27** products; WH Purchased **6,457**, WH Zero **3**, Batch Purchased **22,877**, Batch Zero **563**; WH value **$11,638.60**, Batch value **$63,751.72**, company inventory value **$75,390.32**. Snapshot/source/closed-batch/negative-stock mismatches: **0**.
+- Back Sale historical audit: **311** movements (306 Purchased, 5 Zero-Cost); **0** invalid source buckets, **0** Zero-Cost monetary values, **0** Purchased display-rounding discrepancies; **1** Purchased Back Sale without recorded cost remains for separate manual audit (no automatic accounting edit).
+- Test reported `STEP 1 PASSED: STAGED SQL COMPILED + READ-ONLY AUDITS RAN IN ISOLATED DATABASE`. Throwaway test container removed.
+
+**STILL BLOCKED:** SQL compilation does not establish transactional correctness. Before release, run source-specific invoice sale / Back Sale / partial and post-close reversal **through the actual staged functions/triggers** in a disposable database; verify warehouse/batch ledgers, COGS at original purchase cost, invalid-source rollback, duplicate submission, multi-bank/split/offline paths, old APK/PWA compatibility, Local V5/V6 migrations, Salary V2 payment regression, and post-transaction reconciliation. Do not deploy staged SQL or merge frontend PRs yet.
+
+## 01-Nov-2026 — Step 2A actual invoice-trigger test VERIFIED (6/6 PASS)
+- Test SQL: `ACTUAL-BATCH-INVOICE-SOURCE-ROLLBACK-ISOLATED.sql`. Uses an existing OPEN mixed-source Batch and existing invoice header from the restored sandbox only.
+- Tests the actual `invoice_lines` AFTER INSERT stock trigger and stock_activity/batch snapshots: mixed Purchased 3 + Zero-Cost 2 with source cost validation, Purchased-only 2, Zero-Cost-only 2 at $0, invalid split, Purchased oversell, missing explicit source.
+- Each rejected insert uses a PL/pgSQL exception subtransaction; checks no rejected invoice, movement, or stock-balance changes remain.
+- Whole fixture runs under explicit SQL BEGIN/ROLLBACK, then separately checks that no synthetic invoice-line or ledger rows survived.
+- Dedicated no-network Docker runner and launcher are pinned to GitHub blob hashes. They reuse the verified 01-Nov `LOCAL-V2-READONLY-SNAPSHOT-20261101-112831.dump`. No real Local or Cloud DB connectivity.
+- **Test executed successfully on 01-Nov-2026.** All six notices passed, full transaction rolled back, post-ROLLBACK verified no synthetic invoice lines or stock ledger rows remained; isolated Docker container removed. Historical read-only stock valuation still $75,390.32. Evidence: operator screenshot on 01-Nov-2026 (Step 2A) and prior Step 2A log. Original assertion was over-precise; verified column storage is stock_activity.unit_cost numeric(18,4), line_value numeric(18,2), and replaced assertion with correct 4dp/2dp checks. No stock accounting logic was changed. **Back Sale and pre/post-close Reversal real trigger tests remain release blockers.**
+
+
+## 01-Nov-2026 — Step 2B actual Back Sale function PREPARED / NOT RUN
+- Test SQL `ACTUAL-BACK-SALE-SOURCE-ROLLBACK-ISOLATED.sql` executes staged `bb_stock_save_batch_reference_internal(..., 'BACK_SALE')` on a throwaway PostgreSQL copy, selecting a real active test actor who has access to the existing open Batch and warehouse in the copied database. Permissions remain enabled.
+- Seven cases: mixed Purchased 3 + Zero-Cost 2, Purchased-only 2, Zero-Cost-only 2, duplicate request idempotency, invalid source split, Purchased oversell, missing explicit source. Checks source-specific warehouse ledger buckets, cost precision, batch snapshot balances, no writes for rejected requests, and post-rollback deletion of all synthetic rows.
+- One-command runner `RUN-BB-STOCK-SOURCE-V2-STEP2-BACKSALE.ps1`, pinned to matching SHA source files, executes BOTH Step 2A invoice test and Step 2B Back Sale test with `--network none`, no published ports, full SQL rollback, and explicit DB-name guard. Uses existing 01-Nov read-only Local backup; no new production database connections.
+- Staged backend Back Sale response metadata corrected to say explicit source allocation rather than automatic Purchased-first. No production code deployed.
+- **Step 2B has NOT run yet.** Pre/post-close Reversal, stale client compatibility, Salary V2/Local migration, and live deployment remain blocked.
+
+## 01-Nov-2026 — Supabase Branching validation BLOCKED by historical migrations
+- User approved temporary Supabase Branch compute quoted by Supabase at USD **0.01344/hour** (+ usage); branch `stock-source-v2-validation-20261101` was created from production main.
+- Supabase branch status reported `MIGRATIONS_FAILED` **before Stock Source V2 SQL was installed**.
+- Branch Postgres logs identified first replay failure: `relation "public.clients" does not exist` while executing function `public.bb_client_editor_revision()` in initial `clients_editor_auth_rls_rpc_v1` migration. This function assumes business tables already existed on main, but fresh branches do not clone the live schema.
+- Branch migrations list and public tables were empty when checked. **No V2 test was performed against the branch**; no branch migrations were merged.
+- The failed branch was deleted successfully and subsequent `list_branches` confirmed **main only**. Production was not modified.
+- **Separate prerequisite:** safely reconcile migration history with live schema (e.g., baseline schema captured from actual production/Local schema, then independently replay and verify), before creating a new Supabase test branch. Do not repair migrations on production merely to make a test pass. Keep Stock Source V2 SQL staged.
+
+## 01-Nov-2026 — Automated no-network GitHub Actions safety check VERIFIED
+- Workflow: `.github/workflows/stock-source-v2-safety-ci.yml` (feature branch only; no production credentials).
+- GitHub Actions run [41276642239](https://github.com/angsokhey11-cloud/big-brother-dashboard/actions/runs/41276642239) completed SUCCESS on commit `e325685c5f76f31045e6ae452db532e25cd2eebd`.
+- `pglast` SQL grammar: 3 source-aware functions, 6 reversal functions, 1 source snapshot function all parsed successfully.
+- Disposable `postgres:17` Docker container with `--network none` ran `SOURCE-ARITHMETIC-SMOKE-READONLY.sql`: **12/12 PASS**, container removed.
+- This automatic feature-branch CI provides continuous grammar + pure arithmetic coverage without Supabase Branching cost or repeated Windows screenshots. It **does not** establish live trigger correctness, API authorization, stock-history regression, or Local migration safety.
+- Production remains untouched. Existing 01-Nov isolated Local PostgreSQL Invoice Sale tests remain separately verified 6/6; Back Sale and Reversal pending.
+
+## 01-Nov-2026 — Automatic CI extended to PowerShell schema export and Step 2B runners
+- Workflow [run 41276832799](https://github.com/angsokhey11-cloud/big-brother-dashboard/actions/runs/41276832799) **SUCCESS** on feature commit `50f36d93d4ba4a83728db4402b0d4d29cce73b07`.
+- Checks: PostgreSQL grammar for 10 staged functions; PowerShell parser for schema-only export, Back Sale test launcher and isolated runner; PostgreSQL 17 synthetic arithmetic **12/12 PASS**. Disposable test container removed.
+- Added one-time schema-only export helper `EXTRACT-LOCAL-SCHEMA-ONLY-NONDESTRUCTIVE.ps1`; uses existing Local snapshot in `--network none` Docker; no real database access, no data rows, and no automatic publish. Function text may contain secrets; review before sharing.
+- Still **NOT** a complete branch migration-replay fix or actual Back Sale / Reversal trigger integration test.
+
+## 01-Nov-2026 — Uploaded Local schema-only audit: structural table parity VERIFIED
+- Received `BIG-BROTHER-LOCAL-SCHEMA-ONLY.sql` from the existing nonproduction Local snapshot. **Raw DDL and function bodies NOT committed to GitHub**.
+- Cloud vs Local share **143 PUBLIC base tables, 1,803 columns**. Exact ordered fingerprints match for column names, data types, NOT NULL flags, and DEFAULT presence. Local has one extra table `bb_local_sync_history` (13 columns), which must remain Local-only.
+- Cloud has 552 public functions vs 520 local declarations; 38 private vs 37; 169 public triggers vs 161 local declarations. Differences need signature and security review. Full Cloud branching schema parity **NOT yet established**.
+- Uploaded SQL is schema-only (`COPY` rows: 0); contains Supabase-managed schemas and extension setup, so **not safe to execute wholesale** on a new Supabase branch. No raw SQL, sensitive literals, customer/bank/staff records were published.
+- See `LOCAL-CLOUD-SCHEMA-BASELINE-COMPARISON-20261101.md` for evidence and repair gates. No production/Local writes; no new billable branch opened. Back Sale/Reversal transaction integration remains pending.
+
+## 01-Nov-2026 — Exact routine/trigger inventory classification VERIFIED
+- Read-only Local `pg_dump` DDL vs Cloud system catalogs: **556** shared function names, **34** Cloud-only function names, **1** Local-only (`private.bb_local_reject_infrastructure_replay_v1`). No overload names detected on either side. Function body/security parity still unverified.
+- Trigger identity diff: 105 exact matches, **49** Local hash-named vs Cloud table-named permanent-ID capture triggers; 49/49 match exact table+ID-column mapping (MD5 `a83d85c680d92ec6e9ae777fce5ef4b7`). Cloud 49/49 independently checked as AFTER INSERT ROW and calling `bb_capture_permanent_primary_id`; Local 49/49 schema declarations have the same action/handler.
+- Additional Cloud-only triggers: 15 (notification 8, cron 4, FCM/push 2, staff-assistant 1). Local-only: seven infrastructure replay guards. These are intentional environment differences; do **not** treat net difference of eight as eight missing triggers.
+- Exact evidence: `LOCAL-CLOUD-SCHEMA-BASELINE-COMPARISON-20261101.md`. Database writes: **none**; real Local/Cloud unchanged.
+- Branching remains BLOCKED until clean-baseline replay and function/default/RLS/permission tests. Actual Back Sale and Reversal transaction integration remains pending.
+
+## 01-Nov-2026 — Step 2B actual Back Sale SYNTHETIC transaction test VERIFIED
+- GitHub Actions run [41278491705](https://github.com/angsokhey11-cloud/big-brother-dashboard/actions/runs/41278491705), feature commit `55f1568e2be808647af1e65344bee7c335df947b`. The `Actual Back Sale function (synthetic isolated PostgreSQL)` job **SUCCESS**.
+- CI creates disposable **PostgreSQL 17 with `--network none`**, no Cloud/Local database access or business records. Test-only support tables and helpers are in `CI-BACKSALE-SYNTHETIC-SCHEMA.sql`; synthetic actor, warehouse, batch and purchased/zero-cost quantities; runs **actual staged `bb_stock_save_batch_reference_internal` function from `20261031_source_aware_batch_sale_and_back_sale_STAGED.sql`**.
+- All **7/7** executed: Mixed Purchased 3 / Zero-Cost 2; Purchased-only 2; Zero-Cost-only 2; duplicate request idempotency; invalid split rejection; Purchased oversell rejection; missing source rejection. Real function's writes to ledger, batch source snapshots, cost and response were asserted.
+- CI log confirms `ROLLBACK` and **post-ROLLBACK synthetic ledger and request rows absent**. Test container removed.
+- **Limitations**: This was **not** the existing Local snapshot (Windows Step2B remains unrun). CI uses limited synthetic schema and test-only ID/auth/status/revision support implementations; real Supabase/Local permission, legacy triggers and true schema replay not tested. Do not mark full Back Sale released; do not deploy staged PRs. Source-specific Reversal before/after Batch Close and complete Cloud branch baseline remain blockers.
+
+## 01-Nov-2026 — Reversal Source Snapshot REAL-FUNCTION synthetic CI VERIFIED (4/4)
+- GitHub Actions run [41278629192](https://github.com/angsokhey11-cloud/big-brother-dashboard/actions/runs/41278629192), commit `bd9b5b63b14b2de20d02085b4e13a903e3f5b255`: CI synthetic Back Sale 7/7 and **real staged `bb_invoice_reversal_batch_source_snapshot_v2` 4/4** passed in no-network PostgreSQL 17.
+- Source snapshot case 1: original Purchased 3 / Zero 2, prior returned P1/Z1, remaining P2/Z1, original historical Purchased value 9.85; case 2: DIRECT invoice excluded from Batch source; case 3: unauthorized actor rejected using *test-only* access helper; case 4: excessive source return flagged mismatch and synthetic injection rolled back.
+- **Limitations:** test is isolated and synthetic with simplified helper functions and limited table DDL; this is read-only snapshot verification, NOT actual Reversal save/postclose transaction execution or Cloud RLS/API compatibility. Actual reversal posting, historical source-correct COGS, post-close warehouse restoration, and full migration baseline remain blockers. No production or real Local modification.
+
+## 01-Nov-2026 — Synthetic actual preclose/postclose Reversal posting triggers VERIFIED (4/4 + 4/4)
+- GitHub Actions [run 41279051293](https://github.com/angsokhey11-cloud/big-brother-dashboard/actions/runs/41279051293), commit `069a7cc2677c814bff9b0bc799ac1edaccd484c3`: both jobs SUCCESS. No production credentials, test-only PostgreSQL 17 `--network none` and full container cleanup.
+- **Open Batch actual AFTER INSERT stock trigger `bb_batch_return_stock_internal`: 4/4 PASS**. Before mutation, Purchased-specific over-return is rejected. Actual partial reversal restores Purchased 1 / Zero-Cost 1 and uses **historical 9.85/3 -> 3.28 COGS** (not current moving average). An invalid source split and return above remaining sold balance are rejected. Post-`ROLLBACK` ledgers/snapshots match baseline. Synthetic `CI-REVERSAL-PRECLOSE-...` files.
+- **Closed Batch actual AFTER INSERT stock trigger `bb_postclose_reversal_stock_v1`: 4/4 PASS**. P1/Z1 restored to corresponding Warehouse buckets with Purchased 3.28 historical cost. Additional Purchased unit routed to a same-location open Batch without modifying original Closed Batch. Exhausted source and wrong-location target both rejected atomically; source history fully reconciled; all temp records and stock reversed by `ROLLBACK`. Synthetic `CI-REVERSAL-POSTCLOSE-...` files.
+- These follow successful synthetic real Back Sale 7/7 and read-only original-source snapshot 4/4. **Workflow tests exact staged functions**, not copies of their bodies; some supporting authorization/ID/revision/status functions are purposely simplified CI-only stand-ins.
+- **RELEASE STILL BLOCKED:** Actual Reversal SAVE RPCs (by-id and postclose), BEFORE INSERT validations, full invoice/payment/receivable/refund accounting, full-schema/real-data execution, old APK/PWA compatibility, Salary V2/Local V5/V6 migration, Cloud branch baseline replay, and complete enterprise permissions. No staged SQL or feature PR merged/deployed.
+
+## 01-Nov-2026 — Actual staged Reversal SAVE RPC synthetic integration VERIFIED 6/6
+- GitHub Actions run [41279970306](https://github.com/angsokhey11-cloud/big-brother-dashboard/actions/runs/41279970306) on feature commit `acf3dcf557f197c9d544d4aee81346781b6fa530`; real Reversal RPC synthetic job **SUCCESS**. Standalone disposable no-network `postgres:17` only; none of the SQL was applied on Cloud/Local.
+- Executed **actual staged** functions `bb_batch_return_allocate_internal` (BEFORE INSERT validation), `bb_invoice_reversal_save_v2` (legacy number-only), `bb_invoice_reversal_save_by_id_v2`, `bb_invoice_reversal_postclose_save_v1` with actual staged `bb_batch_return_stock_internal` / `bb_postclose_reversal_stock_v1` AFTER INSERT trigger functions.
+- Six real-function transaction cases: **(1)** reject mismatched invoice ID/number, **(2)** by-ID partial open-Batch P1/Z1 restoration, historical Purchased COGS $3.28, $5.00 return amount + audit, **(3)** postclose SAVE route to Warehouse Purchased/Zero buckets, historical cost and audit, **(4)** wrong-location target rejected atomically, **(5)** ambiguous duplicate-number *legacy* save rejected before any stock/audit write, **(6)** legacy number-only save continues to work for unique Invoice No and records $2.50 return + original $3.28 Purchased COGS.
+- **REAL DEFECT DISCOVERED AND FIXED ON STAGED FEATURE BRANCH**: `bb_invoice_reversal_save_by_id_v2` previously accepted wrong `invoiceNo` paired with a valid invoice ID; added `v_invoice.invoice_no is distinct from v_invoice_no` identity guard. `bb_invoice_reversal_save_v2` previously chose an arbitrary invoice when names matched duplicate `invoice_no` across customers; now rejects duplicate numbers and requests exact invoice ID.
+- CI confirms transaction `ROLLBACK` and zero synthetic returns/routes/audit/stock rows remaining. Exact source/amount tests passed even when two synthetic customers share invoice number.
+- **NOT RELEASE-APPROVED**: CI uses minimal synthetic schema with test-only auth/ID/revision/status support; full Prod/Local RLS, frontend Web/PWA/APK backward-compatibility, A/R and bank balance effects, Daily Cash Collection refund handling, salary migration and 342-migration branch baseline replay still need validation. Existing PRs stay open/unmerged, staged SQL **not deployed**.
+
+## 01-Nov-2026 — A/R and Daily Cash refund audit VERIFIED; DCC RELEASE BLOCKER
+- GitHub Actions [run 41280848959](https://github.com/angsokhey11-cloud/big-brother-dashboard/actions/runs/41280848959): all jobs **SUCCESS** in disposable no-network PostgreSQL 17. Existing V2 stock-source 6/6 Invoice Sale (previous Local), 7/7 Back Sale, 4/4 snapshot, 4/4 open, 4/4 closed, 6/6 save RPC, 12/12 arithmetic remain verified in their respective environments.
+- Actual CURRENT Cloud definitions of `bb_sync_invoice_reversal_receivable`, `bb_credit_invoice_net_balance_guard`, `bb_dcc_invoice_list` were copied only to a feature-branch synthetic test reference (no production write). A/R **3/3**: net outstanding 35 for 100-25-40; overpaid credit reversal rejected; cumulative partial returns net outstanding 25 for 100-25-20-30.
+- **DCC defect reproduced:** Fully reversed $100 cash invoice disappears from DCC invoice list, although its original $100 `payments` row remains, and no refund is executed. Current cash report does NOT provide the required refund/receipt reconciliation. This is a **release blocker**, not an approved regression pass.
+- Separate read-only reporting function **prototype** `bb_dcc_invoice_list_v2_staged()` passed: gross $100 receipt remains visible, net invoice value $0, refund review flag true. The prototype never posts money/refund and is NOT production-ready; no existing function was replaced.
+- Detailed accountant review and implementation requirements: `FINANCIAL-REFUND-RECONCILIATION-RELEASE-GATE.md`. Must test actual refund OUT/credit liability, DCC negative refund entries, staff/batch cash accountability, USD/KHR bank/wallet source, Close Selected, Auth and Local migration before release. **No SQL, prototype, or PR deployed/merged.**
+
+## 01-Nov-2026 — Approved Daily Cash prerequisite for original Cash Invoice Reversal VERIFIED
+- User clarified **Daily Cash cleared = Approved Close**; mistaken-invoice Cancellation/number-reuse is a **future separate feature** and has not been developed.
+- Read-only Cloud schema audit: `daily_cash_closes.status='Approved'` linked through `daily_cash_close_invoices.invoice_id` (never just Invoice No). 152 approved close-linked invoice identities were found, without exposing customer data.
+- GitHub Actions [run 41281784893](https://github.com/angsokhey11-cloud/big-brother-dashboard/actions/runs/41281784893) **SUCCESS**. Staged actual `bb_v2_reversal_require_approved_cash_close()` executed as a BEFORE INSERT trigger: **6/6 synthetic tests PASS**. Cash no-close, Pending and Rejected blocked; Approved cash reverse permitted and cash close/payment unchanged; Bank-only reverse permitted; post-invoice Credit A/R Cash does not trigger original-cash gate; full `ROLLBACK` verified.
+- Separate **approved-only historical** reporting function prototype `bb_v2_dcc_approved_cash_history_staged()` passed: original approved $100 cash remains independently visible after full reversal, with review flag, no invented refund; Pending/Rejected closes excluded. It does not affect active Close Selected and has no public execute grant.
+- Old `CI-DCC-CASH-RECEIPT-VISIBILITY-PROTOTYPE.sql` that reintroduced reversed cash into an invoice list is now explicitly **SUPERSEDED — NEVER DEPLOY** because it risks re-closing approved cash. This older function remains isolated in CI only as a forensic control.
+- **No Cloud or Local production changes**; new files only on feature branch. Actual refund outflow, DCC negative refund event, RLS/auth, real schema migration, and Web/PWA/APK compatibility remain **release blockers**.
+
+## 01-Nov-2026 — Isolated cash refund funding + approved history reconciliation 9/9 VERIFIED
+- Verified GitHub Actions [run 41282545879](https://github.com/angsokhey11-cloud/big-brother-dashboard/actions/runs/41282545879) SUCCESS on feature commit `65b6173386e31756704f079f052bb3260cdf1af9`; both isolated CI jobs green (PostgreSQL grammar, PowerShell, 12 stock arithmetic and stock source workflows unaffected).
+- **TEST-ONLY** `CI-REFUND-EXECUTE-SYNTHETIC-ONLY.sql` tests explicit refund approval + execution, with same-source ledger funding and idempotent requests. Its functions hard-block execution outside `bb_stock_v2_sandbox`, use synthetic tables, and do **not** integrate Cloud Auth/RLS or actual bank service; DO NOT DEPLOY.
+- **9/9 synthetic refund posting cases**: (1) Pending refused; (2) unauthorized approval refused; (3) approved Vault $30 OUT with original $100 DCC close/payment unchanged; (4) retry cannot duplicate refund; (5) Daily Cash wallet $20 OUT without re-deducting Vault; (6) $40 over-refund refused when only $30 excess remains; (7) Bank payout blocked pending verified outgoing bank integration; (8) bank-only invoice cannot drain cash; (9) $30 wallet refund refused when wallet holds only $20. Full transaction rollback verified.
+- Approved DCC source was $100, invoice reversal $80, $100 physical cash deposited into Vault, $40 transferred from Vault to Daily Cash. Executed refunds $30 Vault + $20 Daily = $50 remaining combined cash, with $30 refund review outstanding. No duplicate bank outgoing or phantom payment.
+- `CI-REFUND-RECONCILIATION-SYNTHETIC-ONLY.sql` **separately** shows gross Approved $100, executed Vault OUT $30, executed Daily OUT $20, net cash retained $50, remaining excess-review $30 and `selectableForClose=false`; verified against actual synthetic ledger entries, not a fabricated refund flag.
+- **NOT release-ready:** Real Cloud/Local refund tables and migrations, bank outgoing transaction confirmation, cash/bank split, USD/KHR FX, real customer bank wallet source, independent approver vs requester, historical refund backfills, cash close UI and account permissions have not been integrated. These tests are synthetic proof, not live operation.
+
+## 01-Nov-2026 — Local Cloud→Local V2 ZERO source guard + optional unique index VERIFIED
+- Reviewed **actual user-uploaded** `08C-MERGE-CLOUD-STAGE-PERMANENT-V1.2-STOCK-GUARD-STAGED.sql` and `08-SYNC-LIVE-TO-LOCAL-PERMANENT-V1.2(3).ps1`. Original pre/post `stock_activity` source guard covered `BATCH_PENDING` Purchased only and skipped `BATCH_ZERO_COST`, despite invoice trigger emitting source key `:ZERO`. The bug permitted hypothetical same-source Zero-Cost Cloud/Local stock movement rows with different `transaction_id` to survive generic PK merge.
+- Patched **separate staged Local SQL** `08C-MERGE-CLOUD-STAGE-PERMANENT-V1.2-STOCK-GUARD-V2-STAGED.sql` (SHA-256 `035c7039d6492f9e1c7bba1cbd0629271090ae8caa6752745f7baac2cc4019cc`): both source buckets in Cloud duplicates, Local duplicates, cross collisions and post-check; cross-server conflict additionally detects same source key assigned inconsistent buckets even if IDs match. Original salary, permissions, generic merge and transaction controls untouched; patch diff available to accountant separately.
+- [CI run 41283188860](https://github.com/angsokhey11-cloud/big-brother-dashboard/actions/runs/41283188860) **SUCCESS**. **7/7** isolated no-network PostgreSQL tests: valid P/Z; Cloud ZERO dup; Local ZERO dup; cross-ID ZERO; cross-bucket same-ID; post-merge ZERO dup; Purchased cross-ID regression. Synthetic transactions rolled back.
+- Read-only Cloud stock source audit: 2,645 V2 sale movements: **2,624 Purchased**, **21 Zero-Cost**, **zero duplicated source keys**, **zero source bucket/suffix mismatches**. This is a *latent guard defect*, not a detected existing Cloud over-deduction.
+- Cloud `idx_stock_activity_request` is a **nonunique** index. Draft `CI-STOCK-SALE-SOURCE-UNIQUE-INDEX-CANDIDATE.sql` narrowly covers Purchased/Zero-Cost original Batch invoice sales, not arbitrary request keys. [CI run 41283434862](https://github.com/angsokhey11-cloud/big-brother-dashboard/actions/runs/41283434862) **SUCCESS**: **5/5** partial unique index tests (distinct P/Z, duplicate ZERO denied, duplicate Purchased denied, cross-bucket key denied, other BACK_SALE keys unaffected), rollback verified.
+- **Do not deploy index or stage SQL yet.** Cloud historical source keys are safe in read-only scan, but Local live source history and full code/app migration are not independently validated. The Local sync launcher reads **exactly** `08C-MERGE-CLOUD-STAGE-PERMANENT-V1.2.sql`, NOT a `-V2-STAGED` file. Any future release requires a backed-up controlled replacement of that canonical filename, mandatory `V34-PRE-SYNC-SCHEMA-GUARD.ps1`, approved SQL-code check, exact full-merge ROLLBACK rehearsal and Salary V2 compatibility check. See `LOCAL-08C-ZERO-COST-GUARD-V2-READINESS.md`.
+- Real Cloud/main, Local V5/V6 data, salary and bank accounts **UNCHANGED**. Supabase migration replay / refund integration / PWA/APK remain blockers.
