@@ -1967,21 +1967,7 @@ BEGIN
  IF auth.role() IS DISTINCT FROM 'service_role' THEN
   RAISE EXCEPTION 'Bank bulk preparation is server-only';
  END IF;
- IF p_batch_id IS NULL OR p_admin_user IS NULL OR p_reviewer !~ '^[0-9]{5,20}
-DO $bb_validate$
-BEGIN
- IF to_regclass('public.bb_bank_outlet_shares') IS NULL
-    OR to_regprocedure('public.bb_bank_outlet_share_save_v1(text,jsonb)') IS NULL
-    OR to_regprocedure('public.bb_bank_validate_invoice_input(text,text,numeric,text,text,numeric,numeric)') IS NULL
-    OR to_regprocedure('public.bb_ar_receive_batch_registered_outlets_v1(jsonb)') IS NULL
- THEN RAISE EXCEPTION 'BB_MULTI_OUTLET_LOCAL_SCHEMA_INCOMPLETE';END IF;
-END $bb_validate$;
-COMMIT;
-
--- Verify manually after install:
--- SELECT to_regclass('public.bb_bank_outlet_shares');
--- SELECT count(*) FROM public.bb_bank_outlet_shares;
-
+ IF p_batch_id IS NULL OR p_admin_user IS NULL OR p_reviewer !~ '^[0-9]{5,20}$'
    OR jsonb_typeof(p_choices) IS DISTINCT FROM 'array'
    OR jsonb_array_length(p_choices) NOT BETWEEN 1 AND 100 THEN
   RAISE EXCEPTION 'Invalid Bank Review batch or selection';
@@ -2007,21 +1993,7 @@ COMMIT;
   RAISE EXCEPTION 'Review selection is incomplete: expected % rows',v_n;
  END IF;
  FOR v_entry IN SELECT value FROM jsonb_array_elements(p_choices) LOOP
-  IF (v_entry->>'draft_id') !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}
-DO $bb_validate$
-BEGIN
- IF to_regclass('public.bb_bank_outlet_shares') IS NULL
-    OR to_regprocedure('public.bb_bank_outlet_share_save_v1(text,jsonb)') IS NULL
-    OR to_regprocedure('public.bb_bank_validate_invoice_input(text,text,numeric,text,text,numeric,numeric)') IS NULL
-    OR to_regprocedure('public.bb_ar_receive_batch_registered_outlets_v1(jsonb)') IS NULL
- THEN RAISE EXCEPTION 'BB_MULTI_OUTLET_LOCAL_SCHEMA_INCOMPLETE';END IF;
-END $bb_validate$;
-COMMIT;
-
--- Verify manually after install:
--- SELECT to_regclass('public.bb_bank_outlet_shares');
--- SELECT count(*) FROM public.bb_bank_outlet_shares;
-
+  IF (v_entry->>'draft_id') !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
      OR jsonb_typeof(v_entry->'selected') IS DISTINCT FROM 'boolean'
   THEN RAISE EXCEPTION 'Invalid transaction selection'; END IF;
   v_id:=(v_entry->>'draft_id')::uuid;
@@ -2048,42 +2020,14 @@ COMMIT;
   v_sender:=btrim(coalesce(v_entry->>'payer_name',''));
   v_cur:=upper(btrim(coalesce(v_entry->>'currency','')));
   v_bank:=left(btrim(coalesce(v_entry->>'bank_name','')),120);
-  IF v_customer='' OR length(v_customer)>150 OR v_tid !~ '^[A-Z0-9_/-]{4,160}
-DO $bb_validate$
-BEGIN
- IF to_regclass('public.bb_bank_outlet_shares') IS NULL
-    OR to_regprocedure('public.bb_bank_outlet_share_save_v1(text,jsonb)') IS NULL
-    OR to_regprocedure('public.bb_bank_validate_invoice_input(text,text,numeric,text,text,numeric,numeric)') IS NULL
-    OR to_regprocedure('public.bb_ar_receive_batch_registered_outlets_v1(jsonb)') IS NULL
- THEN RAISE EXCEPTION 'BB_MULTI_OUTLET_LOCAL_SCHEMA_INCOMPLETE';END IF;
-END $bb_validate$;
-COMMIT;
-
--- Verify manually after install:
--- SELECT to_regclass('public.bb_bank_outlet_shares');
--- SELECT count(*) FROM public.bb_bank_outlet_shares;
-
+  IF v_customer='' OR length(v_customer)>150 OR v_tid !~ '^[A-Z0-9_/-]{4,160}$'
     OR v_cur NOT IN('USD','KHR') OR v_tid=ANY(v_seen_tx)
   THEN RAISE EXCEPTION 'Customer, reference or currency missing/invalid on selected notice'; END IF;
   IF nullif(v_entry->>'amount','') IS NULL THEN RAISE EXCEPTION 'Amount required'; END IF;
   v_amt:=(v_entry->>'amount')::numeric;
   IF v_amt<=0 OR v_amt>999999999 OR v_amt<>round(v_amt,4)
   THEN RAISE EXCEPTION 'Invalid selected bank amount'; END IF;
-  IF coalesce(v_entry->>'received_date','') !~ '^\d{4}-\d{2}-\d{2}
-DO $bb_validate$
-BEGIN
- IF to_regclass('public.bb_bank_outlet_shares') IS NULL
-    OR to_regprocedure('public.bb_bank_outlet_share_save_v1(text,jsonb)') IS NULL
-    OR to_regprocedure('public.bb_bank_validate_invoice_input(text,text,numeric,text,text,numeric,numeric)') IS NULL
-    OR to_regprocedure('public.bb_ar_receive_batch_registered_outlets_v1(jsonb)') IS NULL
- THEN RAISE EXCEPTION 'BB_MULTI_OUTLET_LOCAL_SCHEMA_INCOMPLETE';END IF;
-END $bb_validate$;
-COMMIT;
-
--- Verify manually after install:
--- SELECT to_regclass('public.bb_bank_outlet_shares');
--- SELECT count(*) FROM public.bb_bank_outlet_shares;
-
+  IF coalesce(v_entry->>'received_date','') !~ '^\d{4}-\d{2}-\d{2}$'
   THEN RAISE EXCEPTION 'Received date required'; END IF;
   v_date:=(v_entry->>'received_date')::date;
   IF v_date<DATE '2000-01-01'
@@ -2142,7 +2086,7 @@ END
 $function$;
 
 
--- Enforce local bank ID re-registration function presence before COMMIT.
+-- Enforce local bank-ID re-registration function presence before COMMIT.
 DO $bb_cancelled_ids_ready$
 BEGIN
  IF to_regprocedure('public.bb_bank_reregistration_status_v1(text)') IS NULL
