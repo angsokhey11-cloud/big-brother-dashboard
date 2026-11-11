@@ -37,7 +37,7 @@ WITH entitlements AS (
  GROUP BY a.transaction_id,coalesce(p.customer_id,t.customer_id)
 )
 SELECT t.transaction_id,e.customer_id,t.currency,t.invoice_currency,t.approved_exchange_rate,
- t.received_date,e.share_amount AS original_amount,
+ t.received_date,e.share_amount::numeric(18,4) AS original_amount,
  CASE WHEN t.status='USED' THEN e.share_amount
       WHEN t.status='CANCELLED' THEN 0::numeric ELSE coalesce(s.spent,0) END AS used_amount,
  CASE WHEN t.status='AVAILABLE' THEN greatest(0::numeric,e.share_amount-coalesce(s.spent,0))
