@@ -1006,3 +1006,47 @@ exception
 end;
 $function$;
 
+
+-- Invoice Generator's pre-save validation must respect per-outlet bank receipt balance.
+CREATE OR REPLACE FUNCTION public.bb_bank_validate_invoice_input(p_customer_id text, p_transaction_id text, p_actual_amount numeric, p_actual_currency text, p_invoice_currency text, p_exchange_rate numeric, p_equivalent_amount numeric)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
+declare reg public.bb_verified_bank_transactions%rowtype;
+ cur text:=upper(trim(coalesce(p_invoice_currency,'')));
+ actual_cur text:=upper(trim(coalesce(p_actual_currency,'')));
+ rate numeric; debit numeric; spent numeric; remaining numeric; tol numeric;
+begin
+ if not public.bb_has_module_access('invoice_generator','create') then raise exception 'Invoice Generator access required'; end if;
+ if cur not in ('USD','KHR') or actual_cur not in ('USD','KHR') or coalesce(p_equivalent_amount,0)<=0 then return false; end if;
+ select * into reg from public.bb_verified_bank_transactions where upper(trim(transaction_id))=upper(trim(coalesce(p_transaction_id,'')));
+ if not found then
+   return public.bb_is_admin() and nullif(trim(coalesce(p_transaction_id,'')),'') is not null
+      and coalesce(p_equivalent_amount,0)>0;
+ end if;
+ if reg.status<>'AVAILABLE' or reg.currency<>actual_cur
+   or p_actual_amount is null or p_actual_amount<=0
+   or not exists(select 1 from public.bb_bank_balance_snapshot b
+     where b.transaction_id=reg.transaction_id and b.customer_id=p_customer_id
+       and b.status='AVAILABLE' and b.remaining_amount>0)
+ then return false; end if;
+ rate:=case when reg.currency=cur then 1
+     when coalesce(reg.approved_exchange_rate,0)>1 then reg.approved_exchange_rate
+     else p_exchange_rate end;
+ if reg.currency<>cur and (rate is null or rate<=1 or p_exchange_rate is null
+     or abs(rate-p_exchange_rate)>0.000001) then return false; end if;
+ debit:=case when reg.currency=cur then p_equivalent_amount
+   when reg.currency='KHR' then p_equivalent_amount*rate
+   else p_equivalent_amount/rate end;
+ select b.remaining_amount,b.original_amount
+   into remaining,spent
+ from public.bb_bank_balance_snapshot b
+ where b.transaction_id=reg.transaction_id and b.customer_id=p_customer_id;
+ if remaining is null then return false; end if;
+ tol:=case when reg.currency='KHR' then 0.5 else 0.005 end;
+ return remaining>0 and debit>0 and debit<=remaining+tol and
+  (abs(p_actual_amount-reg.amount)<=tol or abs(p_actual_amount-spent)<=tol
+   or abs(p_actual_amount-debit)<=tol or abs(p_actual_amount-remaining)<=tol);
+end $function$;
