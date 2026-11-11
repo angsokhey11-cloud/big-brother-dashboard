@@ -54,7 +54,7 @@ DECLARE v jsonb;
 BEGIN
  IF NOT public.bb_is_admin() THEN RAISE EXCEPTION 'Admin required'; END IF;
  SELECT coalesce(jsonb_agg(jsonb_build_object('transactionId',s.transaction_id,'customerId',s.customer_id,
-  'customerName',c.customer_name,'location',c.location_code,'amount',s.allocated_amount,
+  'customerName',c.customer_name,'location',c.location_code,'currency',t.currency,'amount',s.allocated_amount,
   'used',coalesce(b.used_amount,0),'remaining',coalesce(b.remaining_amount,0))
   ORDER BY s.transaction_id,c.customer_name,s.customer_id),'[]'::jsonb) INTO v
  FROM public.bb_bank_outlet_shares s
