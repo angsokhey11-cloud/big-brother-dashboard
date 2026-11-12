@@ -171,7 +171,7 @@ BEGIN
     v_total:=v_total+v_amount;
     v_count:=v_count+1;
   END LOOP;
-  IF v_total>v_available+case when v_currency='KHR' then 0.000001 else 0.000001 end
+  IF v_total>v_available+0.000001
   THEN RAISE EXCEPTION 'Receipt balance changed: only % % remains for this customer',round(v_available,v_precision),v_currency; END IF;
 
   v_request_id:=public.bb_next_prefixed_id('public.ar_payment_requests'::regclass,'request_id','ARR',5);
