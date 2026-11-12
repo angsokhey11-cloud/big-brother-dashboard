@@ -208,3 +208,7 @@ REVOKE ALL ON FUNCTION public.bb_stock_issue_batch_with_selling_window_v1(jsonb)
 REVOKE ALL ON FUNCTION public.bb_stock_admin_update_selling_window_v1(text,date,date,text) FROM PUBLIC,anon;
 GRANT EXECUTE ON FUNCTION public.bb_stock_issue_batch_with_selling_window_v1(jsonb) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.bb_stock_admin_update_selling_window_v1(text,date,date,text) TO authenticated;
+
+-- Direct authenticated calls to the older internal transfer function would
+-- bypass the new issue-time date window. All UI transfers use bb_stock_save_movement.
+REVOKE EXECUTE ON FUNCTION public.bb_stock_save_batch_transfer_internal(jsonb) FROM authenticated;
