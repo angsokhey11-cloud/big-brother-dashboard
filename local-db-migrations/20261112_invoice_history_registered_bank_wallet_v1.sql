@@ -127,6 +127,7 @@ BEGIN
  -- The unchanged existing correction routine updates Invoice, Stock, A/R
  -- references and creates the new original Bank payment. Its BEFORE INSERT
  -- bank trigger debits EXACTLY this customer's approved outlet share.
+ PERFORM set_config('bb.history_registered_wallet','on',true);
  v_result:=public.bb_sales_history_update_invoice(p_payload);
 
  SELECT count(*),coalesce(sum(a.applied_invoice_amount),0)
