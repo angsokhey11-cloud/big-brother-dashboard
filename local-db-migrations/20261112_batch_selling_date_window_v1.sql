@@ -109,8 +109,7 @@ begin
   if v_type='DAMAGE_EXCHANGE_RECEIVE' then return public.bb_stock_receive_damage_exchange(p_payload); end if;
   raise exception 'Stock movement % is not migrated yet',coalesce(nullif(v_type,''),'UNKNOWN');
 end;
-$function$
-
+$function$;
 
 -- Extend the existing batch picker; preserve its location authorization.
 CREATE OR REPLACE FUNCTION public.bb_sales_open_batches()
@@ -130,8 +129,7 @@ begin
   join public.stock_batches b on b.batch_id=x->>'batchId'
   where public.bb_has_location_access(x->>'locationCode');
   return jsonb_set(v,'{batches}',v_batches,true);
-end;$function$
-
+end;$function$;
 
 -- Staff-only guard: Invoice Generator cannot use a date outside the issued range.
 -- Admin remains authorized to make historical or exceptional corrections.
@@ -192,17 +190,16 @@ BEGIN
  UPDATE public.stock_batches
  SET selling_date_from=p_from,selling_date_to=p_to
  WHERE batch_id=v_batch.batch_id;
- INSERT INTO public.bb_audit_log(
-   audit_id,actor_user_id,actor_staff_id,actor_name,module,action,record_type,record_id,
-   reference_no,reason,before_state,after_state,metadata)
- VALUES(
-   (SELECT coalesce(max(audit_id),0)+1 FROM public.bb_audit_log),
-   auth.uid(),public.bb_actor_staff_id(),public.bb_actor_name(),
-   'Stock Management','BATCH_SELLING_WINDOW_UPDATE','stock_batches',v_batch.batch_id,
-   v_batch.batch_id,p_reason,
-   jsonb_build_object('from',v_batch.selling_date_from,'to',v_batch.selling_date_to),
-   jsonb_build_object('from',p_from,'to',p_to),
-   jsonb_build_object('source','admin-date-window-correction'));
+ INSERT INTO public.system_activity_log(
+   actor_user_id,actor_staff_id,actor_name,module_key,action,
+   entity_type,entity_id,location_code,summary,metadata)
+ VALUES(auth.uid(),public.bb_actor_staff_id(),public.bb_actor_name(),
+   'Stock Management','BATCH_SELLING_WINDOW_UPDATE',
+   'stock_batches',v_batch.batch_id,v_batch.location_code,
+   'Admin updated Batch selling-date window · '||v_batch.batch_id,
+   jsonb_build_object('reason',p_reason,
+      'oldFrom',v_batch.selling_date_from,'oldTo',v_batch.selling_date_to,
+      'newFrom',p_from,'newTo',p_to));
  RETURN jsonb_build_object('success',true,'batchId',v_batch.batch_id,
    'sellingDateFrom',p_from,'sellingDateTo',p_to);
 END;$func$;
