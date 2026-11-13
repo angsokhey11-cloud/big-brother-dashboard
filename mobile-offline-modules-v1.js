@@ -558,7 +558,7 @@ async function open(name){
        full?.value?.success){
       const url=name==='sales-support-calculator'
         ?'./mobile-offline-calculator.html?mobile=1&view=calculator&v=20261028-seamless1'
-        :name==='sales-support-your-customer'?'./mobile-offline-your-customer-v1.html?embed=1&v=20261028-interactive1'
+        :name==='sales-support-your-customer'?'./mobile-offline-your-customer-v1.html?embed=1&v=20261113-add-location1'
         :name==='sales-support-your-collection'?'./mobile-offline-your-collection-mobile-v1.html?embed=1&v=20261028-collection1'
         :name==='history'?'./mobile-offline-history-mobile-v1.html?embed=1&v=20261028-alllines1'
         :name==='monthly-sales-report'?'./mobile-offline-monthly-sales-v1.html?embed=1&v=20261028-monthly1'
