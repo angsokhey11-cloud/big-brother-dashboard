@@ -107,7 +107,7 @@ const MOBILE_URL={
   'daily-sale-summary':'https://angsokhey11-cloud.github.io/big-brother-daily-sale-summary/mobile.html?embed=1&v=20260915-1',
   'daily-cash-collection':'https://angsokhey11-cloud.github.io/big-brother-daily-cash-collection/mobile.html?embed=1&v=20260915-1',
 
-  'sales-support-add-customer':'https://angsokhey11-cloud.github.io/big-brother-sales-support/add-customer-mobile.html?embed=1&v=20260915-1',
+  'sales-support-add-customer':'https://angsokhey11-cloud.github.io/big-brother-sales-support/add-customer-mobile.html?embed=1&v=20261113-add-location1',
   'sales-support-customer-map':'https://angsokhey11-cloud.github.io/big-brother-customers-editor/sales-support-customer-map-mobile.html?embed=1&v=20260915-1',
   'sales-support-your-stock':'https://angsokhey11-cloud.github.io/big-brother-sales-support/your-stock-mobile.html?embed=1&v=20260915-1',
   'sales-support-your-collection':'https://angsokhey11-cloud.github.io/big-brother-daily-cash-collection/your-collection-mobile.html?embed=1&v=20260915-1',
