@@ -2,7 +2,7 @@
 (function(){
 'use strict';
 const ROUTE='sales-support-add-customer';
-const URL='https://angsokhey11-cloud.github.io/big-brother-sales-support/add-customer.html?embed=1&v=20260914-1';
+const URL='https://angsokhey11-cloud.github.io/big-brother-sales-support/add-customer.html?embed=1&v=20261113-add-location1';
 let restoreDone=false;
 const key=v=>String(v||'').trim().toLowerCase();
 function profile(){return window.BBDashboardAdapter?.getProfile?.()||null}
@@ -42,10 +42,16 @@ function persist(){try{const u=new URL(location.href);u.searchParams.set('module
 function deny(){
   try{document.getElementById('bbAddCustomerToast')?.remove();const el=document.createElement('div');el.id='bbAddCustomerToast';el.textContent='Create permission is required for Add Customer.';el.style.cssText='position:fixed;right:18px;bottom:18px;z-index:1000000;background:#7a271a;color:#fff;padding:11px 14px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.18);font:800 12px Arial';document.body.appendChild(el);setTimeout(()=>el.remove(),2800)}catch(_){}
 }
-function open(updateUrl=true){
+function open(updateUrl=true,options=null){
   ensureMenu();if(!canUse()){deny();return false}
   const home=document.getElementById('dashboardHome');const workspace=document.getElementById('moduleWorkspace');const frame=document.getElementById('moduleFrame');
-  if(!workspace||!frame)return false;if(home)home.hidden=true;workspace.hidden=false;frame.src=URL;markActive();if(updateUrl!==false)persist();return true;
+  if(!workspace||!frame)return false;
+  const target=new URL(URL);
+  if(options?.mode==='location'&&options?.customerId){
+    target.searchParams.set('mode','location');
+    target.searchParams.set('customerId',String(options.customerId).trim());
+  }
+  if(home)home.hidden=true;workspace.hidden=false;frame.src=target.href;markActive();if(updateUrl!==false)persist();return true;
 }
 function restore(){
   if(restoreDone)return;let route='';try{route=new URLSearchParams(location.search).get('module')||''}catch(_){}
