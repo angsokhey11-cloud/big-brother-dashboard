@@ -89,6 +89,7 @@ function phoneHref(c){
 }
 function card(c){
   const key=clean(c.customerId),url=mapUrl(c),phone=phoneHref(c);
+  const canAddLocation=!!key&&!clean(c.googleMapsLink)&&!(clean(c.latitude)&&clean(c.longitude));
   const el=document.createElement('article');el.className='customer-card';
   el.innerHTML='<div class="customer-card-head"><div><h3>'+escapeHtml(c.name)+'</h3>'+
     '<div class="code">'+escapeHtml(key||'-')+' · '+escapeHtml(c.locationCode)+' — '+escapeHtml(locationName(c.locationCode))+'</div></div>'+
@@ -100,6 +101,7 @@ function card(c){
     (phone?'<a class="btn ghost" data-call>📞 Call</a>':'')+
     (url?'<button class="btn ghost" type="button" data-map>📍 Google Maps</button>':'')+
     '<button class="btn secondary" type="button" data-prices aria-expanded="false">💲 Product Price</button>'+
+    (canAddLocation?'<button class="btn ghost" type="button" data-add-location>📍 Add Location</button>':'')+
     '<button class="btn primary" type="button" data-calculator>🧮 Calculator</button></div>'+
     '<div class="price-panel"></div>';
   if(phone)el.querySelector('[data-call]').href=phone;
@@ -135,6 +137,31 @@ function card(c){
          (p.isCustomPrice?' · Custom':'')+'</div></div>'+
          '<div class="pval">$'+(Number(p.customerPriceUSD)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div>').join('')+'</div>'
       :'<div class="muted">No product prices found.</div>';
+  });
+  el.querySelector('[data-add-location]')?.addEventListener('click',()=>{
+    if(!api?.canUseNetwork?.()){
+      alert('Please connect to the internet to save a customer GPS location.');
+      return;
+    }
+    const target=new URL('https://angsokhey11-cloud.github.io/big-brother-sales-support/add-customer-mobile.html');
+    target.searchParams.set('embed','1');
+    target.searchParams.set('mode','location');
+    target.searchParams.set('customerId',key);
+    target.searchParams.set('v','20261113-add-location1');
+    // On a local/offline origin, open the online form directly so the customer ID is not lost.
+    if(location.origin!==target.origin){
+      window.open(target.href,'_blank','noopener');
+      return;
+    }
+    try{
+      sessionStorage.setItem('BB_SALES_CUSTOMER_LOCATION_TARGET_V1',JSON.stringify({customerId:key,at:Date.now()}));
+      if(window.parent?.BBMobile?.open){
+        const opened=window.parent.BBMobile.open('sales-support-add-customer',true);
+        if(opened!==false)return;
+      }
+    }catch(_){}
+    try{sessionStorage.removeItem('BB_SALES_CUSTOMER_LOCATION_TARGET_V1')}catch(_){}
+    window.open(target.href,'_blank','noopener');
   });
   el.querySelector('[data-calculator]').addEventListener('click',()=>{
     const parent=window.parent;
