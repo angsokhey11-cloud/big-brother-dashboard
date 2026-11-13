@@ -2,7 +2,7 @@
 (function(){
 'use strict';
 const ROUTE='sales-support-add-customer';
-const URL='https://angsokhey11-cloud.github.io/big-brother-sales-support/add-customer.html?embed=1&v=20261113-add-location1';
+const URL='https://angsokhey11-cloud.github.io/big-brother-sales-support/add-customer.html?embed=1&v=20261113-phone-address2';
 let restoreDone=false;
 const key=v=>String(v||'').trim().toLowerCase();
 function profile(){return window.BBDashboardAdapter?.getProfile?.()||null}
