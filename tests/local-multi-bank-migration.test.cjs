@@ -14,9 +14,10 @@ assert.ok(record,'Code Sync migration must be registered');
 assert.equal(record.file,file,'Registered SQL filename must match');
 assert.equal(record.sha256,crypto.createHash('sha256').update(data).digest('hex').toUpperCase(),
  'V3.4 Code Sync checksum must match exact SQL bytes');
-assert.equal(registry.migrations.at(-1).id,record.id,'Multi-bank migration must follow bank partial-use migration');
-assert.ok(registry.migrations.some(x=>x.id==='20261025_c_bank_partial_use_cloud_parity_v1'),
- 'The required Local partial-use bank migration must come first');
+const partialIndex=registry.migrations.findIndex(x=>x.id==='20261025_c_bank_partial_use_cloud_parity_v1');
+const multiBankIndex=registry.migrations.findIndex(x=>x.id===record.id);
+assert.ok(partialIndex>=0 && multiBankIndex>partialIndex,
+ 'The required Local partial-use bank migration must precede multi-bank (later migrations are allowed)');
 for(const [reason,pattern] of [
  ['fail-closed prerequisite check',/LOCAL_MULTI_BANK_SAFE_STOP/],
  ['vetted existing partial bank guard',/private\.bb_bank_guard_payment\(\)/],
@@ -51,6 +52,8 @@ const afterRpc=sql.split('end $fn$;').slice(1).join('end $fn$;');
 assert.doesNotMatch(beforeRpc+afterRpc,/\bINSERT\s+INTO\s+public\.(?:invoices|payments|bb_verified_bank_transactions)\b/i);
 assert.match(sql,/insert into public\.payments \(/i,'Authorized admin RPC must create one payment per bank source');
 const dashboard=fs.readFileSync(path.resolve(__dirname,'../index.html'),'utf8');
-assert.match(dashboard,/20261027-multi-bank-verified1/,'Desktop route should remain current');
+assert.match(dashboard,/big-brother-invoice-generator\/\?embed=1&v=2026\d{4}-[^"']+/,'Desktop route must target a versioned Invoice Generator');
+assert.match(dashboard,/if \(isAdmin\) next\.searchParams\.set\('bbMultiBankPilot', '1'\)/,'Admin route must enable multi-bank pilot');
+assert.match(dashboard,/else next\.searchParams\.delete\('bbMultiBankPilot'\)/,'Non-admin route must remove multi-bank flag');
 assert.match(dashboard,/getProfile\?\.\(\)\?\.user\?\.isAdmin === true/,'Pilot routing must use logged-in admin profile');
 console.log('PASS registered checksum, source safety, desktop parity');
