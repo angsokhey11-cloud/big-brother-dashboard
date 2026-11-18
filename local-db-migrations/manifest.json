@@ -194,6 +194,12 @@
       "file": "20261118_bank_payment_correction_preview_v1.sql",
       "sha256": "5F64FF7F4262C41A0325655EE3E3109334F408513078A7DC554D1C807A85A29B",
       "description": "Admin-only Local Brain payment correction preview; intentionally blocks writes pending verified replacement-payment and bank-reversal sync. No business rows changed."
+    },
+    {
+      "id": "20261118_payment_correction_queue_v1",
+      "file": "20261118_payment_correction_queue_v1.sql",
+      "sha256": "12325F2BF9CF1B4DDB63970338D3F5AE667E7CF3F6993DDE4B1CCC4B475EF553",
+      "description": "Local admin correction intent queue. Requires V3.4 queue-aware upload helpers; no business payment change before verified Cloud upload and refresh."
     }
   ]
 }
