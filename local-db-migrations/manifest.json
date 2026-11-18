@@ -188,6 +188,12 @@
       "file": "20261103_f_damage_clearance_zero_cost_writeoff_v1.sql",
       "sha256": "6271E2BB30BF368BA9E25811CD98682A1730026E1BB396BFD56DB8F40B32C98F",
       "description": "Admin Deduct-as-Cost for zero-cost damaged stock creates a $0 noncash writeoff register with no fabricated expense"
+    },
+    {
+      "id": "20261118_bank_payment_correction_preview_v1",
+      "file": "20261118_bank_payment_correction_preview_v1.sql",
+      "sha256": "5F64FF7F4262C41A0325655EE3E3109334F408513078A7DC554D1C807A85A29B",
+      "description": "Admin-only Local Brain payment correction preview; intentionally blocks writes pending verified replacement-payment and bank-reversal sync. No business rows changed."
     }
   ]
 }
