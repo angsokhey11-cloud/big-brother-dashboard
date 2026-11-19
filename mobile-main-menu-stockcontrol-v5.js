@@ -94,7 +94,7 @@ const MOBILE={
  'stock-control-batch-transfer':'https://angsokhey11-cloud.github.io/big-brother-stock-allocation/batch-transfer-mobile.html?embed=1&v=20261008-mobile1',
  'stock-control-back-sale':'https://angsokhey11-cloud.github.io/big-brother-stock-allocation/back-sale-mobile.html?embed=1&v=20261002-mobile1',
  'invoice':'https://angsokhey11-cloud.github.io/big-brother-invoice-generator/mobile.html?embed=1&v=20261001-scanfix2',
- 'history':'https://angsokhey11-cloud.github.io/invoice-history/invoice-history-mobile.html?embed=1&v=20261001-creditdigitalfix4',
+ 'history':'https://angsokhey11-cloud.github.io/invoice-history/invoice-history-mobile.html?embed=1&v=20261119-scope2',
  'sale-return':'https://angsokhey11-cloud.github.io/big-brother-invoice-reversal/mobile.html?embed=1&v=20260924-invoiceid1',
  'reversal-history':'https://angsokhey11-cloud.github.io/big-brother-invoice-reversal/mobile-history.html?embed=1&v=20260915-1',
  'payment-history':'https://angsokhey11-cloud.github.io/big-brother-payment-history/mobile.html?embed=1&v=20261018-date1',
@@ -106,7 +106,7 @@ const MOBILE={
  'sales-support-your-stock':'https://angsokhey11-cloud.github.io/big-brother-sales-support/your-stock-mobile.html?embed=1&v=20261001-salesmandamage1',
  'sales-support-batch-selling-tracker':'https://angsokhey11-cloud.github.io/big-brother-batch-selling-tracker/mobile.html?embed=1&v=20260925-dashboard1',
  'sales-support-your-collection':'https://angsokhey11-cloud.github.io/big-brother-daily-cash-collection/your-collection-mobile.html?embed=1&v=20260921-owner1',
- 'sales-support-your-invoices':'https://angsokhey11-cloud.github.io/invoice-history/your-invoices-mobile.html?embed=1&v=20260925-assigned2',
+ 'sales-support-your-invoices':'https://angsokhey11-cloud.github.io/invoice-history/your-invoices-mobile.html?embed=1&v=20261119-scope2',
  'sales-support-your-receivable':'https://angsokhey11-cloud.github.io/big-brother-ar/your-receivable-mobile.html?embed=1&v=20261030-pwa-share-ready1',
 
  'real-invoice':'https://angsokhey11-cloud.github.io/big-brother-real-invoice/?embed=1&v=20261018-date1',
@@ -262,7 +262,7 @@ function openDirect(route,push=true,forceLive=false){
    return true;
  }
  const universal=window.BBMobileUniversalReadOnlyV1;
- if(!forceLive&&!liveApproval&&!realPilot&&universal&&!['history','monthly-sales-report','sales-support-your-stock','sales-support-batch-selling-tracker','daily-sale-summary'].includes(route)){
+ if(!forceLive&&!liveApproval&&!realPilot&&universal&&!['history','sales-support-your-invoices','monthly-sales-report','sales-support-your-stock','sales-support-batch-selling-tracker','daily-sale-summary'].includes(route)){
    void universal.open(route).then(ok=>{
      if(!ok){
        if(offline?.canUseNetwork())openDirect(route,push,true);
