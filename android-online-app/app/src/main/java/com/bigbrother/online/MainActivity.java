@@ -57,6 +57,7 @@ public final class MainActivity extends Activity {
     private static final String STABLE_PACKAGE = "com.bigbrother.online.stable";
     private WebView browser;
     private BBNativeFileActions nativeFiles;
+    private BBNativePrint nativePrint;
     private View overlay;
     private TextView overlayTitle;
     private TextView overlayMessage;
@@ -148,6 +149,7 @@ public final class MainActivity extends Activity {
         // Trusted, origin-scoped Android exports for generated invoice files.
         // Only user-approved share/save/open choosers are available.
         nativeFiles = BBNativeFileActions.install(this,browser);
+        nativePrint = BBNativePrint.install(this,browser);
         browser.setWebChromeClient(new WebChromeClient() {
             @Override public boolean onShowFileChooser(WebView webView,
                 ValueCallback<Uri[]> callback, FileChooserParams params) {
@@ -562,6 +564,7 @@ public final class MainActivity extends Activity {
            retry!=null&&retry.getVisibility()==View.VISIBLE)scheduleRetry();
     }
     @Override protected void onDestroy() {
+        if(nativePrint!=null)nativePrint.destroy();
         reconnectHandler.removeCallbacks(retryOpen);
         if (fileChooserCallback != null) finishFileChooser(null);
         if (pendingMediaPermission != null) {

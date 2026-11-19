@@ -51,6 +51,7 @@ public final class MainActivity extends Activity {
     private static final int REQUEST_WEB_LOCATION = 4131;
     private WebView browser;
     private BBNativeFileActions nativeFiles;
+    private BBNativePrint nativePrint;
     private View overlay;
     private TextView overlayTitle;
     private TextView overlayMessage;
@@ -141,6 +142,7 @@ public final class MainActivity extends Activity {
         CookieManager.getInstance().setAcceptCookie(true);
         // Native invoice exports only from Local Brain's HTTPS origin on :8443.
         nativeFiles = BBNativeFileActions.install(this,browser);
+        nativePrint = BBNativePrint.install(this,browser);
         browser.setWebChromeClient(new WebChromeClient() {
             @Override public boolean onShowFileChooser(WebView webView,
                 ValueCallback<Uri[]> callback, FileChooserParams params) {
@@ -490,6 +492,7 @@ public final class MainActivity extends Activity {
            retry!=null&&retry.getVisibility()==View.VISIBLE)scheduleRetry();
     }
     @Override protected void onDestroy() {
+        if(nativePrint!=null)nativePrint.destroy();
         reconnectHandler.removeCallbacks(retryOpen);
         if (fileChooserCallback != null) finishFileChooser(null);
         if (pendingMediaPermission != null) {
