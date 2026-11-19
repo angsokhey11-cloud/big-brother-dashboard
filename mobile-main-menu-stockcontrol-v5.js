@@ -252,7 +252,7 @@ function openDirect(route,push=true,forceLive=false){
  // archived read-only page; especially important for notification taps.
  const liveApproval=route==='admin-staff-request';
  const realPilot=realArPilot(route);
- if(!forceLive&&!liveApproval&&!realPilot&&cached?.canOpen(route)){
+ if(!forceLive&&(route!=='history'||offline?.canUseNetwork()!==true)&&!liveApproval&&!realPilot&&cached?.canOpen(route)){
    void cached.open(route).then(ok=>{
      if(!ok){
        if(offline?.canUseNetwork())openDirect(route,push,true);
