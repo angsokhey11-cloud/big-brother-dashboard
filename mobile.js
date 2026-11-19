@@ -392,7 +392,7 @@ function openModule(route,updateUrl=true,forceLive=false){
   // All three A/R routes use the original cached UI, even in installed PWA.
   // Other routes retain their current offline fallback until migrated.
   const realArPilot=['ar-your','ar-all','sales-support-your-receivable'].includes(route);
-  if(!forceLive&&!liveApproval&&!realArPilot&&cached?.canOpen(route)){
+  if(!forceLive&&(route!=='history'||offline?.canUseNetwork()!==true)&&!liveApproval&&!realArPilot&&cached?.canOpen(route)){
     void cached.open(route).then(ok=>{
       if(!ok){
         if(offline?.canUseNetwork())openModule(route,updateUrl,true);
