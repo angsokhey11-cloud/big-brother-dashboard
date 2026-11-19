@@ -984,7 +984,7 @@ function openRoute(route,navState='',forceLive=false){
   // Real cached A/R UI is now the default: never stage the old offline screen.
   const realArPilot=route==='ar-your'||route==='ar-all'||route==='sales-support-your-receivable';
   // Cache first even when navigator.onLine=true; slow mobile data must not block taps.
-  if(!forceLive&&!realArPilot&&cached?.canOpen(route)){
+  if(!forceLive&&(route!=='history'||offline?.canUseNetwork()!==true)&&!realArPilot&&cached?.canOpen(route)){
     void cached.open(route).then(ok=>{
       if(!ok){
         if(offline?.canUseNetwork())openRoute(route,navState,true);
