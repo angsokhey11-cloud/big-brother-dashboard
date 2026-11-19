@@ -88,6 +88,7 @@ const BASE_ROUTES=new Set([
 ]);
 
 const MOBILE_URLS={
+  'history':'invoice-history/invoice-history-mobile.html?embed=1&v=20261119-scope2',
   'stock-control-allocation':'big-brother-stock-allocation/mobile.html?embed=1&v=20261002-mobile1',
   'stock-control-batch-transfer':'big-brother-stock-allocation/batch-transfer-mobile.html?embed=1&v=20261008-mobile1',
   'stock-control-back-sale':'big-brother-stock-allocation/back-sale-mobile.html?embed=1&v=20261002-mobile1',
@@ -98,7 +99,7 @@ const MOBILE_URLS={
   'sales-support-your-stock':'big-brother-sales-support/your-stock-mobile.html?embed=1&v=20261017-date-display1',
   'sales-support-batch-selling-tracker':'big-brother-batch-selling-tracker/mobile.html?embed=1&v=20261107-no-10sec-tracker-poll-v6',
   'sales-support-your-collection':'big-brother-daily-cash-collection/your-collection-mobile.html?embed=1&v=20261017-crossday1',
-  'sales-support-your-invoices':'invoice-history/your-invoices-mobile.html?embed=1&v=20260925-assigned2',
+  'sales-support-your-invoices':'invoice-history/your-invoices-mobile.html?embed=1&v=20261119-scope2',
   'sales-support-your-receivable':'big-brother-ar/your-receivable-mobile.html?embed=1&view=your&v=20261107-ar-mobile-customer-totals-v2',
   'master-expense-categories':'big-brother-master-data/expense-categories.html?embed=1&v=20260912-3',
   'admin-pending-receivable':'big-brother-admin-work/?embed=1&view=pending-receivable',
@@ -996,7 +997,7 @@ function openRoute(route,navState='',forceLive=false){
     return;
   }
   const universal=window.BBMobileUniversalReadOnlyV1;
-  if(!forceLive&&!realArPilot&&universal&&!['history','monthly-sales-report','sales-support-your-stock','sales-support-batch-selling-tracker','daily-sale-summary'].includes(route)){
+  if(!forceLive&&!realArPilot&&universal&&!['history','sales-support-your-invoices','monthly-sales-report','sales-support-your-stock','sales-support-batch-selling-tracker','daily-sale-summary'].includes(route)){
     void universal.open(route).then(ok=>{
       if(!ok){
         if(offline?.canUseNetwork())openRoute(route,navState,true);
