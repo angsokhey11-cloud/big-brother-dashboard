@@ -10,6 +10,22 @@ const definitions=[
 function install(){
  const root=document.getElementById("adminWorkSubmenu");
  if(!root||root.dataset.bbGrouped==="1")return;
+ // Add the Bank Review entry without editing the Dashboard's boot-time route map.
+ if(!document.getElementById("navAdminBankReview")){
+  const bankReview=document.createElement("button");
+  bankReview.type="button";bankReview.id="navAdminBankReview";
+  bankReview.textContent="Bank Review";
+  bankReview.addEventListener("click",()=>{
+   // Reuse the existing, permission-gated Admin Work workspace shell.
+   if(typeof window.loadWorkspace!=="function")return;
+   window.loadWorkspace("admin-bank-history",false);
+   const frame=document.getElementById("moduleFrame");
+   if(frame)frame.src="https://angsokhey11-cloud.github.io/big-brother-notification-center/dashboard-bank-review.html?embed=1";
+   document.querySelectorAll(".shell-nav-link,.nav-submenu button").forEach(x=>x.classList.remove("active"));
+   bankReview.classList.add("active");
+  });
+  root.appendChild(bankReview);
+ }
  const original=[...root.children].filter(x=>x.matches("button"));
  if(!original.length)return;
  const style=document.createElement("style");
@@ -43,6 +59,11 @@ function install(){
   sections.get(group).appendChild(button);
  }
  root.dataset.bbGrouped="1";
+ // Keep the active function visible if the Dashboard opens it from a deep link.
+ root.addEventListener("click",event=>{
+  const target=event.target.closest(".bb-admin-section-body>button");
+  if(target)target.closest(".bb-admin-section")?.querySelector(".bb-admin-section-toggle")?.setAttribute("data-last-selected",target.id);
+ });
  // Opening Admin Work itself never expands its sections; users choose each group.
 }
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",install,{once:true});
