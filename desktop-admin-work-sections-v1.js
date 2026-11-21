@@ -23,6 +23,7 @@ function install(){
    if(frame)frame.src="https://angsokhey11-cloud.github.io/big-brother-notification-center/bank-transaction-bulk-review.html?dashboard=1&v=20261121-direct1";
    document.querySelectorAll(".shell-nav-link,.nav-submenu button").forEach(x=>x.classList.remove("active"));
    bankReview.classList.add("active");
+   history.replaceState(null,"",location.pathname+"?module=admin-bank-review");
   });
   root.appendChild(bankReview);
  }
