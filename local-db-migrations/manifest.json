@@ -168,8 +168,8 @@
     {
       "id": "20261103_b_damage_exchange_cost_cogs_v1",
       "file": "20261103_b_damage_exchange_cost_cogs_v1.sql",
-      "sha256": "FF11B1445D9D463AF8C001073BCB142C4F92CBB9084FC409CE6CE65551426351",
-      "description": "Damage Exchange documented original purchase cost and header value; restore Champei exchanges and sales COGS with audit; replay-safe if Cloud data already corrected or not yet imported"
+      "sha256": "CF5E6517BF88508756C0D188029A607DBFB1F462385B277D0C50AAA684AA4930",
+      "description": "Damage Exchange source-documented purchase cost/COGS and header repair, with replay-safe current-moving-average validation; preserve already-corrected $0.45 historical costs and all stock balances"
     },
     {
       "id": "20261103_c_warehouse_damage_source_split_v1",
