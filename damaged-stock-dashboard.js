@@ -542,10 +542,69 @@
 
 
   /* =========================================================
+     RESTORE NESTED SIDEBAR STATE ON FULL REFRESH
+     ========================================================= */
+
+  const damagedRouteButtons = {
+    "stock-damaged-report": "navStockDamagedReport",
+    "stock-damaged-cleared": "navStockDamagedCleared",
+    "stock-damaged-accounting": "navStockDamagedAccounting"
+  };
+
+  function expandMenu(subId, buttonId) {
+    const sub = document.getElementById(subId);
+    const button = document.getElementById(buttonId);
+    if (sub) sub.classList.add("open");
+    if (button) {
+      button.classList.add("open");
+      button.setAttribute("aria-expanded", "true");
+      const arrow = button.querySelector(".nav-arrow");
+      if (arrow) arrow.textContent = "▲";
+    }
+  }
+
+  function showActiveDamageRoute(route) {
+    const activeId = damagedRouteButtons[route];
+    if (!activeId || !document.getElementById(activeId)) return;
+
+    // The original shell only knows stock-damaged, not its three child routes.
+    // Keep both parent groups expanded and mark the precise route selected.
+    expandMenu("stockSubmenu", "stockMenuButton");
+    expandMenu("damagedStockSubmenu", "damagedStockMenuButton");
+
+    document.querySelectorAll(".shell-nav-link.active, .nav-submenu button.active")
+      .forEach(button => button.classList.remove("active"));
+    document.getElementById(activeId)?.classList.add("active");
+  }
+
+  function restoreDamageMenuFromUrl() {
+    const route = new URLSearchParams(location.search).get("module");
+    if (route && damagedRouteButtons[route]) showActiveDamageRoute(route);
+  }
+
+  function installDamageMenuActiveBridge() {
+    const original = window.setShellActive;
+    if (typeof original !== "function" || original.__bbDamageMenuActiveBridge) return;
+    const enhanced = function (moduleName) {
+      const result = original.apply(this, arguments);
+      showActiveDamageRoute(moduleName);
+      return result;
+    };
+    enhanced.__bbDamageMenuActiveBridge = true;
+    window.setShellActive = enhanced;
+  }
+
+  /* =========================================================
      START
      ========================================================= */
 
   installDamagedStockMenu();
+  installDamageMenuActiveBridge();
+  restoreDamageMenuFromUrl();
+  // The authorized Dashboard route can finish opening after DOMContentLoaded.
+  // Re-apply the highlight once its iframe loads, without reloading the app.
+  document.getElementById("moduleFrame")
+    ?.addEventListener("load", restoreDamageMenuFromUrl);
 
 
 })();
