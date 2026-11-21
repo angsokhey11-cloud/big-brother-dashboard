@@ -1389,6 +1389,9 @@ body{
     // Desktop Stock Menu V2: three collapsible, presentational sections.
     // Preserve the existing Stock/Damage/Report DOM nodes and route handlers.
     html=html.replace('</body>', '<scr'+'ipt src="desktop-stock-sections-v2.js?v=20261121-stock-sections-v2a"></scr'+'ipt></body>');
+    // Desktop Sales Support Menu V2: three independent collapsible sections.
+    // Reuse original buttons/permissions and restore the correct menu on Ctrl+R.
+    html=html.replace('</body>', '<scr'+'ipt src="desktop-sales-support-sections-v2.js?v=20261121-sales-sections-v2a"></scr'+'ipt></body>');
     // Independent Admin Work UI: no core route, auth, or accounting changes.
     html=html.replace('</body>', '<scr'+'ipt src="desktop-admin-work-sections-v1.js?v=20261121-route6"></scr'+'ipt></body>');
     html=html.replace('</body>', '<scr'+'ipt src="desktop-admin-work-route-restore-v1.js?v=20261121-route3"></scr'+'ipt></body>');
