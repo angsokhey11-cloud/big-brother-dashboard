@@ -98,7 +98,7 @@ BEGIN
     END IF;
     v_source_pos := position(v_source_marker IN v_aware_def);
     IF v_source_pos<1 OR
-       position('from public.invoices' IN lower(substring(v_aware_def FROM 1 FOR v_source_pos)))=0 THEN
+       lower(substring(v_aware_def FROM 1 FOR v_source_pos)) !~ 'from[[:space:]]+public[.]invoices' THEN
       RAISE EXCEPTION 'Local source-aware invoice lookup shape differs; abort before function replacement';
     END IF;
     v_aware_def := substring(v_aware_def FROM 1 FOR v_source_pos+length(v_source_marker)-1) ||
