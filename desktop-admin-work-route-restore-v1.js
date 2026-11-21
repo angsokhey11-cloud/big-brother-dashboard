@@ -14,8 +14,9 @@ function restore(){
  if(moduleName==="admin-bank-review"){
   const button=document.getElementById("navAdminBankReview");
   if(!button)return;
-  button.closest(".bb-admin-section")?.querySelector(".bb-admin-section-toggle")?.click();
-  button.click();
+  const toggle=button.closest(".bb-admin-section")?.querySelector(".bb-admin-section-toggle");
+  if(toggle&&toggle.getAttribute("aria-expanded")!=="true")toggle.click();
+  // Auth adapter opens the Bank Review frame after session validation.
   return;
  }
  // The Dashboard core now restores standard Admin Work routes itself.
