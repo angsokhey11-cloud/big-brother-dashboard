@@ -1331,6 +1331,17 @@ body{
     // Telegram Manager must load as an independent admin menu AFTER the
     // original Notification Center and all Dashboard feature integrations.
     html=html.replace('</body>', '<scr'+'ipt src="desktop-telegram-manager-menu-v1.js?v=20261022-workspace-tools1"></scr'+'ipt></body>');
+    // Restore Admin Work routes on Ctrl+R using the legacy shell's own
+    // initial routing. Previously it required autoload=1 and omitted newer
+    // Admin Work modules, so the Dashboard always opened Home.
+    html=html.replace(
+      "const allowAutoload = params.get('autoload') === '1';",
+      "const allowAutoload = params.get('autoload') === '1' || /^admin-[a-z0-9-]+$/.test(moduleName || '');"
+    );
+    html=html.replace(
+      "'admin-staff-request','admin-request']",
+      "'admin-staff-request','admin-request','admin-user-permissions','admin-bank-register','admin-bank-history','admin-management-control','admin-system-activity','admin-notification-center','admin-telegram-manager']"
+    );
     // Independent Admin Work UI: no core route, auth, or accounting changes.
     html=html.replace('</body>', '<scr'+'ipt src="desktop-admin-work-sections-v1.js?v=20261121-route6"></scr'+'ipt></body>');
     html=html.replace('</body>', '<scr'+'ipt src="desktop-admin-work-route-restore-v1.js?v=20261121-route1"></scr'+'ipt></body>');
