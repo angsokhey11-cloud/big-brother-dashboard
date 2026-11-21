@@ -325,11 +325,16 @@ BEGIN
     RAISE EXCEPTION 'Local historical exchange and later stock costs are incomplete (% of 18)',n;
   END IF;
 
+  -- Historical exchange unit cost of $0.45 is already validated above
+  -- against BOTH corrected exchange headers and all 18 original stock movements.
+  -- Current purchased average cost is a LIVE moving value, not an immutable
+  -- historical exchange rate. It may be 0 for a fully depleted SKU or drift
+  -- after later receipts. Never rewrite live valuation merely to pass replay.
   SELECT count(*) INTO n FROM public.bb_stock_product_rows_zero_cost_v1_internal() p
   WHERE p.product_code IN ('CHM-220','CH-O220')
-    AND p.average_cost=0.45;
+    AND p.average_cost IS NOT NULL AND p.average_cost>=0;
   IF n<>2 THEN
-    RAISE EXCEPTION 'Local purchased average costs not restored for both products: %',n;
+    RAISE EXCEPTION 'Local purchased average-cost rows missing/invalid for exchange products: % of 2',n;
   END IF;
 
   IF (SELECT coalesce(sum(line_value),0) FROM public.stock_activity
