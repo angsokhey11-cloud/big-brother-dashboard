@@ -410,9 +410,52 @@
     return true;
   }
 
+
+  // V5 can pre-create Sales Support buttons before the independent module
+  // scripts run. Older ensureMenu() code attaches a click listener only when
+  // creating a button, leaving pre-existing buttons with no working handler.
+  // Handle those clicks at one stable parent with the module's own permission
+  // checked open() method. Capture phase prevents duplicate navigation from
+  // older button-level handlers.
+  function bindSalesSupportMenuNavigation(){
+    const submenu=document.getElementById('salesSupportSubmenu');
+    if(!submenu||submenu.dataset.bbSalesRouteBound==='1')return;
+    const buttonRoutes={
+      navSalesSupportYourStock:'sales-support-your-stock',
+      navSalesSupportYourCollection:'sales-support-your-collection',
+      navSalesSupportYourInvoices:'sales-support-your-invoices',
+      navSalesSupportYourReceivable:'sales-support-your-receivable',
+      navSalesSupportAddCustomer:'sales-support-add-customer',
+      navSalesSupportCustomerMap:'sales-support-customer-map'
+    };
+    submenu.addEventListener('click',event=>{
+      const button=event.target?.closest?.('button');
+      const route=buttonRoutes[button?.id];
+      if(!route)return;
+      event.preventDefault();
+      event.stopPropagation();
+      const apiName=SALES_SUPPORT_RESTORE[route]?.[0];
+      const api=apiName&&window[apiName];
+      if(typeof api?.open!=='function'){
+        console.error('BIG BROTHER: Sales Support module unavailable:',route);
+        toast('This Sales Support function did not load. Please Code Sync and refresh.');
+        return;
+      }
+      // Independent module APIs perform their own grant and create checks.
+      // They also save the exact route so Ctrl+R reopens the right function.
+      try{api.open(true)}
+      catch(error){
+        console.error('BIG BROTHER: Sales Support navigation failed:',route,error);
+        toast('Could not open this function. Check the browser Console.');
+      }
+    },true);
+    submenu.dataset.bbSalesRouteBound='1';
+  }
+
   function activateDashboard(){
     installStockAdjustmentMenu();
     installWorkspaceGuard();
+    bindSalesSupportMenuNavigation();
     applyRouteVisibility();
     updateUserUI();
     const initial=new URLSearchParams(location.search).get('module');
