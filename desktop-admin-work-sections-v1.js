@@ -20,7 +20,7 @@ function install(){
    if(typeof window.loadWorkspace!=="function")return;
    window.loadWorkspace("admin-bank-history",false);
    const frame=document.getElementById("moduleFrame");
-   if(frame)frame.src="https://angsokhey11-cloud.github.io/big-brother-notification-center/dashboard-bank-review.html?embed=1";
+   if(frame)frame.src="https://angsokhey11-cloud.github.io/big-brother-notification-center/bank-transaction-bulk-review.html?dashboard=1&v=20261121-direct1";
    document.querySelectorAll(".shell-nav-link,.nav-submenu button").forEach(x=>x.classList.remove("active"));
    bankReview.classList.add("active");
   });
