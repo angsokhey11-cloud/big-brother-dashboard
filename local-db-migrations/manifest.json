@@ -212,6 +212,12 @@
       "file": "20261120_invoice_number_date_defaults_v1.sql",
       "sha256": "404A723877BCB434A392E650A599BAD032ED120FB87098A3A14150E9B2F49A9E",
       "description": "Local Direct Sale and independent Batch Sale invoice numbering and date defaults; read-only RPC parity, preserve permissions and business records"
+    },
+    {
+      "id": "20261121_batch_editor_selling_window_local_v1",
+      "file": "20261121_batch_editor_selling_window_local_v1.sql",
+      "sha256": "199245A9F07E6A3ECACE092A700EE7F0BF487D73F7A47DC5CA25B78F1846E9AE",
+      "description": "Local Brain V5/V6 Batch Editor Admin selling-date-only Save Changes parity; guarded stock_batches range columns, RPC read/audit-write, Invoice Generator range picker, staff invoice date restriction. No business rows changed."
     }
   ]
 }
