@@ -1386,6 +1386,9 @@ body{
       "'admin-staff-request','admin-request']",
       "'admin-staff-request','admin-request','admin-user-permissions','admin-bank-register','admin-bank-history','admin-management-control','admin-system-activity','admin-notification-center','admin-telegram-manager']"
     );
+    // Desktop Stock Menu V2: three collapsible, presentational sections.
+    // Preserve the existing Stock/Damage/Report DOM nodes and route handlers.
+    html=html.replace('</body>', '<scr'+'ipt src="desktop-stock-sections-v2.js?v=20261121-stock-sections-v2a"></scr'+'ipt></body>');
     // Independent Admin Work UI: no core route, auth, or accounting changes.
     html=html.replace('</body>', '<scr'+'ipt src="desktop-admin-work-sections-v1.js?v=20261121-route6"></scr'+'ipt></body>');
     html=html.replace('</body>', '<scr'+'ipt src="desktop-admin-work-route-restore-v1.js?v=20261121-route3"></scr'+'ipt></body>');
