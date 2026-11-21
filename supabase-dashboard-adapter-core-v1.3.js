@@ -374,14 +374,14 @@
           const button=document.getElementById('navAdminBankReview');
           if(button)button.click();
           else window.openInitialWorkspace();
-          document.getElementById('bbAdminRouteBootVeil')?.remove();
+          document.getElementById('bbDashboardBootVeil')?.remove();
         };
         setTimeout(openBankReview,0);
       }else{
         window.loadWorkspace(initial,false);
       }
     }else window.openInitialWorkspace();
-    if(initial!=='admin-bank-review')document.getElementById('bbAdminRouteBootVeil')?.remove();
+    if(initial!=='admin-bank-review')document.getElementById('bbDashboardBootVeil')?.remove();
   }
 
   async function start(){
