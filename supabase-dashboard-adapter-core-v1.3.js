@@ -460,6 +460,12 @@
     updateUserUI();
     const initial=new URLSearchParams(location.search).get('module');
     if(initial==='stock-adjustment'&&canRoute('stock-adjustment'))openStockAdjustment(false);
+    else if(initial==='daily-cash'&&canRoute('daily-cash')){
+      // Daily Cash was added after the legacy initial route allowlist.
+      // The user-facing menu stores ?module=daily-cash without autoload=1;
+      // restore its exact workspace only after auth and access validation.
+      window.loadWorkspace('daily-cash',false);
+    }
     else if(restoreSalesSupportRoute(initial)){} // Exact Sales Support route, never Calculator fallback.
     else if(/^admin-[a-z0-9-]+$/.test(initial||'') && canRoute(initial)){
       // Restore the requested Admin Work route AFTER session validation and
