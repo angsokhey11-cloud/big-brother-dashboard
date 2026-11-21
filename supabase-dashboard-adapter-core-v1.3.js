@@ -359,6 +359,57 @@
     };
   }
 
+  // Restore Sales Support routes AFTER authentication.  Most Sales Support
+  // modules are independent, permission-checked menu extensions rather than
+  // entries in the legacy Dashboard's built-in route list. Calling the legacy
+  // initial workspace handler for these routes resets the chosen screen.
+  const SALES_SUPPORT_RESTORE={
+    'sales-support-your-stock':['BBYourStock','/big-brother-sales-support/your-stock.html'],
+    'sales-support-your-collection':['BBYourCollection','/big-brother-daily-cash-collection/your-collection.html'],
+    'sales-support-your-invoices':['BBYourInvoices','/invoice-history/your-invoices.html'],
+    'sales-support-your-receivable':['BBYourReceivable','/big-brother-ar/your-receivable.html'],
+    'sales-support-batch-selling-tracker':['BBBatchSellingTracker','/big-brother-batch-selling-tracker/'],
+    'sales-support-add-customer':['BBAddCustomer','/big-brother-sales-support/add-customer.html'],
+    'sales-support-customer-map':['BBCustomerMap','/big-brother-customers-editor/sales-support-customer-map.html']
+  };
+  function restoreSalesSupportRoute(moduleName){
+    if(moduleName==='sales-support-calculator'||moduleName==='sales-support-your-customer'){
+      // The two original Sales Support functions use the existing authenticated
+      // workspace loader, keeping their own module and customer view intact.
+      if(canRoute(moduleName))window.loadWorkspace(moduleName,false);
+      else window.openInitialWorkspace();
+      return true;
+    }
+    const target=SALES_SUPPORT_RESTORE[moduleName];
+    if(!target)return false;
+    const [apiName,path]=target;
+    // Do not reveal the legacy overview while an independent view is loading.
+    const home=document.getElementById('dashboardHome');
+    const workspace=document.getElementById('moduleWorkspace');
+    if(home)home.hidden=true;
+    if(workspace)workspace.hidden=false;
+
+    function reopen(attempt){
+      // Do not reopen the stale route if the user navigated away in the meantime.
+      if(new URLSearchParams(location.search).get('module')!==moduleName)return;
+      const frame=document.getElementById('moduleFrame');
+      const src=String(frame?.getAttribute('src')||'');
+      if(src.includes(path))return; // Another module's restore already succeeded.
+      const moduleApi=window[apiName];
+      if(moduleApi&&typeof moduleApi.open==='function'){
+        // Each extension checks the current user's module permissions itself.
+        moduleApi.open(false);
+        return;
+      }
+      if(attempt<30)setTimeout(()=>reopen(attempt+1),100);
+      else console.error('Sales Support route restore module not loaded:',moduleName);
+    }
+    // Let the extension's own startup restorer run first; avoid duplicate
+    // iframe reloads when it already opened the correct Sales Support screen.
+    setTimeout(()=>reopen(0),130);
+    return true;
+  }
+
   function activateDashboard(){
     installStockAdjustmentMenu();
     installWorkspaceGuard();
@@ -366,6 +417,7 @@
     updateUserUI();
     const initial=new URLSearchParams(location.search).get('module');
     if(initial==='stock-adjustment'&&canRoute('stock-adjustment'))openStockAdjustment(false);
+    else if(restoreSalesSupportRoute(initial)){} // Exact Sales Support route, never Calculator fallback.
     else if(/^admin-[a-z0-9-]+$/.test(initial||'') && canRoute(initial)){
       // Restore the requested Admin Work route AFTER session validation and
       // permission guards are installed, not during DOMContentLoaded.
