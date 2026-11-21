@@ -365,7 +365,20 @@
     updateUserUI();
     const initial=new URLSearchParams(location.search).get('module');
     if(initial==='stock-adjustment'&&canRoute('stock-adjustment'))openStockAdjustment(false);
-    else window.openInitialWorkspace();
+    else if(/^admin-[a-z0-9-]+$/.test(initial||'') && canRoute(initial)){
+      // Restore the requested Admin Work route AFTER session validation and
+      // permission guards are installed, not during DOMContentLoaded.
+      if(initial==='admin-bank-review'){
+        const openBankReview=()=>{
+          const button=document.getElementById('navAdminBankReview');
+          if(button)button.click();
+          else window.openInitialWorkspace();
+        };
+        setTimeout(openBankReview,0);
+      }else{
+        window.loadWorkspace(initial,false);
+      }
+    }else window.openInitialWorkspace();
   }
 
   async function start(){
