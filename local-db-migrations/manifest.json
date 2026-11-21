@@ -154,6 +154,12 @@
       "description": "Qualify salary_month in staff salary save RPC advance lookup; fixes PostgreSQL ambiguous column error; no salary or payment data changed"
     },
     {
+      "id": "20261103_0_restore_stock_trigger_guards_v1",
+      "file": "20261103_0_restore_stock_trigger_guards_v1.sql",
+      "sha256": "4A36C434BACFD02632AB3F7EEB8EEBE34F4CFD52C22225A5A06117DA2098D925",
+      "description": "Guarded Local-only repair of main/source-aware invoice stock early-exit safety checks before Nov3 Direct Sale migration; require verified mutually exclusive triggers; no business record changes"
+    },
+    {
       "id": "20261103_a_direct_sale_warehouse_source_v1",
       "file": "20261103_a_direct_sale_warehouse_source_v1.sql",
       "sha256": "D6CCB7E7152B2B7D869E8F2EFD392292B1D353D1297077A987BFEE8A9EF64438",
