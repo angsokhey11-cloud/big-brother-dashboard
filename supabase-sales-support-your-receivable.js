@@ -59,7 +59,7 @@ function markActive(){
 }
 function persist(){
   try{
-    const u=new URL(location.href);
+    const u=new window.URL(location.href);
     u.searchParams.set('module',ROUTE);
     u.searchParams.set('autoload','1');
     history.replaceState({},'',u.pathname+u.search+u.hash);
