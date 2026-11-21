@@ -38,7 +38,7 @@ function markActive(){
   if(submenu)submenu.classList.add('open');
   if(menuBtn){menuBtn.classList.add('open');menuBtn.setAttribute('aria-expanded','true');const arrow=menuBtn.querySelector('.nav-arrow');if(arrow)arrow.textContent='▲'}
 }
-function persist(){try{const u=new URL(location.href);u.searchParams.set('module',ROUTE);u.searchParams.set('autoload','1');history.replaceState({},'',u.pathname+u.search+u.hash)}catch(_){}}
+function persist(){try{const u=new window.URL(location.href);u.searchParams.set('module',ROUTE);u.searchParams.set('autoload','1');history.replaceState({},'',u.pathname+u.search+u.hash)}catch(_){}}
 function deny(){
   try{document.getElementById('bbAddCustomerToast')?.remove();const el=document.createElement('div');el.id='bbAddCustomerToast';el.textContent='Create permission is required for Add Customer.';el.style.cssText='position:fixed;right:18px;bottom:18px;z-index:1000000;background:#7a271a;color:#fff;padding:11px 14px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.18);font:800 12px Arial';document.body.appendChild(el);setTimeout(()=>el.remove(),2800)}catch(_){}
 }
@@ -46,7 +46,7 @@ function open(updateUrl=true,options=null){
   ensureMenu();if(!canUse()){deny();return false}
   const home=document.getElementById('dashboardHome');const workspace=document.getElementById('moduleWorkspace');const frame=document.getElementById('moduleFrame');
   if(!workspace||!frame)return false;
-  const target=new URL(URL);
+  const target=new window.URL(URL);
   if(options?.mode==='location'&&options?.customerId){
     target.searchParams.set('mode','location');
     target.searchParams.set('customerId',String(options.customerId).trim());
