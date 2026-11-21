@@ -58,6 +58,18 @@ function install(){
    (/bank|transaction|payer/i.test(label)?"bank":/telegram|notification|permission/i.test(label)?"system":/receivable|deposit|cash/i.test(label)?"payments":"staff");
   sections.get(group).appendChild(button);
  }
+ // Telegram Manager is injected by a separate script, sometimes after this one.
+ // Move it into System & Communication without changing its click handler.
+ function moveTelegramManager(){
+  const systemBody=sections.get("system");
+  if(!systemBody)return;
+  const candidates=[...document.querySelectorAll("#adminWorkSubmenu button")];
+  const telegram=candidates.find(b=>b.id==="navAdminTelegramManager"||(/telegram manager/i).test(b.textContent||""));
+  if(telegram&&telegram.parentElement!==systemBody)systemBody.appendChild(telegram);
+ }
+ moveTelegramManager();
+ const observer=new MutationObserver(()=>moveTelegramManager());
+ observer.observe(root,{childList:true,subtree:true});
  root.dataset.bbGrouped="1";
  // Keep the active function visible if the Dashboard opens it from a deep link.
  root.addEventListener("click",event=>{
