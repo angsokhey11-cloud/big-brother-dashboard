@@ -14,7 +14,7 @@ function install(){
  if(!document.getElementById("navAdminBankReview")){
   const bankReview=document.createElement("button");
   bankReview.type="button";bankReview.id="navAdminBankReview";
-  bankReview.textContent="Bank Review";
+  bankReview.innerHTML='<span aria-hidden="true" style="display:inline-flex;align-items:center;justify-content:center;width:18px;min-width:18px;margin-right:8px;vertical-align:middle"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/><circle cx="16" cy="15" r="2"/><path d="m17.5 16.5 2 2"/></svg></span><span>Bank Review</span>';
   bankReview.addEventListener("click",()=>{
    // Reuse the existing, permission-gated Admin Work workspace shell.
    if(typeof window.loadWorkspace!=="function")return;
