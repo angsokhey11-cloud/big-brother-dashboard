@@ -1331,11 +1331,10 @@ body{
     // Telegram Manager must load as an independent admin menu AFTER the
     // original Notification Center and all Dashboard feature integrations.
     html=html.replace('</body>', '<scr'+'ipt src="desktop-telegram-manager-menu-v1.js?v=20261022-workspace-tools1"></scr'+'ipt></body>');
-    // Avoid flashing the legacy Monthly Overview while restoring an Admin
-    // Work deep link. Authentication will release this temporary veil.
-    if(/^admin-[a-z0-9-]+$/.test(new URLSearchParams(location.search).get('module')||'')){
-      html=html.replace('</head>', '<style id="bbAdminRouteBootVeil">#dashboardHome{visibility:hidden!important}</style></head>');
-    }
+    // The legacy source contains the old Dashboard welcome cards. Keep that
+    // home view hidden until the authenticated adapter has selected the
+    // actual destination, regardless of the requested module.
+    html=html.replace('</head>', '<style id="bbDashboardBootVeil">#dashboardHome{visibility:hidden!important}</style></head>');
     // Restore Admin Work routes on Ctrl+R using the legacy shell's own
     // initial routing. Previously it required autoload=1 and omitted newer
     // Admin Work modules, so the Dashboard always opened Home.
