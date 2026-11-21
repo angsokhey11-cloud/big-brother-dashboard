@@ -29,7 +29,6 @@ try {
     throw ('Local Brain database container not running: '+$Container+'. Running: '+($running -join ', '))
   }
   $sql=@'
-\\pset pager off
 BEGIN TRANSACTION READ ONLY;
 SET LOCAL statement_timeout='45s';
 SELECT '01 - REQUIRED TABLES' AS diagnostic;
