@@ -67,7 +67,8 @@
     'admin-request':{module:'admin_work',action:'view'},
     'admin-user-permissions':{module:'admin_work',action:'view',adminOnly:true},
     'admin-bank-register':{module:'admin_work',action:'view',adminOnly:true},
-    'admin-bank-history':{module:'admin_work',action:'view',adminOnly:true}
+    'admin-bank-history':{module:'admin_work',action:'view',adminOnly:true},
+    'admin-bank-review':{module:'admin_work',action:'view',adminOnly:true}
   };
 
   let session=null;
