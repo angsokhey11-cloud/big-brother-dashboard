@@ -18,8 +18,7 @@ function restore(){
   button.click();
   return;
  }
- if(typeof window.loadWorkspace!=="function")return;
- window.loadWorkspace(moduleName,false);
+ // The Dashboard core now restores standard Admin Work routes itself.
  const button=[...submenu.querySelectorAll("button")].find(b=>
   (b.getAttribute("onclick")||"").includes("'"+moduleName+"'"));
  const section=button?.closest(".bb-admin-section");
