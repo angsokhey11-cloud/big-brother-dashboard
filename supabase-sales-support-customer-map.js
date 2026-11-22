@@ -39,7 +39,13 @@ function deny(){try{document.getElementById('bbCustomerMapToast')?.remove();cons
 function open(updateUrl=true){
   ensureMenu();if(!canView()){deny();return false}
   const home=document.getElementById('dashboardHome'),workspace=document.getElementById('moduleWorkspace'),frame=document.getElementById('moduleFrame');if(!workspace||!frame)return false;
-  if(home)home.hidden=true;workspace.hidden=false;frame.src=URL;markActive();if(updateUrl!==false)persist();return true;
+  if(home)home.hidden=true;workspace.hidden=false;
+  // Switching away from Your Customer must invalidate the shell's old
+  // iframe route marker and any queued module switch.
+  frame.dataset.bbSwitchToken=String(Number(frame.dataset.bbSwitchToken||0)+1);
+  frame.dataset.module=ROUTE;
+  frame.src=URL;
+  markActive();if(updateUrl!==false)persist();return true;
 }
 function restore(){
   if(restoreDone)return;let route='';try{route=new URLSearchParams(location.search).get('module')||''}catch(_){}
