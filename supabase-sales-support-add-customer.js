@@ -51,7 +51,13 @@ function open(updateUrl=true,options=null){
     target.searchParams.set('mode','location');
     target.searchParams.set('customerId',String(options.customerId).trim());
   }
-  if(home)home.hidden=true;workspace.hidden=false;frame.src=target.href;markActive();if(updateUrl!==false)persist();return true;
+  if(home)home.hidden=true;workspace.hidden=false;
+  // The shell's light-loader checks dataset.module before reusing the iframe.
+  // Keep it in sync so Your Customer always reloads after Add Customer.
+  frame.dataset.bbSwitchToken=String(Number(frame.dataset.bbSwitchToken||0)+1);
+  frame.dataset.module=ROUTE;
+  frame.src=target.href;
+  markActive();if(updateUrl!==false)persist();return true;
 }
 function restore(){
   if(restoreDone)return;let route='';try{route=new URLSearchParams(location.search).get('module')||''}catch(_){}
