@@ -21,6 +21,18 @@ css.textContent=`
 body.bb-sidebar-collapsed #bbSidebarToggle{left:0}
 #bbSidebarToggle:hover{background:#e8f2fc}
 #bbSidebarToggle:focus-visible{outline:3px solid #6ca7eb;outline-offset:2px}
+/* Invoice-only browser sidecar: leave usable space on the right
+   when the menu is collapsed. The iframe shrinks (not the browser),
+   so the generator is left-aligned and the floating browser no longer
+   covers invoice fields. Keep the full-width layout on smaller screens. */
+@media(min-width:1440px){
+ body.bb-sidebar-collapsed #moduleWorkspace:has(#moduleFrame[data-module="invoice"]):not([hidden]){
+  width:calc(100% - 430px)!important;
+  max-width:calc(100% - 430px)!important;
+  margin-left:0!important;
+  margin-right:auto!important;
+ }
+}
 @media(max-width:720px){#bbSidebarToggle{display:none!important}}
 `;
 document.head.appendChild(css);
