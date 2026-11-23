@@ -5,7 +5,7 @@ const fs=require('node:fs');
 const source=fs.readFileSync('index.html','utf8');
 const legacy=fs.readFileSync('legacy-dashboard-v3.40.html','utf8');
 const invoiceRoot='https://angsokhey11-cloud.github.io/big-brother-invoice-generator/';
-const version='20261027-bank-equivalent-reset1';
+const version='20261123-batch-restore-sidecar1';
 const required=[
  ['latest desktop URL',source.includes(invoiceRoot+'?embed=1&v='+version)],
  ['legacy Invoice URL matched',legacy.includes('invoice: "'+invoiceRoot+'?embed=1&v=20260924-cashbank1"')],
@@ -18,7 +18,7 @@ const required=[
  ['staff pilot flag removed',source.includes("else next.searchParams.delete('bbMultiBankPilot');")],
  ['iframe URL version checked',source.includes("new URL(frame.src).searchParams.get('v')")],
  ['iframe pilot status checked',source.includes("new URL(frame.src).searchParams.get('bbMultiBankPilot')")],
- ['fresh legacy source requested',source.includes('legacy-dashboard-v3.40.html?v=20261027-invoice-admin-route1')],
+ ['fresh legacy source requested',source.includes('legacy-dashboard-v3.40.html?v=20261122-nav-return1')],
 ];
 for(const [name,valid] of required){assert.ok(valid,name);console.log('PASS '+name)}
 const code=source.match(/<script>\s*([\s\S]*?)<\/script>/i)?.[1];
