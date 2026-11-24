@@ -73,6 +73,12 @@ final class CloudAuth {
         args.put("p_invoice_id", invoiceId);
         return readInvoiceRpc("bb_invoice_history_mobile_detail_by_id", args);
     }
+    synchronized JSONObject digitalOriginalStatus(String invoiceId) throws Exception {
+        if (invoiceId == null || invoiceId.trim().isEmpty()) throw new IOException("Invoice ID required");
+        JSONObject args = new JSONObject();
+        args.put("p_invoice_id", invoiceId);
+        return readInvoiceRpc("bb_real_invoice_digital_status", args);
+    }
     private JSONObject readInvoiceRpc(String fn, JSONObject args) throws Exception {
         JSONObject current = profile();
         JSONObject user = current.optJSONObject("user");

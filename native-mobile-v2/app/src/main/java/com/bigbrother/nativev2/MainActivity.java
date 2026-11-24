@@ -227,6 +227,7 @@ public final class MainActivity extends Activity {
             catch(Exception e){pendingExport=null;exportBusy=false;Toast.makeText(this,"Save picker unavailable",Toast.LENGTH_LONG).show();}
         });
         button("Share PDF (Telegram)").setOnClickListener(v -> shareInvoice(invoice));
+        addDigitalOriginalStatus(invoice);
         button("Share invoice images (PNG)").setOnClickListener(v -> shareImages(invoice));
         button("Print A4 / PDF").setOnClickListener(v -> {
             if(exportBusy)return;
@@ -235,6 +236,42 @@ public final class MainActivity extends Activity {
             try{pm.print("BIG BROTHER Invoice "+safeInvoiceName(invoice),new InvoiceNativeActions.Adapter(this,invoice),
                 new android.print.PrintAttributes.Builder().setMediaSize(android.print.PrintAttributes.MediaSize.ISO_A4).setColorMode(android.print.PrintAttributes.COLOR_MODE_COLOR).build());}
             catch(Exception e){Toast.makeText(this,"Printing unavailable",Toast.LENGTH_LONG).show();}
+        });
+    }
+    private void addDigitalOriginalStatus(JSONObject invoice){
+        String id=InvoicePdf.value(invoice,"invoiceId");
+        TextView state=label("Digital Original: checking server status…",14,Color.DKGRAY);
+        Button refresh=button("Refresh Digital Original status");
+        final LinearLayout page=root;
+        if(id.isEmpty()){state.setText("Digital Original: invoice identity unavailable");refresh.setEnabled(false);return;}
+        refresh.setOnClickListener(v -> checkDigitalOriginal(id,invoice,page,state,refresh));
+        checkDigitalOriginal(id,invoice,page,state,refresh);
+    }
+    private void checkDigitalOriginal(String id,JSONObject invoice,LinearLayout page,TextView state,Button refresh){
+        refresh.setEnabled(false);
+        state.setText("Digital Original: checking server status…");
+        worker.execute(() -> {
+            String result;
+            try {
+                JSONObject data=auth.digitalOriginalStatus(id);
+                if(!(data.opt("hasImage") instanceof Boolean)||!(data.opt("eligible") instanceof Boolean))
+                    throw new IllegalStateException("Incomplete original status");
+                if(Boolean.TRUE.equals(data.opt("hasImage"))){
+                    result="history_capture".equals(data.optString("source"))
+                        ?"Digital Original already saved"
+                        :"Invoice picture already uploaded — do not overwrite";
+                }else if(Boolean.TRUE.equals(data.opt("eligible"))){
+                    boolean credit="credit".equalsIgnoreCase(InvoicePdf.value(invoice,"paymentMethod").trim());
+                    boolean outstanding=false;
+                    try{outstanding=new java.math.BigDecimal(InvoicePdf.value(invoice,"outstanding")).signum()>0;}
+                    catch(NumberFormatException ignored){}
+                    result=credit&&outstanding
+                        ?"Digital Original eligible — registration disabled in development build"
+                        :"Invoice status changed — reopen the latest invoice";
+                }else result="Digital Original not eligible";
+            }catch(Exception e){result="Digital Original status unavailable. Retry or reopen invoice.";}
+            final String text=result;
+            runOnUiThread(() -> {if(!destroyed&&root==page){state.setText(text);refresh.setEnabled(true);}});
         });
     }
     private String safeInvoiceName(JSONObject invoice){
