@@ -166,10 +166,11 @@ def stage():
             s = replace_once(s, "    private WebView browser;", "    private WebView browser;\n    private BundledUpdate bundledUpdate;")
             s = replace_once(s, "        nativePrint = BBNativePrint.install(this,browser);", "        nativePrint = BBNativePrint.install(this,browser);\n        bundledUpdate = new BundledUpdate(this);\n        bundledUpdate.attach(browser);")
             s = replace_once(s, "        super.onPause();", "        if(bundledUpdate!=null)bundledUpdate.pause();\n        super.onPause();")
-            s = replace_once(s, "        super.onResume();", "        super.onResume();\n        if(bundledUpdate!=null){bundledUpdate.resume();reconnectHandler.postDelayed(()->{if(bundledUpdate!=null)bundledUpdate.check();},1500);}")
+            s = replace_once(s, "        super.onResume();", "        super.onResume();\n        if(bundledUpdate!=null){bundledUpdate.resume();reconnectHandler.postDelayed(()->{if(bundledUpdate!=null)bundledUpdate.check();},250);}")
             s = replace_once(s, "        if(nativePrint!=null)nativePrint.destroy();", "        if(bundledUpdate!=null){bundledUpdate.destroy();bundledUpdate=null;}\n        if(nativePrint!=null)nativePrint.destroy();")
         p.write_text(s, encoding="utf-8")
     shutil.copy2(ROOT / "android/BundledUpdate.java", java / "BundledUpdate.java")
+    shutil.copy2(ROOT / "android/UpdateTruckView.java", java / "UpdateTruckView.java")
     paths=app/"src/main/res/xml/bb_camera_paths.xml"
     paths.write_text(replace_once(paths.read_text(encoding="utf-8"), "</paths>", '    <cache-path name="apk_updates" path="apk_updates/"/>\n</paths>'), encoding="utf-8")
     p=app/"build.gradle"

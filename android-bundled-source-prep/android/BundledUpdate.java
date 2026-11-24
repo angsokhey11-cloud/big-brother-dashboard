@@ -26,7 +26,10 @@ final class BundledUpdate {
     static final String TAG="bundled-online-dev";
     static final long LIMIT=150L*1024*1024;
     final Activity a;
-    private AlertDialog settingsDialog,offerDialog;private boolean foreground;private long promptedVersion;private String actionText="Check";
+    private AlertDialog settingsDialog,offerDialog,progressDialog,installDialog;
+    private TextView progressTitle,progressDetail;private ProgressBar progressBar;
+    private boolean firstCheck=true,installPromptPending=false;
+    private final android.os.Handler ui=new android.os.Handler(android.os.Looper.getMainLooper());private boolean foreground;private long promptedVersion;private String actionText="Check";
     private androidx.webkit.JavaScriptReplyProxy settingsReply;
     final ExecutorService worker=Executors.newSingleThreadExecutor();
     private boolean dead,busy;private long lastCheck=-60000;private Offer offer;private File ready;
@@ -54,8 +57,8 @@ final class BundledUpdate {
                 a.runOnUiThread(()->{if(dead)return;settingsReply=reply;sendStatus();if("open".equals(cmd)&&foreground)openSettings();});
             });
     }
-    void resume(){foreground=true;maybePrompt();}
-    void pause(){foreground=false;if(offerDialog!=null){offerDialog.dismiss();offerDialog=null;}}
+    void resume(){foreground=true;maybePrompt();maybeInstallPrompt();}
+    void pause(){foreground=false;closeProgress();if(offerDialog!=null){offerDialog.dismiss();offerDialog=null;}if(installDialog!=null){installDialog.dismiss();installDialog=null;}}
     private void sendStatus(){
         if(settingsReply==null)return;
         try{JSONObject o=new JSONObject();o.put("version",currentName);o.put("status",lastStatus);o.put("busy",busy);settingsReply.postMessage(o.toString());}
@@ -87,19 +90,69 @@ final class BundledUpdate {
         offerDialog.setOnDismissListener(d->offerDialog=null);
         offerDialog.show();
     }
+    private int dp(float n){return Math.round(n*a.getResources().getDisplayMetrics().density);}
+    private TextView line(String text,int size,int color,boolean bold){
+        TextView v=new TextView(a);v.setText(text);v.setTextSize(size);v.setTextColor(color);
+        v.setGravity(android.view.Gravity.CENTER);if(bold)v.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);return v;
+    }
+    private void openProgress(String title,String detail,boolean download){
+        if(dead||!foreground||a.isFinishing()||a.isDestroyed())return;
+        closeProgress();
+        LinearLayout content=new LinearLayout(a);content.setOrientation(LinearLayout.VERTICAL);
+        content.setGravity(android.view.Gravity.CENTER_HORIZONTAL);content.setPadding(dp(24),dp(24),dp(24),dp(12));
+        content.addView(line("BIG BROTHER",24,0xff173b70,true));
+        content.addView(line("M O B I L E",13,0xff52718e,true));
+        content.addView(new UpdateTruckView(a),new LinearLayout.LayoutParams(-1,dp(155)));
+        progressTitle=line(title,16,0xff173b70,true);content.addView(progressTitle);
+        progressDetail=line(detail,12,0xff52718e,false);content.addView(progressDetail);
+        progressBar=new ProgressBar(a,null,android.R.attr.progressBarStyleHorizontal);progressBar.setMax(100);progressBar.setIndeterminate(!download);
+        LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,dp(6));p.topMargin=dp(16);p.bottomMargin=dp(16);content.addView(progressBar,p);
+        content.addView(line("Fast. Reliable. Always Moving.",11,0xff52718e,false));
+        progressDialog=new AlertDialog.Builder(a).setView(content).setNegativeButton("Continue working",null).create();
+        final AlertDialog own=progressDialog;
+        own.setOnDismissListener(d->{if(progressDialog==own){progressDialog=null;progressTitle=null;progressDetail=null;progressBar=null;}});
+        own.show();
+        if(!download)ui.postDelayed(()->{if(progressDialog==own)closeProgress();},7000);
+    }
+    private void progress(String title,String detail,int percent){
+        ui.post(()->{if(dead||progressDialog==null)return;
+            progressTitle.setText(title);progressDetail.setText(detail);
+            progressBar.setIndeterminate(percent<0);if(percent>=0)progressBar.setProgress(percent);
+        });
+    }
+    private void closeProgress(){if(progressDialog!=null){progressDialog.dismiss();progressDialog=null;progressTitle=null;progressDetail=null;progressBar=null;}}
+    private void maybeInstallPrompt(){
+        if(!installPromptPending||!foreground||dead||busy||ready==null||!ready.isFile()||a.isFinishing()||a.isDestroyed())return;
+        installPromptPending=false;askInstall();
+    }
+    private void askInstall(){
+        if(!foreground||dead||installDialog!=null)return;
+        installDialog=new AlertDialog.Builder(a).setTitle("Update ready to install")
+            .setMessage("Your new BIG BROTHER Mobile version has been downloaded and verified. Save or complete any unfinished work before installing. Android will close the app during installation.")
+            .setNegativeButton("Later",null).setPositiveButton("Install Update",(d,w)->install()).create();
+        installDialog.setOnDismissListener(d->installDialog=null);installDialog.show();
+    }
     void check(){check(false);}
     private void check(boolean manual){
         if(dead||busy||offer!=null||(!manual&&SystemClock.elapsedRealtime()-lastCheck<60000))return;
         lastCheck=SystemClock.elapsedRealtime();busy=true;
+        if(firstCheck||manual)openProgress("Checking for updates…","Finding the latest application version",false);
+        firstCheck=false;
         show(currentName+" · Checking for updates…","Checking");
         worker.execute(()->{
             Offer result=null;String error=null;
             try{result=checkCatalog();}catch(Exception e){error=e instanceof java.net.SocketTimeoutException?"Connection timed out":e instanceof java.net.UnknownHostException?"Update server unreachable":e instanceof javax.net.ssl.SSLException?"Secure connection failed":e.getMessage();}
             final Offer found=result;final String failure=error;
             a.runOnUiThread(()->{busy=false;if(dead||a.isFinishing()||a.isDestroyed())return;
-                if(found!=null){offer=found;show("V3.0."+(found.version-30000)+" available · "+currentName+" installed","Download");maybePrompt();}
-                else if(failure!=null){show(currentName+" · "+failure,"Retry");}
-                else{show(currentName+" · Up to date","Check");}
+                if(found!=null){closeProgress();offer=found;show("V3.0."+(found.version-30000)+" available · "+currentName+" installed","Download");maybePrompt();}
+                else {
+                    if(failure!=null)show(currentName+" · "+failure,"Retry");else show(currentName+" · Up to date","Check");
+                    if(progressDialog!=null){
+                        final AlertDialog own=progressDialog;
+                        progress(failure==null?"You're up to date!":"Continuing with your installed version…",failure==null?"Your business is on the move":failure,100);
+                        ui.postDelayed(()->{if(progressDialog==own)closeProgress();},850);
+                    }
+                }
             });
         });
     }
@@ -110,19 +163,19 @@ final class BundledUpdate {
         if(dead||busy)return;
         if(offer==null){check(true);return;}
         if(ready!=null&&ready.isFile()){
-            new AlertDialog.Builder(a).setTitle("Install BIG BROTHER update?")
-                .setMessage("Save or complete any unfinished invoice or accounting work first. Android will close the app during installation. Your existing login, cache and settings are retained by an in-place update.")
-                .setNegativeButton("Later",null).setPositiveButton("My work is saved · Install",(d,w)->install()).show();
+            askInstall();
             return;
         }
         busy=true;show("Downloading update… You can keep working.","Downloading");
+        openProgress("Downloading your update…","Preparing the new version",true);
         final Offer selected=offer;
         worker.execute(()->{
             File result=null;try{result=download(selected);}catch(Exception ignored){}
             final File file=result;
             a.runOnUiThread(()->{busy=false;if(dead||a.isDestroyed()||a.isFinishing()){if(file!=null)file.delete();return;}
-                ready=file;show(file==null?"Update download failed · retry":"Update verified · save your work first",file==null?"Retry":"Install");
-                if(foreground&&(settingsDialog==null||!settingsDialog.isShowing()))Toast.makeText(a,file==null?"Update download failed. Retry in Settings.":"Update ready. Install from Mobile Settings when your work is saved.",Toast.LENGTH_LONG).show();
+                closeProgress();ready=file;show(file==null?"Update download failed · retry":"Update verified · save your work first",file==null?"Retry":"Install");
+                if(file!=null){installPromptPending=true;maybeInstallPrompt();}
+                else if(foreground)Toast.makeText(a,"Update download failed. Retry in Settings.",Toast.LENGTH_LONG).show();
             });
         });
     }
@@ -150,7 +203,7 @@ final class BundledUpdate {
             });
         });
     }
-    void destroy(){dead=true;settingsReply=null;if(settingsDialog!=null)settingsDialog.dismiss();if(offerDialog!=null)offerDialog.dismiss();worker.shutdownNow();}
+    void destroy(){dead=true;ui.removeCallbacksAndMessages(null);closeProgress();if(installDialog!=null)installDialog.dismiss();settingsReply=null;if(settingsDialog!=null)settingsDialog.dismiss();if(offerDialog!=null)offerDialog.dismiss();worker.shutdownNow();}
     private long installedVersion()throws Exception{
         PackageInfo p=a.getPackageManager().getPackageInfo(a.getPackageName(),0);
         return Build.VERSION.SDK_INT>=28?p.getLongVersionCode():p.versionCode;
@@ -177,6 +230,7 @@ final class BundledUpdate {
                 release=new JSONObject(out.toString("UTF-8"));
             }
             if(release.optBoolean("draft",true)||!release.optBoolean("prerelease",false)||!TAG.equals(release.optString("tag_name")))throw new IOException("Wrong release channel");
+            progress("Verifying application version…","Comparing available versions",80);
             JSONArray assets=release.getJSONArray("assets");long current=installedVersion();Offer best=null;boolean eligibleName=false;
             Pattern pattern=Pattern.compile("BIG-BROTHER-Online-Bundled-DEV-([0-9]+)\\.apk");
             for(int i=0;i<assets.length();i++){
@@ -205,13 +259,15 @@ final class BundledUpdate {
                     int status=c.getResponseCode();
                     if(status==301||status==302||status==303||status==307||status==308){String next=c.getHeaderField("Location");if(next==null)throw new IOException("Missing redirect");url=new URL(url,next);continue;}
                     if(status!=200||c.getContentLengthLong()>offer.size)throw new IOException("Download unavailable");
-                    MessageDigest sha=MessageDigest.getInstance("SHA-256");long total=0;
+                    MessageDigest sha=MessageDigest.getInstance("SHA-256");long total=0;int lastPercent=-1;
                     try(InputStream in=c.getInputStream();FileOutputStream out=new FileOutputStream(apk)){
                         byte[] bytes=new byte[32768];int n;while((n=in.read(bytes))!=-1){
                             if(Thread.currentThread().isInterrupted())throw new IOException("Cancelled");
                             total+=n;if(total>offer.size||total>LIMIT)throw new IOException("APK too large");sha.update(bytes,0,n);out.write(bytes,0,n);
+                            int percent=(int)(100L*total/offer.size);if(percent!=lastPercent){lastPercent=percent;progress("Downloading your update…",percent+"% downloaded",percent);}
                         }
                     }
+                    progress("Checking update integrity…","Verifying APK checksum and signing certificate",-1);
                     if(total!=offer.size||!hex(sha.digest()).equalsIgnoreCase(offer.digest))throw new IOException("Update checksum mismatch");
                     verify(apk,offer.version);ok=true;return apk;
                 }finally{c.disconnect();}
