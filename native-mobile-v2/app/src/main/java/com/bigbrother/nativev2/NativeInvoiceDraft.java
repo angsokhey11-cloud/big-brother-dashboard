@@ -17,7 +17,7 @@ import java.util.function.BooleanSupplier;
 final class NativeInvoiceDraft {
     private final Activity a;private final LinearLayout root;private final CloudAuth api;
     private final ExecutorService worker;private final BooleanSupplier active;
-    private JSONArray locations,products,batches;
+    private JSONArray locations,products,batches,sellingUnits,warehouse;
     private JSONObject location,batch,customer,prices;
     private boolean busy,customersReady;
     private int generation;
@@ -28,8 +28,8 @@ final class NativeInvoiceDraft {
     private final ArrayList<Line> lines=new ArrayList<>();
     private static final int BLUE=Color.rgb(23,74,145);
     private static class Line{
-        String code,name,unit,currency;BigDecimal qty,price;
-        Line(String c,String n,String u,String curr,BigDecimal q,BigDecimal p){code=c;name=n;unit=u;currency=curr;qty=q;price=p;}
+        String code,name,unit,currency;BigDecimal qty,price,factor,purchased,zero;
+        Line(String c,String n,String u,String curr,BigDecimal q,BigDecimal p,BigDecimal f,BigDecimal purchased,BigDecimal zero){code=c;name=n;unit=u;currency=curr;qty=q;price=p;factor=f;this.purchased=purchased;this.zero=zero;}
     }
     NativeInvoiceDraft(Activity a,LinearLayout root,CloudAuth api,ExecutorService worker,BooleanSupplier active){
         this.a=a;this.root=root;this.api=api;this.worker=worker;this.active=active;
@@ -100,6 +100,7 @@ final class NativeInvoiceDraft {
                 a.runOnUiThread(()->{if(!active.getAsBoolean())return;busy=false;
                     locations=activeRows(data.optJSONArray("locations"),"locationCode","code");
                     products=activeRows(data.optJSONArray("products"),"code");
+                    sellingUnits=data.optJSONArray("sellingUnits");
                     batches=new JSONArray();JSONArray list=open.optJSONArray("batches");
                     ArrayList<String> names=new ArrayList<>();names.add("No Batch / Direct Sale");
                     for(int i=0;i<list.length();i++){
@@ -113,7 +114,7 @@ final class NativeInvoiceDraft {
             }catch(Exception e){a.runOnUiThread(()->{if(active.getAsBoolean()){busy=false;status.setText("Master data unavailable — retry.");}});}
         });
     }
-    private void reset(){generation++;location=null;batch=null;customer=null;prices=null;customersReady=false;lines.clear();customerBox.removeAllViews();productBox.removeAllViews();customerLabel.setText("Customer: not selected");number.setText("Invoice No. —");renderLines();}
+    private void reset(){generation++;location=null;batch=null;customer=null;prices=null;warehouse=null;customersReady=false;lines.clear();customerBox.removeAllViews();productBox.removeAllViews();customerLabel.setText("Customer: not selected");number.setText("Invoice No. —");renderLines();}
     private boolean sameScope(){
         if(location==null)return false;
         int bi=batchPicker.getSelectedItemPosition(),li=locationPicker.getSelectedItemPosition();
@@ -139,9 +140,12 @@ final class NativeInvoiceDraft {
         worker.execute(()->{
             try{
                 JSONObject data=api.generatorCustomers(code),seq=api.generatorNumber(id);
+                JSONObject stock=id.isEmpty()?api.generatorWarehouse():null;
+                if(stock!=null&&(!Boolean.TRUE.equals(stock.opt("success"))||stock.optJSONArray("balances")==null))throw new IllegalStateException("Warehouse balances unavailable");
+                final JSONArray balances=stock==null?null:stock.getJSONArray("balances");
                 JSONArray rows=data.getJSONArray("customers");String no=val(seq,"invoiceNo");
                 if(no.isEmpty())throw new IllegalStateException();
-                a.runOnUiThread(()->{if(!active.getAsBoolean()||request!=generation)return;busy=false;customersReady=true;number.setText("Invoice No. "+no+" (suggested)");
+                a.runOnUiThread(()->{if(!active.getAsBoolean()||request!=generation)return;busy=false;warehouse=balances;customersReady=true;number.setText("Invoice No. "+no+" (suggested)");
                     EditText search=field(customerBox,"Search customer in selected location",InputType.TYPE_CLASS_TEXT);
                     LinearLayout results=column(customerBox);
                     button(customerBox,"Find customer",()->{
@@ -154,7 +158,7 @@ final class NativeInvoiceDraft {
                         }
                         if(shown==0)text(results,"No customers found",14);
                     });
-                    status.setText("Select customer. Stock source and payment submission are not yet enabled.");
+                    status.setText("Select customer. Stock snapshot loaded; payment submission remains disabled.");
                 });
             }catch(Exception e){a.runOnUiThread(()->{if(active.getAsBoolean()&&request==generation){busy=false;status.setText("Could not load customers / invoice number. Apply again.");}});}
         });
@@ -174,13 +178,37 @@ final class NativeInvoiceDraft {
             a.runOnUiThread(()->{if(!active.getAsBoolean()||request!=generation)return;busy=false;prices=fresh;status.setText(prices==null?"Customer prices unavailable. Manual draft prices only.":"Customer prices loaded. Verify price and quantity.");renderProducts();});
         });
     }
+    private static boolean tracked(JSONObject p){
+        return !"SERVICE".equalsIgnoreCase(val(p,"itemType"))&&!"false".equalsIgnoreCase(val(p,"trackStock"));
+    }
+    private BigDecimal[] available(String code){
+        JSONArray rows=batch==null?warehouse:batch.optJSONArray("exactItems");
+        if(rows==null)return null;
+        for(int i=0;i<rows.length();i++){
+            JSONObject row=rows.optJSONObject(i);if(row==null||!code.equals(val(row,"productCode")))continue;
+            String p=batch==null?val(row,"purchasedAvailable"):first(row,"purchasedPendingQty","purchasedRemainingQty");
+            String z=batch==null?val(row,"zeroCostAvailable"):first(row,"zeroCostPendingQty","zeroCostRemainingQty");
+            try{
+                BigDecimal purchased=new BigDecimal(p),zero=new BigDecimal(z);
+                if(purchased.signum()<0||zero.signum()<0)return null;
+                for(Line line:lines)if(code.equals(line.code)){purchased=purchased.subtract(line.purchased);zero=zero.subtract(line.zero);}
+                if(purchased.signum()<0||zero.signum()<0)return null;
+                return new BigDecimal[]{purchased,zero};
+            }catch(Exception e){return null;}
+        }
+        return null;
+    }
+    private String plain(BigDecimal n){return n.stripTrailingZeros().toPlainString();}
+    private BigDecimal quantity(EditText field){return new BigDecimal(field.getText().toString().trim().replace(',','.'));}
     private void renderProducts(){
         productBox.removeAllViews();if(busy||!customersReady||customer==null||!sameScope()){status.setText("Apply batch and select customer first.");return;}
         String q=productQuery.getText().toString().trim().toLowerCase(Locale.ROOT);int shown=0;
         for(int i=0;i<products.length()&&shown<30;i++){
             JSONObject p=products.optJSONObject(i);String code=val(p,"code"),name=val(p,"name");
             if(code.isEmpty()||name.isEmpty()||!(name+" "+code+" "+first(p,"productBarcode","barcode")).toLowerCase(Locale.ROOT).contains(q))continue;
-            shown++;button(productBox,name+" · "+val(p,"unit"),()->editLine(p));
+            BigDecimal[] stock=tracked(p)?available(code):null;
+            if(tracked(p)&&(stock==null||stock[0].add(stock[1]).signum()<=0))continue;
+            shown++;button(productBox,name+" · "+val(p,"unit")+(stock==null?"":" · Available "+plain(stock[0].add(stock[1]))),()->editLine(p));
         }
         if(shown==0)text(productBox,"No matching products",14);
     }
@@ -193,19 +221,70 @@ final class NativeInvoiceDraft {
                 if(from.isEmpty()||to.isEmpty()||selected.isBefore(java.time.LocalDate.parse(from.substring(0,10)))||selected.isAfter(java.time.LocalDate.parse(to.substring(0,10))))throw new IllegalArgumentException();
             }catch(Exception e){status.setText("Selling date must be inside the assigned batch date range.");return;}
         }
+        final boolean tracks=tracked(p);
+        final BigDecimal[] stock=tracks?available(code):null;
+        if(tracks&&(stock==null||stock[0].add(stock[1]).signum()<=0)){status.setText("Exact stock source balances unavailable or exhausted.");return;}
         LinearLayout form=new LinearLayout(a);form.setOrientation(LinearLayout.VERTICAL);form.setPadding(24,12,24,12);
-        text(form,"Base unit: "+unit+" · Draft only; available stock not yet verified",13);
-        EditText qty=field(form,"Quantity",InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL);
-        EditText price=field(form,"Unit price ("+current+")",InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL);
+        text(form,"Base unit: "+unit,13);
+        ArrayList<String> names=new ArrayList<>();ArrayList<BigDecimal> factors=new ArrayList<>();
+        names.add(unit.isEmpty()?"Unit":unit);factors.add(BigDecimal.ONE);
+        if(sellingUnits!=null)for(int i=0;i<sellingUnits.length();i++){
+            JSONObject u=sellingUnits.optJSONObject(i);
+            if(u==null||!"PRODUCT".equalsIgnoreCase(val(u,"targetType"))||!code.equals(val(u,"targetCode")))continue;
+            try{
+                BigDecimal factor=new BigDecimal(val(u,"baseQty"));String n=val(u,"sellingUnitName");
+                if(factor.compareTo(BigDecimal.ONE)>0&&!n.isEmpty()){
+                    names.add(n+" (1 = "+plain(factor)+" "+unit+")");factors.add(factor);
+                }
+            }catch(Exception ignored){}
+        }
+        Spinner units=new Spinner(a);form.addView(units);choices(units,names);
+        EditText qty=field(form,"Selling quantity",InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL);
+        EditText price=field(form,"Price per selected selling unit ("+current+")",InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL);
         JSONObject specific=prices==null?null:prices.optJSONObject(code);
-        if("USD".equals(current)&&specific!=null&&!val(specific,"priceUSD").isEmpty())price.setText(val(specific,"priceUSD"));
+        final String basePrice="USD".equals(current)&&specific!=null?val(specific,"priceUSD"):"";
+        final EditText purchased,zero;
+        if(tracks){
+            text(form,"Stock source in base units · Purchased "+plain(stock[0])+" / Zero-Cost "+plain(stock[1]),13);
+            purchased=field(form,"Purchased base quantity",InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL);
+            zero=field(form,"Zero-Cost base quantity",InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL);
+            purchased.setText("0");zero.setText("0");
+        }else{purchased=null;zero=null;}
+        Runnable allocate=()->{
+            if(!tracks)return;
+            try{
+                BigDecimal q=quantity(qty).multiply(factors.get(units.getSelectedItemPosition()));
+                if(q.signum()<0)return;
+                BigDecimal z=q.min(stock[1]);zero.setText(plain(z));purchased.setText(plain(q.subtract(z)));
+            }catch(Exception ignored){}
+        };
+        units.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
+            public void onNothingSelected(AdapterView<?> p){}
+            public void onItemSelected(AdapterView<?> p,View v,int pos,long id){
+                if(!basePrice.isEmpty())try{price.setText(plain(new BigDecimal(basePrice).multiply(factors.get(pos))));}catch(Exception e){price.setText("");}
+                else price.setText("");
+                allocate.run();
+            }
+        });
+        qty.addTextChangedListener(new android.text.TextWatcher(){
+            public void beforeTextChanged(CharSequence s,int st,int count,int after){}
+            public void onTextChanged(CharSequence s,int st,int before,int count){allocate.run();}
+            public void afterTextChanged(android.text.Editable e){}
+        });
         android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(a).setTitle(val(p,"name")).setView(form).setNegativeButton("Cancel",null).setPositiveButton("Add item",null).create();
         dialog.setOnShowListener(d->dialog.getButton(-1).setOnClickListener(v->{
             try{
                 if(!sameScope()||!current.equals(curr()))throw new IllegalStateException();
-                BigDecimal q=new BigDecimal(qty.getText().toString().trim().replace(',','.')),u=new BigDecimal(price.getText().toString().trim().replace(',','.'));
+                BigDecimal q=quantity(qty),u=quantity(price),factor=factors.get(units.getSelectedItemPosition());
                 if(q.signum()<=0||u.signum()<0||q.scale()>4||u.scale()>4||q.compareTo(new BigDecimal("1000000"))>0||u.compareTo(new BigDecimal("1000000"))>0)throw new IllegalArgumentException();
-                lines.add(new Line(code,val(p,"name"),unit,current,q,u));renderLines();dialog.dismiss();
+                BigDecimal base=q.multiply(factor),pQty=BigDecimal.ZERO,zQty=BigDecimal.ZERO;
+                if(tracks){
+                    pQty=quantity(purchased);zQty=quantity(zero);BigDecimal[] fresh=available(code);
+                    if(fresh==null||pQty.signum()<0||zQty.signum()<0||pQty.compareTo(fresh[0])>0||zQty.compareTo(fresh[1])>0||pQty.add(zQty).compareTo(base)!=0){
+                        purchased.setError("Source total must equal "+plain(base)+" base units and not exceed available stock.");return;
+                    }
+                }
+                lines.add(new Line(code,val(p,"name"),names.get(units.getSelectedItemPosition()),current,q,u,factor,pQty,zQty));renderLines();renderProducts();dialog.dismiss();
             }catch(Exception e){qty.setError("Enter valid positive quantity and nonnegative price (max 4 decimals).");}
         }));dialog.show();
     }
@@ -215,7 +294,8 @@ final class NativeInvoiceDraft {
         for(Line row:new ArrayList<>(lines)){
             BigDecimal amount=row.qty.multiply(row.price);sum=sum.add(amount);
             text(linesBox,row.name+" · "+row.qty.toPlainString()+" "+row.unit+" × "+row.price.toPlainString()+" = "+amount.stripTrailingZeros().toPlainString(),15);
-            button(linesBox,"Remove "+row.name,()->{lines.remove(row);renderLines();});
+            if(row.purchased.add(row.zero).signum()>0)text(linesBox,"Base qty "+plain(row.qty.multiply(row.factor))+" · Purchased "+plain(row.purchased)+" · Zero-Cost "+plain(row.zero),13);
+            button(linesBox,"Remove "+row.name,()->{lines.remove(row);renderLines();renderProducts();});
         }
         total.setText("Draft subtotal: "+curr()+" "+sum.setScale("KHR".equals(curr())?0:2,RoundingMode.HALF_UP).toPlainString()+" · unverified");
     }

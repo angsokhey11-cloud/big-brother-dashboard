@@ -115,6 +115,7 @@ final class CloudAuth {
         return data;
     }
     synchronized JSONObject generatorBootstrap()throws Exception{return generatorRead("bb_sales_invoice_bootstrap",new JSONObject());}
+    synchronized JSONObject generatorWarehouse()throws Exception{return generatorRead("bb_sales_direct_stock_balances",new JSONObject());}
     synchronized JSONObject generatorBatches()throws Exception{return generatorRead("bb_sales_open_batches",new JSONObject());}
     synchronized JSONObject generatorCustomers(String code)throws Exception{
         return generatorRead("bb_sales_customers_by_location",new JSONObject().put("p_location_code",code));
