@@ -4,8 +4,14 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import org.json.*;
 
-/** Exact-product cash/credit draft contract. No network writes. */
+/** Development invoice contract preview. No network writes. */
 final class InvoiceDraftPayload {
+    static String endpoint(JSONObject bundle)throws JSONException{
+        JSONObject invoice=bundle.getJSONObject("p_invoice"),payment=bundle.optJSONObject("p_payment");
+        JSONArray sources=payment==null?null:payment.optJSONArray("settlement_sources");
+        if(sources!=null&&sources.length()>1)return "bb_sales_save_invoice_multi_bank_v1";
+        return "Cash + Bank".equals(invoice.getString("paymentMethod"))?"bb_sales_save_invoice_split_payment":"bb_sales_save_invoice_bundle";
+    }
     static LocalDate due(LocalDate sale,JSONObject customer){
         String type=customer.optString("creditTermType","DAYS").toUpperCase(java.util.Locale.ROOT);
         int value=customer.optInt("creditTermValue",4);
@@ -26,21 +32,31 @@ final class InvoiceDraftPayload {
             .put("sellingUnitPrice",price).put("baseQty",baseQty).put("baseUnit",baseUnit);
         return item;
     }
-    static JSONObject bundle(String id,String no,String sale,String due,String batch,String location,String customerId,String customer,String staffId,String salesperson,String method,String currency,BigDecimal rate,DraftPayment.Totals t,JSONArray items)throws JSONException{
-        if(!java.util.Arrays.asList("Cash","Credit","Partially Paid in Cash").contains(method))throw new IllegalArgumentException("Bank payload migration pending.");
+    static JSONObject bundle(String id,String no,String sale,String due,String batch,String location,String customerId,String customer,String staffId,String salesperson,String method,String currency,BigDecimal rate,DraftPayment.Totals t,JSONArray items,JSONObject registered,String settlementRequestId)throws JSONException{
+        boolean bank=java.util.Arrays.asList("Bank","Partially Paid in Bank","Cash + Bank").contains(method);
+        boolean split="Cash + Bank".equals(method);
+        if(!bank&&!java.util.Arrays.asList("Cash","Credit","Partially Paid in Cash").contains(method))throw new IllegalArgumentException("Unsupported method.");
+        if(bank&&registered==null)throw new IllegalArgumentException("Select registered bank transfer.");
+        JSONArray sources=bank?registered.getJSONArray("sources"):new JSONArray();
+        boolean multi=sources.length()>1;
+        if(multi&&(split||settlementRequestId.isEmpty()))throw new IllegalArgumentException("Invalid multi-bank pilot preview.");
+        String transaction=bank?registered.getString("transactionId"):"",receivingBank=bank?registered.getString("bankName"):"";
         if(id.isEmpty()||staffId.isEmpty()||salesperson.isEmpty()||customerId.isEmpty()||items.length()==0)throw new IllegalArgumentException("Required invoice identity missing.");
         JSONObject invoice=new JSONObject().put("invoiceId",id).put("invoiceNo",no).put("invoiceDate",sale).put("dueDate",due)
             .put("batchNumber",batch).put("locationCode",location).put("customerId",customerId).put("customer",customer)
             .put("shippingTo","").put("salesperson",salesperson).put("salespersonStaffId",staffId).put("paymentMethod",method)
-            .put("paymentBank","").put("transactionId","").put("bankReference","").put("currency",currency).put("exchangeRate",rate)
+            .put("paymentBank",receivingBank).put("transactionId",transaction).put("bankReference",transaction).put("currency",currency).put("exchangeRate",rate)
             .put("subtotal",t.subtotal).put("discount",t.discount).put("grandTotal",t.grand).put("amountPaid",t.paid)
             .put("creditAmount",t.outstanding).put("outstanding",t.outstanding).put("change",BigDecimal.ZERO)
             .put("status",t.outstanding.signum()>0?(t.paid.signum()>0?"Processing":"Unpaid"):"Paid").put("note","").put("items",items);
+        if(split)invoice.put("splitCashAmount",t.cash).put("splitBankAmount",t.bank);
         JSONObject payment=null;
         if(t.paid.signum()>0)payment=new JSONObject().put("invoiceId",id).put("invoiceNo",no).put("paymentDate",sale)
-            .put("customer",customer).put("locationCode",location).put("salesperson",salesperson).put("paymentMethod","Cash")
-            .put("bankPayment","").put("transactionId","").put("bankReference","").put("currency",currency).put("exchangeRate",rate)
+            .put("customer",customer).put("locationCode",location).put("salesperson",salesperson).put("paymentMethod",split?"Cash + Bank":bank?"Bank":"Cash")
+            .put("bankPayment",receivingBank).put("transactionId",transaction).put("bankReference",split?transaction:"").put("currency",currency).put("exchangeRate",rate)
             .put("amount",t.paid).put("note","Initial invoice payment");
+        if(payment!=null&&split)payment.put("cashAmount",t.cash).put("bankAmount",t.bank).put("note","Initial split invoice payment");
+        if(payment!=null&&multi)payment.put("settlement_sources",sources).put("settlement_request_id",settlementRequestId);
         return new JSONObject().put("p_invoice",invoice).put("p_payment",payment==null?JSONObject.NULL:payment);
     }
 }

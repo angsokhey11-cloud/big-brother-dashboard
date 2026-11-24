@@ -24,7 +24,7 @@ final class NativeInvoiceDraft {
     private TextView status,customerLabel,total;
     private EditText number;
     private TextView preflightResult,recoveryStatus,duePreview;
-    private String draftId="";
+    private String draftId="",settlementRequestId="";
     private EditText dueOverride;
     private boolean recoveryChecking;
     private boolean checkingDraft;
@@ -106,7 +106,7 @@ final class NativeInvoiceDraft {
         paymentPanel();
         preflightResult=text(root,"Read-only checks; no invoice will be submitted.",14);
         button(root,"Validate draft against server",this::preflight);
-        button(root,"Prepare cash / credit payload preview",this::previewPayload);
+        button(root,"Prepare invoice payload preview",this::previewPayload);
         recoveryStatus=text(root,"Recovery journal: not checked",14);
         button(root,"Check previous invoice save",this::checkRecovery);
         checkRecovery();
@@ -138,7 +138,7 @@ final class NativeInvoiceDraft {
             }catch(Exception e){a.runOnUiThread(()->{if(active.getAsBoolean()){busy=false;status.setText("Master data unavailable — retry.");}});}
         });
     }
-    private void reset(){generation++;draftId="";dueOverride.setText("");location=null;batch=null;customer=null;prices=null;warehouse=null;customersReady=false;lines.clear();customerBox.removeAllViews();productBox.removeAllViews();customerLabel.setText("Customer: not selected");number.setText("");if(bankDraft!=null)bankDraft.customer("");clearPayment();renderLines();}
+    private void reset(){generation++;draftId="";settlementRequestId="";dueOverride.setText("");location=null;batch=null;customer=null;prices=null;warehouse=null;customersReady=false;lines.clear();customerBox.removeAllViews();productBox.removeAllViews();customerLabel.setText("Customer: not selected");number.setText("");if(bankDraft!=null)bankDraft.customer("");clearPayment();renderLines();}
     private boolean sameScope(){
         if(location==null)return false;
         int bi=batchPicker.getSelectedItemPosition(),li=locationPicker.getSelectedItemPosition();
@@ -456,7 +456,7 @@ final class NativeInvoiceDraft {
             String due=dueDate(),no=invoiceNumber();
             BigDecimal rate=DraftPayment.amount(rateInput.getText().toString());
             if(rate.compareTo(BigDecimal.ONE)<=0)throw new IllegalArgumentException("Enter daily exchange rate.");
-            if(!java.util.Arrays.asList("Cash","Credit","Partially Paid in Cash").contains(method))throw new IllegalArgumentException("Bank payload not yet supported.");
+
             String staffId=batch==null?val(location,"salespersonStaffId"):val(batch,"salesmanStaffId");
             String salesperson=batch==null?first(location,"salespersonName","salesperson"):val(batch,"salesmanName");
             BigDecimal subtotal=BigDecimal.ZERO;JSONArray items=new JSONArray();
@@ -467,12 +467,17 @@ final class NativeInvoiceDraft {
             }
             DraftPayment.Totals t=DraftPayment.calculate(subtotal,cur,discountMode.getSelectedItemPosition()==1,
                 DraftPayment.amount(discountInput.getText().toString()),method,
-                "Partially Paid in Cash".equals(method)?DraftPayment.amount(partialInput.getText().toString()):BigDecimal.ZERO,BigDecimal.ZERO,BigDecimal.ZERO);
+                method.startsWith("Partially")?DraftPayment.amount(partialInput.getText().toString()):BigDecimal.ZERO,
+                "Cash + Bank".equals(method)?DraftPayment.amount(cashInput.getText().toString()):BigDecimal.ZERO,
+                "Cash + Bank".equals(method)?DraftPayment.amount(bankInput.getText().toString()):BigDecimal.ZERO);
             if(draftId.isEmpty())draftId="BB-"+java.time.LocalDateTime.now(java.time.ZoneId.of("Asia/Phnom_Penh")).format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"))+"-"+java.util.UUID.randomUUID().toString();
-            JSONObject payload=InvoiceDraftPayload.bundle(draftId,no,sale,due,batch==null?"":val(batch,"batchId"),first(location,"locationCode","code"),val(customer,"customerId"),val(customer,"name"),staffId,salesperson,method,cur,rate,t,items);
-            String fingerprint=InvoiceSaveJournal.digest(payload.toString());
+            if(settlementRequestId.isEmpty())settlementRequestId=java.util.UUID.randomUUID().toString();
+            JSONObject registered=t.bank.signum()>0?bankDraft.capturedSelection(val(customer,"customerId"),sale,cur,method,rate,t.bank):null;
+            JSONObject payload=InvoiceDraftPayload.bundle(draftId,no,sale,due,batch==null?"":val(batch,"batchId"),first(location,"locationCode","code"),val(customer,"customerId"),val(customer,"name"),staffId,salesperson,method,cur,rate,t,items,registered,settlementRequestId);
+            String endpoint=InvoiceDraftPayload.endpoint(payload);
+            String fingerprint=InvoiceSaveJournal.digest(endpoint+"\n"+payload.toString());
             new android.app.AlertDialog.Builder(a).setTitle("Development payload preview")
-                .setMessage("Invoice "+no+"\nCustomer: "+val(customer,"name")+"\nDue: "+due+"\nItems: "+items.length()+"\nGrand total: "+money(t.grand,cur)+"\nPaid: "+money(t.paid,cur)+"\nOutstanding: "+money(t.outstanding,cur)+"\nDraft ID: "+draftId+"\nPayload SHA-256: "+fingerprint.substring(0,16)+"…\nNo request submitted. No recovery record created.")
+                .setMessage("Invoice "+no+"\nCustomer: "+val(customer,"name")+"\nDue: "+due+"\nItems: "+items.length()+"\nGrand total: "+money(t.grand,cur)+"\nPaid: "+money(t.paid,cur)+"\nOutstanding: "+money(t.outstanding,cur)+"\nDraft ID: "+draftId+"\nEndpoint: "+endpoint+"\nPayload SHA-256: "+fingerprint.substring(0,16)+"…\nNo request submitted. No recovery record created.")
                 .setPositiveButton("Close",null).show();
         }catch(Exception e){preflightResult.setText("Payload preview blocked: "+(e instanceof IllegalArgumentException?e.getMessage():"Invalid invoice data."));}
     }

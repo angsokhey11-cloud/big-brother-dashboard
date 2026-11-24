@@ -21,6 +21,11 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+      - name: Test atomic save recovery with fake transport
+        run: |
+          mkdir -p "$RUNNER_TEMP/bb-recovery-test"
+          javac -d "$RUNNER_TEMP/bb-recovery-test" native-mobile-v2/app/src/main/java/com/bigbrother/nativev2/InvoiceSaveCoordinator.java native-mobile-v2/tests/InvoiceSaveCoordinatorTest.java
+          java -cp "$RUNNER_TEMP/bb-recovery-test" com.bigbrother.nativev2.InvoiceSaveCoordinatorTest
       - uses: android-actions/setup-android@v4
       - run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
       - uses: gradle/actions/setup-gradle@v4

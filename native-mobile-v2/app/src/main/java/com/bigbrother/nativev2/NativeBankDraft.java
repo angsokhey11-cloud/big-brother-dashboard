@@ -36,7 +36,7 @@ final class NativeBankDraft {
             date=r.optString("received_date").trim();
             if(date.length()>=10)date=date.substring(0,10);
             LocalDate.parse(date);
-            bank=r.optString("bank_name",r.optString("bank","Bank"));
+            bank=r.optString("bank_name",r.optString("bank","")).trim();
             remaining=new BigDecimal(r.getString("remaining_amount"));
             String raw=InvoicePdf.value(r,"approved_exchange_rate");
             approved=raw.isEmpty()?BigDecimal.ZERO:new BigDecimal(raw);
@@ -145,6 +145,25 @@ final class NativeBankDraft {
                 selected.put(row.id,value);dialog.dismiss();render();
             }catch(Exception e){amount.setError("Enter a positive amount within the available balance.");}
         }));dialog.show();
+    }
+    /** Immutable snapshot for preview. Not a debit authorization. */
+    JSONObject capturedSelection(String cid,String sale,String cur,String paymentMethod,BigDecimal fx,BigDecimal expected)throws JSONException{
+        if(!synced||!customer.equals(cid)||!saleDate.equals(sale)||!currency.equals(cur)||!method.equals(paymentMethod)||rate.compareTo(fx)!=0||planned.compareTo(expected)!=0||expected.signum()<=0||selected.isEmpty())
+            throw new IllegalArgumentException("Sync and select registered bank balance for this invoice.");
+        if(selected.size()>1&&(!multiAllowed()||selected.size()>30))throw new IllegalArgumentException("Multi-bank preview is limited to the admin pilot.");
+        JSONArray sources=new JSONArray();BigDecimal total=BigDecimal.ZERO;
+        String firstId="",firstBank="",actualCurrency="";BigDecimal actual=BigDecimal.ZERO;
+        for(Row row:rows){
+            BigDecimal amount=selected.get(row.id);if(amount==null)continue;
+            if(!compatible(row)||amount.signum()<=0||amount.compareTo(row.remaining)>0||row.bank.isEmpty()||"OTHER".equalsIgnoreCase(row.bank))throw new IllegalArgumentException("Registered transfer or receiving bank invalid.");
+            if(selected.size()>1&&!row.currency.equals(cur))throw new IllegalArgumentException("Multi-bank must use the invoice currency.");
+            BigDecimal equiv=equivalent(row,amount);total=total.add(equiv);
+            if(firstId.isEmpty()){firstId=row.id;firstBank=row.bank;actualCurrency=row.currency;actual=amount;}
+            sources.put(new JSONObject().put("kind","BANK_REGISTER").put("source_id",row.id).put("source_currency",row.currency)
+                .put("source_amount",amount).put("invoice_amount",DraftPayment.round(equiv,cur)));
+        }
+        if(sources.length()!=selected.size()||DraftPayment.round(total,cur).compareTo(expected)!=0)throw new IllegalArgumentException("Selected bank equivalent must match planned payment.");
+        return new JSONObject().put("transactionId",firstId).put("bankName",firstBank).put("actualCurrency",actualCurrency).put("actualAmount",actual).put("sources",sources);
     }
     private void validateSingle(){
         if(validating||!synced||selected.size()!=1||planned.signum()<=0||rate.compareTo(BigDecimal.ONE)<=0)return;
