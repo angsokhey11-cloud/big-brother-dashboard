@@ -81,6 +81,12 @@ final class CloudAuth {
     }
     private JSONObject readInvoiceRpc(String fn, JSONObject args) throws Exception {
         JSONObject current = profile();
+        if ("online".equals(BuildConfig.FLAVOR)) {
+            if (!NativeRoutes.allowed(current,"history","canView")) throw new IOException("Invoice History route permission denied");
+            JSONObject data = new JSONObject(post("/rest/v1/rpc/" + fn, args, accessToken));
+            if (Boolean.FALSE.equals(data.opt("success"))) throw new IOException("Invoice History request failed");
+            return data;
+        }
         JSONObject user = current.optJSONObject("user");
         boolean allowed = user != null && Boolean.TRUE.equals(user.opt("isAdmin"));
         if (!allowed) {
@@ -100,6 +106,27 @@ final class CloudAuth {
         JSONObject data = new JSONObject(post("/rest/v1/rpc/" + fn, args, accessToken));
         if (Boolean.FALSE.equals(data.opt("success"))) throw new IOException("Invoice History request failed");
         return data;
+    }
+    synchronized JSONObject dashboardOverview() throws Exception {
+        JSONObject current=profile();
+        if(!"online".equals(BuildConfig.FLAVOR))throw new IOException("Online dashboard only");
+        JSONObject args=new JSONObject();
+        String fn="bb_mobile_user_overview";
+        if(NativeRoutes.admin(current)){
+            java.time.LocalDate d=java.time.LocalDate.now(java.time.ZoneId.of("Asia/Phnom_Penh"));
+            args.put("p_year",d.getYear());args.put("p_month",d.getMonthValue());
+            fn="bb_dashboard_monthly_overview";
+        }
+        JSONObject data=new JSONObject(post("/rest/v1/rpc/"+fn,args,accessToken));
+        if(Boolean.FALSE.equals(data.opt("success")))throw new IOException("Overview unavailable");
+        return data;
+    }
+    synchronized JSONObject myPayments() throws Exception {
+        JSONObject current=profile();
+        if(!"online".equals(BuildConfig.FLAVOR)||NativeRoutes.admin(current))throw new IOException("Staff overview only");
+        JSONObject args=new JSONObject();
+        args.put("p_from",JSONObject.NULL);args.put("p_to",JSONObject.NULL);args.put("p_salary_month",JSONObject.NULL);
+        return new JSONObject(post("/rest/v1/rpc/bb_staff_relation_my_payments",args,accessToken));
     }
     synchronized void signOut() throws Exception {
         try { if (accessToken != null) post("/auth/v1/logout", new JSONObject(), accessToken); }

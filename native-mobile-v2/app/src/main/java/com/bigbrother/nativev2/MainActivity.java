@@ -163,6 +163,7 @@ public final class MainActivity extends Activity {
         });
     }
     private void showProfile(JSONObject profile) {
+        if ("online".equals(BuildConfig.FLAVOR)) { showNativeHome(profile); return; }
         screen();
         label("Permission profile loaded",20,Color.rgb(23,74,145));
         label("Available modules — Invoice History read-only preview",14,Color.DKGRAY);
@@ -187,6 +188,95 @@ public final class MainActivity extends Activity {
             worker.execute(() -> {
                 try { auth.signOut(); } catch (Exception ignored) {}
                 runOnUiThread(() -> { if (!destroyed) showLogin(); });
+            });
+        });
+    }
+    private JSONObject overviewSnapshot,paymentSnapshot;
+    private boolean overviewLoading;
+    private static final int NAVY=Color.rgb(23,74,145), INK=Color.rgb(23,40,65), PALE=Color.rgb(240,245,251);
+    private void showNativeHome(JSONObject profile){
+        screen();
+        root.setBackgroundColor(PALE);root.setPadding(dp(14),dp(42),dp(14),dp(24));
+        label("Welcome, "+NativeRoutes.name(profile)+"!",23,NAVY);
+        JSONArray locations=profile.optJSONArray("locations");
+        String loc=NativeRoutes.admin(profile)?"All Locations":(locations==null||locations.length()==0?"No assigned location":locations.length()+" assigned location(s)");
+        if(!NativeRoutes.admin(profile)&&locations!=null&&locations.length()==1&&locations.optJSONObject(0)!=null)
+            loc=locations.optJSONObject(0).optString("locationName",loc);
+        label(loc+"  ·  "+java.time.LocalDate.now(java.time.ZoneId.of("Asia/Phnom_Penh")).format(java.time.format.DateTimeFormatter.ofPattern("dd-MMM-yyyy",java.util.Locale.US)),13,INK);
+        label(NativeRoutes.admin(profile)?"Overview":"My Overview",20,NAVY);
+        LinearLayout cards=new LinearLayout(this);cards.setOrientation(LinearLayout.VERTICAL);root.addView(cards);
+        fillOverview(cards,profile);
+        Button refresh=button("Refresh overview");refresh.setAllCaps(false);
+        final LinearLayout page=root;
+        refresh.setOnClickListener(v -> loadOverview(profile,page,cards,refresh));
+        if(overviewSnapshot==null&&!overviewLoading)loadOverview(profile,page,cards,refresh);
+        label("Quick Actions",20,NAVY);
+        for(String key:new String[]{"sales-support-calculator","invoice","history","sales-support-your-customer","ar-your","daily-cash-collection","stock-report","staff-relation"})
+            for(String[] r:NativeRoutes.ALL)if(key.equals(r[0])&&NativeRoutes.allowed(profile,r[0],r[3])){routeTile(profile,r);break;}
+        label("Main Menu",20,NAVY);
+        java.util.LinkedHashSet<String> groups=new java.util.LinkedHashSet<>();
+        for(String[] r:NativeRoutes.ALL)if(NativeRoutes.allowed(profile,r[0],r[3]))groups.add(r[1]);
+        for(String group:groups){
+            Button item=button(group+"  ›");item.setAllCaps(false);
+            item.setOnClickListener(v -> showNativeGroup(profile,group));
+        }
+        button("Sign out").setOnClickListener(v -> {
+            v.setEnabled(false);overviewSnapshot=null;paymentSnapshot=null;
+            worker.execute(()->{try{auth.signOut();}catch(Exception ignored){}runOnUiThread(()->{if(!destroyed){overviewSnapshot=null;paymentSnapshot=null;showLogin();}});});
+        });
+    }
+    private void showNativeGroup(JSONObject profile,String group){
+        screen();root.setBackgroundColor(PALE);
+        label(group,22,NAVY);button("Back to Home").setOnClickListener(v -> showNativeHome(profile));
+        for(String[] r:NativeRoutes.ALL)if(group.equals(r[1])&&NativeRoutes.allowed(profile,r[0],r[3]))routeTile(profile,r);
+    }
+    private void routeTile(JSONObject profile,String[] r){
+        boolean ready="history".equals(r[0]);
+        Button item=button(r[2]+(ready?"  ›":"  ·  Migration pending"));
+        item.setAllCaps(false);item.setEnabled(ready);
+        if(ready)item.setOnClickListener(v -> showHistory(profile));
+    }
+    private String metric(JSONObject obj,String key,boolean money){
+        if(obj==null||obj.isNull(key))return "—";
+        try{java.math.BigDecimal n=new java.math.BigDecimal(obj.optString(key));
+            return money?String.format(java.util.Locale.US,"$%,.2f",n):n.stripTrailingZeros().toPlainString();
+        }catch(Exception e){return "—";}
+    }
+    private void fillOverview(LinearLayout cards,JSONObject profile){
+        cards.removeAllViews();JSONObject data=overviewSnapshot;
+        if(NativeRoutes.admin(profile)){
+            JSONObject m=data==null?null:data.optJSONObject("monthly"),c=data==null?null:data.optJSONObject("currentSnapshot");
+            kpiRow(cards,"Monthly Sales",metric(m,"grossSalesUSD",true),"Receivable",metric(c,"receivableUSD",true));
+            kpiRow(cards,"Stock Value",metric(c,"stockValueUSD",true),"Pending Tasks",metric(c,"pendingStaffRequests",false));
+        }else{
+            JSONObject m=data==null?null:data.optJSONObject("monthlySales"),a=data==null?null:data.optJSONObject("receivable"),stock=data==null?null:data.optJSONObject("stock");
+            kpiRow(cards,"Monthly Sales",metric(m,"netUSD",true),"Receivable",metric(a,"equivalentUSD",true));
+            java.math.BigDecimal usd=java.math.BigDecimal.ZERO,khr=java.math.BigDecimal.ZERO;boolean valid=paymentSnapshot!=null&&paymentSnapshot.optJSONArray("available")!=null;
+            if(valid){JSONArray list=paymentSnapshot.optJSONArray("available");try{for(int i=0;i<list.length();i++){JSONObject row=list.getJSONObject(i);java.math.BigDecimal n=new java.math.BigDecimal(row.getString("amount"));String currency=row.optString("currency","USD");if("USD".equalsIgnoreCase(currency))usd=usd.add(n);else if("KHR".equalsIgnoreCase(currency))khr=khr.add(n);}}catch(Exception e){valid=false;}}
+            kpiRow(cards,"Stock Qty",metric(stock,"physicalQty",false),"Your Earning",valid?String.format(java.util.Locale.US,"$%,.2f · ៛%,.0f",usd,khr):"—");
+        }
+    }
+    private void kpiRow(LinearLayout parent,String a,String av,String b,String bv){
+        LinearLayout row=new LinearLayout(this);row.setOrientation(LinearLayout.HORIZONTAL);parent.addView(row);
+        for(String[] pair:new String[][]{{a,av},{b,bv}}){
+            LinearLayout card=new LinearLayout(this);card.setOrientation(LinearLayout.VERTICAL);card.setPadding(dp(12),dp(12),dp(12),dp(12));
+            android.graphics.drawable.GradientDrawable bg=new android.graphics.drawable.GradientDrawable();bg.setColor(Color.WHITE);bg.setCornerRadius(dp(13));card.setBackground(bg);
+            LinearLayout.LayoutParams params=new LinearLayout.LayoutParams(0,ViewGroup.LayoutParams.WRAP_CONTENT,1);params.setMargins(dp(3),dp(3),dp(3),dp(3));row.addView(card,params);
+            TextView title=new TextView(this);title.setText(pair[0]);title.setTextSize(12);title.setTextColor(INK);card.addView(title);
+            TextView value=new TextView(this);value.setText(pair[1]);value.setTextSize(17);value.setTypeface(null,android.graphics.Typeface.BOLD);value.setTextColor(NAVY);card.addView(value);
+        }
+    }
+    private void loadOverview(JSONObject profile,LinearLayout page,LinearLayout cards,Button refresh){
+        if(overviewLoading)return;
+        overviewLoading=true;refresh.setEnabled(false);refresh.setText("Loading overview…");
+        worker.execute(()->{
+            JSONObject fresh=null,pay=null;
+            try{fresh=auth.dashboardOverview();if(!NativeRoutes.admin(profile))try{pay=auth.myPayments();}catch(Exception ignored){}}catch(Exception ignored){}
+            final JSONObject result=fresh,earnings=pay;
+            runOnUiThread(()->{
+                overviewLoading=false;if(destroyed||root!=page)return;
+                if(result!=null){overviewSnapshot=result;if(earnings!=null)paymentSnapshot=earnings;fillOverview(cards,profile);}
+                refresh.setEnabled(true);refresh.setText(result==null?"Overview unavailable — retry":"Refresh overview");
             });
         });
     }
