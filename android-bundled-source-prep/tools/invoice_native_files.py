@@ -5,6 +5,13 @@ def once(s,old,new):
     if s.count(old)!=1: raise RuntimeError("Invoice file action marker changed: "+old[:100])
     return s.replace(old,new,1)
 
+def head_script(s, script):
+    # Original invoice document also has embedded print HTML templates with
+    # closing head tags. Only modify the actual document head.
+    pos=s.lower().find("</head>")
+    if pos<0: raise RuntimeError("Invoice document head missing")
+    return s[:pos]+script+"\n"+s[pos:]
+
 def apply(assets):
     # Reuse the proven A/R adapter with its existing acknowledgements, limits,
     # filename handling and same-origin Android bridge.
@@ -37,7 +44,7 @@ async function share(files,title,text){''')
     gen=assets/"big-brother-invoice-generator/desktop-source-v20260924-invoiceseq1.html"
     s=gen.read_text(encoding="utf-8")
     s=s.replace("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js",library)
-    s=once(s,"</head>",bridge+"\n</head>")
+    s=head_script(s,bridge)
     s=once(s,"    const url = URL.createObjectURL(blob);\n    const link = document.createElement(\"a\");",'''    if(!window.BBARFileActionsV1?.isNative())throw Error("Android file bridge unavailable. Reopen BIG BROTHER Mobile.");
     await window.BBARFileActionsV1.save(new File([blob],"BIG-BROTHER-"+safeInvoice+"-"+date+".png",{type:"image/png"}));
     return;
@@ -56,8 +63,8 @@ async function share(files,title,text){''')
         # Live engine already has lazy image library; offline original lacked it.
         s=s.replace("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js",library)
         if "function bbHistoryLoadImageLibrary()" not in s:
-            s=once(s,'</head>',f'<script src="{library}"></script>\n</head>')
-        s=once(s,"</head>",bridge+"\n</head>")
+            s=head_script(s,f'<script src="{library}"></script>')
+        s=head_script(s,bridge)
         s=once(s,"      downloadHistoryInvoicePages(blobs,baseName);",'''      if(!window.BBARFileActionsV1?.isNative())throw Error("Android file bridge unavailable. Reopen BIG BROTHER Mobile.");
       const files=blobs.map((blob,index)=>new File([blob],blobs.length>1?baseName+"-Page-"+(index+1)+".png":baseName+".png",{type:"image/png"}));
       await window.BBARFileActionsV1.saveMany(files);
