@@ -23,6 +23,7 @@ final class NativeReceivables {
     private final LinkedHashSet<String> selected=new LinkedHashSet<>();
     private TextView selectionTotal;
     private Button summaryButton,requestButton;
+    private TextView bankSyncStatus;private Button bankSync;private boolean syncingBank;
     private static final int NAVY=Color.rgb(23,74,145);
     NativeReceivables(Activity a,LinearLayout root,CloudAuth api,ExecutorService worker,BooleanSupplier active,String route){
         this.a=a;this.root=root;this.api=api;this.worker=worker;this.active=active;this.route=route;
@@ -54,6 +55,7 @@ final class NativeReceivables {
         text(root,"ar-all".equals(route)?"All receivables · server-authorized locations":"Your receivables · existing assigned scope",14,false);
         status=text(root,"Loading outstanding invoices…",14,false);
         refresh=button("Refresh receivables",this::load);
+        bankSync=button("Sync Bank",this::syncBank);bankSyncStatus=text(root,"Bank not synced in this view",13,false);
         search=new EditText(a);search.setSingleLine(true);search.setInputType(InputType.TYPE_CLASS_TEXT);search.setHint("Search invoice, customer or location");root.addView(search);
         currency=select("All currencies","USD","KHR");
         statusFilter=select("All statuses","Overdue","Unpaid","Processing");
@@ -61,6 +63,7 @@ final class NativeReceivables {
         selectionTotal=text(root,"0 selected",14,true);
         summaryButton=button("Customer Summary",this::summary);summaryButton.setEnabled(false);
         if(!"ar-all".equals(route)){requestButton=button("Collection request preview",()->requestDraft(picked()));requestButton.setEnabled(false);}
+        else{requestButton=button("Admin payment preview",()->adminPayment(picked()));requestButton.setEnabled(false);}
         button("Select all matching invoices",()->{if(loaded&&!checking){selected.clear();for(JSONObject r:rows)if(matches(r)&&selectable(r))selected.add(val(r,"invoiceId"));revision++;render();}});
         button("Clear selection",()->{selected.clear();revision++;render();});
         cards=new LinearLayout(a);cards.setOrientation(LinearLayout.VERTICAL);root.addView(cards);
@@ -118,6 +121,32 @@ final class NativeReceivables {
         selectionTotal.setText(chosen.size()+" selected · "+money(usd,"USD")+" · "+money(khr,"KHR"));
         summaryButton.setEnabled(loaded&&!checking&&!chosen.isEmpty());
         if(requestButton!=null)requestButton.setEnabled(loaded&&!checking&&!chosen.isEmpty());
+    }
+    private void syncBank(){
+        if(syncingBank)return;syncingBank=true;bankSync.setEnabled(false);bankSyncStatus.setText("Downloading verified balances…");
+        worker.execute(()->{
+            JSONObject result=null;try{result=api.receivableBankSync(route);}catch(Exception ignored){}
+            final JSONObject data=result;
+            a.runOnUiThread(()->{if(!active.getAsBoolean())return;syncingBank=false;bankSync.setEnabled(true);
+                bankSyncStatus.setText(data==null?"Sync failed · previous in-memory snapshot retained":"Bank synced · "+data.optInt("count")+" balances · "+java.time.LocalTime.now(java.time.ZoneId.of("Asia/Phnom_Penh")).format(DateTimeFormatter.ofPattern("HH:mm")));
+            });
+        });
+    }
+    private void adminPayment(ArrayList<JSONObject> chosen){
+        if(!loaded||checking||chosen.isEmpty()||!"ar-all".equals(route))return;
+        final int captured=revision;String currency=ccy(chosen.get(0));
+        for(JSONObject r:chosen)if(!selectable(r)||!currency.equals(ccy(r))||val(r,"customerId").isEmpty()){status.setText("Select eligible invoices of one currency with customer IDs.");return;}
+        checking=true;updateSelection();status.setText("Checking Admin access and selected balances…");
+        worker.execute(()->{
+            boolean ok=false;
+            try{api.receivableAdminProfile();verifyChosen(chosen);ok=true;}catch(Exception ignored){}
+            final boolean allowed=ok;
+            a.runOnUiThread(()->{
+                checking=false;if(!active.getAsBoolean())return;updateSelection();
+                if(!allowed||revision!=captured){status.setText("Admin access or selected balances could not be verified.");return;}
+                new NativeARPaymentDraft(a,api,worker,()->active.getAsBoolean()&&revision==captured,chosen).open();
+            });
+        });
     }
     private void requestDraft(ArrayList<JSONObject> chosen){
         if(!loaded||checking||chosen.isEmpty()||"ar-all".equals(route))return;
@@ -395,6 +424,7 @@ final class NativeReceivables {
             check.setOnCheckedChangeListener((v,on)->{if(on)selected.add(val(r,"invoiceId"));else selected.remove(val(r,"invoiceId"));revision++;updateSelection();});
             Button detail=new Button(a);detail.setAllCaps(false);detail.setText("Invoice details");card.addView(detail);detail.setOnClickListener(v->detail(r));
             Button original=new Button(a);original.setAllCaps(false);original.setText("Original invoice");card.addView(original);original.setOnClickListener(v->openOriginal(r));
+            if("ar-all".equals(route)&&selectable(r)){Button admin=new Button(a);admin.setAllCaps(false);admin.setText("Admin payment preview");card.addView(admin);admin.setOnClickListener(v->adminPayment(new ArrayList<>(Collections.singletonList(r))));}
             if(!"ar-all".equals(route)&&selectable(r)){Button request=new Button(a);request.setAllCaps(false);request.setText("Collection request preview");card.addView(request);request.setOnClickListener(v->requestDraft(new ArrayList<>(Collections.singletonList(r))));}
         }
         totals.setText("Outstanding\n"+money(usd,"USD")+"  ·  "+money(khr,"KHR")+"\n"+matched+" invoice(s) · filtered totals");

@@ -126,6 +126,7 @@ final class CloudAuth {
         if(!"online".equals(BuildConfig.FLAVOR)||!NativeRoutes.allowed(current,"invoice","canCreate")||customerId.trim().isEmpty())
             throw new IOException("Bank balance permission denied");
         org.json.JSONArray rows=new org.json.JSONArray(post("/rest/v1/rpc/bb_invoice_bank_bulk_sync",new JSONObject(),accessToken));
+        validateBankRows(rows);sharedBankSnapshot=rows;bankSyncedAt=System.currentTimeMillis();
         org.json.JSONArray customerRows=new org.json.JSONArray();
         for(int i=0;i<rows.length();i++){
             JSONObject row=rows.optJSONObject(i);
@@ -207,6 +208,43 @@ final class CloudAuth {
         if(!Boolean.TRUE.equals(result.opt("success")))throw new IOException("Receivable detail unavailable");
         return result;
     }
+    private org.json.JSONArray sharedBankSnapshot;
+    private long bankSyncedAt;
+    synchronized JSONObject receivableBankSync(String route)throws Exception{
+        JSONObject current=profile();
+        if(!"online".equals(BuildConfig.FLAVOR)||!java.util.Arrays.asList("ar-all","ar-your","sales-support-your-receivable").contains(route)||!NativeRoutes.allowed(current,route,"canView"))
+            throw new IOException("Bank sync access denied");
+        org.json.JSONArray fresh=new org.json.JSONArray(post("/rest/v1/rpc/bb_invoice_bank_bulk_sync",new JSONObject(),accessToken));
+        validateBankRows(fresh);
+        sharedBankSnapshot=fresh;bankSyncedAt=System.currentTimeMillis();
+        return new JSONObject().put("count",fresh.length()).put("syncedAt",bankSyncedAt);
+    }
+    private void validateBankRows(org.json.JSONArray rows)throws Exception{
+        java.util.HashSet<String> seen=new java.util.HashSet<>();
+        for(int i=0;i<rows.length();i++){
+            JSONObject r=rows.getJSONObject(i);String cid=r.getString("customer_id").trim(),tx=r.getString("transaction_id").trim().toUpperCase(java.util.Locale.ROOT);
+            if(cid.isEmpty()||tx.isEmpty()||!seen.add(cid+"|"+tx)||!java.util.Arrays.asList("USD","KHR").contains(r.getString("currency").toUpperCase(java.util.Locale.ROOT))||new java.math.BigDecimal(r.getString("remaining_amount")).signum()<=0)
+                throw new IOException("Invalid bank snapshot");
+        }
+    }
+    synchronized JSONObject receivableAdminProfile()throws Exception{
+        JSONObject current=profile();
+        if(!"online".equals(BuildConfig.FLAVOR)||!NativeRoutes.admin(current)||!NativeRoutes.allowed(current,"ar-all","canView"))throw new IOException("Admin payment access required");
+        return current;
+    }
+    synchronized org.json.JSONArray receivableCustomerBank(String customerId)throws Exception{
+        receivableAdminProfile();
+        if(customerId.trim().isEmpty())throw new IOException("Customer required");
+        org.json.JSONArray fresh=new org.json.JSONArray(post("/rest/v1/rpc/bb_customer_bank_balance_list_v2",new JSONObject().put("p_customer_id",customerId),accessToken));
+        org.json.JSONArray filtered=new org.json.JSONArray();
+        for(int i=0;i<fresh.length();i++){
+            JSONObject row=fresh.getJSONObject(i);
+            if(row.has("customer_id")&&!customerId.equals(row.optString("customer_id")))throw new IOException("Unexpected bank customer");
+            if(new java.math.BigDecimal(row.getString("remaining_amount")).signum()<=0)continue;
+            row.put("customer_id",customerId);filtered.put(row);
+        }
+        validateBankRows(filtered);return filtered;
+    }
     synchronized JSONObject receivableList(String route)throws Exception{
         JSONObject current=profile();
         if(!"online".equals(BuildConfig.FLAVOR)||!java.util.Arrays.asList("ar-all","ar-your","sales-support-your-receivable").contains(route)||!NativeRoutes.allowed(current,route,"canView"))
@@ -254,7 +292,7 @@ final class CloudAuth {
         try { if (accessToken != null) post("/auth/v1/logout", new JSONObject(), accessToken); }
         finally { clear(); }
     }
-    private void clear() { accessToken = null; refreshToken = null; expiresAt = 0; }
+    private void clear() { accessToken = null; refreshToken = null; expiresAt = 0; sharedBankSnapshot=null;bankSyncedAt=0; }
     private String post(String path, JSONObject body, String bearer) throws Exception {
         boolean local = "local".equals(BuildConfig.FLAVOR);
         String key = local ? localKey : KEY;
