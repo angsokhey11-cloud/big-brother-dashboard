@@ -25,7 +25,9 @@ final class BundledUpdate {
     static final String REPO="angsokhey11-cloud/big-brother-dashboard";
     static final String TAG="bundled-online-dev";
     static final long LIMIT=150L*1024*1024;
-    final Activity a;final LinearLayout bar;final TextView label;final Button action, later;
+    final Activity a;
+    private AlertDialog settingsDialog,offerDialog;private boolean foreground;private long promptedVersion;private String actionText="Check";
+    private androidx.webkit.JavaScriptReplyProxy settingsReply;
     final ExecutorService worker=Executors.newSingleThreadExecutor();
     private boolean dead,busy;private long lastCheck=-60000;private Offer offer;private File ready;
     private String currentName="Installed version";private String lastStatus="Ready to check for updates";
@@ -33,23 +35,57 @@ final class BundledUpdate {
         final long version,size;final String name,url,digest;
         Offer(long v,long s,String n,String u,String d){version=v;size=s;name=n;url=u;digest=d;}
     }
-    BundledUpdate(Activity a,LinearLayout bar){
-        this.a=a;this.bar=bar;
-        bar.setOrientation(LinearLayout.HORIZONTAL);bar.setGravity(android.view.Gravity.CENTER_VERTICAL);
-        bar.setPadding(12,0,4,0);bar.setBackgroundColor(0xffeaf2fb);
-        label=new TextView(a);label.setTextColor(0xff174a91);
-        bar.addView(label,new LinearLayout.LayoutParams(0,-2,1));
-        action=new Button(a);action.setAllCaps(false);bar.addView(action);action.setOnClickListener(v->onAction());
-        later=new Button(a);later.setText("Later");later.setAllCaps(false);bar.addView(later);later.setOnClickListener(v->{
-            if(busy)return;
-            // Keep a visible entry point even if the user postpones an update.
-            offer=null;ready=null;lastCheck=-60000;show(currentName+" · Update postponed","Check");
-        });
+    BundledUpdate(Activity a){
+        this.a=a;
         try{currentName="V"+a.getPackageManager().getPackageInfo(a.getPackageName(),0).versionName.replace("-bundled-dev","");}catch(Exception ignored){}
-        label.setTextSize(12);
-        action.setMinHeight(0);action.setMinimumHeight(0);action.setTextSize(12);
-        later.setMinHeight(0);later.setMinimumHeight(0);later.setTextSize(12);
         show(currentName+" · Ready to check","Check");
+    }
+    void attach(android.webkit.WebView browser){
+        if(!androidx.webkit.WebViewFeature.isFeatureSupported(androidx.webkit.WebViewFeature.WEB_MESSAGE_LISTENER))return;
+        androidx.webkit.WebViewCompat.addWebMessageListener(browser,"BBNativeAppUpdate",
+            Collections.singleton("https://app.bigbrother.test"),(view,message,origin,main,reply)->{
+                if(!main||!"https://app.bigbrother.test".equals(origin.toString()))return;
+                Uri page=Uri.parse(view.getUrl()==null?"":view.getUrl());
+                if(!"https".equals(page.getScheme())||!"app.bigbrother.test".equals(page.getHost())||
+                   !"/big-brother-dashboard/mobile.html".equals(page.getPath()))return;
+                if(message.getType()!=androidx.webkit.WebMessageCompat.TYPE_STRING)return;
+                String cmd=message.getData();
+                if(!"status".equals(cmd)&&!"open".equals(cmd))return;
+                a.runOnUiThread(()->{if(dead)return;settingsReply=reply;sendStatus();if("open".equals(cmd)&&foreground)openSettings();});
+            });
+    }
+    void resume(){foreground=true;maybePrompt();}
+    void pause(){foreground=false;if(offerDialog!=null){offerDialog.dismiss();offerDialog=null;}}
+    private void sendStatus(){
+        if(settingsReply==null)return;
+        try{JSONObject o=new JSONObject();o.put("version",currentName);o.put("status",lastStatus);o.put("busy",busy);settingsReply.postMessage(o.toString());}
+        catch(Exception ignored){settingsReply=null;}
+    }
+    private void openSettings(){
+        if(dead||!foreground||a.isFinishing()||a.isDestroyed())return;
+        if(settingsDialog!=null&&settingsDialog.isShowing())return;
+        settingsDialog=new AlertDialog.Builder(a).setTitle("Application update")
+            .setMessage(lastStatus).setNegativeButton("Close",null).setPositiveButton(actionText,null).create();
+        settingsDialog.setOnShowListener(d->{settingsDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v->onAction());refreshSettings();});
+        settingsDialog.setOnDismissListener(d->settingsDialog=null);
+        settingsDialog.show();
+    }
+    private void refreshSettings(){
+        if(settingsDialog==null||!settingsDialog.isShowing())return;
+        settingsDialog.setMessage(lastStatus);
+        Button b=settingsDialog.getButton(AlertDialog.BUTTON_POSITIVE);
+        if(b!=null){b.setText(actionText);b.setEnabled(!busy);}
+    }
+    private void maybePrompt(){
+        if(dead||!foreground||busy||offer==null||promptedVersion==offer.version||a.isFinishing()||a.isDestroyed())return;
+        if(settingsDialog!=null&&settingsDialog.isShowing())return;
+        promptedVersion=offer.version;
+        offerDialog=new AlertDialog.Builder(a).setTitle("BIG BROTHER Mobile update")
+            .setMessage(currentName+" → V3.0."+(offer.version-30000)+"\n\nA newer version is available. Download and install it? You can keep working during the download. Save your work before installing.")
+            .setNegativeButton("Later",(d,w)->{})
+            .setPositiveButton("Download & Update",(d,w)->onAction()).create();
+        offerDialog.setOnDismissListener(d->offerDialog=null);
+        offerDialog.show();
     }
     void check(){check(false);}
     private void check(boolean manual){
@@ -61,16 +97,14 @@ final class BundledUpdate {
             try{result=checkCatalog();}catch(Exception e){error=e instanceof java.net.SocketTimeoutException?"Connection timed out":e instanceof java.net.UnknownHostException?"Update server unreachable":e instanceof javax.net.ssl.SSLException?"Secure connection failed":e.getMessage();}
             final Offer found=result;final String failure=error;
             a.runOnUiThread(()->{busy=false;if(dead||a.isFinishing()||a.isDestroyed())return;
-                if(found!=null){offer=found;show("V3.0."+(found.version-30000)+" available · "+currentName+" installed","Download");}
+                if(found!=null){offer=found;show("V3.0."+(found.version-30000)+" available · "+currentName+" installed","Download");maybePrompt();}
                 else if(failure!=null){show(currentName+" · "+failure,"Retry");}
                 else{show(currentName+" · Up to date","Check");}
             });
         });
     }
     private void show(String text,String button){
-        lastStatus=text;label.setText(text);action.setText(button);action.setEnabled(!busy);
-        later.setVisibility(offer!=null&&!busy?View.VISIBLE:View.GONE);
-        bar.setVisibility(View.VISIBLE);
+        lastStatus=text;actionText=button;refreshSettings();sendStatus();
     }
     private void onAction(){
         if(dead||busy)return;
@@ -88,6 +122,7 @@ final class BundledUpdate {
             final File file=result;
             a.runOnUiThread(()->{busy=false;if(dead||a.isDestroyed()||a.isFinishing()){if(file!=null)file.delete();return;}
                 ready=file;show(file==null?"Update download failed · retry":"Update verified · save your work first",file==null?"Retry":"Install");
+                if(foreground&&(settingsDialog==null||!settingsDialog.isShowing()))Toast.makeText(a,file==null?"Update download failed. Retry in Settings.":"Update ready. Install from Mobile Settings when your work is saved.",Toast.LENGTH_LONG).show();
             });
         });
     }
@@ -98,12 +133,12 @@ final class BundledUpdate {
             catch(Exception e){Toast.makeText(a,"Allow installation from this app in Android settings.",Toast.LENGTH_LONG).show();}
             return;
         }
-        busy=true;action.setEnabled(false);final File file=ready;final Offer selected=offer;
+        busy=true;show("Verifying update…","Verifying");final File file=ready;final Offer selected=offer;
         worker.execute(()->{
             boolean verified=false;try{verify(file,selected.version);verified=hashFile(file,selected);}catch(Exception ignored){}
             final boolean ok=verified;
             a.runOnUiThread(()->{
-                busy=false;if(dead||a.isDestroyed()||a.isFinishing())return;action.setEnabled(true);
+                busy=false;if(dead||a.isDestroyed()||a.isFinishing())return;show("Update verified · ready to install","Install");
                 if(!ok){file.delete();ready=null;show("Update verification failed","Retry");return;}
                 try{
                     Uri uri=FileProvider.getUriForFile(a,a.getPackageName()+".camera.fileprovider",file);
@@ -115,7 +150,7 @@ final class BundledUpdate {
             });
         });
     }
-    void destroy(){dead=true;worker.shutdownNow();}
+    void destroy(){dead=true;settingsReply=null;if(settingsDialog!=null)settingsDialog.dismiss();if(offerDialog!=null)offerDialog.dismiss();worker.shutdownNow();}
     private long installedVersion()throws Exception{
         PackageInfo p=a.getPackageManager().getPackageInfo(a.getPackageName(),0);
         return Build.VERSION.SDK_INT>=28?p.getLongVersionCode():p.versionCode;

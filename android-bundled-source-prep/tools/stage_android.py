@@ -35,6 +35,19 @@ def stage():
     print("Installed Invoice History: existing cache-first route enabled")
     from history_fast import apply as apply_history_fast
     apply_history_fast(assets)
+    # The update entry lives in the existing Mobile Settings, not a header.
+    mobile=assets/"big-brother-dashboard/mobile.html"
+    source=mobile.read_text(encoding="utf-8")
+    anchor='        <!-- Real Receivable cache-first mode is now the default for every user. -->'
+    source=replace_once(source,anchor,'''        <button id="bbAppUpdateSettings" class="sheet-option" type="button" hidden>
+          <span aria-hidden="true">↻</span>
+          <div><strong>Application Update</strong><small id="bbAppUpdateStatus">Checking installed version…</small></div>
+        </button>
+'''+anchor)
+    source=replace_once(source,"</body>",'<script src="bb-bundled-update-settings.js"></script>\n</body>')
+    mobile.write_text(source,encoding="utf-8")
+    shutil.copy2(ROOT/"android/bb-bundled-update-settings.js",mobile.parent/"bb-bundled-update-settings.js")
+
     # The installed package owns UI versions. Rotate only the existing PWA
     # static-shell cache, not IndexedDB, saved credentials or business snapshots.
     # Include the staged assets and this script, not the Android signing version:
@@ -129,17 +142,9 @@ def stage():
             s = s.replace('           retry!=null&&retry.getVisibility()==View.VISIBLE)scheduleRetry();','           retry!=null&&retry.getVisibility()==View.VISIBLE)stopRetry();')
         if name == "MainActivity.java":
             s = replace_once(s, "    private WebView browser;", "    private WebView browser;\n    private BundledUpdate bundledUpdate;")
-            s = replace_once(s, "        root.addView(browser,new FrameLayout.LayoutParams(-1,-1));", """        LinearLayout installedLayout = new LinearLayout(this);
-        installedLayout.setOrientation(LinearLayout.VERTICAL);
-        root.addView(installedLayout,new FrameLayout.LayoutParams(-1,-1));
-        LinearLayout updateBar = new LinearLayout(this);
-        installedLayout.addView(updateBar,new LinearLayout.LayoutParams(-1,-2));
-        bundledUpdate = new BundledUpdate(this,updateBar);
-        FrameLayout content = new FrameLayout(this);
-        installedLayout.addView(content,new LinearLayout.LayoutParams(-1,0,1));
-        content.addView(browser,new FrameLayout.LayoutParams(-1,-1));""")
-            s = replace_once(s, "        root.addView(panel,new FrameLayout.LayoutParams(-1,-1));", "        content.addView(panel,new FrameLayout.LayoutParams(-1,-1));")
-            s = replace_once(s, "        super.onResume();", "        super.onResume();\n        if(bundledUpdate!=null)reconnectHandler.postDelayed(()->{if(bundledUpdate!=null)bundledUpdate.check();},1500);")
+            s = replace_once(s, "        nativePrint = BBNativePrint.install(this,browser);", "        nativePrint = BBNativePrint.install(this,browser);\n        bundledUpdate = new BundledUpdate(this);\n        bundledUpdate.attach(browser);")
+            s = replace_once(s, "        super.onPause();", "        if(bundledUpdate!=null)bundledUpdate.pause();\n        super.onPause();")
+            s = replace_once(s, "        super.onResume();", "        super.onResume();\n        if(bundledUpdate!=null){bundledUpdate.resume();reconnectHandler.postDelayed(()->{if(bundledUpdate!=null)bundledUpdate.check();},1500);}")
             s = replace_once(s, "        if(nativePrint!=null)nativePrint.destroy();", "        if(bundledUpdate!=null){bundledUpdate.destroy();bundledUpdate=null;}\n        if(nativePrint!=null)nativePrint.destroy();")
         p.write_text(s, encoding="utf-8")
     shutil.copy2(ROOT / "android/BundledUpdate.java", java / "BundledUpdate.java")
