@@ -9,11 +9,26 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-/** Cloud-only transport. Call on a worker thread; tokens remain in memory.
- * Local Brain requires a separately verified authentication contract.
+/** Flavor-isolated transport. Call on a worker thread; tokens remain in memory.
  */
 final class CloudAuth {
     private static final String KEY = "sb_publishable_w762jR65CWwlO30fKQsYOw_6L9grx8S";
+    private String localKey;
+    synchronized void configureLocalKey(String value) throws Exception {
+        if (!"local".equals(BuildConfig.FLAVOR)) throw new IOException("Local configuration unavailable");
+        String key = value.trim();
+        if (key.equals(KEY)) throw new IOException("Cloud key is not permitted");
+        boolean valid = key.matches("sb_publishable_[A-Za-z0-9_-]+");
+        if (!valid) {
+            String[] parts = key.split("\\.");
+            if (parts.length == 3) {
+                JSONObject claims = new JSONObject(new String(android.util.Base64.decode(parts[1], android.util.Base64.URL_SAFE | android.util.Base64.NO_WRAP), StandardCharsets.UTF_8));
+                valid = "anon".equals(claims.optString("role"));
+            }
+        }
+        if (!valid) throw new IOException("Only a public anon or publishable key is allowed");
+        clear(); localKey = key;
+    }
     private String accessToken;
     private String refreshToken;
     private long expiresAt;
@@ -86,13 +101,20 @@ final class CloudAuth {
     }
     private void clear() { accessToken = null; refreshToken = null; expiresAt = 0; }
     private String post(String path, JSONObject body, String bearer) throws Exception {
-        if (!"online".equals(BuildConfig.FLAVOR)) throw new IOException("Cloud authentication disabled in Local build");
+        boolean local = "local".equals(BuildConfig.FLAVOR);
+        String key = local ? localKey : KEY;
+        if (key == null) throw new IOException("Configure Local Brain public key first");
+        URL endpoint = new URL(BuildConfig.ENDPOINT);
+        if (!"https".equals(endpoint.getProtocol()) ||
+            (local ? (!"bigbrother.local".equals(endpoint.getHost()) || endpoint.getPort()!=8443)
+                   : (!"sjfhlaclgmkwwofzstok.supabase.co".equals(endpoint.getHost()) || endpoint.getPort()!=-1)))
+            throw new IOException("Unexpected authentication endpoint");
         HttpsURLConnection conn = (HttpsURLConnection) new URL(BuildConfig.ENDPOINT + path).openConnection();
         try {
             conn.setInstanceFollowRedirects(false);
             conn.setConnectTimeout(10000); conn.setReadTimeout(15000);
             conn.setUseCaches(false); conn.setRequestMethod("POST"); conn.setDoOutput(true);
-            conn.setRequestProperty("apikey", KEY);
+            conn.setRequestProperty("apikey", key);
             conn.setRequestProperty("Content-Type", "application/json");
             if (bearer != null) conn.setRequestProperty("Authorization", "Bearer " + bearer);
             byte[] bytes = body.toString().getBytes(StandardCharsets.UTF_8);

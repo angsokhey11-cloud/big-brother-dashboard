@@ -43,8 +43,9 @@ public final class MainActivity extends Activity {
     }
     private void showLogin() {
         screen();
-        if (!"online".equals(BuildConfig.FLAVOR)) {
-            label("Local Brain authentication is not connected yet.",16,Color.DKGRAY);
+        final boolean local = "local".equals(BuildConfig.FLAVOR);
+        if (local) {
+            label("Local Brain V6 — secure LAN sign-in",16,Color.DKGRAY);
             TextView connection = label("",14,Color.DKGRAY);
             Button probe = button("Check Local Brain connection");
             probe.setOnClickListener(v -> {
@@ -58,7 +59,13 @@ public final class MainActivity extends Activity {
                 });
             });
             button("Network settings").setOnClickListener(v -> startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS)));
-            return;
+        }
+        EditText publicKey = new EditText(this);
+        if (local) {
+            publicKey.setHint("Local public anon / publishable key");
+            publicKey.setSingleLine(true); publicKey.setSaveEnabled(false);
+            publicKey.setText(getPreferences(MODE_PRIVATE).getString("local_public_key",""));
+            root.addView(publicKey);
         }
         EditText email = new EditText(this);
         email.setHint("Email"); email.setSingleLine(true);
@@ -74,7 +81,14 @@ public final class MainActivity extends Activity {
             String address = email.getText().toString().trim();
             String secret = password.getText().toString();
             if (address.isEmpty() || secret.isEmpty()) { result.setText("Enter email and password."); return; }
-            signIn.setEnabled(false); email.setEnabled(false); password.setEnabled(false);
+            if (local) {
+                try {
+                    String key = publicKey.getText().toString().trim();
+                    auth.configureLocalKey(key);
+                    getPreferences(MODE_PRIVATE).edit().putString("local_public_key",key).apply();
+                } catch (Exception e) { result.setText("Enter the Local Brain public anon or publishable key only."); return; }
+            }
+            signIn.setEnabled(false); email.setEnabled(false); password.setEnabled(false); publicKey.setEnabled(false);
             password.setText(""); result.setText("Signing in…");
             worker.execute(() -> {
                 try {
@@ -83,7 +97,7 @@ public final class MainActivity extends Activity {
                 } catch (Exception e) {
                     runOnUiThread(() -> { if (!destroyed) {
                         result.setText("Sign-in or permission lookup failed. Check credentials and connection.");
-                        signIn.setEnabled(true); email.setEnabled(true); password.setEnabled(true);
+                        signIn.setEnabled(true); email.setEnabled(true); password.setEnabled(true); publicKey.setEnabled(true);
                     }});
                 }
             });
