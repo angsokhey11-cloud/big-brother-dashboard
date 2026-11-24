@@ -22,7 +22,7 @@ final class NativeReceivables {
     private boolean loading,loaded,checking;private int limit=30,revision;
     private final LinkedHashSet<String> selected=new LinkedHashSet<>();
     private TextView selectionTotal;
-    private Button summaryButton;
+    private Button summaryButton,requestButton;
     private static final int NAVY=Color.rgb(23,74,145);
     NativeReceivables(Activity a,LinearLayout root,CloudAuth api,ExecutorService worker,BooleanSupplier active,String route){
         this.a=a;this.root=root;this.api=api;this.worker=worker;this.active=active;this.route=route;
@@ -60,6 +60,7 @@ final class NativeReceivables {
         totals=text(root,"Outstanding: —",18,true);
         selectionTotal=text(root,"0 selected",14,true);
         summaryButton=button("Customer Summary",this::summary);summaryButton.setEnabled(false);
+        if(!"ar-all".equals(route)){requestButton=button("Collection request preview",()->requestDraft(picked()));requestButton.setEnabled(false);}
         button("Select all matching invoices",()->{if(loaded&&!checking){selected.clear();for(JSONObject r:rows)if(matches(r)&&selectable(r))selected.add(val(r,"invoiceId"));revision++;render();}});
         button("Clear selection",()->{selected.clear();revision++;render();});
         cards=new LinearLayout(a);cards.setOrientation(LinearLayout.VERTICAL);root.addView(cards);
@@ -71,7 +72,7 @@ final class NativeReceivables {
         });
         android.widget.AdapterView.OnItemSelectedListener listener=new android.widget.AdapterView.OnItemSelectedListener(){
             public void onNothingSelected(android.widget.AdapterView<?> p){}
-            public void onItemSelected(android.widget.AdapterView<?> p,android.view.View v,int pos,long id){limit=30;render();}
+            public void onItemSelected(android.widget.AdapterView<?> p,android.view.View v,int pos,long id){limit=30;selected.clear();revision++;render();}
         };
         currency.setOnItemSelectedListener(listener);statusFilter.setOnItemSelectedListener(listener);
         load();
@@ -116,6 +117,67 @@ final class NativeReceivables {
         for(JSONObject r:chosen)if("USD".equals(ccy(r)))usd=usd.add(amount(r));else khr=khr.add(amount(r));
         selectionTotal.setText(chosen.size()+" selected · "+money(usd,"USD")+" · "+money(khr,"KHR"));
         summaryButton.setEnabled(loaded&&!checking&&!chosen.isEmpty());
+        if(requestButton!=null)requestButton.setEnabled(loaded&&!checking&&!chosen.isEmpty());
+    }
+    private void requestDraft(ArrayList<JSONObject> chosen){
+        if(!loaded||checking||chosen.isEmpty()||"ar-all".equals(route))return;
+        final int captured=revision;
+        String cur=ccy(chosen.get(0));BigDecimal total=BigDecimal.ZERO;
+        for(JSONObject r:chosen){
+            if(!selectable(r)||!cur.equals(ccy(r))||val(r,"invoiceId").isEmpty()||val(r,"customerId").isEmpty()){
+                status.setText("Select eligible outstanding invoices of one currency, with valid customer IDs.");return;
+            }
+            total=total.add(amount(r));
+        }
+        final BigDecimal full=total;
+        LinearLayout form=new LinearLayout(a);form.setOrientation(LinearLayout.VERTICAL);form.setPadding(dp(16),dp(6),dp(16),dp(12));
+        text(form,chosen.size()+" invoice(s) · "+money(full,cur),18,true);
+        text(form,"Direct Request · Admin decides Cash or Bank during approval",14,false);
+        for(JSONObject r:chosen)text(form,val(r,"invoiceNo")+" · "+val(r,"customer")+" · "+money(amount(r),cur),13,false);
+        EditText paymentDate=new EditText(a);paymentDate.setSingleLine(true);paymentDate.setFocusable(false);paymentDate.setText(LocalDate.now(java.time.ZoneId.of("Asia/Phnom_Penh")).toString());
+        text(form,"Collection date",13,true);form.addView(paymentDate);
+        paymentDate.setOnClickListener(v->{
+            LocalDate d=LocalDate.parse(paymentDate.getText().toString());
+            new android.app.DatePickerDialog(a,(p,y,m,day)->paymentDate.setText(LocalDate.of(y,m+1,day).toString()),d.getYear(),d.getMonthValue()-1,d.getDayOfMonth()).show();
+        });
+        EditText input=new EditText(a);input.setInputType(InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL);input.setSingleLine(true);input.setText(full.stripTrailingZeros().toPlainString());
+        text(form,chosen.size()==1?"Requested amount ("+cur+")":"Full outstanding · batch requests",13,true);form.addView(input);input.setEnabled(chosen.size()==1);
+        EditText note=new EditText(a);note.setHint("Note (optional)");note.setMaxLines(3);form.addView(note);
+        ScrollView scroll=new ScrollView(a);scroll.addView(form);
+        android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(a).setTitle("Collection request · development preview").setView(scroll).setNegativeButton("Cancel",null).setPositiveButton("Validate draft",null).create();
+        dialog.setOnShowListener(d->dialog.getButton(-1).setOnClickListener(v->{
+            try{
+                if(!active.getAsBoolean()||captured!=revision||checking)throw new IllegalArgumentException("Selection changed. Refresh.");
+                BigDecimal requested=chosen.size()==1?DraftPayment.amount(input.getText().toString()):full;
+                if(requested.signum()<=0||requested.compareTo(full)>0||requested.stripTrailingZeros().scale()>DraftPayment.scale(cur))throw new IllegalArgumentException("Invalid collection amount.");
+                String day=LocalDate.parse(paymentDate.getText().toString()).toString();
+                JSONObject payload=new JSONObject().put("paymentDate",day).put("note",note.getText().toString().trim()).put("requestType","Direct Request");
+                if(chosen.size()==1){
+                    JSONObject r=chosen.get(0);
+                    payload.put("invoiceId",val(r,"invoiceId")).put("invoiceNo",val(r,"invoiceNo")).put("customerId",val(r,"customerId")).put("amount",requested);
+                }else{
+                    JSONArray ids=new JSONArray(),nos=new JSONArray();HashSet<String> customers=new HashSet<>();
+                    for(JSONObject r:chosen){ids.put(val(r,"invoiceId"));nos.put(val(r,"invoiceNo"));customers.add(val(r,"customerId"));}
+                    payload.put("invoiceIds",ids).put("invoiceNos",nos).put("customerId",customers.size()==1?customers.iterator().next():"");
+                }
+                String frozen=new JSONObject().put("p_payload",payload).toString();
+                dialog.dismiss();verifyRequestDraft(chosen,captured,requested,cur,day,frozen);
+            }catch(Exception e){input.setError("Check amount, currency and selection.");}
+        }));dialog.show();
+    }
+    private void verifyRequestDraft(ArrayList<JSONObject> chosen,int captured,BigDecimal requested,String cur,String day,String frozen){
+        checking=true;updateSelection();status.setText("Verifying collection draft against current outstanding…");
+        worker.execute(()->{
+            String fingerprint=null;
+            try{verifyChosen(chosen);fingerprint=InvoiceSaveJournal.digest(frozen);}catch(Exception ignored){}
+            final String result=fingerprint;
+            a.runOnUiThread(()->{
+                checking=false;if(!active.getAsBoolean())return;updateSelection();
+                if(captured!=revision||result==null){status.setText("Collection draft changed or cannot be verified. Refresh.");return;}
+                status.setText("Collection request draft verified · no request sent.");
+                new android.app.AlertDialog.Builder(a).setTitle("Direct Request preview").setMessage(chosen.size()+" invoice(s)\nCollection date: "+day+"\nRequested: "+money(requested,cur)+"\nAdmin approval required.\n\nPayload fingerprint: "+result.substring(0,16)+"…\nNo payment or request has been submitted.").setPositiveButton("Close",null).show();
+            });
+        });
     }
     private void detail(JSONObject row){
         if(!loaded||checking)return;
@@ -333,6 +395,7 @@ final class NativeReceivables {
             check.setOnCheckedChangeListener((v,on)->{if(on)selected.add(val(r,"invoiceId"));else selected.remove(val(r,"invoiceId"));revision++;updateSelection();});
             Button detail=new Button(a);detail.setAllCaps(false);detail.setText("Invoice details");card.addView(detail);detail.setOnClickListener(v->detail(r));
             Button original=new Button(a);original.setAllCaps(false);original.setText("Original invoice");card.addView(original);original.setOnClickListener(v->openOriginal(r));
+            if(!"ar-all".equals(route)&&selectable(r)){Button request=new Button(a);request.setAllCaps(false);request.setText("Collection request preview");card.addView(request);request.setOnClickListener(v->requestDraft(new ArrayList<>(Collections.singletonList(r))));}
         }
         totals.setText("Outstanding\n"+money(usd,"USD")+"  ·  "+money(khr,"KHR")+"\n"+matched+" invoice(s) · filtered totals");
         if(matched==0)text(cards,"No matching outstanding invoices.",14,false);

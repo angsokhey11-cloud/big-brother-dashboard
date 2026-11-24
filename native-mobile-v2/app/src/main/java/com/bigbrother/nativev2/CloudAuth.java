@@ -155,10 +155,10 @@ final class CloudAuth {
         org.json.JSONArray manifest=receivableOriginalManifest(route,new org.json.JSONArray().put(id));
         if(manifest.length()!=1)throw new IOException("No accessible original");
         JSONObject row=manifest.getJSONObject(0);String path=row.getString("path");
-        if(path.length()>1024||path.startsWith("/")||path.indexOf('\\\\')>=0)throw new IOException("Invalid object path");
+        if(path.length()>1024||path.startsWith("/")||path.indexOf(92)>=0)throw new IOException("Invalid object path");
         StringBuilder encoded=new StringBuilder();
         for(String part:path.split("/",-1)){
-            if(part.isEmpty()||".".equals(part)||"..".equals(part)||part.indexOf('\u0000')>=0)throw new IOException("Invalid object path");
+            if(part.isEmpty()||".".equals(part)||"..".equals(part)||part.indexOf(0)>=0)throw new IOException("Invalid object path");
             if(encoded.length()>0)encoded.append('/');
             encoded.append(android.net.Uri.encode(part));
         }

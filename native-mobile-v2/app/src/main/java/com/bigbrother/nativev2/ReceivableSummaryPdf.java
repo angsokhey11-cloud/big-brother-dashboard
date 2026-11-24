@@ -23,14 +23,15 @@ final class ReceivableSummaryPdf {
         if(old!=null)for(File f:old)if(f.getName().startsWith("BB-AR-Summary-")&&System.currentTimeMillis()-f.lastModified()>3600000L)f.delete();
         File file=File.createTempFile("BB-AR-Summary-", ".pdf",folder);
         boolean ok=false;
-        try(PdfDocument doc=new PdfDocument();FileOutputStream out=new FileOutputStream(file)){
+        PdfDocument doc=new PdfDocument();
+        try(FileOutputStream out=new FileOutputStream(file)){
             Writer writer=new Writer(doc);
             try{
                 writer.start();
                 for(String line:snapshot.split("\n",-1))writer.line(line);
                 writer.finish();doc.writeTo(out);ok=true;
             }finally{if(writer.page!=null)writer.finish();}
-        }finally{if(!ok)file.delete();}
+        }finally{try{doc.close();}finally{if(!ok)file.delete();}}
         return file;
     }
     private static final class Writer{
