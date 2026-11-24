@@ -150,6 +150,39 @@ final class CloudAuth {
         if(id.trim().isEmpty()||id.length()>128)throw new IOException("Invalid invoice identity");
         return generatorRead("bb_sales_verify_invoice_save",new JSONObject().put("p_invoice_id",id));
     }
+    synchronized java.io.File receivableOriginal(String route,String id,java.io.File folder,long limit)throws Exception{
+        if(limit<=0||limit>20L*1024*1024)throw new IOException("Original file size limit");
+        org.json.JSONArray manifest=receivableOriginalManifest(route,new org.json.JSONArray().put(id));
+        if(manifest.length()!=1)throw new IOException("No accessible original");
+        JSONObject row=manifest.getJSONObject(0);String path=row.getString("path");
+        if(path.length()>1024||path.startsWith("/")||path.indexOf('\\\\')>=0)throw new IOException("Invalid object path");
+        StringBuilder encoded=new StringBuilder();
+        for(String part:path.split("/",-1)){
+            if(part.isEmpty()||".".equals(part)||"..".equals(part)||part.indexOf('\u0000')>=0)throw new IOException("Invalid object path");
+            if(encoded.length()>0)encoded.append('/');
+            encoded.append(android.net.Uri.encode(part));
+        }
+        String extension=path.substring(path.lastIndexOf('.')+1).toLowerCase(java.util.Locale.ROOT);
+        if(!java.util.Arrays.asList("jpg","jpeg","png","webp","gif","bmp","pdf").contains(extension))throw new IOException("Unsupported original file type");
+        String safeNo=row.optString("invoiceNo","Invoice").replaceAll("[^a-zA-Z0-9_-]","_");
+        if(safeNo.length()>64)safeNo=safeNo.substring(0,64);
+        if(!folder.exists()&&!folder.mkdirs())throw new IOException("Cache unavailable");
+        java.io.File output=java.io.File.createTempFile("BB-AR-Original-"+safeNo+"-", "."+extension,folder);
+        HttpsURLConnection conn=null;boolean ok=false;
+        try{
+            conn=(HttpsURLConnection)new URL("https://sjfhlaclgmkwwofzstok.supabase.co/storage/v1/object/authenticated/bb-real-invoices/"+encoded).openConnection();
+            conn.setInstanceFollowRedirects(false);conn.setConnectTimeout(10000);conn.setReadTimeout(20000);conn.setUseCaches(false);
+            conn.setRequestProperty("apikey",KEY);conn.setRequestProperty("Authorization","Bearer "+accessToken);
+            if(conn.getResponseCode()!=200||conn.getContentLengthLong()>limit)throw new IOException("Original download unavailable");
+            long size=0;
+            try(InputStream in=conn.getInputStream();java.io.FileOutputStream out=new java.io.FileOutputStream(output)){
+                byte[] b=new byte[8192];int n;
+                while((n=in.read(b))!=-1){size+=n;if(size>limit)throw new IOException("Original exceeds limit");out.write(b,0,n);}
+            }
+            if(size==0||!ReceivableFiles.validFile(output))throw new IOException("Original content does not match supported file type");
+            ok=true;return output;
+        }finally{if(conn!=null)conn.disconnect();if(!ok)output.delete();}
+    }
     synchronized org.json.JSONArray receivableOriginalManifest(String route,org.json.JSONArray ids)throws Exception{
         JSONObject current=profile();
         if(!"online".equals(BuildConfig.FLAVOR)||!java.util.Arrays.asList("ar-all","ar-your","sales-support-your-receivable").contains(route)||!NativeRoutes.allowed(current,route,"canView")||ids.length()<1||ids.length()>35)

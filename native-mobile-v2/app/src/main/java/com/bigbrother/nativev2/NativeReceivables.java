@@ -204,7 +204,66 @@ final class NativeReceivables {
         new android.app.AlertDialog.Builder(a).setTitle("Customer Invoice Summary").setMessage(snapshot)
             .setPositiveButton("Close",null)
             .setNeutralButton("Check originals",(d,w)->checkOriginals(chosen,capturedRevision))
-            .setNegativeButton("Share PDF",(d,w)->shareSummary(chosen,capturedRevision,snapshot)).show();
+            .setNegativeButton("Share / Export",(d,w)->new android.app.AlertDialog.Builder(a).setTitle("Share customer summary").setItems(new String[]{"Summary PDF","Summary PNG pages","Summary PDF + available originals"},(dlg,index)->{if(index==0)shareSummary(chosen,capturedRevision,snapshot);else sharePackage(chosen,capturedRevision,snapshot,index==2);}).show()).show();
+    }
+    private void sharePackage(ArrayList<JSONObject> chosen,int captured,String snapshot,boolean originals){
+        if(checking||!loaded||revision!=captured)return;
+        if(originals&&chosen.size()>35){status.setText("Select up to 35 invoices per attachment package.");return;}
+        checking=true;updateSelection();status.setText("Preparing verified documents…");
+        worker.execute(()->{
+            ArrayList<java.io.File> prepared=new ArrayList<>();ArrayList<String> missing=new ArrayList<>();boolean ok=false;
+            try{
+                verifyChosen(chosen);
+                java.io.File pdf=ReceivableSummaryPdf.create(a,snapshot);prepared.add(pdf);
+                if(originals){
+                    JSONArray ids=new JSONArray();for(JSONObject r:chosen)ids.put(val(r,"invoiceId"));
+                    JSONArray manifest=api.receivableOriginalManifest(route,ids);HashSet<String> accessible=new HashSet<>();
+                    for(int i=0;i<manifest.length();i++)accessible.add(val(manifest.getJSONObject(i),"invoiceId"));
+                    long bytes=pdf.length();
+                    for(JSONObject r:chosen){
+                        String id=val(r,"invoiceId");
+                        if(!accessible.contains(id)){missing.add(val(r,"invoiceNo")+" · "+val(r,"customer"));continue;}
+                        java.io.File f=api.receivableOriginal(route,id,ReceivableFiles.folder(a),Math.min(20L*1024*1024,65L*1024*1024-bytes));
+                        prepared.add(f);bytes+=f.length();
+                    }
+                }else{prepared.addAll(ReceivableFiles.pngs(a,pdf));pdf.delete();prepared.remove(pdf);}
+                verifyChosen(chosen);ok=true;
+            }catch(Exception e){ReceivableFiles.delete(prepared);prepared.clear();}
+            final boolean success=ok;
+            a.runOnUiThread(()->{
+                checking=false;
+                if(!active.getAsBoolean()||revision!=captured){ReceivableFiles.delete(prepared);return;}
+                updateSelection();
+                if(!success){status.setText("Documents unavailable, changed, or exceed size limits. Refresh or select fewer invoices.");return;}
+                String message=prepared.size()+" file(s) ready.";
+                if(!missing.isEmpty())message+="\n\nOriginals not uploaded or not accessible:\n"+android.text.TextUtils.join("\n",missing);
+                final boolean[] sharing={false};
+                android.app.AlertDialog dialog=new android.app.AlertDialog.Builder(a).setTitle("Review sharing package").setMessage(message)
+                    .setNegativeButton("Cancel",null).setPositiveButton("Share",(d,w)->{
+                        if(!active.getAsBoolean()||revision!=captured)return;
+                        try{ReceivableFiles.share(a,prepared);sharing[0]=true;status.setText("Choose recipient in the share app.");}catch(Exception e){status.setText("Sharing unavailable.");}
+                    }).create();
+                dialog.setOnDismissListener(d->{if(!sharing[0])ReceivableFiles.delete(prepared);});dialog.show();
+            });
+        });
+    }
+    private void openOriginal(JSONObject row){
+        if(checking||!loaded)return;
+        int captured=revision;
+        checking=true;updateSelection();status.setText("Opening authorized original…");
+        worker.execute(()->{
+            java.io.File file=null;
+            try{file=api.receivableOriginal(route,val(row,"invoiceId"),ReceivableFiles.folder(a),20L*1024*1024);}catch(Exception ignored){}
+            final java.io.File result=file;
+            a.runOnUiThread(()->{
+                checking=false;
+                if(!active.getAsBoolean()||revision!=captured){if(result!=null)result.delete();return;}
+                updateSelection();
+                if(result==null){status.setText("Original not accessible, missing, unsupported or too large.");return;}
+                status.setText("Original downloaded online.");
+                ReceivableFiles.view(a,result,worker,()->active.getAsBoolean()&&revision==captured);
+            });
+        });
     }
     private void checkOriginals(ArrayList<JSONObject> chosen,int captured){
         if(checking||!loaded||revision!=captured)return;
@@ -273,6 +332,7 @@ final class NativeReceivables {
             CheckBox check=new CheckBox(a);check.setText(selectable(r)?"Select invoice":"Processing · not selectable");check.setEnabled(selectable(r));check.setChecked(selected.contains(val(r,"invoiceId")));card.addView(check);
             check.setOnCheckedChangeListener((v,on)->{if(on)selected.add(val(r,"invoiceId"));else selected.remove(val(r,"invoiceId"));revision++;updateSelection();});
             Button detail=new Button(a);detail.setAllCaps(false);detail.setText("Invoice details");card.addView(detail);detail.setOnClickListener(v->detail(r));
+            Button original=new Button(a);original.setAllCaps(false);original.setText("Original invoice");card.addView(original);original.setOnClickListener(v->openOriginal(r));
         }
         totals.setText("Outstanding\n"+money(usd,"USD")+"  ·  "+money(khr,"KHR")+"\n"+matched+" invoice(s) · filtered totals");
         if(matched==0)text(cards,"No matching outstanding invoices.",14,false);
