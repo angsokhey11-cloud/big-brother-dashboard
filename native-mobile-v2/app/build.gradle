@@ -1,0 +1,13 @@
+plugins { id 'com.android.application' }
+android {
+ namespace 'com.bigbrother.nativev2'
+ compileSdk 35
+ defaultConfig { minSdk 26; targetSdk 35; versionCode 1; versionName '2.0.0-dev' }
+ flavorDimensions 'connection'
+ productFlavors {
+  online { dimension 'connection'; applicationId 'com.bigbrother.online.v2dev'; buildConfigField 'String', 'ENDPOINT', '"https://sjfhlaclgmkwwofzstok.supabase.co"'; resValue 'string', 'app_name', 'BIG BROTHER Online V2 Dev' }
+  local { dimension 'connection'; applicationId 'com.bigbrother.localbrain.v2dev'; buildConfigField 'String', 'ENDPOINT', '"https://bigbrother.local:8443"'; resValue 'string', 'app_name', 'BIG BROTHER Local V2 Dev' }
+ }
+ buildFeatures { buildConfig true }
+ compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+}
