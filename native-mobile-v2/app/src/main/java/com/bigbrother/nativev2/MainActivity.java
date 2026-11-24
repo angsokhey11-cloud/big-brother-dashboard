@@ -21,6 +21,9 @@ public final class MainActivity extends Activity {
     private LinearLayout root;
     private TextView status;
     private boolean destroyed;
+    private JSONObject pendingExport;
+    private boolean exportBusy;
+    private static final int SAVE_PDF=4101;
     private int dp(int n) { return Math.round(n * getResources().getDisplayMetrics().density); }
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
@@ -213,7 +216,69 @@ public final class MainActivity extends Activity {
         }
         for(String[] field:new String[][]{{"Subtotal","subtotal"},{"Discount","discount"},{"Grand total","grandTotal"},{"Paid","amountPaid"},{"Outstanding","outstanding"}})
             label(field[0]+": "+invoice.optString(field[1]),16,Color.DKGRAY);
-        label("Export, printing and editing are not available in this development preview.",14,Color.DKGRAY);
+        label("Development PDF only — official layout and Digital Original registration pending.",14,Color.DKGRAY);
+        button("Save to Device (PDF)").setOnClickListener(v -> {
+            if(exportBusy)return;
+            pendingExport=invoice;exportBusy=true;
+            Intent picker=new Intent(Intent.ACTION_CREATE_DOCUMENT);
+            picker.addCategory(Intent.CATEGORY_OPENABLE);picker.setType("application/pdf");
+            picker.putExtra(Intent.EXTRA_TITLE,"BIG-BROTHER-"+safeInvoiceName(invoice)+".pdf");
+            try{startActivityForResult(picker,SAVE_PDF);}
+            catch(Exception e){pendingExport=null;exportBusy=false;Toast.makeText(this,"Save picker unavailable",Toast.LENGTH_LONG).show();}
+        });
+        button("Share PDF (Telegram)").setOnClickListener(v -> shareInvoice(invoice));
+    }
+    private String safeInvoiceName(JSONObject invoice){
+        String n=invoice.optString("invoiceNo","Invoice").replaceAll("[^A-Za-z0-9_-]","_");
+        return n.substring(0,Math.min(60,n.length()));
+    }
+    @Override protected void onActivityResult(int request,int result,Intent data){
+        super.onActivityResult(request,result,data);
+        if(request!=SAVE_PDF)return;
+        JSONObject invoice=pendingExport;pendingExport=null;
+        if(result!=RESULT_OK||data==null||data.getData()==null||invoice==null){exportBusy=false;return;}
+        android.net.Uri uri=data.getData();
+        worker.execute(() -> {
+            boolean ok=false;
+            try(java.io.ByteArrayOutputStream bytes=new java.io.ByteArrayOutputStream()){
+                InvoicePdf.write(invoice,bytes);
+                try(java.io.OutputStream out=getContentResolver().openOutputStream(uri,"w")){
+                    if(out==null)throw new java.io.IOException("Destination unavailable");
+                    bytes.writeTo(out);out.flush();
+                }
+                ok=true;
+            }catch(Exception e){}
+            final boolean success=ok;
+            runOnUiThread(() -> {exportBusy=false;if(!destroyed)Toast.makeText(this,success?"PDF saved":"Save failed; destination may contain an empty or partial file",Toast.LENGTH_LONG).show();});
+        });
+    }
+    private void shareInvoice(JSONObject invoice){
+        if(exportBusy)return;
+        exportBusy=true;
+        worker.execute(() -> {
+            java.io.File file=null;
+            try {
+                java.io.File folder=new java.io.File(getCacheDir(),"invoice_exports");
+                if(!folder.exists()&&!folder.mkdirs())throw new java.io.IOException("Cache unavailable");
+                java.io.File[] previous=folder.listFiles();
+                if(previous!=null)for(java.io.File old:previous)if(System.currentTimeMillis()-old.lastModified()>86400000L)old.delete();
+                file=java.io.File.createTempFile("BB-"+safeInvoiceName(invoice)+"-",".pdf",folder);
+                try(java.io.FileOutputStream out=new java.io.FileOutputStream(file)){InvoicePdf.write(invoice,out);}
+                android.net.Uri uri=androidx.core.content.FileProvider.getUriForFile(this,getPackageName()+".exports",file);
+                runOnUiThread(() -> {
+                    exportBusy=false;if(destroyed)return;
+                    Intent share=new Intent(Intent.ACTION_SEND);share.setType("application/pdf");
+                    share.putExtra(Intent.EXTRA_STREAM,uri);
+                    share.setClipData(android.content.ClipData.newRawUri("Invoice PDF",uri));
+                    share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    try{startActivity(Intent.createChooser(share,"Share invoice PDF"));}
+                    catch(Exception e){Toast.makeText(this,"Sharing unavailable",Toast.LENGTH_LONG).show();}
+                });
+            }catch(Exception e){
+                if(file!=null)file.delete();
+                runOnUiThread(() -> {exportBusy=false;if(!destroyed)Toast.makeText(this,"Could not generate PDF",Toast.LENGTH_LONG).show();});
+            }
+        });
     }
     private boolean allowed(JSONObject profile,String key,String action) {
         JSONObject user=profile.optJSONObject("user");
