@@ -106,7 +106,7 @@ public final class MainActivity extends Activity {
     private void showProfile(JSONObject profile) {
         screen();
         label("Permission profile loaded",20,Color.rgb(23,74,145));
-        label("Available modules — preview only; accounting screens are not connected.",14,Color.DKGRAY);
+        label("Available modules — Invoice History read-only preview",14,Color.DKGRAY);
         String[][] modules = {
             {"Invoice Generator","invoice_generator","canCreate"},
             {"Invoice History","invoice_history","canView"},
@@ -118,7 +118,8 @@ public final class MainActivity extends Activity {
         };
         int visible=0;
         for (String[] m:modules) if (allowed(profile,m[1],m[2])) {
-            label(m[0] + " — migration pending",16,Color.DKGRAY); visible++;
+            if ("invoice_history".equals(m[1])) button(m[0]).setOnClickListener(v -> showHistory(profile));
+            else label(m[0] + " — migration pending",16,Color.DKGRAY); visible++;
         }
         if (visible==0) label("No supported module grants found.",15,Color.DKGRAY);
         Button logout=button("Sign out");
@@ -129,6 +130,90 @@ public final class MainActivity extends Activity {
                 runOnUiThread(() -> { if (!destroyed) showLogin(); });
             });
         });
+    }
+    private EditText field(String hint) {
+        EditText value = new EditText(this);
+        value.setHint(hint); value.setSingleLine(true); value.setSaveEnabled(false);
+        root.addView(value); return value;
+    }
+    private void showHistory(JSONObject profile) {
+        screen();
+        label("Invoice History",22,Color.rgb(23,74,145));
+        button("Back to dashboard").setOnClickListener(v -> showProfile(profile));
+        EditText number=field("Invoice number");
+        EditText customer=field("Customer name");
+        EditText from=field("From date (YYYY-MM-DD)");
+        EditText to=field("To date (YYYY-MM-DD)");
+        TextView message=label("",14,Color.DKGRAY);
+        Button search=button("Search invoices");
+        LinearLayout results=new LinearLayout(this);
+        results.setOrientation(LinearLayout.VERTICAL); root.addView(results);
+        final LinearLayout page=root;
+        search.setOnClickListener(v -> {
+            String n=number.getText().toString(), c=customer.getText().toString();
+            String a=from.getText().toString().trim(), b=to.getText().toString().trim();
+            try {
+                if(!a.isEmpty()) java.time.LocalDate.parse(a);
+                if(!b.isEmpty()) java.time.LocalDate.parse(b);
+                if(!a.isEmpty()&&!b.isEmpty()&&a.compareTo(b)>0) throw new IllegalArgumentException();
+            } catch(Exception e) { message.setText("Enter valid dates in YYYY-MM-DD format."); return; }
+            if(n.trim().isEmpty()&&c.trim().isEmpty()&&(a.isEmpty()||b.isEmpty())){
+                message.setText("Enter an invoice number, customer, or both dates.");return;
+            }
+            search.setEnabled(false); results.removeAllViews(); message.setText("Searching…");
+            worker.execute(() -> {
+                try {
+                    JSONObject data=auth.invoiceList(n,c,a,b);
+                    JSONArray rows=data.getJSONArray("invoices");
+                    runOnUiThread(() -> {
+                        if(destroyed||root!=page)return;
+                        search.setEnabled(true);
+                        message.setText(rows.length()+" invoices found");
+                        for(int i=0;i<rows.length()&&i<200;i++){
+                            JSONObject row=rows.optJSONObject(i); if(row==null)continue;
+                            String id=row.optString("invoiceId","");
+                            Button entry=new Button(this);
+                            entry.setAllCaps(false);
+                            entry.setText(row.optString("invoiceNo")+" · "+row.optString("invoiceDate")+"\n"+row.optString("customer"));
+                            entry.setEnabled(!id.isEmpty());
+                            entry.setOnClickListener(w -> loadInvoice(profile,id,page,message,results,search));
+                            results.addView(entry);
+                        }
+                        if(rows.length()>200)message.setText("Showing first 200 of "+rows.length()+" invoices. Refine your search.");
+                    });
+                }catch(Exception e){runOnUiThread(() -> {if(!destroyed&&root==page){search.setEnabled(true);message.setText("Search failed. Check connection and permissions.");}});}
+            });
+        });
+    }
+    private void loadInvoice(JSONObject profile,String id,LinearLayout page,TextView message,LinearLayout results,Button search){
+        search.setEnabled(false);
+        for(int i=0;i<results.getChildCount();i++)results.getChildAt(i).setEnabled(false);
+        message.setText("Loading invoice…");
+        worker.execute(() -> {
+            try {
+                JSONObject invoice=auth.invoiceDetail(id).getJSONObject("invoice");
+                if(!id.equals(invoice.optString("invoiceId")))throw new IllegalStateException("Invoice identity mismatch");
+                runOnUiThread(() -> {if(!destroyed&&root==page)showInvoice(profile,invoice);});
+            } catch(Exception e){runOnUiThread(() -> {if(!destroyed&&root==page){
+                message.setText("Could not load invoice. Search again.");
+                search.setEnabled(true);results.removeAllViews();
+            }});}
+        });
+    }
+    private void showInvoice(JSONObject profile,JSONObject invoice){
+        screen();
+        label("Invoice preview — read only",22,Color.rgb(23,74,145));
+        button("Back to Invoice History").setOnClickListener(v -> showHistory(profile));
+        for(String[] field:new String[][]{{"Invoice","invoiceNo"},{"Date","invoiceDate"},{"Customer","customer"},{"Currency","currency"}})
+            label(field[0]+": "+invoice.optString(field[1]),16,Color.DKGRAY);
+        JSONArray items=invoice.optJSONArray("items");
+        if(items!=null)for(int i=0;i<items.length();i++){
+            JSONObject item=items.optJSONObject(i);if(item==null)continue;
+            label((i+1)+". "+item.optString("productName",item.optString("description",item.optString("name")))+"\nQty: "+item.optString("qty",item.optString("quantity"))+"  |  Price: "+item.optString("unitPrice",item.optString("price"))+"  |  Amount: "+item.optString("amount",item.optString("total")),15,Color.DKGRAY);
+        }
+        for(String[] field:new String[][]{{"Subtotal","subtotal"},{"Discount","discount"},{"Grand total","grandTotal"},{"Paid","amountPaid"},{"Outstanding","outstanding"}})
+            label(field[0]+": "+invoice.optString(field[1]),16,Color.DKGRAY);
+        label("Export, printing and editing are not available in this development preview.",14,Color.DKGRAY);
     }
     private boolean allowed(JSONObject profile,String key,String action) {
         JSONObject user=profile.optJSONObject("user");
