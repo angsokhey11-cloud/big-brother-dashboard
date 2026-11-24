@@ -227,6 +227,15 @@ public final class MainActivity extends Activity {
             catch(Exception e){pendingExport=null;exportBusy=false;Toast.makeText(this,"Save picker unavailable",Toast.LENGTH_LONG).show();}
         });
         button("Share PDF (Telegram)").setOnClickListener(v -> shareInvoice(invoice));
+        button("Share invoice images (PNG)").setOnClickListener(v -> shareImages(invoice));
+        button("Print A4 / PDF").setOnClickListener(v -> {
+            if(exportBusy)return;
+            android.print.PrintManager pm=(android.print.PrintManager)getSystemService(PRINT_SERVICE);
+            if(pm==null){Toast.makeText(this,"Printing unavailable",Toast.LENGTH_LONG).show();return;}
+            try{pm.print("BIG BROTHER Invoice "+safeInvoiceName(invoice),new InvoiceNativeActions.Adapter(this,invoice),
+                new android.print.PrintAttributes.Builder().setMediaSize(android.print.PrintAttributes.MediaSize.ISO_A4).setColorMode(android.print.PrintAttributes.COLOR_MODE_COLOR).build());}
+            catch(Exception e){Toast.makeText(this,"Printing unavailable",Toast.LENGTH_LONG).show();}
+        });
     }
     private String safeInvoiceName(JSONObject invoice){
         String n=invoice.optString("invoiceNo","Invoice").replaceAll("[^A-Za-z0-9_-]","_");
@@ -277,6 +286,38 @@ public final class MainActivity extends Activity {
             }catch(Exception e){
                 if(file!=null)file.delete();
                 runOnUiThread(() -> {exportBusy=false;if(!destroyed)Toast.makeText(this,"Could not generate PDF",Toast.LENGTH_LONG).show();});
+            }
+        });
+    }
+    private void shareImages(JSONObject invoice){
+        if(exportBusy)return;
+        exportBusy=true;
+        final LinearLayout page=root;
+        worker.execute(() -> {
+            java.util.ArrayList<java.io.File> files=null;
+            try{
+                java.io.File folder=new java.io.File(getCacheDir(),"invoice_exports");
+                if(!folder.exists()&&!folder.mkdirs())throw new java.io.IOException("Cache unavailable");
+                files=InvoiceNativeActions.pngs(this,invoice,folder);
+                java.util.ArrayList<android.net.Uri> uris=new java.util.ArrayList<>();
+                for(java.io.File file:files)uris.add(androidx.core.content.FileProvider.getUriForFile(this,getPackageName()+".exports",file));
+                final java.util.ArrayList<java.io.File> created=files;
+                runOnUiThread(() -> {
+                    exportBusy=false;
+                    if(destroyed||root!=page){for(java.io.File file:created)file.delete();return;}
+                    Intent share=new Intent(uris.size()==1?Intent.ACTION_SEND:Intent.ACTION_SEND_MULTIPLE);
+                    share.setType("image/png");
+                    if(uris.size()==1)share.putExtra(Intent.EXTRA_STREAM,uris.get(0));
+                    else share.putParcelableArrayListExtra(Intent.EXTRA_STREAM,uris);
+                    android.content.ClipData clip=android.content.ClipData.newRawUri("Invoice image",uris.get(0));
+                    for(int i=1;i<uris.size();i++)clip.addItem(new android.content.ClipData.Item(uris.get(i)));
+                    share.setClipData(clip);share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    try{startActivity(Intent.createChooser(share,"Share invoice images"));}
+                    catch(Exception e){for(java.io.File file:created)file.delete();Toast.makeText(this,"Sharing unavailable",Toast.LENGTH_LONG).show();}
+                });
+            }catch(Exception e){
+                if(files!=null)for(java.io.File file:files)file.delete();
+                runOnUiThread(()->{exportBusy=false;if(!destroyed&&root==page)Toast.makeText(this,"Image export failed. Try PDF for long invoices.",Toast.LENGTH_LONG).show();});
             }
         });
     }
