@@ -35,6 +35,8 @@ def stage():
     print("Installed Invoice History: existing cache-first route enabled")
     from history_fast import apply as apply_history_fast
     apply_history_fast(assets)
+    from invoice_native_files import apply as apply_invoice_native_files
+    apply_invoice_native_files(assets)
     # The update entry lives in the existing Mobile Settings, not a header.
     mobile=assets/"big-brother-dashboard/mobile.html"
     source=mobile.read_text(encoding="utf-8")
@@ -140,6 +142,26 @@ def stage():
             # No automatic reload loop for an installed source failure.
             s = s.replace('        scheduleRetry();\n    }\n    @Override protected void onActivityResult','        stopRetry();\n    }\n    @Override protected void onActivityResult')
             s = s.replace('           retry!=null&&retry.getVisibility()==View.VISIBLE)scheduleRetry();','           retry!=null&&retry.getVisibility()==View.VISIBLE)stopRetry();')
+        if name == "BBNativeFileActions.java":
+            # Multi-page Save creates one ZIP with all original PNG pages.
+            s = replace_once(s, 'if(!"share".equals(action)&&entries.length()!=1)', 'if("open".equals(action)&&entries.length()!=1)')
+            s = replace_once(s, '            final int request=requestId;', """            if("save".equals(action)&&files.size()>1){
+                File zipped=File.createTempFile("BIG-BROTHER-Invoice-Pages-", ".zip",folder);
+                try(java.util.zip.ZipOutputStream zip=new java.util.zip.ZipOutputStream(new FileOutputStream(zipped))){
+                    for(File part:files){
+                        zip.putNextEntry(new java.util.zip.ZipEntry(part.getName().replaceFirst("^[0-9]+_[0-9]+_","")));
+                        try(InputStream in=new java.io.FileInputStream(part)){
+                            byte[] b=new byte[65536];int n;while((n=in.read(b))!=-1)zip.write(b,0,n);
+                        }
+                        zip.closeEntry();
+                    }
+                }
+                for(File part:files)part.delete();
+                files.clear();types.clear();files.add(zipped);types.add("application/zip");
+            }
+            final int request=requestId;""")
+            s = replace_once(s, '        pendingSave=file;', '        if(pendingSave!=null)throw new IllegalStateException("Finish the current Save to Device first.");\n        pendingSave=file;')
+            s = replace_once(s, '        activity.startActivityForResult(intent,SAVE_REQUEST);', '        try{activity.startActivityForResult(intent,SAVE_REQUEST);}catch(Exception e){pendingSave=null;throw e;}')
         if name == "MainActivity.java":
             s = replace_once(s, "    private WebView browser;", "    private WebView browser;\n    private BundledUpdate bundledUpdate;")
             s = replace_once(s, "        nativePrint = BBNativePrint.install(this,browser);", "        nativePrint = BBNativePrint.install(this,browser);\n        bundledUpdate = new BundledUpdate(this);\n        bundledUpdate.attach(browser);")
