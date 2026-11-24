@@ -90,7 +90,8 @@ final class InvoiceNativeActions {
                     float l=margins.getLeftMils()*72f/1000,t=margins.getTopMils()*72f/1000;
                     float r=w-margins.getRightMils()*72f/1000,b=h-margins.getBottomMils()*72f/1000;
                     if(r<=l||b<=t)throw new IOException("Invalid paper margins");
-                    try(PdfRenderer renderer=new PdfRenderer(ParcelFileDescriptor.open(pdf,ParcelFileDescriptor.MODE_READ_ONLY));PdfDocument output=new PdfDocument()){
+                    PdfDocument output=new PdfDocument();
+                    try(PdfRenderer renderer=new PdfRenderer(ParcelFileDescriptor.open(pdf,ParcelFileDescriptor.MODE_READ_ONLY))){
                         for(int i=0;i<count;i++){
                             if(cancel.isCanceled())break;
                             if(!requested(i,pages))continue;
@@ -109,7 +110,7 @@ final class InvoiceNativeActions {
                             written.add(new PageRange(i,i));
                         }
                         if(!cancel.isCanceled()&&!written.isEmpty())output.writeTo(out);
-                    }
+                    }finally{output.close();}
                     if(cancel.isCanceled())cb.onWriteCancelled();
                     else if(written.isEmpty())cb.onWriteFailed("No pages selected");
                     else cb.onWriteFinished(written.toArray(new PageRange[0]));
