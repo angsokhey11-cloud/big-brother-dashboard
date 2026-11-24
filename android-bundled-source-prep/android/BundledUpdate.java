@@ -27,7 +27,8 @@ final class BundledUpdate {
     static final long LIMIT=150L*1024*1024;
     final Activity a;final LinearLayout bar;final TextView label;final Button action, later;
     final ExecutorService worker=Executors.newSingleThreadExecutor();
-    private boolean dead,busy;private long lastCheck=-900000;private Offer offer;private File ready;
+    private boolean dead,busy;private long lastCheck=-60000;private Offer offer;private File ready;
+    private String currentName="Installed version";private String lastStatus="Ready to check for updates";
     static final class Offer {
         final long version,size;final String name,url,digest;
         Offer(long v,long s,String n,String u,String d){version=v;size=s;name=n;url=u;digest=d;}
@@ -39,24 +40,41 @@ final class BundledUpdate {
         label=new TextView(a);label.setTextColor(0xff174a91);
         bar.addView(label,new LinearLayout.LayoutParams(0,-2,1));
         action=new Button(a);action.setAllCaps(false);bar.addView(action);action.setOnClickListener(v->onAction());
-        later=new Button(a);later.setText("Later");later.setAllCaps(false);bar.addView(later);later.setOnClickListener(v->bar.setVisibility(View.GONE));
-        bar.setVisibility(View.GONE);
+        later=new Button(a);later.setText("Later");later.setAllCaps(false);bar.addView(later);later.setOnClickListener(v->{
+            if(busy)return;
+            // Keep a visible entry point even if the user postpones an update.
+            offer=null;ready=null;lastCheck=-60000;show(currentName+" · Update postponed","Check");
+        });
+        try{currentName="V"+a.getPackageManager().getPackageInfo(a.getPackageName(),0).versionName.replace("-bundled-dev","");}catch(Exception ignored){}
+        label.setTextSize(12);
+        action.setMinHeight(0);action.setMinimumHeight(0);action.setTextSize(12);
+        later.setMinHeight(0);later.setMinimumHeight(0);later.setTextSize(12);
+        show(currentName+" · Ready to check","Check");
     }
-    void check(){
-        if(dead||busy||offer!=null||SystemClock.elapsedRealtime()-lastCheck<900000)return;
+    void check(){check(false);}
+    private void check(boolean manual){
+        if(dead||busy||offer!=null||(!manual&&SystemClock.elapsedRealtime()-lastCheck<60000))return;
         lastCheck=SystemClock.elapsedRealtime();busy=true;
+        show(currentName+" · Checking for updates…","Checking");
         worker.execute(()->{
-            Offer result=null;
-            try{result=checkCatalog();}catch(Exception ignored){}
-            final Offer found=result;
+            Offer result=null;String error=null;
+            try{result=checkCatalog();}catch(Exception e){error=e instanceof java.net.SocketTimeoutException?"Connection timed out":e instanceof java.net.UnknownHostException?"Update server unreachable":e instanceof javax.net.ssl.SSLException?"Secure connection failed":e.getMessage();}
+            final Offer found=result;final String failure=error;
             a.runOnUiThread(()->{busy=false;if(dead||a.isFinishing()||a.isDestroyed())return;
-                if(found!=null){offer=found;show("App update available · "+found.version,"Download");}
+                if(found!=null){offer=found;show("V3.0."+(found.version-30000)+" available · "+currentName+" installed","Download");}
+                else if(failure!=null){show(currentName+" · "+failure,"Retry");}
+                else{show(currentName+" · Up to date","Check");}
             });
         });
     }
-    private void show(String text,String button){label.setText(text);action.setText(button);action.setEnabled(!busy);bar.setVisibility(View.VISIBLE);}
+    private void show(String text,String button){
+        lastStatus=text;label.setText(text);action.setText(button);action.setEnabled(!busy);
+        later.setVisibility(offer!=null&&!busy?View.VISIBLE:View.GONE);
+        bar.setVisibility(View.VISIBLE);
+    }
     private void onAction(){
-        if(dead||busy||offer==null)return;
+        if(dead||busy)return;
+        if(offer==null){check(true);return;}
         if(ready!=null&&ready.isFile()){
             new AlertDialog.Builder(a).setTitle("Install BIG BROTHER update?")
                 .setMessage("Save or complete any unfinished invoice or accounting work first. Android will close the app during installation. Your existing login, cache and settings are retained by an in-place update.")
@@ -115,23 +133,28 @@ final class BundledUpdate {
         HttpsURLConnection c=open(new URL("https://api.github.com/repos/"+REPO+"/releases/tags/"+TAG));
         try{
             c.setRequestProperty("Accept","application/vnd.github+json");int status=c.getResponseCode();
-            if(status==404)return null;if(status!=200)throw new IOException("Update catalog unavailable");
+            if(status==404)throw new IOException("Update channel not found (404)");
+            if(status==403||status==429)throw new IOException("Update service rate limited ("+status+")");
+            if(status!=200)throw new IOException("Update check failed (HTTP "+status+")");
             JSONObject release;
             try(InputStream in=c.getInputStream();ByteArrayOutputStream out=new ByteArrayOutputStream()){
                 byte[] b=new byte[8192];int n;while((n=in.read(b))!=-1){if(out.size()+n>1024*1024)throw new IOException("Catalog too large");out.write(b,0,n);}
                 release=new JSONObject(out.toString("UTF-8"));
             }
             if(release.optBoolean("draft",true)||!release.optBoolean("prerelease",false)||!TAG.equals(release.optString("tag_name")))throw new IOException("Wrong release channel");
-            JSONArray assets=release.getJSONArray("assets");long current=installedVersion();Offer best=null;
+            JSONArray assets=release.getJSONArray("assets");long current=installedVersion();Offer best=null;boolean eligibleName=false;
             Pattern pattern=Pattern.compile("BIG-BROTHER-Online-Bundled-DEV-([0-9]+)\\.apk");
             for(int i=0;i<assets.length();i++){
                 JSONObject row=assets.getJSONObject(i);String name=row.optString("name");Matcher m=pattern.matcher(name);
                 if(!m.matches())continue;
                 long v=Long.parseLong(m.group(1)),size=row.optLong("size",-1);String digest=row.optString("digest"),url=row.optString("browser_download_url");
+                if(v>current)eligibleName=true;
                 if(v<=current||v>Integer.MAX_VALUE||size<=0||size>LIMIT||!digest.matches("sha256:[a-fA-F0-9]{64}")||
                     !url.equals("https://github.com/"+REPO+"/releases/download/"+TAG+"/"+name))continue;
                 if(best==null||v>best.version)best=new Offer(v,size,name,url,digest.substring(7));
-            }return best;
+            }
+            if(best==null&&eligibleName)throw new IOException("New release metadata incomplete");
+            return best;
         }finally{c.disconnect();}
     }
     private File download(Offer offer)throws Exception{
