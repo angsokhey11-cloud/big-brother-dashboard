@@ -33,6 +33,8 @@ def stage():
         "if(!forceLive&&!liveApproval&&!realPilot&&cached?.canOpen(route)){")
     menu.write_text(source, encoding="utf-8")
     print("Installed Invoice History: existing cache-first route enabled")
+    from history_fast import apply as apply_history_fast
+    apply_history_fast(assets)
     # The installed package owns UI versions. Rotate only the existing PWA
     # static-shell cache, not IndexedDB, saved credentials or business snapshots.
     # Include the staged assets and this script, not the Android signing version:
