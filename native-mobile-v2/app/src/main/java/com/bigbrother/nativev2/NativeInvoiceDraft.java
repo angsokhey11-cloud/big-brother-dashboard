@@ -22,7 +22,11 @@ final class NativeInvoiceDraft {
     private boolean busy,customersReady;
     private int generation;
     private TextView status,number,customerLabel,total;
-    private EditText date,productQuery;
+    private EditText date,productQuery,rateInput,discountInput,partialInput,cashInput,bankInput,actualBankInput;
+    private Spinner discountMode,paymentMethod,bankCurrency;
+    private TextView paymentSummary,exchangeSummary,bankSummary;
+    private String lastCurrency;
+    private boolean resettingPayment;
     private Spinner locationPicker,batchPicker,currency;
     private LinearLayout customerBox,productBox,linesBox;
     private final ArrayList<Line> lines=new ArrayList<>();
@@ -74,7 +78,11 @@ final class NativeInvoiceDraft {
         currency.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener(){
             public void onNothingSelected(android.widget.AdapterView<?> p){}
             public void onItemSelected(android.widget.AdapterView<?> p,View v,int pos,long id){
-                if(!lines.isEmpty()&&!lines.get(0).currency.equals(curr())){lines.clear();renderLines();status.setText("Currency changed. Draft lines cleared; enter prices in the new currency.");}
+                if(lastCurrency!=null&&!lastCurrency.equals(curr())){
+                    lines.clear();clearPayment();renderLines();renderProducts();
+                    status.setText("Currency changed. Draft items and payment amounts cleared.");
+                }
+                lastCurrency=curr();
             }
         });
         button(root,"Apply batch and location",this::apply);
@@ -86,6 +94,7 @@ final class NativeInvoiceDraft {
         productBox=column(root);
         text(root,"Invoice Items",18);linesBox=column(root);
         total=text(root,"Draft subtotal —",18);
+        paymentPanel();
         Button complete=button(root,"Complete — migration pending",()->{});complete.setEnabled(false);
         load();
     }
@@ -114,7 +123,7 @@ final class NativeInvoiceDraft {
             }catch(Exception e){a.runOnUiThread(()->{if(active.getAsBoolean()){busy=false;status.setText("Master data unavailable — retry.");}});}
         });
     }
-    private void reset(){generation++;location=null;batch=null;customer=null;prices=null;warehouse=null;customersReady=false;lines.clear();customerBox.removeAllViews();productBox.removeAllViews();customerLabel.setText("Customer: not selected");number.setText("Invoice No. —");renderLines();}
+    private void reset(){generation++;location=null;batch=null;customer=null;prices=null;warehouse=null;customersReady=false;lines.clear();customerBox.removeAllViews();productBox.removeAllViews();customerLabel.setText("Customer: not selected");number.setText("Invoice No. —");clearPayment();renderLines();}
     private boolean sameScope(){
         if(location==null)return false;
         int bi=batchPicker.getSelectedItemPosition(),li=locationPicker.getSelectedItemPosition();
@@ -170,7 +179,7 @@ final class NativeInvoiceDraft {
     }
     private void loadPrices(JSONObject row){
         if(busy||!sameScope())return;
-        customer=row;prices=null;lines.clear();renderLines();customerLabel.setText("Customer: "+val(row,"name"));busy=true;
+        customer=row;prices=null;lines.clear();clearPayment();renderLines();customerLabel.setText("Customer: "+val(row,"name"));busy=true;
         status.setText("Loading customer prices…");int request=++generation;
         worker.execute(()->{
             JSONObject result=null;try{result=api.generatorPrices(val(row,"customerId")).optJSONObject("prices");}catch(Exception ignored){}
@@ -242,7 +251,7 @@ final class NativeInvoiceDraft {
         EditText qty=field(form,"Selling quantity",InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL);
         EditText price=field(form,"Price per selected selling unit ("+current+")",InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL);
         JSONObject specific=prices==null?null:prices.optJSONObject(code);
-        final String basePrice="USD".equals(current)&&specific!=null?val(specific,"priceUSD"):"";
+        final String basePrice=specific!=null?val(specific,"USD".equals(current)?"priceUSD":"priceKHR"):"";
         final EditText purchased,zero;
         if(tracks){
             text(form,"Stock source in base units · Purchased "+plain(stock[0])+" / Zero-Cost "+plain(stock[1]),13);
@@ -288,6 +297,81 @@ final class NativeInvoiceDraft {
             }catch(Exception e){qty.setError("Enter valid positive quantity and nonnegative price (max 4 decimals).");}
         }));dialog.show();
     }
+    private Spinner select(String... values){
+        Spinner p=new Spinner(a);root.addView(p);choices(p,new ArrayList<>(java.util.Arrays.asList(values)));return p;
+    }
+    private void observe(EditText field){
+        field.addTextChangedListener(new android.text.TextWatcher(){
+            public void beforeTextChanged(CharSequence s,int start,int count,int after){}
+            public void onTextChanged(CharSequence s,int start,int before,int count){updatePayment();}
+            public void afterTextChanged(android.text.Editable e){}
+        });
+    }
+    private void observe(Spinner spinner){
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
+            public void onNothingSelected(AdapterView<?> p){}
+            public void onItemSelected(AdapterView<?> p,View v,int pos,long id){updatePayment();}
+        });
+    }
+    private void paymentPanel(){
+        text(root,"Discount & Payment",18);
+        int numeric=InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL;
+        rateInput=field(root,"Daily exchange rate: 1 USD = ? KHR",numeric);
+        discountMode=select("Fixed amount","Percentage");
+        discountInput=field(root,"Discount",numeric);
+        paymentMethod=select("Cash","Bank","Credit","Partially Paid in Cash","Partially Paid in Bank","Cash + Bank");
+        partialInput=field(root,"Partial payment (invoice currency)",numeric);
+        cashInput=field(root,"Cash amount (invoice currency)",numeric);
+        bankInput=field(root,"Bank amount (invoice currency)",numeric);
+        bankCurrency=select("USD","KHR");
+        actualBankInput=field(root,"Actual bank amount (selected bank currency)",numeric);
+        paymentSummary=text(root,"",16);exchangeSummary=text(root,"",14);bankSummary=text(root,"",14);
+        for(EditText f:new EditText[]{rateInput,discountInput,partialInput,cashInput,bankInput,actualBankInput})observe(f);
+        for(Spinner p:new Spinner[]{discountMode,paymentMethod,bankCurrency})observe(p);
+        updatePayment();
+    }
+    private void clearPayment(){
+        if(paymentSummary==null)return;
+        resettingPayment=true;
+        for(EditText f:new EditText[]{discountInput,partialInput,cashInput,bankInput,actualBankInput})f.setText("");
+        resettingPayment=false;updatePayment();
+    }
+    private String money(BigDecimal n,String currency){
+        return currency+" "+DraftPayment.round(n,currency).toPlainString();
+    }
+    private void updatePayment(){
+        if(paymentSummary==null||resettingPayment)return;
+        String method=String.valueOf(paymentMethod.getSelectedItem()),cur=curr();
+        boolean partial=method.startsWith("Partially"),split="Cash + Bank".equals(method);
+        boolean bank=split||"Bank".equals(method)||"Partially Paid in Bank".equals(method);
+        partialInput.setVisibility(partial?View.VISIBLE:View.GONE);
+        cashInput.setVisibility(split?View.VISIBLE:View.GONE);bankInput.setVisibility(split?View.VISIBLE:View.GONE);
+        bankCurrency.setVisibility(bank?View.VISIBLE:View.GONE);actualBankInput.setVisibility(bank?View.VISIBLE:View.GONE);
+        exchangeSummary.setText("");bankSummary.setText("");
+        BigDecimal subtotal=BigDecimal.ZERO;for(Line line:lines)subtotal=subtotal.add(line.qty.multiply(line.price));
+        try{
+            DraftPayment.Totals t=DraftPayment.calculate(subtotal,cur,discountMode.getSelectedItemPosition()==1,
+                DraftPayment.amount(discountInput.getText().toString()),method,
+                partial?DraftPayment.amount(partialInput.getText().toString()):BigDecimal.ZERO,
+                split?DraftPayment.amount(cashInput.getText().toString()):BigDecimal.ZERO,
+                split?DraftPayment.amount(bankInput.getText().toString()):BigDecimal.ZERO);
+            paymentSummary.setText("Discount: "+money(t.discount,cur)+"\nGrand Total: "+money(t.grand,cur)+"\nAmount Paid: "+money(t.paid,cur)+"\nCredit Amount: "+money(t.outstanding,cur));
+            BigDecimal rate=DraftPayment.amount(rateInput.getText().toString());
+            if(rate.compareTo(BigDecimal.ONE)>0){
+                String other="USD".equals(cur)?"KHR":"USD";
+                exchangeSummary.setText("Exchange equivalent: "+money(DraftPayment.exchange(t.grand,cur,other,rate),other));
+            }else exchangeSummary.setText("Enter today's exchange rate to calculate equivalent.");
+            if(bank){
+                String bc=String.valueOf(bankCurrency.getSelectedItem());
+                BigDecimal actual=DraftPayment.amount(actualBankInput.getText().toString());
+                BigDecimal equivalent=DraftPayment.exchange(actual,bc,cur,rate);
+                BigDecimal expected=DraftPayment.exchange(t.bank,cur,bc,rate);
+                bankSummary.setText("Bank amount required: "+money(expected,bc)+"\nEntered bank equivalent: "+money(equivalent,cur)+
+                    "\n"+(equivalent.compareTo(t.bank)<0?"Entered amount is insufficient. ":"Entered amount covers planned bank payment. ")+
+                    "No registered transfer verified. Draft only.");
+            }
+        }catch(IllegalArgumentException e){paymentSummary.setText("Draft payment incomplete: "+e.getMessage());}
+    }
     private void renderLines(){
         if(linesBox==null)return;
         linesBox.removeAllViews();BigDecimal sum=BigDecimal.ZERO;
@@ -298,5 +382,6 @@ final class NativeInvoiceDraft {
             button(linesBox,"Remove "+row.name,()->{lines.remove(row);renderLines();renderProducts();});
         }
         total.setText("Draft subtotal: "+curr()+" "+sum.setScale("KHR".equals(curr())?0:2,RoundingMode.HALF_UP).toPlainString()+" · unverified");
+        updatePayment();
     }
 }
