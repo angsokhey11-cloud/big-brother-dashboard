@@ -107,6 +107,25 @@ final class CloudAuth {
         if (Boolean.FALSE.equals(data.opt("success"))) throw new IOException("Invoice History request failed");
         return data;
     }
+    private JSONObject generatorRead(String fn,JSONObject args)throws Exception{
+        if(!"online".equals(BuildConfig.FLAVOR)||!NativeRoutes.allowed(profile(),"invoice","canCreate"))
+            throw new IOException("Invoice Generator permission denied");
+        JSONObject data=new JSONObject(post("/rest/v1/rpc/"+fn,args,accessToken));
+        if(Boolean.FALSE.equals(data.opt("success")))throw new IOException("Invoice Generator request failed");
+        return data;
+    }
+    synchronized JSONObject generatorBootstrap()throws Exception{return generatorRead("bb_sales_invoice_bootstrap",new JSONObject());}
+    synchronized JSONObject generatorBatches()throws Exception{return generatorRead("bb_sales_open_batches",new JSONObject());}
+    synchronized JSONObject generatorCustomers(String code)throws Exception{
+        return generatorRead("bb_sales_customers_by_location",new JSONObject().put("p_location_code",code));
+    }
+    synchronized JSONObject generatorPrices(String id)throws Exception{
+        return generatorRead("bb_sales_customer_prices",new JSONObject().put("p_customer_id",id));
+    }
+    synchronized JSONObject generatorNumber(String batch)throws Exception{
+        return batch.isEmpty()?generatorRead("bb_sales_next_invoice_no",new JSONObject()):
+            generatorRead("bb_sales_batch_next_invoice_no",new JSONObject().put("p_batch_id",batch));
+    }
     synchronized JSONObject dashboardOverview() throws Exception {
         JSONObject current=profile();
         if(!"online".equals(BuildConfig.FLAVOR))throw new IOException("Online dashboard only");
