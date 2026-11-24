@@ -1,0 +1,51 @@
+name: Native V2 isolated invoice transaction tests
+on:
+  push:
+    branches: [mobile-v2-development]
+    paths: ['native-mobile-v2/tests/postgres/**', '.github/workflows/native-v2-postgres-fixtures.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  postgres-fixtures:
+    if: github.ref == 'refs/heads/mobile-v2-development'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: fixture-only
+          POSTGRES_DB: ordinary_fixture
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d ordinary_fixture"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGPASSWORD: fixture-only
+      PGHOST: 127.0.0.1
+      PGUSER: postgres
+      PGDATABASE: ordinary_fixture
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Deployed core and split save with synthetic records
+        working-directory: native-mobile-v2/tests/postgres
+        run: |
+          psql -v ON_ERROR_STOP=1 -f base-fixture.sql
+          psql -v ON_ERROR_STOP=1 -f historical-bank-trigger.sql
+          psql -v ON_ERROR_STOP=1 -f ordinary-fixture.sql
+          psql -v ON_ERROR_STOP=1 -f deployed-save-functions.sql
+          psql -v ON_ERROR_STOP=1 -f ordinary-assert.sql
+      - name: Existing multi-bank atomic regression suite in separate database
+        working-directory: native-mobile-v2/tests/postgres
+        run: |
+          createdb multi_fixture
+          # Roles are cluster-wide and already exist; the second fixture gets fresh tables.
+          sed '/^create role anon nologin;/d; /^create role authenticated nologin;/d' base-fixture.sql | psql -d multi_fixture -v ON_ERROR_STOP=1
+          psql -d multi_fixture -v ON_ERROR_STOP=1 -f historical-bank-trigger.sql
+          psql -d multi_fixture -v ON_ERROR_STOP=1 -f multi-bank-function.sql
+          psql -d multi_fixture -v ON_ERROR_STOP=1 -f multi-bank-assert.sql
