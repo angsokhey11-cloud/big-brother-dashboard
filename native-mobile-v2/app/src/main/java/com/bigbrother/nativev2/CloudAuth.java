@@ -43,6 +43,43 @@ final class CloudAuth {
         }
         return new JSONObject(post("/rest/v1/rpc/bb_current_access_profile", new JSONObject(), accessToken));
     }
+    synchronized JSONObject invoiceList(String invoiceNo, String customer, String from, String to) throws Exception {
+        JSONObject args = new JSONObject();
+        args.put("p_invoice_no", invoiceNo.trim());
+        args.put("p_customer", customer.trim());
+        args.put("p_date_from", from.isEmpty() ? JSONObject.NULL : from);
+        args.put("p_date_to", to.isEmpty() ? JSONObject.NULL : to);
+        args.put("p_invoice_type", "");
+        return readInvoiceRpc("bb_invoice_history_mobile_list", args);
+    }
+    synchronized JSONObject invoiceDetail(String invoiceId) throws Exception {
+        if (invoiceId == null || invoiceId.trim().isEmpty()) throw new IOException("Invoice ID required");
+        JSONObject args = new JSONObject();
+        args.put("p_invoice_id", invoiceId);
+        return readInvoiceRpc("bb_invoice_history_mobile_detail_by_id", args);
+    }
+    private JSONObject readInvoiceRpc(String fn, JSONObject args) throws Exception {
+        JSONObject current = profile();
+        JSONObject user = current.optJSONObject("user");
+        boolean allowed = user != null && Boolean.TRUE.equals(user.opt("isAdmin"));
+        if (!allowed) {
+            org.json.JSONArray grants = current.optJSONArray("modules");
+            JSONObject exact = null, wildcard = null;
+            if (grants != null) for (int i=0; i<grants.length(); i++) {
+                JSONObject grant = grants.optJSONObject(i);
+                if (grant == null) continue;
+                String key = grant.optString("moduleKey").trim();
+                if ("*".equals(key) && wildcard == null) wildcard = grant;
+                if ("invoice_history".equalsIgnoreCase(key) && exact == null) exact = grant;
+            }
+            JSONObject selected = wildcard != null ? wildcard : exact;
+            allowed = selected != null && Boolean.TRUE.equals(selected.opt("canView"));
+        }
+        if (!allowed) throw new IOException("Invoice History permission denied");
+        JSONObject data = new JSONObject(post("/rest/v1/rpc/" + fn, args, accessToken));
+        if (Boolean.FALSE.equals(data.opt("success"))) throw new IOException("Invoice History request failed");
+        return data;
+    }
     synchronized void signOut() throws Exception {
         try { if (accessToken != null) post("/auth/v1/logout", new JSONObject(), accessToken); }
         finally { clear(); }
