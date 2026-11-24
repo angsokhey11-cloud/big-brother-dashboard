@@ -26,7 +26,8 @@ public final class MainActivity extends Activity {
     private boolean autoChecked;
     private JSONObject pendingExport;
     private boolean exportBusy;
-    private static final int SAVE_PDF=4101;
+    private static final int SAVE_PDF=4101, SAVE_PNG_FOLDER=4102;
+    private final ExecutorService imageWorker=Executors.newSingleThreadExecutor();
     private int dp(int n) { return Math.round(n * getResources().getDisplayMetrics().density); }
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
@@ -271,8 +272,11 @@ public final class MainActivity extends Activity {
         }
         for(String[] field:new String[][]{{"Subtotal","subtotal"},{"Discount","discount"},{"Grand total","grandTotal"},{"Paid","amountPaid"},{"Outstanding","outstanding"}})
             label(field[0]+": "+invoice.optString(field[1]),16,Color.DKGRAY);
-        label("Development PDF only — official layout and Digital Original registration pending.",14,Color.DKGRAY);
-        button("Save to Device (PDF)").setOnClickListener(v -> {
+        label("Development copies — Digital Original registration pending.",14,Color.DKGRAY);
+        button("Save to Device (PNG)").setOnClickListener(v -> beginSaveImages(invoice));
+        button("Share to Telegram (PNG)").setOnClickListener(v -> shareImages(invoice));
+        addDigitalOriginalStatus(invoice);
+        button("Save PDF (optional)").setOnClickListener(v -> {
             if(exportBusy)return;
             pendingExport=invoice;exportBusy=true;
             Intent picker=new Intent(Intent.ACTION_CREATE_DOCUMENT);
@@ -281,9 +285,7 @@ public final class MainActivity extends Activity {
             try{startActivityForResult(picker,SAVE_PDF);}
             catch(Exception e){pendingExport=null;exportBusy=false;Toast.makeText(this,"Save picker unavailable",Toast.LENGTH_LONG).show();}
         });
-        button("Share PDF (Telegram)").setOnClickListener(v -> shareInvoice(invoice));
-        addDigitalOriginalStatus(invoice);
-        button("Share invoice images (PNG)").setOnClickListener(v -> shareImages(invoice));
+        button("Share PDF (optional)").setOnClickListener(v -> shareInvoice(invoice));
         button("Print A4 / PDF").setOnClickListener(v -> {
             if(exportBusy)return;
             android.print.PrintManager pm=(android.print.PrintManager)getSystemService(PRINT_SERVICE);
@@ -335,6 +337,12 @@ public final class MainActivity extends Activity {
     }
     @Override protected void onActivityResult(int request,int result,Intent data){
         super.onActivityResult(request,result,data);
+        if(request==SAVE_PNG_FOLDER){
+            JSONObject invoice=pendingExport;pendingExport=null;
+            if(result!=RESULT_OK||data==null||data.getData()==null||invoice==null){exportBusy=false;return;}
+            saveImages(invoice,data.getData());
+            return;
+        }
         if(request!=SAVE_PDF)return;
         JSONObject invoice=pendingExport;pendingExport=null;
         if(result!=RESULT_OK||data==null||data.getData()==null||invoice==null){exportBusy=false;return;}
@@ -381,11 +389,74 @@ public final class MainActivity extends Activity {
             }
         });
     }
+    private void beginSaveImages(JSONObject invoice){
+        if(exportBusy)return;
+        exportBusy=true;
+        if(android.os.Build.VERSION.SDK_INT>=29){saveImages(invoice,null);return;}
+        pendingExport=invoice;
+        try{startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE),SAVE_PNG_FOLDER);}
+        catch(Exception e){pendingExport=null;exportBusy=false;Toast.makeText(this,"Folder picker unavailable",Toast.LENGTH_LONG).show();}
+    }
+    private void saveImages(JSONObject invoice,android.net.Uri tree){
+        Toast.makeText(this,"Preparing invoice PNG…",Toast.LENGTH_SHORT).show();
+        imageWorker.execute(() -> {
+            java.util.ArrayList<java.io.File> files=null;
+            java.util.ArrayList<android.net.Uri> saved=new java.util.ArrayList<>();
+            boolean ok=false;
+            try{
+                java.io.File folder=new java.io.File(getCacheDir(),"invoice_exports");
+                if(!folder.exists()&&!folder.mkdirs())throw new java.io.IOException("Cache unavailable");
+                files=InvoiceNativeActions.pngs(this,invoice,folder);
+                String base="BIG-BROTHER-"+safeInvoiceName(invoice)+"-"+System.currentTimeMillis();
+                android.content.ContentResolver resolver=getContentResolver();
+                for(int i=0;i<files.size();i++){
+                    String name=base+(files.size()>1?"-page-"+(i+1):"")+".png";
+                    android.net.Uri dest;
+                    if(android.os.Build.VERSION.SDK_INT>=29){
+                        android.content.ContentValues values=new android.content.ContentValues();
+                        values.put(android.provider.MediaStore.Images.Media.DISPLAY_NAME,name);
+                        values.put(android.provider.MediaStore.Images.Media.MIME_TYPE,"image/png");
+                        values.put(android.provider.MediaStore.Images.Media.RELATIVE_PATH,android.os.Environment.DIRECTORY_PICTURES+"/BIG BROTHER");
+                        values.put(android.provider.MediaStore.Images.Media.IS_PENDING,1);
+                        dest=resolver.insert(android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI,values);
+                    }else{
+                        if(tree==null)throw new java.io.IOException("Destination folder missing");
+                        android.net.Uri parent=android.provider.DocumentsContract.buildDocumentUriUsingTree(tree,android.provider.DocumentsContract.getTreeDocumentId(tree));
+                        dest=android.provider.DocumentsContract.createDocument(resolver,parent,"image/png",name);
+                    }
+                    if(dest==null)throw new java.io.IOException("Cannot create PNG");
+                    saved.add(dest);
+                    try(java.io.InputStream in=new java.io.FileInputStream(files.get(i));java.io.OutputStream out=resolver.openOutputStream(dest,"w")){
+                        if(out==null)throw new java.io.IOException("Destination unavailable");
+                        byte[] buffer=new byte[32768];int n;
+                        while((n=in.read(buffer))!=-1)out.write(buffer,0,n);
+                        out.flush();
+                    }
+                }
+                if(android.os.Build.VERSION.SDK_INT>=29){
+                    for(android.net.Uri uri:saved){
+                        android.content.ContentValues ready=new android.content.ContentValues();
+                        ready.put(android.provider.MediaStore.Images.Media.IS_PENDING,0);
+                        if(resolver.update(uri,ready,null,null)!=1)throw new java.io.IOException("Could not publish PNG");
+                    }
+                }
+                ok=true;
+            }catch(Exception e){
+                for(android.net.Uri uri:saved)try{
+                    if(android.os.Build.VERSION.SDK_INT>=29)getContentResolver().delete(uri,null,null);
+                    else android.provider.DocumentsContract.deleteDocument(getContentResolver(),uri);
+                }catch(Exception ignored){}
+            }finally{if(files!=null)for(java.io.File file:files)file.delete();}
+            final boolean success=ok;final int count=saved.size();
+            runOnUiThread(()->{exportBusy=false;if(!destroyed)Toast.makeText(this,success?(count+" PNG image(s) saved"+(android.os.Build.VERSION.SDK_INT>=29?" to Pictures/BIG BROTHER":"")):"PNG save failed. Try again or use PDF for long invoices.",Toast.LENGTH_LONG).show();});
+        });
+    }
     private void shareImages(JSONObject invoice){
         if(exportBusy)return;
         exportBusy=true;
         final LinearLayout page=root;
-        worker.execute(() -> {
+        Toast.makeText(this,"Preparing invoice PNG…",Toast.LENGTH_SHORT).show();
+        imageWorker.execute(() -> {
             java.util.ArrayList<java.io.File> files=null;
             try{
                 java.io.File folder=new java.io.File(getCacheDir(),"invoice_exports");
@@ -442,5 +513,5 @@ public final class MainActivity extends Activity {
         NetworkCapabilities caps=manager==null?null:manager.getNetworkCapabilities(manager.getActiveNetwork());
         status.setText(caps==null?"Device network: disconnected":"Device network: connected (server not verified)");
     }
-    @Override protected void onDestroy(){destroyed=true;worker.shutdown();updateWorker.shutdown();super.onDestroy();}
+    @Override protected void onDestroy(){destroyed=true;worker.shutdown();updateWorker.shutdown();imageWorker.shutdown();super.onDestroy();}
 }
