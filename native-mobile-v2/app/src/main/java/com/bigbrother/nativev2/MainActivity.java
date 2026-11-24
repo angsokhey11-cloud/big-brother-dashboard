@@ -30,6 +30,7 @@ public final class MainActivity extends Activity {
     private int dp(int n) { return Math.round(n * getResources().getDisplayMetrics().density); }
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
+        LocalTransport.init(this);
         showLogin();
     }
     private void screen() {
@@ -60,7 +61,7 @@ public final class MainActivity extends Activity {
                 worker.execute(() -> {
                     String message;
                     try { message = LocalConnection.check(); }
-                    catch (Exception e) { message = "Secure LAN connection failed. Check Wi-Fi, Local Brain V6 and Caddy certificate."; }
+                    catch (Exception e) { message = LocalTransport.explain(e); }
                     final String result = message;
                     runOnUiThread(() -> { if (!destroyed) { connection.setText(result); probe.setEnabled(true); } });
                 });

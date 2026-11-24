@@ -115,6 +115,16 @@ final class CloudAuth {
             (local ? (!"bigbrother.local".equals(endpoint.getHost()) || endpoint.getPort()!=8443)
                    : (!"sjfhlaclgmkwwofzstok.supabase.co".equals(endpoint.getHost()) || endpoint.getPort()!=-1)))
             throw new IOException("Unexpected authentication endpoint");
+        if(local){
+            okhttp3.Request.Builder request=LocalTransport.request(path)
+                .header("apikey",key)
+                .post(okhttp3.RequestBody.create(body.toString(),okhttp3.MediaType.parse("application/json")));
+            if(bearer!=null)request.header("Authorization","Bearer "+bearer);
+            try(okhttp3.Response response=LocalTransport.client().newCall(request.build()).execute()){
+                if(!response.isSuccessful())throw new IOException("Local server request failed ("+response.code()+")");
+                return LocalTransport.read(response,1048576);
+            }
+        }
         HttpsURLConnection conn = (HttpsURLConnection) new URL(BuildConfig.ENDPOINT + path).openConnection();
         try {
             conn.setInstanceFollowRedirects(false);

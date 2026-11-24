@@ -65,17 +65,11 @@ final class AppUpdater {
         }finally{conn.disconnect();}
     }
     private static Offer checkLocal(Context context)throws Exception{
-        HttpsURLConnection conn=open(new URL(BuildConfig.ENDPOINT+"/v6-mobile-update/manifest.json"));
-        try{
-            int status=conn.getResponseCode();
+        try(okhttp3.Response conn=LocalTransport.client().newCall(LocalTransport.request("/v6-mobile-update/manifest.json").get().build()).execute()){
+            int status=conn.code();
             if(status==404)return null;
             if(status!=200)throw new IOException("Local update catalog unavailable");
-            JSONObject data;
-            try(InputStream in=conn.getInputStream();ByteArrayOutputStream out=new ByteArrayOutputStream()){
-                byte[] b=new byte[4096];int n;
-                while((n=in.read(b))!=-1){if(out.size()+n>65536)throw new IOException("Catalog too large");out.write(b,0,n);}
-                data=new JSONObject(out.toString("UTF-8"));
-            }
+            JSONObject data=new JSONObject(LocalTransport.read(conn,65536));
             if(!"native-v2-local-dev".equals(data.optString("channel")))throw new IOException("Wrong Local channel");
             long version=data.getLong("versionCode"),size=data.getLong("size");
             String name=data.getString("name"),digest=data.getString("sha256");
@@ -84,7 +78,7 @@ final class AppUpdater {
                !name.equals("BIG-BROTHER-local-v2dev-"+version+".apk")||!digest.matches("[a-fA-F0-9]{64}"))
                 throw new IOException("Invalid Local update manifest");
             return new Offer(version,size,BuildConfig.ENDPOINT+"/v6-mobile-update/"+name,digest,name);
-        }finally{conn.disconnect();}
+        }
     }
     private static HttpsURLConnection open(URL url)throws IOException{
         String host=url.getHost();
@@ -103,6 +97,18 @@ final class AppUpdater {
         File apk=File.createTempFile("bb-update-",".apk",folder);
         boolean ok=false;
         try{
+            if("local".equals(BuildConfig.FLAVOR)){
+                try(okhttp3.Response response=LocalTransport.client().newBuilder().callTimeout(5,java.util.concurrent.TimeUnit.MINUTES).build().newCall(LocalTransport.request("/v6-mobile-update/"+offer.name).get().build()).execute()){
+                    if(!response.isSuccessful()||response.body()==null)throw new IOException("Local APK download failed");
+                    MessageDigest sha=MessageDigest.getInstance("SHA-256");long total=0;
+                    try(InputStream in=response.body().byteStream();FileOutputStream out=new FileOutputStream(apk)){
+                        byte[] bytes=new byte[32768];int n;
+                        while((n=in.read(bytes))!=-1){total+=n;if(total>offer.size||total>LIMIT)throw new IOException("Update exceeds expected size");sha.update(bytes,0,n);out.write(bytes,0,n);}
+                    }
+                    if(total!=offer.size||!hex(sha.digest()).equalsIgnoreCase(offer.digest))throw new IOException("Update integrity check failed");
+                    verify(context,apk,offer.version);ok=true;return apk;
+                }
+            }
             URL url=new URL(offer.url);
             for(int redirects=0;redirects<=5;redirects++){
                 HttpsURLConnection conn=open(url);
