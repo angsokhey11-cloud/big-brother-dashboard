@@ -245,6 +245,30 @@ final class CloudAuth {
         }
         validateBankRows(filtered);return filtered;
     }
+    synchronized JSONObject nativeReport(String route,String period,String batch)throws Exception{
+        JSONObject current=profile();
+        if(!"online".equals(BuildConfig.FLAVOR)||!NativeReadModules.supports(route)||!NativeRoutes.allowed(current,route,"canView"))throw new IOException("Module access denied");
+        JSONObject args=new JSONObject();String fn;
+        switch(route){
+            case "sales-support-your-customer":fn="bb_sales_support_bootstrap";break;
+            case "sales-support-your-stock":
+                fn=NativeRoutes.admin(current)?"bb_sales_support_admin_your_stock":"bb_sales_support_my_stock";
+                args.put("p_batch_id",batch.isEmpty()?JSONObject.NULL:batch);break;
+            case "sales-support-your-collection":fn="bb_sales_support_your_collection_invoice_list";break;
+            case "stock-report":fn="bb_stock_report_fast";break;
+            case "daily-sale-summary":
+                String day=java.time.LocalDate.parse(period).toString();
+                fn="bb_sales_history_list";
+                args.put("p_invoice_no","").put("p_customer","").put("p_date_from",day).put("p_date_to",day).put("p_invoice_type","");break;
+            case "monthly-sales-report":
+                java.time.YearMonth month=java.time.YearMonth.parse(period);
+                fn="bb_report_monthly_sales";args.put("p_year",month.getYear()).put("p_month",month.getMonthValue());break;
+            default:throw new IOException("Unsupported native report");
+        }
+        JSONObject data=new JSONObject(post("/rest/v1/rpc/"+fn,args,accessToken));
+        if(Boolean.FALSE.equals(data.opt("success")))throw new IOException("Report request failed");
+        return data;
+    }
     synchronized JSONObject receivableList(String route)throws Exception{
         JSONObject current=profile();
         if(!"online".equals(BuildConfig.FLAVOR)||!java.util.Arrays.asList("ar-all","ar-your","sales-support-your-receivable").contains(route)||!NativeRoutes.allowed(current,route,"canView"))
