@@ -10,23 +10,8 @@ const definitions=[
 function install(){
  const root=document.getElementById("adminWorkSubmenu");
  if(!root||root.dataset.bbGrouped==="1")return;
- // Add the Bank Review entry without editing the Dashboard's boot-time route map.
- if(!document.getElementById("navAdminBankReview")){
-  const bankReview=document.createElement("button");
-  bankReview.type="button";bankReview.id="navAdminBankReview";
-  bankReview.innerHTML='<span aria-hidden="true" style="display:inline-flex;align-items:center;justify-content:center;width:18px;min-width:18px;margin-right:8px;vertical-align:middle"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/><circle cx="16" cy="15" r="2"/><path d="m17.5 16.5 2 2"/></svg></span><span>Bank Review</span>';
-  bankReview.addEventListener("click",()=>{
-   // Reuse the existing, permission-gated Admin Work workspace shell.
-   if(typeof window.loadWorkspace!=="function")return;
-   window.loadWorkspace("admin-bank-history",false);
-   const frame=document.getElementById("moduleFrame");
-   if(frame)frame.src="https://angsokhey11-cloud.github.io/big-brother-notification-center/bank-transaction-bulk-review.html?dashboard=1&v=20261121-direct1";
-   document.querySelectorAll(".shell-nav-link,.nav-submenu button").forEach(x=>x.classList.remove("active"));
-   bankReview.classList.add("active");
-   history.replaceState(null,"",location.pathname+"?module=admin-bank-review");
-  });
-  root.appendChild(bankReview);
- }
+ // Bank Review is registered by the Dashboard core before permissions are applied.
+ // This file only groups existing navigation buttons; never opens another module.
  const original=[...root.children].filter(x=>x.matches("button"));
  if(!original.length)return;
  const style=document.createElement("style");
