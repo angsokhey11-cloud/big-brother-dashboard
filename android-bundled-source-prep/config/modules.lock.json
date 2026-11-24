@@ -38,7 +38,7 @@
     },
     {
       "name": "big-brother-stock-managemenet",
-      "sha": "3762557b41f7b6067d05967845551c6c94dca986"
+      "sha": "01f80d059213639f37ea3c8941a5e14846136b84"
     },
     {
       "name": "big-brother-purchase-recorder",
@@ -130,7 +130,7 @@
     },
     {
       "name": "big-brother-stock-allocation",
-      "sha": "97ce6d98684992031973288c873396ebf6be8a43"
+      "sha": "75d05c92415b44fdd239286964c4465343241529"
     }
   ]
 }
