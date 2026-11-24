@@ -43,6 +43,23 @@ final class InvoiceSaveJournal {
             if(!store.edit().putString(key,record.toString()).commit())throw new IOException("Recovery storage unavailable; do not submit.");
         }
     }
+    /**
+     * Adapter for the tested coordinator. A verifier must be the authoritative
+     * server and return true only for the exact recorded ID. No live transport
+     * is currently connected to this adapter.
+     */
+    InvoiceSaveCoordinator.Journal coordinatorJournal(){
+        return new InvoiceSaveCoordinator.Journal(){
+            public void begin(String id,String no,String frozen)throws Exception{InvoiceSaveJournal.this.begin(id,no,frozen);}
+            public void acknowledge(String id)throws Exception{
+                synchronized(LOCK){
+                    JSONObject record=pending();
+                    if(record==null||!id.equals(record.getString("invoiceId")))throw new IOException("Recovery identity mismatch.");
+                    if(!store.edit().remove(key).commit())throw new IOException("Could not clear recovery record.");
+                }
+            }
+        };
+    }
     /** Only clear a matching record after the server confirms it exists. A not-found response is not proof of rollback. */
     boolean acknowledgeVerified(String invoiceId,JSONObject verification)throws Exception{
         synchronized(LOCK){

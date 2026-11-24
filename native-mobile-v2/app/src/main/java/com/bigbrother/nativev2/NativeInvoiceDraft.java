@@ -106,7 +106,8 @@ final class NativeInvoiceDraft {
         paymentPanel();
         preflightResult=text(root,"Read-only checks; no invoice will be submitted.",14);
         button(root,"Validate draft against server",this::preflight);
-        button(root,"Prepare invoice payload preview",this::previewPayload);
+        button(root,"Invoice Preview (native A4)",()->previewPayload(true));
+        button(root,"Prepare invoice payload preview",()->previewPayload(false));
         recoveryStatus=text(root,"Recovery journal: not checked",14);
         button(root,"Check previous invoice save",this::checkRecovery);
         checkRecovery();
@@ -449,7 +450,7 @@ final class NativeInvoiceDraft {
             a.runOnUiThread(()->{recoveryChecking=false;if(active.getAsBoolean())recoveryStatus.setText(message);});
         });
     }
-    private void previewPayload(){
+    private void previewPayload(boolean visual){
         try{
             if(busy||!sameScope()||customer==null||lines.isEmpty())throw new IllegalArgumentException("Select location, customer and products.");
             String method=String.valueOf(paymentMethod.getSelectedItem()),cur=curr(),sale=date.getText().toString().trim();
@@ -474,6 +475,14 @@ final class NativeInvoiceDraft {
             if(settlementRequestId.isEmpty())settlementRequestId=java.util.UUID.randomUUID().toString();
             JSONObject registered=t.bank.signum()>0?bankDraft.capturedSelection(val(customer,"customerId"),sale,cur,method,rate,t.bank):null;
             JSONObject payload=InvoiceDraftPayload.bundle(draftId,no,sale,due,batch==null?"":val(batch,"batchId"),first(location,"locationCode","code"),val(customer,"customerId"),val(customer,"name"),staffId,salesperson,method,cur,rate,t,items,registered,settlementRequestId);
+            if(visual){
+                JSONObject document=new JSONObject(payload.getJSONObject("p_invoice").toString());
+                document.put("phone",val(customer,"phone")).put("address",val(customer,"address"));
+                document.put("bankPayment",val(document,"paymentBank"));
+                document.put("_nativeUnsavedDraft",true);
+                NativeDraftPreview.open(a,document,worker,active);
+                return;
+            }
             String endpoint=InvoiceDraftPayload.endpoint(payload);
             String fingerprint=InvoiceSaveJournal.digest(endpoint+"\n"+payload.toString());
             new android.app.AlertDialog.Builder(a).setTitle("Development payload preview")

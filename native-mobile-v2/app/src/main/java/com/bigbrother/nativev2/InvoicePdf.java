@@ -93,7 +93,7 @@ final class InvoicePdf {
         y+=29;draw(layout("Ready to be your partner",10,Color.DKGRAY,false,300,Layout.Alignment.ALIGN_NORMAL),M,y);
         y+=21;rule(M,y,R,Color.DKGRAY);y+=8;
         draw(layout("INVOICE",25,NAVY,true,R-M,Layout.Alignment.ALIGN_CENTER),M,y);y+=32;
-        draw(layout("DEVELOPMENT COPY — NOT DIGITAL ORIGINAL",10,Color.DKGRAY,true,R-M,Layout.Alignment.ALIGN_CENTER),M,y);y+=18;
+        draw(layout(invoice.optBoolean("_nativeUnsavedDraft")?"UNSAVED DRAFT — NOT A VALID INVOICE":"DEVELOPMENT COPY — NOT DIGITAL ORIGINAL",10,Color.DKGRAY,true,R-M,Layout.Alignment.ALIGN_CENTER),M,y);y+=18;
         StaticLayout id=layout("Invoice: "+value(invoice,"invoiceNo")+"  |  "+date(value(invoice,"invoiceDate")),11,NAVY,true,R-M,Layout.Alignment.ALIGN_NORMAL);
         if(id.getHeight()>70)throw new IOException("Invoice identifier too long");
         draw(id,M,y);y+=id.getHeight()+8;
@@ -133,7 +133,11 @@ final class InvoicePdf {
         String barcode=first(item,"productBarcode","barcode"), note=value(item,"productNote"),unit=value(item,"unit");
         if(!barcode.isEmpty())name+="\nBarcode: "+barcode;
         if(!note.isEmpty())name+="\nNote: "+note;
-        String[] cells={String.valueOf(n),name,format(qty,2,false)+(unit.isEmpty()?"":"/"+unit),money(price,true),money(amount,false)};
+        if(invoice.optBoolean("_nativeUnsavedDraft")&&!value(item,"sellingQty").isEmpty()&&!value(item,"sellingUnitPrice").isEmpty()){
+            name+="\nBase: "+format(qty,4,false)+(unit.isEmpty()?"":" "+unit);
+            qty=value(item,"sellingQty");price=value(item,"sellingUnitPrice");unit=value(item,"sellingUnit");
+        }
+        String[] cells={String.valueOf(n),name,format(qty,invoice.optBoolean("_nativeUnsavedDraft")?4:2,false)+(unit.isEmpty()?"":"/"+unit),money(price,true),money(amount,false)};
         StaticLayout[] lines=new StaticLayout[5];int height=30;
         for(int i=0;i<5;i++){
             lines[i]=layout(cells[i],10,Color.BLACK,false,COL[i+1]-COL[i]-8,
