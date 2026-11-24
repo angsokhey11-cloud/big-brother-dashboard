@@ -12,7 +12,7 @@ import java.util.function.BooleanSupplier;
 
 /** Native read-only report screens backed by the existing module RPCs. */
 final class NativeReadModules {
-    static boolean supports(String route){return Arrays.asList("sales-support-your-customer","sales-support-your-stock","sales-support-your-collection","stock-report","daily-sale-summary","monthly-sales-report").contains(route);}
+    static boolean supports(String route){return Arrays.asList("sales-support-your-customer","sales-support-your-stock","sales-support-your-collection","stock-report","daily-sale-summary","monthly-sales-report","purchase-history","purchase-payable","purchase-payment-history","expense-history","expense-accrued","customers-details","clients-details","products-details","master-expense-categories").contains(route);}
     private final Activity a;private final LinearLayout root;private final CloudAuth api;private final ExecutorService worker;private final BooleanSupplier active;private final String route;
     private TextView status,totals;private EditText search,period;private LinearLayout list;private Button more,refresh;
     private Spinner batches;private final ArrayList<String> batchIds=new ArrayList<>();private boolean changingBatches,loading;
@@ -57,7 +57,9 @@ final class NativeReadModules {
         batches.setAdapter(new ArrayAdapter<>(a,android.R.layout.simple_spinner_dropdown_item,names));int i=batchIds.indexOf(selected);batches.setSelection(Math.max(i,0));
     }
     private static final class Row{
-        final String title,subtitle,detail,search;Row(String t,String s,String d,String q){title=t;subtitle=s;detail=d;search=(t+" "+s+" "+q).toLowerCase(Locale.ROOT);}
+        final String title,subtitle,detail,search,id;
+        Row(String t,String s,String d,String q){this(t,s,d,q,"");}
+        Row(String t,String s,String d,String q,String id){title=t;subtitle=s;detail=d;search=(t+" "+s+" "+q).toLowerCase(Locale.ROOT);this.id=id;}
     }
     private void addStock(ArrayList<Row> out,JSONArray a,boolean group){
         if(a==null)return;for(int i=0;i<a.length();i++){JSONObject r=a.optJSONObject(i);if(r==null)continue;
@@ -69,7 +71,7 @@ final class NativeReadModules {
         }
     }
     private JSONArray require(JSONObject j,String key){JSONArray r=j.optJSONArray(key);if(r==null)throw new IllegalArgumentException("Unexpected response");return r;}
-    private ArrayList<Row> rows(){
+    private ArrayList<Row> rows() throws JSONException{
         ArrayList<Row> out=new ArrayList<>();totals.setText("");
         if("stock-report".equals(route)){
             JSONObject grouped=data.optJSONObject("groupedLive"),t=data.optJSONObject("totals");
@@ -81,6 +83,43 @@ final class NativeReadModules {
                 JSONArray products=r.optJSONArray("products");StringBuilder q=new StringBuilder();
                 if(products!=null)for(int j=0;j<products.length();j++){JSONObject p=products.optJSONObject(j);if(p==null)continue;String n=first(p,"productName","productCode");q.append(" ").append(n);d.append("\n").append(n).append(" · ").append(fields(p,"Gross qty","grossQty","Returned","returnQty","Net qty","netQty","Net USD","totalSaleUSD"));}
                 out.add(new Row(first(r,"locationName","locationCode"),fields(r,"Net USD","totalSaleUSD","Net qty","netQty"),d.toString(),q.toString()));
+            }
+        }else if(Arrays.asList("purchase-history","purchase-payable","purchase-payment-history","expense-history","expense-accrued","customers-details","clients-details","products-details","master-expense-categories").contains(route)){
+            String key;
+            switch(route){
+                case "purchase-history":case "purchase-payable":key="purchases";break;
+                case "purchase-payment-history":key="data";break;
+                case "expense-history":key="history";break;
+                case "expense-accrued":key="accrued";break;
+                case "customers-details":key="customers";break;
+                case "clients-details":key="clients";break;
+                case "products-details":key="products";break;
+                default:key="categories";
+            }
+            JSONArray arr=require(data,key);
+            for(int i=0;i<arr.length();i++){
+                JSONObject r=arr.getJSONObject(i);
+                if("purchases".equals(key)){
+                    if("purchase-payable".equals(route)&&new java.math.BigDecimal(v(r,"payable")).signum()<=0)continue;
+                    String id=v(r,"purchaseId");if(id.isEmpty())continue;
+                    out.add(new Row(first(r,"clientInvoiceNumber","purchaseId")+" · "+v(r,"clientName"),
+                        fields(r,"Date","purchaseDate","Currency","currency","Payable","payable","Status","paymentStatus"),
+                        fields(r,"Purchase ID","purchaseId","Purchaser","purchaserName","Total","grandTotal","Paid","amountPaid","Term","paymentTerm","Status","status"),id+" "+v(r,"clientCode"),id));
+                }else if("purchase-payment-history".equals(route)){
+                    out.add(new Row(v(r,"purchasePaymentId")+" · "+v(r,"clientName"),fields(r,"Date","paymentDate","Currency","currency","Amount","amount","Method","paymentMethod"),
+                        fields(r,"Purchase","purchaseId","Bank","bank","Transaction","transactionId","Processed by","processedBy","Note","note"),v(r,"transactionId")+" "+v(r,"purchaseId")));
+                }else if("history".equals(key)||"accrued".equals(key)){
+                    out.add(new Row(v(r,"expenseId")+" · "+first(r,"category","description"),fields(r,"Date","expenseDate","Payee","payee","Currency","currency","Amount","amount","Balance","balance"),
+                        fields(r,"Type","expenseType","Description","description","Rate","exchangeRate","USD value","amountUSD","Paid","paidAmount","Method","paymentMethod","Reference","referenceNo","Due","dueDate","Status","status","Note","note"),v(r,"description")+" "+v(r,"payee")));
+                }else if("customers".equals(key)){
+                    out.add(new Row(first(r,"name","customerName","customerId"),fields(r,"ID","customerId","Location","locationCode","Phone","phone"),fields(r,"Address","address","Map","googleMapsLink","Credit term","creditTermType","Term value","creditTermValue","Status","status"),v(r,"address")));
+                }else if("clients".equals(key)){
+                    out.add(new Row(first(r,"clientName","name","clientId"),fields(r,"ID","clientId","Code","clientCode","Currency","currency","Status","status"),fields(r,"Phone","phone","Address","address","Payment term","paymentTerm"),v(r,"clientCode")));
+                }else if("products".equals(key)){
+                    out.add(new Row(first(r,"name","productName","code"),fields(r,"Code","code","Unit","unit","Category","category"),fields(r,"Barcode","barcode","Type","itemType","Stock tracked","trackStock","USD price","priceUSD","KHR price","priceKHR","Active","active"),v(r,"barcode")));
+                }else{
+                    out.add(new Row(first(r,"category","categoryId"),fields(r,"ID","categoryId","Type","expenseType","Active","active"),fields(r,"Review required","migrationReviewRequired","Note","migrationNote"),v(r,"categoryId")));
+                }
             }
         }else{
             String key="sales-support-your-customer".equals(route)?"customers":"sales-support-your-stock".equals(route)?"items":"invoices";
@@ -94,6 +133,23 @@ final class NativeReadModules {
             }
         }return out;
     }
+    private void purchaseDetail(Row r){
+        if(loading||r.id.isEmpty())return;
+        loading=true;status.setText("Loading purchase items…");
+        worker.execute(()->{
+            JSONObject result=null;try{result=api.nativePurchaseDetail(route,r.id);}catch(Exception ignored){}
+            final JSONObject response=result;
+            a.runOnUiThread(()->{
+                if(!active.getAsBoolean())return;loading=false;
+                if(response==null){status.setText("Purchase detail unavailable.");return;}
+                JSONObject p=response.optJSONObject("purchase");StringBuilder d=new StringBuilder(r.detail);
+                d.append("\n\nPurchased products\n");
+                JSONArray items=response.optJSONArray("items");
+                for(int i=0;i<items.length();i++){JSONObject item=items.optJSONObject(i);if(item!=null)d.append(first(item,"productName","productCode")).append(" · ").append(fields(item,"Qty","qty","Unit","unit","Price","unitPrice","Amount","amount")).append("\n");}
+                status.setText("Online snapshot · read only");new AlertDialog.Builder(a).setTitle(r.title).setMessage(d.toString()).setPositiveButton("Close",null).show();
+            });
+        });
+    }
     private void render(){
         if(list==null)return;list.removeAllViews();totals.setText("");more.setVisibility(android.view.View.GONE);if(data==null)return;
         try{
@@ -103,7 +159,7 @@ final class NativeReadModules {
                 LinearLayout card=new LinearLayout(a);card.setOrientation(LinearLayout.VERTICAL);card.setPadding(dp(12),dp(8),dp(12),dp(8));
                 android.graphics.drawable.GradientDrawable bg=new android.graphics.drawable.GradientDrawable();bg.setColor(Color.WHITE);bg.setCornerRadius(dp(10));bg.setStroke(dp(1),Color.rgb(218,228,239));card.setBackground(bg);
                 LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2);lp.topMargin=dp(8);list.addView(card,lp);text(card,r.title,16,true);text(card,r.subtitle,13,false);
-                if(!r.detail.isEmpty()){Button b=new Button(a);b.setText("Details");b.setAllCaps(false);card.addView(b);b.setOnClickListener(v->new AlertDialog.Builder(a).setTitle(r.title).setMessage(r.detail).setPositiveButton("Close",null).show());}
+                if(!r.detail.isEmpty()){Button b=new Button(a);b.setText("Details");b.setAllCaps(false);card.addView(b);b.setOnClickListener(v->{if(!r.id.isEmpty())purchaseDetail(r);else new AlertDialog.Builder(a).setTitle(r.title).setMessage(r.detail).setPositiveButton("Close",null).show();});}
             }
             if(count==0)text(list,"No matching records.",14,false);if(count>limit)more.setVisibility(android.view.View.VISIBLE);
         }catch(Exception e){list.removeAllViews();totals.setText("");status.setText("Unexpected report format. No data displayed.");}

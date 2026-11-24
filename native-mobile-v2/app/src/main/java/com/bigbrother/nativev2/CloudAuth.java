@@ -245,6 +245,14 @@ final class CloudAuth {
         }
         validateBankRows(filtered);return filtered;
     }
+    synchronized JSONObject nativePurchaseDetail(String route,String id)throws Exception{
+        JSONObject current=profile();
+        if(!"online".equals(BuildConfig.FLAVOR)||!java.util.Arrays.asList("purchase-history","purchase-payable").contains(route)||!NativeRoutes.allowed(current,route,"canView")||id.trim().isEmpty())throw new IOException("Purchase detail denied");
+        JSONObject data=new JSONObject(post("/rest/v1/rpc/bb_purchase_detail",new JSONObject().put("p_purchase_id",id),accessToken));
+        JSONObject purchase=data.optJSONObject("purchase");
+        if(Boolean.FALSE.equals(data.opt("success"))||purchase==null||!id.equals(purchase.optString("purchaseId"))||data.optJSONArray("items")==null)throw new IOException("Purchase detail unavailable");
+        return data;
+    }
     synchronized JSONObject nativeReport(String route,String period,String batch)throws Exception{
         JSONObject current=profile();
         if(!"online".equals(BuildConfig.FLAVOR)||!NativeReadModules.supports(route)||!NativeRoutes.allowed(current,route,"canView"))throw new IOException("Module access denied");
@@ -256,6 +264,15 @@ final class CloudAuth {
                 args.put("p_batch_id",batch.isEmpty()?JSONObject.NULL:batch);break;
             case "sales-support-your-collection":fn="bb_sales_support_your_collection_invoice_list";break;
             case "stock-report":fn="bb_stock_report_fast";break;
+            case "purchase-history":
+            case "purchase-payable":fn="bb_purchase_history_bundle";break;
+            case "purchase-payment-history":fn="bb_purchase_payments";break;
+            case "expense-history":
+            case "expense-accrued":fn="bb_expense_sync_snapshot";break;
+            case "customers-details":fn="bb_customer_editor_bootstrap";break;
+            case "clients-details":fn="bb_client_editor_bootstrap";break;
+            case "products-details":fn="bb_product_editor_bootstrap";break;
+            case "master-expense-categories":fn="bb_master_expense_categories_admin_list";break;
             case "daily-sale-summary":
                 String day=java.time.LocalDate.parse(period).toString();
                 fn="bb_sales_history_list";
@@ -264,6 +281,10 @@ final class CloudAuth {
                 java.time.YearMonth month=java.time.YearMonth.parse(period);
                 fn="bb_report_monthly_sales";args.put("p_year",month.getYear()).put("p_month",month.getMonthValue());break;
             default:throw new IOException("Unsupported native report");
+        }
+        if("expense-history".equals(route)){
+            JSONObject access=new JSONObject(post("/rest/v1/rpc/bb_expense_mobile_history_access",new JSONObject(),accessToken));
+            if(!Boolean.TRUE.equals(access.opt("canView")))throw new IOException("Expense History access denied");
         }
         JSONObject data=new JSONObject(post("/rest/v1/rpc/"+fn,args,accessToken));
         if(Boolean.FALSE.equals(data.opt("success")))throw new IOException("Report request failed");
