@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Stage existing Online Android shell + pinned PWA assets, never edit production source."""
-import pathlib, shutil, subprocess, sys
+import hashlib, json, pathlib, re, shutil, subprocess, sys
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 REPO = ROOT.parent
 STAGE = ROOT / "build" / "android"
@@ -33,6 +33,44 @@ def stage():
         "if(!forceLive&&!liveApproval&&!realPilot&&cached?.canOpen(route)){")
     menu.write_text(source, encoding="utf-8")
     print("Installed Invoice History: existing cache-first route enabled")
+    # The installed package owns UI versions. Rotate only the existing PWA
+    # static-shell cache, not IndexedDB, saved credentials or business snapshots.
+    # Include the staged assets and this script, not the Android signing version:
+    # identical UI content can share a shell cache across APK builds.
+    digest = hashlib.sha256()
+    for item in sorted(p for p in assets.rglob("*") if p.is_file()):
+        digest.update(item.relative_to(assets).as_posix().encode("utf-8"))
+        digest.update(hashlib.sha256(item.read_bytes()).digest())
+    digest.update(pathlib.Path(__file__).read_bytes())
+    ui_version = digest.hexdigest()[:20]
+    worker = assets / "big-brother-dashboard/sw.js"
+    worker_source = worker.read_text(encoding="utf-8")
+    worker_source, count = re.subn(r"const CACHE='bb-mobile-shell-v[0-9]+';",
+        "const CACHE='bb-mobile-shell-bundled-"+ui_version+"';", worker_source)
+    if count != 1:
+        raise RuntimeError("PWA static shell cache marker changed")
+    worker.write_text(worker_source, encoding="utf-8")
+    # Report remaining third-party asset URLs as evidence, not as permission
+    # to blindly remove dependencies used by maps, invoice export, or Khmer fonts.
+    external = {}
+    pattern = re.compile(r'https?://[a-zA-Z0-9.-]+', re.I)
+    for item in assets.rglob("*"):
+        if not item.is_file() or item.suffix.lower() not in {".html",".htm",".js",".mjs",".css"}:
+            continue
+        for url in set(pattern.findall(item.read_text(encoding="utf-8"))):
+            host = url.split("://",1)[1].lower()
+            if host == HOST:
+                continue
+            external.setdefault(host, []).append(item.relative_to(assets).as_posix())
+    report_file = ROOT / "build/bundle-report.json"
+    report = json.loads(report_file.read_text(encoding="utf-8"))
+    report["installedUiVersion"] = ui_version
+    report["externalHostFileReferences"] = {host: {"fileCount": len(paths), "examples": sorted(paths)[:8]}
+                                             for host, paths in sorted(external.items())}
+    report_file.write_text(json.dumps(report, indent=2)+"\n", encoding="utf-8")
+    print("Installed UI shell version:", ui_version)
+    print("Remaining external hosts (static references):", ", ".join(sorted(external)))
+
 
     java = app / "src/main/java/com/bigbrother/online"
     for name in ("MainActivity.java", "BBNativeFileActions.java", "BBNativePrint.java"):

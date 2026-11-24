@@ -1,0 +1,6 @@
+# Installed UI versioning
+Verified V3.0.2 signed build 45342340995: 32 repositories, 499 files, ~15.9 MB uncompressed source; ~10.7 MB artifact ZIP. Compared all 32 pinned main branches on 24-Nov-2026. 30 unchanged, Dashboard newer test-only commit and A/R newer Local SQL-only commit. Updated both pins; SQL/tests remain excluded from packaging. No frontend accounting logic rewritten.
+
+Android staging now derives a deterministic content fingerprint for the bundled UI and uses it in the existing PWA static-shell cache name. The existing worker's activation deletes only older bb-mobile-shell-* static caches; IndexedDB business snapshots and session storage are untouched. New APK versions with changed assets can therefore refresh the old cached shell instead of indefinitely serving the prior version. Worker lifecycle still follows the existing safe reload behavior; device verification pending.
+
+Build report adds an inventory of remaining external host references with file examples. References are not measured network requests; some are optional, comments or API origins. Do not blanket block external libraries or map/export services. Next review actual blocking UI dependencies and device timing. No new accounting logic, database changes, production APK changes, or Local work.
