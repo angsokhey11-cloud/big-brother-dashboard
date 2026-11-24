@@ -23,7 +23,10 @@ final class NativeInvoiceDraft {
     private int generation;
     private TextView status,customerLabel,total;
     private EditText number;
-    private TextView preflightResult;
+    private TextView preflightResult,recoveryStatus,duePreview;
+    private String draftId="";
+    private EditText dueOverride;
+    private boolean recoveryChecking;
     private boolean checkingDraft;
     private EditText date,productQuery,rateInput,discountInput,partialInput,cashInput,bankInput,actualBankInput;
     private Spinner discountMode,paymentMethod,bankCurrency;
@@ -36,8 +39,8 @@ final class NativeInvoiceDraft {
     private final ArrayList<Line> lines=new ArrayList<>();
     private static final int BLUE=Color.rgb(23,74,145);
     private static class Line{
-        String code,name,unit,currency;BigDecimal qty,price,factor,purchased,zero;
-        Line(String c,String n,String u,String curr,BigDecimal q,BigDecimal p,BigDecimal f,BigDecimal purchased,BigDecimal zero){code=c;name=n;unit=u;currency=curr;qty=q;price=p;factor=f;this.purchased=purchased;this.zero=zero;}
+        String code,name,unit,currency,baseUnit,sellingUnit,barcode,lineId;BigDecimal qty,price,factor,purchased,zero;
+        Line(String c,String n,String u,String curr,BigDecimal q,BigDecimal p,BigDecimal f,BigDecimal purchased,BigDecimal zero,String baseUnit,String sellingUnit,String barcode){code=c;name=n;unit=u;currency=curr;qty=q;price=p;factor=f;this.purchased=purchased;this.zero=zero;this.baseUnit=baseUnit;this.sellingUnit=sellingUnit;this.barcode=barcode;lineId=java.util.UUID.randomUUID().toString();}
     }
     NativeInvoiceDraft(Activity a,LinearLayout root,CloudAuth api,ExecutorService worker,BooleanSupplier active){
         this.a=a;this.root=root;this.api=api;this.worker=worker;this.active=active;
@@ -75,6 +78,8 @@ final class NativeInvoiceDraft {
         number=field(root,"Invoice No. (INV-...)",InputType.TYPE_CLASS_TEXT);
         date=field(root,"Selling date (YYYY-MM-DD)",InputType.TYPE_CLASS_DATETIME|InputType.TYPE_DATETIME_VARIATION_DATE);
         date.setText(java.time.LocalDate.now(java.time.ZoneId.of("Asia/Phnom_Penh")).toString());
+        duePreview=text(root,"Due date: select customer",14);
+        dueOverride=field(root,"Override due date (YYYY-MM-DD), optional",InputType.TYPE_CLASS_TEXT);
         text(root,"Batch / Direct Sale",15);batchPicker=new Spinner(a);root.addView(batchPicker);
         text(root,"Main Location",15);locationPicker=new Spinner(a);root.addView(locationPicker);
         text(root,"Currency",15);currency=new Spinner(a);root.addView(currency);
@@ -101,6 +106,10 @@ final class NativeInvoiceDraft {
         paymentPanel();
         preflightResult=text(root,"Read-only checks; no invoice will be submitted.",14);
         button(root,"Validate draft against server",this::preflight);
+        button(root,"Prepare cash / credit payload preview",this::previewPayload);
+        recoveryStatus=text(root,"Recovery journal: not checked",14);
+        button(root,"Check previous invoice save",this::checkRecovery);
+        checkRecovery();
         Button complete=button(root,"Complete — migration pending",()->{});complete.setEnabled(false);
         load();
     }
@@ -129,7 +138,7 @@ final class NativeInvoiceDraft {
             }catch(Exception e){a.runOnUiThread(()->{if(active.getAsBoolean()){busy=false;status.setText("Master data unavailable — retry.");}});}
         });
     }
-    private void reset(){generation++;location=null;batch=null;customer=null;prices=null;warehouse=null;customersReady=false;lines.clear();customerBox.removeAllViews();productBox.removeAllViews();customerLabel.setText("Customer: not selected");number.setText("");if(bankDraft!=null)bankDraft.customer("");clearPayment();renderLines();}
+    private void reset(){generation++;draftId="";dueOverride.setText("");location=null;batch=null;customer=null;prices=null;warehouse=null;customersReady=false;lines.clear();customerBox.removeAllViews();productBox.removeAllViews();customerLabel.setText("Customer: not selected");number.setText("");if(bankDraft!=null)bankDraft.customer("");clearPayment();renderLines();}
     private boolean sameScope(){
         if(location==null)return false;
         int bi=batchPicker.getSelectedItemPosition(),li=locationPicker.getSelectedItemPosition();
@@ -185,7 +194,7 @@ final class NativeInvoiceDraft {
     }
     private void loadPrices(JSONObject row){
         if(busy||!sameScope())return;
-        customer=row;prices=null;lines.clear();if(bankDraft!=null)bankDraft.customer(val(row,"customerId"));clearPayment();renderLines();customerLabel.setText("Customer: "+val(row,"name"));busy=true;
+        customer=row;draftId="";dueOverride.setText("");prices=null;lines.clear();if(bankDraft!=null)bankDraft.customer(val(row,"customerId"));clearPayment();renderLines();customerLabel.setText("Customer: "+val(row,"name"));busy=true;
         status.setText("Loading customer prices…");int request=++generation;
         worker.execute(()->{
             JSONObject result=null;try{result=api.generatorPrices(val(row,"customerId")).optJSONObject("prices");}catch(Exception ignored){}
@@ -241,15 +250,15 @@ final class NativeInvoiceDraft {
         if(tracks&&(stock==null||stock[0].add(stock[1]).signum()<=0)){status.setText("Exact stock source balances unavailable or exhausted.");return;}
         LinearLayout form=new LinearLayout(a);form.setOrientation(LinearLayout.VERTICAL);form.setPadding(24,12,24,12);
         text(form,"Base unit: "+unit,13);
-        ArrayList<String> names=new ArrayList<>();ArrayList<BigDecimal> factors=new ArrayList<>();
-        names.add(unit.isEmpty()?"Unit":unit);factors.add(BigDecimal.ONE);
+        ArrayList<String> names=new ArrayList<>(),unitNames=new ArrayList<>();ArrayList<BigDecimal> factors=new ArrayList<>();
+        names.add(unit.isEmpty()?"Unit":unit);unitNames.add(unit.isEmpty()?"Unit":unit);factors.add(BigDecimal.ONE);
         if(sellingUnits!=null)for(int i=0;i<sellingUnits.length();i++){
             JSONObject u=sellingUnits.optJSONObject(i);
             if(u==null||!"PRODUCT".equalsIgnoreCase(val(u,"targetType"))||!code.equals(val(u,"targetCode")))continue;
             try{
                 BigDecimal factor=new BigDecimal(val(u,"baseQty"));String n=val(u,"sellingUnitName");
                 if(factor.compareTo(BigDecimal.ONE)>0&&!n.isEmpty()){
-                    names.add(n+" (1 = "+plain(factor)+" "+unit+")");factors.add(factor);
+                    names.add(n+" (1 = "+plain(factor)+" "+unit+")");unitNames.add(n);factors.add(factor);
                 }
             }catch(Exception ignored){}
         }
@@ -299,7 +308,7 @@ final class NativeInvoiceDraft {
                         purchased.setError("Source total must equal "+plain(base)+" base units and not exceed available stock.");return;
                     }
                 }
-                lines.add(new Line(code,val(p,"name"),names.get(units.getSelectedItemPosition()),current,q,u,factor,pQty,zQty));renderLines();renderProducts();dialog.dismiss();
+                lines.add(new Line(code,val(p,"name"),names.get(units.getSelectedItemPosition()),current,q,u,factor,pQty,zQty,unit,unitNames.get(units.getSelectedItemPosition()),first(p,"productBarcode","barcode")));renderLines();renderProducts();dialog.dismiss();
             }catch(Exception e){qty.setError("Enter valid positive quantity and nonnegative price (max 4 decimals).");}
         }));dialog.show();
     }
@@ -333,7 +342,7 @@ final class NativeInvoiceDraft {
         actualBankInput=field(root,"Actual bank amount (selected bank currency)",numeric);
         paymentSummary=text(root,"",16);exchangeSummary=text(root,"",14);bankSummary=text(root,"",14);
         bankDraft=new NativeBankDraft(a,root,api,worker,active);
-        observe(date);
+        observe(date);observe(dueOverride);
         for(EditText f:new EditText[]{rateInput,discountInput,partialInput,cashInput,bankInput,actualBankInput})observe(f);
         for(Spinner p:new Spinner[]{discountMode,paymentMethod,bankCurrency})observe(p);
         updatePayment();
@@ -350,6 +359,7 @@ final class NativeInvoiceDraft {
     }
     private void updatePayment(){
         if(paymentSummary==null||resettingPayment)return;
+        try{duePreview.setText(customer==null?"Due date: select customer":"Due date: "+dueDate());}catch(Exception e){duePreview.setText("Due date: invalid date");}
         String method=String.valueOf(paymentMethod.getSelectedItem()),cur=curr();
         boolean partial=method.startsWith("Partially"),split="Cash + Bank".equals(method);
         boolean bank=split||"Bank".equals(method)||"Partially Paid in Bank".equals(method);
@@ -383,6 +393,61 @@ final class NativeInvoiceDraft {
             }
         }catch(IllegalArgumentException e){paymentSummary.setText("Draft payment incomplete: "+e.getMessage());}
         if(bankDraft!=null)bankDraft.context(date.getText().toString().trim(),cur,method,bankRate,bankPlanned);
+    }
+    private String dueDate(){
+        java.time.LocalDate sale=java.time.LocalDate.parse(date.getText().toString().trim());
+        String override=dueOverride.getText().toString().trim();
+        java.time.LocalDate due=override.isEmpty()?InvoiceDraftPayload.due(sale,customer):java.time.LocalDate.parse(override);
+        if(due.isBefore(sale))throw new IllegalArgumentException("Due date cannot precede sale.");
+        return due.toString();
+    }
+    private void checkRecovery(){
+        if(recoveryChecking)return;
+        recoveryChecking=true;recoveryStatus.setText("Checking recovery journal…");
+        worker.execute(()->{
+            String result;
+            try{
+                InvoiceSaveJournal journal=new InvoiceSaveJournal(a,api.generatorAccount());
+                JSONObject pending=journal.pending();
+                if(pending==null)result="Recovery journal: no unresolved invoice on this device.";
+                else{
+                    String id=pending.getString("invoiceId");
+                    JSONObject verified=api.generatorVerifySave(id);
+                    if(Boolean.TRUE.equals(verified.opt("found")))
+                        result="Original invoice "+pending.optString("invoiceNo")+" exists. Do not submit it again. Admin reconciliation required before clearing journal.";
+                    else result="Original save unresolved: "+pending.optString("invoiceNo")+". Do not retry or create a replacement. Ask Admin.";
+                }
+            }catch(Exception e){result="Recovery verification unavailable. No save permitted.";}
+            final String message=result;
+            a.runOnUiThread(()->{recoveryChecking=false;if(active.getAsBoolean())recoveryStatus.setText(message);});
+        });
+    }
+    private void previewPayload(){
+        try{
+            if(busy||!sameScope()||customer==null||lines.isEmpty())throw new IllegalArgumentException("Select location, customer and products.");
+            String method=String.valueOf(paymentMethod.getSelectedItem()),cur=curr(),sale=date.getText().toString().trim();
+            String due=dueDate(),no=invoiceNumber();
+            BigDecimal rate=DraftPayment.amount(rateInput.getText().toString());
+            if(rate.compareTo(BigDecimal.ONE)<=0)throw new IllegalArgumentException("Enter daily exchange rate.");
+            if(!java.util.Arrays.asList("Cash","Credit","Partially Paid in Cash").contains(method))throw new IllegalArgumentException("Bank payload not yet supported.");
+            String staffId=batch==null?val(location,"salespersonStaffId"):val(batch,"salesmanStaffId");
+            String salesperson=batch==null?first(location,"salespersonName","salesperson"):val(batch,"salesmanName");
+            BigDecimal subtotal=BigDecimal.ZERO;JSONArray items=new JSONArray();
+            for(Line l:lines){
+                if(!cur.equals(l.currency))throw new IllegalArgumentException("Draft currency mismatch.");
+                subtotal=subtotal.add(l.qty.multiply(l.price));
+                items.put(InvoiceDraftPayload.item(l.lineId,l.code,l.name,l.barcode,l.baseUnit,l.sellingUnit,l.factor,l.qty,l.price,l.purchased,l.zero));
+            }
+            DraftPayment.Totals t=DraftPayment.calculate(subtotal,cur,discountMode.getSelectedItemPosition()==1,
+                DraftPayment.amount(discountInput.getText().toString()),method,
+                "Partially Paid in Cash".equals(method)?DraftPayment.amount(partialInput.getText().toString()):BigDecimal.ZERO,BigDecimal.ZERO,BigDecimal.ZERO);
+            if(draftId.isEmpty())draftId="BB-"+java.time.LocalDateTime.now(java.time.ZoneId.of("Asia/Phnom_Penh")).format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"))+"-"+java.util.UUID.randomUUID().toString();
+            JSONObject payload=InvoiceDraftPayload.bundle(draftId,no,sale,due,batch==null?"":val(batch,"batchId"),first(location,"locationCode","code"),val(customer,"customerId"),val(customer,"name"),staffId,salesperson,method,cur,rate,t,items);
+            String fingerprint=InvoiceSaveJournal.digest(payload.toString());
+            new android.app.AlertDialog.Builder(a).setTitle("Development payload preview")
+                .setMessage("Invoice "+no+"\nCustomer: "+val(customer,"name")+"\nDue: "+due+"\nItems: "+items.length()+"\nGrand total: "+money(t.grand,cur)+"\nPaid: "+money(t.paid,cur)+"\nOutstanding: "+money(t.outstanding,cur)+"\nDraft ID: "+draftId+"\nPayload SHA-256: "+fingerprint.substring(0,16)+"…\nNo request submitted. No recovery record created.")
+                .setPositiveButton("Close",null).show();
+        }catch(Exception e){preflightResult.setText("Payload preview blocked: "+(e instanceof IllegalArgumentException?e.getMessage():"Invalid invoice data."));}
     }
     private String invoiceNumber(){
         String raw=number.getText().toString().trim();

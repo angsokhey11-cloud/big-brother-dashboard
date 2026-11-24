@@ -130,6 +130,15 @@ final class CloudAuth {
         if(!no.matches("INV-[0-9]+")||customerId.trim().isEmpty())throw new IOException("Invoice number or customer invalid");
         return generatorRead("bb_sales_check_invoice_customer",new JSONObject().put("p_invoice_no",no).put("p_customer_id",customerId));
     }
+    synchronized String generatorAccount()throws Exception{
+        if(!"online".equals(BuildConfig.FLAVOR)||!NativeRoutes.allowed(profile(),"invoice","canCreate"))throw new IOException("Invoice permission denied");
+        String[] parts=accessToken.split("\\.");
+        if(parts.length!=3)throw new IOException("Account identity unavailable");
+        JSONObject claims=new JSONObject(new String(android.util.Base64.decode(parts[1],android.util.Base64.URL_SAFE|android.util.Base64.NO_WRAP),StandardCharsets.UTF_8));
+        String sub=claims.optString("sub").trim();
+        if(sub.isEmpty())throw new IOException("Account identity unavailable");
+        return sub;
+    }
     synchronized JSONObject generatorVerifySave(String id)throws Exception{
         if(id.trim().isEmpty()||id.length()>128)throw new IOException("Invalid invoice identity");
         return generatorRead("bb_sales_verify_invoice_save",new JSONObject().put("p_invoice_id",id));
