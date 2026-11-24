@@ -1,0 +1,83 @@
+name: Build Native V2 Signed Development APKs
+on:
+  push:
+    branches: [mobile-v2-development]
+    paths:
+      - 'native-mobile-v2/**'
+      - '.github/workflows/build-native-mobile-v2-signed-dev.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  signed-development:
+    if: github.ref == 'refs/heads/mobile-v2-development'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+      - run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+      - name: Prepare existing permanent signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.BB_STABLE_KEYSTORE_B64 }}
+          BB_V2_KEYSTORE_PASSWORD: ${{ secrets.BB_STABLE_KEYSTORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          umask 077
+          if [[ -z "$KEYSTORE_B64" || -z "$BB_V2_KEYSTORE_PASSWORD" ]]; then
+            echo "::error::Permanent Android signing secrets are not configured."
+            exit 1
+          fi
+          key="$RUNNER_TEMP/bb-v2-signing.p12"
+          printf '%s' "$KEYSTORE_B64" | tr -d '\r\n\t ' | base64 --decode > "$key"
+          keytool -list -storetype PKCS12 -keystore "$key" -storepass "$BB_V2_KEYSTORE_PASSWORD" -alias bigbrother >/dev/null 2>&1
+          echo "BB_V2_KEYSTORE_FILE=$key" >> "$GITHUB_ENV"
+          echo "BB_V2_VERSION_CODE=$((20000 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
+          echo "BB_V2_VERSION_NAME=2.0.$GITHUB_RUN_NUMBER-dev" >> "$GITHUB_ENV"
+      - name: Build signed V2 development APKs
+        env:
+          BB_V2_KEYSTORE_PASSWORD: ${{ secrets.BB_STABLE_KEYSTORE_PASSWORD }}
+        run: gradle --no-daemon -p native-mobile-v2 :app:assembleOnlineRelease :app:assembleLocalRelease
+      - name: Verify signatures, exact package identity and version
+        env:
+          BB_V2_KEYSTORE_PASSWORD: ${{ secrets.BB_STABLE_KEYSTORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/bb-v2-artifacts"
+          signer="$ANDROID_HOME/build-tools/35.0.0/apksigner"
+          aapt="$ANDROID_HOME/build-tools/35.0.0/aapt"
+          expected="$(keytool -exportcert -storetype PKCS12 -keystore "$BB_V2_KEYSTORE_FILE" -storepass "$BB_V2_KEYSTORE_PASSWORD" -alias bigbrother | sha256sum | cut -d' ' -f1)"
+          for flavor in online local; do
+            apk="native-mobile-v2/app/build/outputs/apk/$flavor/release/app-$flavor-release.apk"
+            test -s "$apk"
+            if [[ "$flavor" == online ]]; then pkg=com.bigbrother.online.v2dev; else pkg=com.bigbrother.localbrain.v2dev; fi
+            verification="$("$signer" verify --verbose --print-certs "$apk")"
+            actual="$(printf '%s\n' "$verification" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p')"
+            [[ "$actual" == "$expected" ]]
+            badging="$("$aapt" dump badging "$apk")"
+            first="$(printf '%s\n' "$badging" | sed -n '1p')"
+            [[ "$first" == "package: name='$pkg' versionCode='$BB_V2_VERSION_CODE' "* ]]
+            dest="$RUNNER_TEMP/bb-v2-artifacts/BIG-BROTHER-$flavor-v2dev-$BB_V2_VERSION_CODE.apk"
+            cp "$apk" "$dest"
+            (cd "$RUNNER_TEMP/bb-v2-artifacts"; sha256sum "$(basename "$dest")" > "$(basename "$dest").sha256")
+            echo "Verified $flavor development APK version $BB_V2_VERSION_CODE."
+          done
+      - name: Upload signed development APKs only
+        uses: actions/upload-artifact@v4
+        with:
+          name: BIG-BROTHER-Native-V2-Signed-DEV
+          path: ${{ runner.temp }}/bb-v2-artifacts/*
+          if-no-files-found: error
+          retention-days: 90
+      - name: Remove temporary signing key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/bb-v2-signing.p12"

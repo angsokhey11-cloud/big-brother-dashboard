@@ -2,7 +2,24 @@ plugins { id 'com.android.application' }
 android {
  namespace 'com.bigbrother.nativev2'
  compileSdk 35
- defaultConfig { minSdk 26; targetSdk 35; versionCode 1; versionName '2.0.0-dev' }
+ defaultConfig { minSdk 26; targetSdk 35; versionCode (System.getenv('BB_V2_VERSION_CODE') ?: '1').toInteger(); versionName (System.getenv('BB_V2_VERSION_NAME') ?: '2.0.0-dev') }
+ signingConfigs {
+  if (System.getenv('BB_V2_KEYSTORE_FILE')) {
+   stableV2 {
+    storeFile file(System.getenv('BB_V2_KEYSTORE_FILE'))
+    storeType 'PKCS12'
+    storePassword System.getenv('BB_V2_KEYSTORE_PASSWORD')
+    keyAlias 'bigbrother'
+    keyPassword System.getenv('BB_V2_KEYSTORE_PASSWORD')
+   }
+  }
+ }
+ buildTypes {
+  release {
+   if (System.getenv('BB_V2_KEYSTORE_FILE')) signingConfig signingConfigs.stableV2
+   minifyEnabled false
+  }
+ }
  flavorDimensions 'connection'
  productFlavors {
   online { dimension 'connection'; applicationId 'com.bigbrother.online.v2dev'; buildConfigField 'String', 'ENDPOINT', '"https://sjfhlaclgmkwwofzstok.supabase.co"'; resValue 'string', 'app_name', 'BIG BROTHER Online V2 Dev' }
