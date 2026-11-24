@@ -21,6 +21,9 @@ public final class MainActivity extends Activity {
     private LinearLayout root;
     private TextView status;
     private boolean destroyed;
+    private final ExecutorService updateWorker=Executors.newSingleThreadExecutor();
+    private boolean updateBusy;
+    private boolean autoChecked;
     private JSONObject pendingExport;
     private boolean exportBusy;
     private static final int SAVE_PDF=4101;
@@ -46,6 +49,7 @@ public final class MainActivity extends Activity {
     }
     private void showLogin() {
         screen();
+        addUpdatePanel();
         final boolean local = "local".equals(BuildConfig.FLAVOR);
         if (local) {
             label("Local Brain V6 — secure LAN sign-in",16,Color.DKGRAY);
@@ -104,6 +108,56 @@ public final class MainActivity extends Activity {
                     }});
                 }
             });
+        });
+    }
+    private void addUpdatePanel(){
+        final LinearLayout page=root;
+        TextView info=label("App version: "+BuildConfig.VERSION_NAME,13,Color.DKGRAY);
+        Button check=button("Check for updates");
+        check.setOnClickListener(v -> checkUpdate(page,info,check));
+        if(!autoChecked){autoChecked=true;checkUpdate(page,info,check);}
+    }
+    private void checkUpdate(LinearLayout page,TextView info,Button check){
+        if(updateBusy)return;
+        updateBusy=true;check.setEnabled(false);info.setText("Checking update channel…");
+        updateWorker.execute(()->{
+            try{
+                AppUpdater.Offer offer=AppUpdater.check(this);
+                runOnUiThread(()->{
+                    updateBusy=false;if(destroyed||root!=page)return;
+                    check.setEnabled(true);
+                    if(offer==null){info.setText("No newer verified release listed.");return;}
+                    info.setText("Update available: build "+offer.version);
+                    new android.app.AlertDialog.Builder(this).setTitle("BIG BROTHER update")
+                      .setMessage("Download and verify the new APK? Android will ask before installing.")
+                      .setNegativeButton("Later",null)
+                      .setPositiveButton("Download",(d,w)->downloadUpdate(page,info,check,offer)).show();
+                });
+            }catch(Exception e){runOnUiThread(()->{updateBusy=false;if(!destroyed&&root==page){check.setEnabled(true);info.setText("Update check unavailable. Current app remains installed.");}});}
+        });
+    }
+    private void downloadUpdate(LinearLayout page,TextView info,Button check,AppUpdater.Offer offer){
+        if(updateBusy||root!=page)return;
+        if(!getPackageManager().canRequestPackageInstalls()){
+            info.setText("Allow installation from this app, then check for updates again.");
+            try{startActivity(new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,android.net.Uri.parse("package:"+getPackageName())));}catch(Exception ignored){}
+            return;
+        }
+        updateBusy=true;check.setEnabled(false);info.setText("Downloading and verifying update…");
+        updateWorker.execute(()->{
+            try{
+                java.io.File apk=AppUpdater.download(this,offer);
+                runOnUiThread(()->{
+                    updateBusy=false;
+                    if(destroyed||root!=page){apk.delete();return;}
+                    check.setEnabled(true);
+                    android.net.Uri uri=androidx.core.content.FileProvider.getUriForFile(this,getPackageName()+".exports",apk);
+                    Intent install=new Intent(Intent.ACTION_VIEW);install.setDataAndType(uri,"application/vnd.android.package-archive");
+                    install.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    try{startActivity(install);info.setText("Verified APK — confirm the update in Android.");}
+                    catch(Exception e){apk.delete();info.setText("Android installer unavailable.");}
+                });
+            }catch(Exception e){runOnUiThread(()->{updateBusy=false;if(!destroyed&&root==page){check.setEnabled(true);info.setText("Update rejected or download failed. Current app remains installed.");}});}
         });
     }
     private void showProfile(JSONObject profile) {
@@ -387,5 +441,5 @@ public final class MainActivity extends Activity {
         NetworkCapabilities caps=manager==null?null:manager.getNetworkCapabilities(manager.getActiveNetwork());
         status.setText(caps==null?"Device network: disconnected":"Device network: connected (server not verified)");
     }
-    @Override protected void onDestroy(){destroyed=true;worker.shutdown();super.onDestroy();}
+    @Override protected void onDestroy(){destroyed=true;worker.shutdown();updateWorker.shutdown();super.onDestroy();}
 }

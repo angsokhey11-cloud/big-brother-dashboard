@@ -1,1 +1,1 @@
-<paths xmlns:android="http://schemas.android.com/apk/res/android"><cache-path name="invoice_exports" path="invoice_exports/"/></paths>
+<paths xmlns:android="http://schemas.android.com/apk/res/android"><cache-path name="invoice_exports" path="invoice_exports/"/><cache-path name="apk_updates" path="apk_updates/"/></paths>

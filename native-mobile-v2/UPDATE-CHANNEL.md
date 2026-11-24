@@ -1,0 +1,5 @@
+# Native V2 development update channel
+
+Automatic catalog check on the login screen, manual download and Android installation confirmation. No background installation or dynamic execution. Online and Local have separate development release tags: native-v2-online-dev and native-v2-local-dev. Each published APK asset must be named BIG-BROTHER-<flavor>-v2dev-<versionCode>.apk and include GitHub's SHA-256 digest. APK must match the installed package ID, have a higher version code, and match the installed signing certificate. Android performs final install validation.
+
+No update release has been published. Current CI debug builds are not a reliable update chain because the debug signing certificate can change and the version code is fixed. Before publishing any update, implement permanent signing and monotonically increasing version codes, verify APK signatures in CI, and exercise wrong package, wrong signer, corrupt download, interrupted network, permission denial and installer cancellation on devices. Keep production APKs untouched. Native APK updates cannot be rolled back silently; preserve existing data and plan forward repair releases.
