@@ -20,7 +20,7 @@ final class NativeInvoiceDraft {
     private JSONArray locations,products,batches,sellingUnits,warehouse;
     private JSONObject location,batch,customer,prices;
     private boolean busy,customersReady;
-    private int generation;
+    private int generation,revision;
     private TextView status,customerLabel,total;
     private EditText number;
     private TextView preflightResult,recoveryStatus,duePreview;
@@ -35,7 +35,7 @@ final class NativeInvoiceDraft {
     private String lastCurrency;
     private boolean resettingPayment;
     private Spinner locationPicker,batchPicker,currency;
-    private LinearLayout customerBox,productBox,linesBox;
+    private LinearLayout customerBox,productBox,linesBox,paymentCard,productRow;
     private final ArrayList<Line> lines=new ArrayList<>();
     private static final int BLUE=Color.rgb(23,74,145);
     private static class Line{
@@ -44,6 +44,46 @@ final class NativeInvoiceDraft {
     }
     NativeInvoiceDraft(Activity a,LinearLayout root,CloudAuth api,ExecutorService worker,BooleanSupplier active){
         this.a=a;this.root=root;this.api=api;this.worker=worker;this.active=active;
+    }
+    private int dp(int value){return Math.round(value*a.getResources().getDisplayMetrics().density);}
+    private android.graphics.drawable.GradientDrawable shape(int color,int stroke){
+        android.graphics.drawable.GradientDrawable b=new android.graphics.drawable.GradientDrawable();
+        b.setColor(color);b.setCornerRadius(dp(12));b.setStroke(dp(1),stroke);return b;
+    }
+    private LinearLayout section(String title){
+        LinearLayout c=new LinearLayout(a);c.setOrientation(LinearLayout.VERTICAL);
+        c.setPadding(dp(12),dp(8),dp(12),dp(12));
+        c.setBackground(shape(Color.WHITE,Color.rgb(218,228,239)));
+        LinearLayout.LayoutParams params=new LinearLayout.LayoutParams(-1,-2);params.topMargin=dp(10);root.addView(c,params);
+        TextView heading=text(c,title,17);heading.setTypeface(null,android.graphics.Typeface.BOLD);
+        return c;
+    }
+    private LinearLayout horizontal(LinearLayout parent){
+        LinearLayout row=new LinearLayout(a);row.setOrientation(LinearLayout.HORIZONTAL);parent.addView(row,new LinearLayout.LayoutParams(-1,-2));return row;
+    }
+    private LinearLayout half(LinearLayout row){
+        LinearLayout c=new LinearLayout(a);c.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0,-2,1);lp.setMargins(dp(3),0,dp(3),0);row.addView(c,lp);return c;
+    }
+    private EditText calendar(LinearLayout parent,String label,boolean optional){
+        text(parent,label,13);
+        EditText field=field(parent,"YYYY-MM-DD",InputType.TYPE_CLASS_DATETIME|InputType.TYPE_DATETIME_VARIATION_DATE);
+        field.setFocusable(false);field.setClickable(true);
+        field.setOnClickListener(v->{
+            java.time.LocalDate selected;
+            try{selected=java.time.LocalDate.parse(field.getText().toString());}
+            catch(Exception e){selected=java.time.LocalDate.now(java.time.ZoneId.of("Asia/Phnom_Penh"));}
+            android.app.DatePickerDialog dialog=new android.app.DatePickerDialog(a,(picker,y,m,d)->field.setText(java.time.LocalDate.of(y,m+1,d).toString()),selected.getYear(),selected.getMonthValue()-1,selected.getDayOfMonth());
+            if(optional)dialog.setButton(android.content.DialogInterface.BUTTON_NEUTRAL,"Use customer term",(d,w)->field.setText(""));
+            dialog.show();
+        });
+        return field;
+    }
+    private void productTile(String title,Runnable action,int index){
+        if(index%2==0||productRow==null)productRow=horizontal(productBox);
+        Button b=new Button(a);b.setAllCaps(false);b.setText(title);b.setTextSize(13);b.setTextColor(BLUE);b.setGravity(android.view.Gravity.CENTER_VERTICAL|android.view.Gravity.START);
+        b.setPadding(dp(9),dp(8),dp(9),dp(8));b.setMinHeight(dp(66));b.setBackground(shape(Color.rgb(240,246,253),Color.rgb(202,219,238)));
+        LinearLayout.LayoutParams params=new LinearLayout.LayoutParams(0,-2,1);params.setMargins(dp(3),dp(4),dp(3),dp(4));productRow.addView(b,params);b.setOnClickListener(v->action.run());
     }
     private TextView text(LinearLayout p,String value,int size){
         TextView t=new TextView(a);t.setText(value);t.setTextSize(size);t.setTextColor(BLUE);t.setPadding(0,8,0,8);p.addView(t);return t;
@@ -78,14 +118,16 @@ final class NativeInvoiceDraft {
             if(lines.isEmpty()){load();return;}
             new android.app.AlertDialog.Builder(a).setTitle("Reload master data?").setMessage("Reloading clears current draft items and payment selection.").setNegativeButton("Keep draft",null).setPositiveButton("Reload",(d,w)->load()).show();
         });
-        number=field(root,"Invoice No. (INV-...)",InputType.TYPE_CLASS_TEXT);
-        date=field(root,"Selling date (YYYY-MM-DD)",InputType.TYPE_CLASS_DATETIME|InputType.TYPE_DATETIME_VARIATION_DATE);
+        LinearLayout info=section("Invoice Information");
+        LinearLayout firstRow=horizontal(info),left=half(firstRow),right=half(firstRow);
+        text(left,"Invoice No.",13);number=field(left,"INV-...",InputType.TYPE_CLASS_TEXT);
+        date=calendar(right,"Selling date",false);
         date.setText(java.time.LocalDate.now(java.time.ZoneId.of("Asia/Phnom_Penh")).toString());
-        duePreview=text(root,"Due date: select customer",14);
-        dueOverride=field(root,"Override due date (YYYY-MM-DD), optional",InputType.TYPE_CLASS_TEXT);
-        text(root,"Batch / Direct Sale",15);batchPicker=new Spinner(a);root.addView(batchPicker);
-        text(root,"Main Location",15);locationPicker=new Spinner(a);root.addView(locationPicker);
-        text(root,"Currency",15);currency=new Spinner(a);root.addView(currency);
+        duePreview=text(info,"Due date: select customer",14);
+        dueOverride=calendar(info,"Override due date (optional)",true);
+        text(info,"Batch / Direct Sale",15);batchPicker=new Spinner(a);info.addView(batchPicker);
+        text(info,"Main Location",15);locationPicker=new Spinner(a);info.addView(locationPicker);
+        text(info,"Currency",15);currency=new Spinner(a);info.addView(currency);
         choices(currency,new ArrayList<>(java.util.Arrays.asList("USD","KHR")));
         currency.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener(){
             public void onNothingSelected(android.widget.AdapterView<?> p){}
@@ -97,24 +139,33 @@ final class NativeInvoiceDraft {
                 lastCurrency=curr();
             }
         });
-        button(root,"Apply batch and location",this::apply);
-        customerLabel=text(root,"Customer: select batch / location first",15);
-        customerBox=column(root);
-        text(root,"Products",18);
-        productQuery=field(root,"Search product name, code or barcode",InputType.TYPE_CLASS_TEXT);
-        button(root,"Search products",this::renderProducts);
-        productBox=column(root);
-        text(root,"Invoice Items",18);linesBox=column(root);
-        total=text(root,"Draft subtotal —",18);
+        button(info,"Apply batch and location",this::apply);
+        LinearLayout customerCard=section("Customer Information");
+        customerLabel=text(customerCard,"Customer: select batch / location first",15);
+        customerBox=column(customerCard);
+        LinearLayout catalog=section("Products");
+        productQuery=field(catalog,"Search product name, code or barcode",InputType.TYPE_CLASS_TEXT);
+        productBox=column(catalog);
+        productQuery.addTextChangedListener(new android.text.TextWatcher(){
+            public void beforeTextChanged(CharSequence s,int start,int count,int after){}
+            public void onTextChanged(CharSequence s,int start,int before,int count){if(!busy&&customersReady&&customer!=null&&sameScope())renderProducts();}
+            public void afterTextChanged(android.text.Editable e){}
+        });
+        LinearLayout items=section("Invoice Items");
+        linesBox=column(items);
+        total=text(items,"Draft subtotal —",18);total.setTypeface(null,android.graphics.Typeface.BOLD);
         paymentPanel();
-        preflightResult=text(root,"Read-only checks; no invoice will be submitted.",14);
-        button(root,"Validate draft against server",this::preflight);
-        button(root,"Invoice Preview (native A4)",()->previewPayload(true));
-        button(root,"Prepare invoice payload preview",()->previewPayload(false));
-        recoveryStatus=text(root,"Recovery journal: not checked",14);
-        button(root,"Check previous invoice save",this::checkRecovery);
+        LinearLayout actions=section("Invoice Actions");
+        button(actions,"Invoice Preview (native A4)",()->previewPayload(true));
+        preflightResult=text(actions,"Read-only checks; no invoice will be submitted.",14);
+        button(actions,"Validate draft against server",this::preflight);
+        LinearLayout more=column(actions);more.setVisibility(View.GONE);
+        button(actions,"More Functions · developer checks",()->more.setVisibility(more.getVisibility()==View.VISIBLE?View.GONE:View.VISIBLE));
+        button(more,"Prepare invoice payload preview",()->previewPayload(false));
+        recoveryStatus=text(more,"Recovery journal: not checked",14);
+        button(more,"Check previous invoice save",this::checkRecovery);
         checkRecovery();
-        Button complete=button(root,"Complete — migration pending",()->{});complete.setEnabled(false);
+        Button complete=button(actions,"Complete — migration pending",()->{});complete.setEnabled(false);
         load();
     }
     private String curr(){return currency.getSelectedItem()==null?"USD":currency.getSelectedItem().toString();}
@@ -146,7 +197,7 @@ final class NativeInvoiceDraft {
     private boolean sameScope(){
         if(location==null)return false;
         int bi=batchPicker.getSelectedItemPosition(),li=locationPicker.getSelectedItemPosition();
-        if(batch!=null)return bi>0&&batches!=null&&batches.optJSONObject(bi-1)==batch;
+        if(batch!=null)return bi>0&&batches!=null&&batches.optJSONObject(bi-1)==batch&&li>0&&locations!=null&&locations.optJSONObject(li-1)==location;
         return bi==0&&li>0&&locations!=null&&locations.optJSONObject(li-1)==location;
     }
     private void apply(){
@@ -241,7 +292,7 @@ final class NativeInvoiceDraft {
         }catch(Exception e){return null;}
     }
     private void renderProducts(){
-        productBox.removeAllViews();if(busy||!customersReady||customer==null||!sameScope()){status.setText("Apply batch and select customer first.");return;}
+        productBox.removeAllViews();productRow=null;if(busy||!customersReady||customer==null||!sameScope()){status.setText("Apply batch and select customer first.");return;}
         String q=productQuery.getText().toString().trim().toLowerCase(Locale.ROOT);int shown=0;
         if(batch!=null){
             JSONArray groups=batch.optJSONArray("groupItems");
@@ -252,7 +303,7 @@ final class NativeInvoiceDraft {
                 BigDecimal n=groupAvailable(code);if(n==null||n.signum()<=0)continue;
                 try{
                     JSONObject entry=new JSONObject().put("code",code).put("name",name).put("unit",val(g,"unit")).put("entryType","GROUP");
-                    shown++;button(productBox,name+" · Group · Available "+plain(n),()->editLine(entry));
+                    productTile(name+"\nGroup · Available "+plain(n),()->editLine(entry),shown++);
                 }catch(JSONException ignored){}
             }
         }
@@ -261,9 +312,10 @@ final class NativeInvoiceDraft {
             if(code.isEmpty()||name.isEmpty()||!(name+" "+code+" "+first(p,"productBarcode","barcode")).toLowerCase(Locale.ROOT).contains(q))continue;
             BigDecimal[] stock=tracked(p)?available(code):null;
             if(tracked(p)&&(stock==null||stock[0].add(stock[1]).signum()<=0))continue;
-            shown++;button(productBox,name+" · "+val(p,"unit")+(stock==null?"":" · Available "+plain(stock[0].add(stock[1]))),()->editLine(p));
+            productTile(name+"\n"+val(p,"unit")+(stock==null?" · Service":" · Available "+plain(stock[0].add(stock[1]))),()->editLine(p),shown++);
         }
         if(shown==0)text(productBox,"No matching products",14);
+        if(shown==30)text(productBox,"Showing up to 30 products. Search to narrow results.",12);
     }
     private void editLine(JSONObject p){
         if(!sameScope()||busy||customer==null)return;
@@ -344,7 +396,7 @@ final class NativeInvoiceDraft {
         }));dialog.show();
     }
     private Spinner select(String... values){
-        Spinner p=new Spinner(a);root.addView(p);choices(p,new ArrayList<>(java.util.Arrays.asList(values)));return p;
+        Spinner p=new Spinner(a);paymentCard.addView(p);choices(p,new ArrayList<>(java.util.Arrays.asList(values)));return p;
     }
     private void observe(EditText field){
         field.addTextChangedListener(new android.text.TextWatcher(){
@@ -360,19 +412,19 @@ final class NativeInvoiceDraft {
         });
     }
     private void paymentPanel(){
-        text(root,"Discount & Payment",18);
+        paymentCard=section("Discount & Payment");
         int numeric=InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL;
-        rateInput=field(root,"Daily exchange rate: 1 USD = ? KHR",numeric);
+        rateInput=field(paymentCard,"Daily exchange rate: 1 USD = ? KHR",numeric);
         discountMode=select("Fixed amount","Percentage");
-        discountInput=field(root,"Discount",numeric);
+        discountInput=field(paymentCard,"Discount",numeric);
         paymentMethod=select("Cash","Bank","Credit","Partially Paid in Cash","Partially Paid in Bank","Cash + Bank");
-        partialInput=field(root,"Partial payment (invoice currency)",numeric);
-        cashInput=field(root,"Cash amount (invoice currency)",numeric);
-        bankInput=field(root,"Bank amount (invoice currency)",numeric);
+        partialInput=field(paymentCard,"Partial payment (invoice currency)",numeric);
+        cashInput=field(paymentCard,"Cash amount (invoice currency)",numeric);
+        bankInput=field(paymentCard,"Bank amount (invoice currency)",numeric);
         bankCurrency=select("USD","KHR");
-        actualBankInput=field(root,"Actual bank amount (selected bank currency)",numeric);
-        paymentSummary=text(root,"",16);exchangeSummary=text(root,"",14);bankSummary=text(root,"",14);
-        bankDraft=new NativeBankDraft(a,root,api,worker,active);
+        actualBankInput=field(paymentCard,"Actual bank amount (selected bank currency)",numeric);
+        paymentSummary=text(paymentCard,"",16);exchangeSummary=text(paymentCard,"",14);bankSummary=text(paymentCard,"",14);
+        bankDraft=new NativeBankDraft(a,paymentCard,api,worker,active);
         observe(date);observe(dueOverride);observe(number);
         for(EditText f:new EditText[]{rateInput,discountInput,partialInput,cashInput,bankInput,actualBankInput})observe(f);
         for(Spinner p:new Spinner[]{discountMode,paymentMethod,bankCurrency})observe(p);
@@ -390,6 +442,7 @@ final class NativeInvoiceDraft {
     }
     private void updatePayment(){
         if(paymentSummary==null||resettingPayment)return;
+        revision++;
         if(preflightResult!=null)preflightResult.setText("Draft inputs changed. Run fresh validation before reviewing.");
         try{duePreview.setText(customer==null?"Due date: select customer":"Due date: "+dueDate());}catch(Exception e){duePreview.setText("Due date: invalid date");}
         String method=String.valueOf(paymentMethod.getSelectedItem()),cur=curr();
@@ -546,6 +599,7 @@ final class NativeInvoiceDraft {
                 method.startsWith("Partially")?DraftPayment.amount(partialInput.getText().toString()):BigDecimal.ZERO,
                 "Cash + Bank".equals(method)?DraftPayment.amount(cashInput.getText().toString()):BigDecimal.ZERO,
                 "Cash + Bank".equals(method)?DraftPayment.amount(bankInput.getText().toString()):BigDecimal.ZERO);
+            final int capturedRevision=revision;
             checkingDraft=true;preflightResult.setText("Checking captured draft against current server data…");
             worker.execute(()->{
                 String result;
@@ -589,7 +643,7 @@ final class NativeInvoiceDraft {
                 }catch(IllegalStateException e){result="Draft check blocked: "+e.getMessage();}
                 catch(Exception e){result="Draft check unavailable. Verify connection, date and current stock, then retry.";}
                 final String message=result;
-                a.runOnUiThread(()->{checkingDraft=false;if(active.getAsBoolean())preflightResult.setText(message);});
+                a.runOnUiThread(()->{checkingDraft=false;if(active.getAsBoolean())preflightResult.setText(capturedRevision==revision?message:"Draft changed during validation. Run fresh validation.");});
             });
         }catch(Exception e){preflightResult.setText("Draft check blocked: "+(e instanceof IllegalArgumentException?e.getMessage():"Invalid invoice data."));}
     }

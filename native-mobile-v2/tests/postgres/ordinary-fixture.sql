@@ -1,6 +1,6 @@
 -- Extend the synthetic fixture, not production. Stock trigger below is a test double.
 alter table public.invoices
- add column subtotal numeric(18,2), add column discount numeric(18,2),
+ add column payment_method text, add column subtotal numeric(18,2), add column discount numeric(18,2),
  add column change_amount numeric, add column outstanding numeric(18,2), add column status text,
  add column note text, add column due_date date, add column bank_payment text, add column bank_reference text,
  add column credit_amount numeric, add column batch_number text, add column shipping_to_legacy text;
