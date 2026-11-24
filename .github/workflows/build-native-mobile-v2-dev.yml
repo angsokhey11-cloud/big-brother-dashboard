@@ -1,0 +1,39 @@
+name: Build Native Mobile V2 Development APKs
+on:
+  push:
+    branches: [mobile-v2-development]
+    paths:
+      - 'native-mobile-v2/**'
+      - '.github/workflows/build-native-mobile-v2-dev.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    if: github.ref == 'refs/heads/mobile-v2-development'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+      - run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+      - run: gradle --no-daemon -p native-mobile-v2 :app:assembleOnlineDebug :app:assembleLocalDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BIG-BROTHER-Online-V2-SCAFFOLD-NOT-PRODUCTION
+          path: native-mobile-v2/app/build/outputs/apk/online/debug/*.apk
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BIG-BROTHER-Local-V2-SCAFFOLD-NOT-PRODUCTION
+          path: native-mobile-v2/app/build/outputs/apk/local/debug/*.apk
+          if-no-files-found: error
