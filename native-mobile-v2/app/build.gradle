@@ -1,22 +1,29 @@
 plugins { id 'com.android.application' }
+def v2Code = Integer.parseInt(System.getenv('BB_V2_VERSION_CODE') ?: '1')
+def v2Name = System.getenv('BB_V2_VERSION_NAME') ?: '2.0.0-dev'
 android {
  namespace 'com.bigbrother.nativev2'
  compileSdk 35
- defaultConfig { minSdk 26; targetSdk 35; versionCode (System.getenv('BB_V2_VERSION_CODE') ?: '1').toInteger(); versionName (System.getenv('BB_V2_VERSION_NAME') ?: '2.0.0-dev') }
+ defaultConfig {
+  minSdk = 26
+  targetSdk = 35
+  versionCode = v2Code
+  versionName = v2Name
+ }
  signingConfigs {
   if (System.getenv('BB_V2_KEYSTORE_FILE')) {
    stableV2 {
-    storeFile file(System.getenv('BB_V2_KEYSTORE_FILE'))
-    storeType 'PKCS12'
-    storePassword System.getenv('BB_V2_KEYSTORE_PASSWORD')
-    keyAlias 'bigbrother'
-    keyPassword System.getenv('BB_V2_KEYSTORE_PASSWORD')
+    storeFile = file(System.getenv('BB_V2_KEYSTORE_FILE'))
+    storeType = 'PKCS12'
+    storePassword = System.getenv('BB_V2_KEYSTORE_PASSWORD')
+    keyAlias = 'bigbrother'
+    keyPassword = System.getenv('BB_V2_KEYSTORE_PASSWORD')
    }
   }
  }
  buildTypes {
   release {
-   if (System.getenv('BB_V2_KEYSTORE_FILE')) signingConfig signingConfigs.stableV2
+   if (System.getenv('BB_V2_KEYSTORE_FILE')) signingConfig = signingConfigs.stableV2
    minifyEnabled false
   }
  }
