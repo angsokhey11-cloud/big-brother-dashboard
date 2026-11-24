@@ -80,7 +80,7 @@ final class BundledUpdate {
         if(b!=null){b.setText(actionText);b.setEnabled(!busy);}
     }
     private void maybePrompt(){
-        if(dead||!foreground||busy||offer==null||promptedVersion==offer.version||a.isFinishing()||a.isDestroyed())return;
+        if(dead||!foreground||busy||offer==null||progressDialog!=null||promptedVersion==offer.version||a.isFinishing()||a.isDestroyed())return;
         if(settingsDialog!=null&&settingsDialog.isShowing())return;
         promptedVersion=offer.version;
         offerDialog=new AlertDialog.Builder(a).setTitle("BIG BROTHER Mobile update")
@@ -108,11 +108,12 @@ final class BundledUpdate {
         progressBar=new ProgressBar(a,null,android.R.attr.progressBarStyleHorizontal);progressBar.setMax(100);progressBar.setIndeterminate(!download);
         LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,dp(6));p.topMargin=dp(16);p.bottomMargin=dp(16);content.addView(progressBar,p);
         content.addView(line("Fast. Reliable. Always Moving.",11,0xff52718e,false));
-        progressDialog=new AlertDialog.Builder(a).setView(content).setNegativeButton("Continue working",null).create();
+        progressDialog=new AlertDialog.Builder(a).setView(content).setNegativeButton("Close",null).setPositiveButton("Download & Update",null).setCancelable(false).create();
         final AlertDialog own=progressDialog;
         own.setOnDismissListener(d->{if(progressDialog==own){progressDialog=null;progressTitle=null;progressDetail=null;progressBar=null;}});
         own.show();
-        if(!download)ui.postDelayed(()->{if(progressDialog==own)closeProgress();},7000);
+        own.getButton(AlertDialog.BUTTON_POSITIVE).setVisibility(View.GONE);
+        own.setCanceledOnTouchOutside(false);
     }
     private void progress(String title,String detail,int percent){
         ui.post(()->{if(dead||progressDialog==null)return;
@@ -134,7 +135,7 @@ final class BundledUpdate {
     }
     void check(){check(false);}
     private void check(boolean manual){
-        if(dead||busy||offer!=null||(!manual&&SystemClock.elapsedRealtime()-lastCheck<60000))return;
+        if(dead||busy||offer!=null||progressDialog!=null||(!manual&&SystemClock.elapsedRealtime()-lastCheck<60000))return;
         lastCheck=SystemClock.elapsedRealtime();busy=true;
         if(firstCheck||manual)openProgress("Checking for updates…","Finding the latest application version",false);
         firstCheck=false;
@@ -144,13 +145,22 @@ final class BundledUpdate {
             try{result=checkCatalog();}catch(Exception e){error=e instanceof java.net.SocketTimeoutException?"Connection timed out":e instanceof java.net.UnknownHostException?"Update server unreachable":e instanceof javax.net.ssl.SSLException?"Secure connection failed":e.getMessage();}
             final Offer found=result;final String failure=error;
             a.runOnUiThread(()->{busy=false;if(dead||a.isFinishing()||a.isDestroyed())return;
-                if(found!=null){closeProgress();offer=found;show("V3.0."+(found.version-30000)+" available · "+currentName+" installed","Download");maybePrompt();}
+                if(found!=null){
+                    offer=found;show("V3.0."+(found.version-30000)+" available · "+currentName+" installed","Download");
+                    if(progressDialog!=null){
+                        // Retain the running truck and result until an explicit choice.
+                        promptedVersion=found.version;
+                        progress("A new delivery has arrived!",currentName+" → V3.0."+(found.version-30000),100);
+                        final AlertDialog own=progressDialog;
+                        Button download=own.getButton(AlertDialog.BUTTON_POSITIVE);
+                        download.setVisibility(View.VISIBLE);
+                        download.setOnClickListener(v->{if(progressDialog==own){closeProgress();onAction();}});
+                    }else maybePrompt();
+                }
                 else {
                     if(failure!=null)show(currentName+" · "+failure,"Retry");else show(currentName+" · Up to date","Check");
                     if(progressDialog!=null){
-                        final AlertDialog own=progressDialog;
                         progress(failure==null?"You're up to date!":"Continuing with your installed version…",failure==null?"Your business is on the move":failure,100);
-                        ui.postDelayed(()->{if(progressDialog==own)closeProgress();},850);
                     }
                 }
             });
