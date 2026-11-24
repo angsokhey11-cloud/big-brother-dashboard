@@ -114,6 +114,13 @@ final class CloudAuth {
         if(Boolean.FALSE.equals(data.opt("success")))throw new IOException("Invoice Generator request failed");
         return data;
     }
+    synchronized boolean generatorValidateBank(String customerId,String transactionId,java.math.BigDecimal actual,String actualCurrency,String invoiceCurrency,java.math.BigDecimal rate,java.math.BigDecimal equivalent)throws Exception{
+        if(!"online".equals(BuildConfig.FLAVOR)||!NativeRoutes.allowed(profile(),"invoice","canCreate"))throw new IOException("Bank validation permission denied");
+        JSONObject args=new JSONObject().put("p_customer_id",customerId).put("p_transaction_id",transactionId)
+            .put("p_actual_amount",actual).put("p_actual_currency",actualCurrency).put("p_invoice_currency",invoiceCurrency)
+            .put("p_exchange_rate",rate).put("p_equivalent_amount",equivalent);
+        return "true".equals(post("/rest/v1/rpc/bb_bank_validate_invoice_input",args,accessToken).trim());
+    }
     synchronized JSONObject generatorBankBalances(String customerId)throws Exception{
         JSONObject current=profile();
         if(!"online".equals(BuildConfig.FLAVOR)||!NativeRoutes.allowed(current,"invoice","canCreate")||customerId.trim().isEmpty())

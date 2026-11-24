@@ -13,7 +13,7 @@ final class InvoiceDraftPayload {
         if("MONTHS".equals(type))return sale.plusMonths(Math.max(1,value)).withDayOfMonth(1);
         return sale.plusDays(Math.max(0,value));
     }
-    static JSONObject item(String lineId,String code,String name,String barcode,String baseUnit,String sellingUnit,BigDecimal factor,BigDecimal qty,BigDecimal price,BigDecimal purchased,BigDecimal zero)throws JSONException{
+    static JSONObject item(String lineId,String code,String name,String barcode,String baseUnit,String sellingUnit,BigDecimal factor,BigDecimal qty,BigDecimal price,BigDecimal purchased,BigDecimal zero,boolean group)throws JSONException{
         BigDecimal baseQty=qty.multiply(factor),amount=qty.multiply(price);
         JSONArray sources=new JSONArray();
         if(purchased.signum()>0)sources.put(new JSONObject().put("source","PURCHASED").put("qty",purchased));
@@ -21,7 +21,7 @@ final class InvoiceDraftPayload {
         JSONObject item=new JSONObject().put("lineId",lineId).put("productCode",code).put("productName",name)
             .put("productBarcode",barcode).put("productNote","").put("unit",baseUnit)
             .put("qty",baseQty).put("unitPrice",price.divide(factor,12,RoundingMode.HALF_UP)).put("amount",amount)
-            .put("entryType","EXACT").put("productGroupCode","").put("productGroupName","").put("stockAllocations",sources);
+            .put("entryType",group?"GROUP":"EXACT").put("productGroupCode",group?code:"").put("productGroupName",group?name:"").put("stockAllocations",sources);
         if(factor.compareTo(BigDecimal.ONE)>0)item.put("sellingQty",qty).put("sellingUnit",sellingUnit).put("sellingUnitBaseQty",factor)
             .put("sellingUnitPrice",price).put("baseQty",baseQty).put("baseUnit",baseUnit);
         return item;

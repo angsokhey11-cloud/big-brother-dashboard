@@ -39,8 +39,8 @@ final class NativeInvoiceDraft {
     private final ArrayList<Line> lines=new ArrayList<>();
     private static final int BLUE=Color.rgb(23,74,145);
     private static class Line{
-        String code,name,unit,currency,baseUnit,sellingUnit,barcode,lineId;BigDecimal qty,price,factor,purchased,zero;
-        Line(String c,String n,String u,String curr,BigDecimal q,BigDecimal p,BigDecimal f,BigDecimal purchased,BigDecimal zero,String baseUnit,String sellingUnit,String barcode){code=c;name=n;unit=u;currency=curr;qty=q;price=p;factor=f;this.purchased=purchased;this.zero=zero;this.baseUnit=baseUnit;this.sellingUnit=sellingUnit;this.barcode=barcode;lineId=java.util.UUID.randomUUID().toString();}
+        String code,name,unit,currency,baseUnit,sellingUnit,barcode,lineId;boolean group;BigDecimal qty,price,factor,purchased,zero;
+        Line(String c,String n,String u,String curr,BigDecimal q,BigDecimal p,BigDecimal f,BigDecimal purchased,BigDecimal zero,String baseUnit,String sellingUnit,String barcode,boolean group){code=c;name=n;unit=u;currency=curr;qty=q;price=p;factor=f;this.purchased=purchased;this.zero=zero;this.baseUnit=baseUnit;this.sellingUnit=sellingUnit;this.barcode=barcode;this.group=group;lineId=java.util.UUID.randomUUID().toString();}
     }
     NativeInvoiceDraft(Activity a,LinearLayout root,CloudAuth api,ExecutorService worker,BooleanSupplier active){
         this.a=a;this.root=root;this.api=api;this.worker=worker;this.active=active;
@@ -215,7 +215,7 @@ final class NativeInvoiceDraft {
             try{
                 BigDecimal purchased=new BigDecimal(p),zero=new BigDecimal(z);
                 if(purchased.signum()<0||zero.signum()<0)return null;
-                for(Line line:lines)if(code.equals(line.code)){purchased=purchased.subtract(line.purchased);zero=zero.subtract(line.zero);}
+                for(Line line:lines)if(!line.group&&code.equals(line.code)){purchased=purchased.subtract(line.purchased);zero=zero.subtract(line.zero);}
                 if(purchased.signum()<0||zero.signum()<0)return null;
                 return new BigDecimal[]{purchased,zero};
             }catch(Exception e){return null;}
@@ -224,9 +224,34 @@ final class NativeInvoiceDraft {
     }
     private String plain(BigDecimal n){return n.stripTrailingZeros().toPlainString();}
     private BigDecimal quantity(EditText field){return new BigDecimal(field.getText().toString().trim().replace(',','.'));}
+    private BigDecimal groupAvailable(String code){
+        if(batch==null)return null;
+        JSONArray rows=batch.optJSONArray("groupItems");if(rows==null)return null;
+        JSONObject found=null;
+        for(int i=0;i<rows.length();i++){JSONObject row=rows.optJSONObject(i);if(row!=null&&code.equals(val(row,"groupCode"))){if(found!=null)return null;found=row;}}
+        if(found==null)return null;
+        try{
+            BigDecimal n=new BigDecimal(first(found,"remainingQty","issuedQty"));
+            for(Line line:lines)if(line.group&&code.equals(line.code))n=n.subtract(line.qty.multiply(line.factor));
+            return n.signum()<0?null:n;
+        }catch(Exception e){return null;}
+    }
     private void renderProducts(){
         productBox.removeAllViews();if(busy||!customersReady||customer==null||!sameScope()){status.setText("Apply batch and select customer first.");return;}
         String q=productQuery.getText().toString().trim().toLowerCase(Locale.ROOT);int shown=0;
+        if(batch!=null){
+            JSONArray groups=batch.optJSONArray("groupItems");
+            if(groups!=null)for(int i=0;i<groups.length()&&shown<30;i++){
+                JSONObject g=groups.optJSONObject(i);if(g==null)continue;
+                String code=val(g,"groupCode"),name=val(g,"groupName");
+                if(code.isEmpty()||name.isEmpty()||!(name+" "+code).toLowerCase(Locale.ROOT).contains(q))continue;
+                BigDecimal n=groupAvailable(code);if(n==null||n.signum()<=0)continue;
+                try{
+                    JSONObject entry=new JSONObject().put("code",code).put("name",name).put("unit",val(g,"unit")).put("entryType","GROUP");
+                    shown++;button(productBox,name+" · Group · Available "+plain(n),()->editLine(entry));
+                }catch(JSONException ignored){}
+            }
+        }
         for(int i=0;i<products.length()&&shown<30;i++){
             JSONObject p=products.optJSONObject(i);String code=val(p,"code"),name=val(p,"name");
             if(code.isEmpty()||name.isEmpty()||!(name+" "+code+" "+first(p,"productBarcode","barcode")).toLowerCase(Locale.ROOT).contains(q))continue;
@@ -245,16 +270,17 @@ final class NativeInvoiceDraft {
                 if(from.isEmpty()||to.isEmpty()||selected.isBefore(java.time.LocalDate.parse(from.substring(0,10)))||selected.isAfter(java.time.LocalDate.parse(to.substring(0,10))))throw new IllegalArgumentException();
             }catch(Exception e){status.setText("Selling date must be inside the assigned batch date range.");return;}
         }
-        final boolean tracks=tracked(p);
+        final boolean group="GROUP".equals(val(p,"entryType"));
+        final boolean tracks=!group&&tracked(p);
         final BigDecimal[] stock=tracks?available(code):null;
         if(tracks&&(stock==null||stock[0].add(stock[1]).signum()<=0)){status.setText("Exact stock source balances unavailable or exhausted.");return;}
         LinearLayout form=new LinearLayout(a);form.setOrientation(LinearLayout.VERTICAL);form.setPadding(24,12,24,12);
-        text(form,"Base unit: "+unit,13);
+        text(form,"Base unit: "+unit+(group?" · Group balance "+plain(groupAvailable(code)):""),13);
         ArrayList<String> names=new ArrayList<>(),unitNames=new ArrayList<>();ArrayList<BigDecimal> factors=new ArrayList<>();
         names.add(unit.isEmpty()?"Unit":unit);unitNames.add(unit.isEmpty()?"Unit":unit);factors.add(BigDecimal.ONE);
         if(sellingUnits!=null)for(int i=0;i<sellingUnits.length();i++){
             JSONObject u=sellingUnits.optJSONObject(i);
-            if(u==null||!"PRODUCT".equalsIgnoreCase(val(u,"targetType"))||!code.equals(val(u,"targetCode")))continue;
+            if(u==null||!(group?"GROUP":"PRODUCT").equalsIgnoreCase(val(u,"targetType"))||!code.equals(val(u,"targetCode")))continue;
             try{
                 BigDecimal factor=new BigDecimal(val(u,"baseQty"));String n=val(u,"sellingUnitName");
                 if(factor.compareTo(BigDecimal.ONE)>0&&!n.isEmpty()){
@@ -266,7 +292,7 @@ final class NativeInvoiceDraft {
         EditText qty=field(form,"Selling quantity",InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL);
         EditText price=field(form,"Price per selected selling unit ("+current+")",InputType.TYPE_CLASS_NUMBER|InputType.TYPE_NUMBER_FLAG_DECIMAL);
         JSONObject specific=prices==null?null:prices.optJSONObject(code);
-        final String basePrice=specific!=null?val(specific,"USD".equals(current)?"priceUSD":"priceKHR"):"";
+        final String basePrice=!group&&specific!=null?val(specific,"USD".equals(current)?"priceUSD":"priceKHR"):"";
         final EditText purchased,zero;
         if(tracks){
             text(form,"Stock source in base units · Purchased "+plain(stock[0])+" / Zero-Cost "+plain(stock[1]),13);
@@ -302,13 +328,14 @@ final class NativeInvoiceDraft {
                 BigDecimal q=quantity(qty),u=quantity(price),factor=factors.get(units.getSelectedItemPosition());
                 if(q.signum()<=0||u.signum()<0||q.scale()>4||u.scale()>4||q.compareTo(new BigDecimal("1000000"))>0||u.compareTo(new BigDecimal("1000000"))>0)throw new IllegalArgumentException();
                 BigDecimal base=q.multiply(factor),pQty=BigDecimal.ZERO,zQty=BigDecimal.ZERO;
+                if(group){BigDecimal remaining=groupAvailable(code);if(remaining==null||base.compareTo(remaining)>0){qty.setError("Group quantity exceeds current draft availability.");return;}}
                 if(tracks){
                     pQty=quantity(purchased);zQty=quantity(zero);BigDecimal[] fresh=available(code);
                     if(fresh==null||pQty.signum()<0||zQty.signum()<0||pQty.compareTo(fresh[0])>0||zQty.compareTo(fresh[1])>0||pQty.add(zQty).compareTo(base)!=0){
                         purchased.setError("Source total must equal "+plain(base)+" base units and not exceed available stock.");return;
                     }
                 }
-                lines.add(new Line(code,val(p,"name"),names.get(units.getSelectedItemPosition()),current,q,u,factor,pQty,zQty,unit,unitNames.get(units.getSelectedItemPosition()),first(p,"productBarcode","barcode")));renderLines();renderProducts();dialog.dismiss();
+                lines.add(new Line(code,val(p,"name"),names.get(units.getSelectedItemPosition()),current,q,u,factor,pQty,zQty,unit,unitNames.get(units.getSelectedItemPosition()),first(p,"productBarcode","barcode"),group));renderLines();renderProducts();dialog.dismiss();
             }catch(Exception e){qty.setError("Enter valid positive quantity and nonnegative price (max 4 decimals).");}
         }));dialog.show();
     }
@@ -436,7 +463,7 @@ final class NativeInvoiceDraft {
             for(Line l:lines){
                 if(!cur.equals(l.currency))throw new IllegalArgumentException("Draft currency mismatch.");
                 subtotal=subtotal.add(l.qty.multiply(l.price));
-                items.put(InvoiceDraftPayload.item(l.lineId,l.code,l.name,l.barcode,l.baseUnit,l.sellingUnit,l.factor,l.qty,l.price,l.purchased,l.zero));
+                items.put(InvoiceDraftPayload.item(l.lineId,l.code,l.name,l.barcode,l.baseUnit,l.sellingUnit,l.factor,l.qty,l.price,l.purchased,l.zero,l.group));
             }
             DraftPayment.Totals t=DraftPayment.calculate(subtotal,cur,discountMode.getSelectedItemPosition()==1,
                 DraftPayment.amount(discountInput.getText().toString()),method,
@@ -475,9 +502,11 @@ final class NativeInvoiceDraft {
             if(rate.compareTo(BigDecimal.ONE)<=0)throw new IllegalArgumentException("Enter a valid daily exchange rate.");
             BigDecimal subtotal=BigDecimal.ZERO;
             java.util.LinkedHashMap<String,BigDecimal[]> allocations=new java.util.LinkedHashMap<>();
+            java.util.LinkedHashMap<String,BigDecimal> groupAllocations=new java.util.LinkedHashMap<>();
             for(Line l:lines){
                 if(!cur.equals(l.currency))throw new IllegalArgumentException("Invoice currency changed.");
                 subtotal=subtotal.add(l.qty.multiply(l.price));
+                if(l.group)groupAllocations.merge(l.code,l.qty.multiply(l.factor),BigDecimal::add);
                 if(l.purchased.add(l.zero).signum()>0){
                     if(l.purchased.add(l.zero).compareTo(l.qty.multiply(l.factor))!=0)throw new IllegalArgumentException("Invalid source allocation.");
                     BigDecimal[] sum=allocations.computeIfAbsent(l.code,k->new BigDecimal[]{BigDecimal.ZERO,BigDecimal.ZERO});
@@ -498,6 +527,7 @@ final class NativeInvoiceDraft {
                     if(Boolean.TRUE.equals(duplicate.opt("exists")))throw new IllegalStateException("This invoice number already exists for the selected customer.");
                     JSONArray stock;
                     if(bid.isEmpty()){
+                        if(!groupAllocations.isEmpty())throw new IllegalStateException("Group stock requires a batch.");
                         JSONObject data=api.generatorWarehouse();
                         if(!Boolean.TRUE.equals(data.opt("success")))throw new IllegalStateException("Warehouse balance unavailable.");
                         stock=data.getJSONArray("balances");
@@ -510,6 +540,14 @@ final class NativeInvoiceDraft {
                         String from=val(found,"sellingDateFrom"),to=val(found,"sellingDateTo");
                         if(from.length()<10||to.length()<10||d.isBefore(java.time.LocalDate.parse(from.substring(0,10)))||d.isAfter(java.time.LocalDate.parse(to.substring(0,10))))throw new IllegalStateException("Selling date is outside the current batch range.");
                         stock=found.getJSONArray("exactItems");
+                        if(!groupAllocations.isEmpty()){
+                            JSONArray groups=found.getJSONArray("groupItems");
+                            for(java.util.Map.Entry<String,BigDecimal> e:groupAllocations.entrySet()){
+                                JSONObject row=null;
+                                for(int i=0;i<groups.length();i++){JSONObject x=groups.optJSONObject(i);if(x!=null&&e.getKey().equals(val(x,"groupCode"))){if(row!=null)throw new IllegalStateException("Ambiguous group balance.");row=x;}}
+                                if(row==null||new BigDecimal(first(row,"remainingQty","issuedQty")).compareTo(e.getValue())<0)throw new IllegalStateException("Group stock changed for "+e.getKey());
+                            }
+                        }
                     }
                     for(java.util.Map.Entry<String,BigDecimal[]> e:allocations.entrySet()){
                         JSONObject row=null;
@@ -533,6 +571,7 @@ final class NativeInvoiceDraft {
         for(Line row:new ArrayList<>(lines)){
             BigDecimal amount=row.qty.multiply(row.price);sum=sum.add(amount);
             text(linesBox,row.name+" · "+row.qty.toPlainString()+" "+row.unit+" × "+row.price.toPlainString()+" = "+amount.stripTrailingZeros().toPlainString(),15);
+            if(row.group)text(linesBox,"Group base quantity "+plain(row.qty.multiply(row.factor))+" · server allocation pending",13);
             if(row.purchased.add(row.zero).signum()>0)text(linesBox,"Base qty "+plain(row.qty.multiply(row.factor))+" · Purchased "+plain(row.purchased)+" · Zero-Cost "+plain(row.zero),13);
             button(linesBox,"Remove "+row.name,()->{lines.remove(row);renderLines();renderProducts();});
         }

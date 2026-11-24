@@ -23,7 +23,7 @@ final class NativeBankDraft {
     private final Button sync;
     private String customer="",saleDate="",currency="USD",method="";
     private BigDecimal rate=BigDecimal.ZERO,planned=BigDecimal.ZERO;
-    private boolean admin,loading,synced;
+    private boolean admin,loading,synced,validating;
     private int generation;
     private final ArrayList<Row> rows=new ArrayList<>();
     private final LinkedHashMap<String,BigDecimal> selected=new LinkedHashMap<>();
@@ -146,6 +146,24 @@ final class NativeBankDraft {
             }catch(Exception e){amount.setError("Enter a positive amount within the available balance.");}
         }));dialog.show();
     }
+    private void validateSingle(){
+        if(validating||!synced||selected.size()!=1||planned.signum()<=0||rate.compareTo(BigDecimal.ONE)<=0)return;
+        String id=selected.keySet().iterator().next();Row row=find(id);
+        if(row==null||!compatible(row))return;
+        BigDecimal amount=selected.get(id),expected=planned,fx=rate;
+        if(DraftPayment.round(equivalent(row,amount),currency).compareTo(expected)!=0){summary.setText("Selected amount does not match planned bank payment.");return;}
+        String cid=customer,cur=currency,methodSnapshot=method,dateSnapshot=saleDate;int token=generation;
+        validating=true;summary.setText("Checking selected transfer with server…");
+        worker.execute(()->{
+            boolean ok=false;try{ok=api.generatorValidateBank(cid,id,amount,row.currency,cur,fx,expected);}catch(Exception ignored){}
+            final boolean valid=ok;
+            activity.runOnUiThread(()->{
+                validating=false;
+                if(!active.getAsBoolean()||token!=generation||!customer.equals(cid)||!currency.equals(cur)||!method.equals(methodSnapshot)||!saleDate.equals(dateSnapshot)||rate.compareTo(fx)!=0||planned.compareTo(expected)!=0||selected.size()!=1||!amount.equals(selected.get(id)))return;
+                summary.setText(valid?"Server accepted the captured bank input. Snapshot check only; no money reserved or debited.":"Bank input rejected or unavailable. Refresh and review.");
+            });
+        });
+    }
     private void render(){
         sync.setEnabled(!customer.isEmpty()&&!loading);
         list.removeAllViews();summary.setText("");
@@ -168,6 +186,7 @@ final class NativeBankDraft {
         BigDecimal amount=BigDecimal.ZERO;
         for(Map.Entry<String,BigDecimal> e:selected.entrySet())amount=amount.add(equivalent(find(e.getKey()),e.getValue()));
         BigDecimal displayed=DraftPayment.round(amount,currency);
+        if(selected.size()==1&&planned.signum()>0)button(list,"Validate selected transfer",this::validateSingle);
         String match=selected.isEmpty()?"Select a registered transfer.":displayed.compareTo(planned)==0?"Matches planned bank amount.":"Does not match planned bank amount.";
         summary.setText("Selected equivalent: "+money(displayed,currency)+" / "+money(planned,currency)+"\n"+match+
           (selected.size()>1?"\nMultiple-source admin pilot preview only.":"")+"\nNo funds reserved or debited.");
