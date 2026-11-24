@@ -37,6 +37,8 @@ def stage():
     apply_history_fast(assets)
     from invoice_native_files import apply as apply_invoice_native_files
     apply_invoice_native_files(assets)
+    from scanner_mobile_layout import apply as apply_scanner_mobile_layout
+    apply_scanner_mobile_layout(assets)
     # The update entry lives in the existing Mobile Settings, not a header.
     mobile=assets/"big-brother-dashboard/mobile.html"
     source=mobile.read_text(encoding="utf-8")
