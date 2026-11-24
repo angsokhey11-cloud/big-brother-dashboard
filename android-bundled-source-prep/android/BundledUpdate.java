@@ -28,6 +28,7 @@ final class BundledUpdate {
     final Activity a;
     private AlertDialog settingsDialog,offerDialog,progressDialog,installDialog;
     private TextView progressTitle,progressDetail;private ProgressBar progressBar;
+    private long progressOpenedAt;
     private boolean firstCheck=true,installPromptPending=false;
     private final android.os.Handler ui=new android.os.Handler(android.os.Looper.getMainLooper());private boolean foreground;private long promptedVersion;private String actionText="Check";
     private androidx.webkit.JavaScriptReplyProxy settingsReply;
@@ -112,6 +113,7 @@ final class BundledUpdate {
         final AlertDialog own=progressDialog;
         own.setOnDismissListener(d->{if(progressDialog==own){progressDialog=null;progressTitle=null;progressDetail=null;progressBar=null;}});
         own.show();
+        progressOpenedAt=SystemClock.elapsedRealtime();
         own.getButton(AlertDialog.BUTTON_POSITIVE).setVisibility(View.GONE);
         own.setCanceledOnTouchOutside(false);
     }
@@ -161,6 +163,11 @@ final class BundledUpdate {
                     if(failure!=null)show(currentName+" · "+failure,"Retry");else show(currentName+" · Up to date","Check");
                     if(progressDialog!=null){
                         progress(failure==null?"You're up to date!":"Continuing with your installed version…",failure==null?"Your business is on the move":failure,100);
+                        // Show the truck for at least five seconds total, without
+                        // hiding a still-running check or a new version decision.
+                        final AlertDialog own=progressDialog;
+                        long remaining=Math.max(800L,5000L-(SystemClock.elapsedRealtime()-progressOpenedAt));
+                        ui.postDelayed(()->{if(!dead&&progressDialog==own)closeProgress();},remaining);
                     }
                 }
             });
