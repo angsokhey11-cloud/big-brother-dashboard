@@ -33,6 +33,7 @@ final class AppUpdater {
         return Build.VERSION.SDK_INT>=28?p.getLongVersionCode():p.versionCode;
     }
     static Offer check(Context context)throws Exception{
+        if ("local".equals(BuildConfig.FLAVOR)) return checkLocal(context);
         URL url=new URL("https://api.github.com/repos/"+REPO+"/releases/tags/"+channel());
         HttpsURLConnection conn=open(url);
         try{
@@ -63,10 +64,34 @@ final class AppUpdater {
             return best;
         }finally{conn.disconnect();}
     }
+    private static Offer checkLocal(Context context)throws Exception{
+        HttpsURLConnection conn=open(new URL(BuildConfig.ENDPOINT+"/v6-mobile-update/manifest.json"));
+        try{
+            int status=conn.getResponseCode();
+            if(status==404)return null;
+            if(status!=200)throw new IOException("Local update catalog unavailable");
+            JSONObject data;
+            try(InputStream in=conn.getInputStream();ByteArrayOutputStream out=new ByteArrayOutputStream()){
+                byte[] b=new byte[4096];int n;
+                while((n=in.read(b))!=-1){if(out.size()+n>65536)throw new IOException("Catalog too large");out.write(b,0,n);}
+                data=new JSONObject(out.toString("UTF-8"));
+            }
+            if(!"native-v2-local-dev".equals(data.optString("channel")))throw new IOException("Wrong Local channel");
+            long version=data.getLong("versionCode"),size=data.getLong("size");
+            String name=data.getString("name"),digest=data.getString("sha256");
+            if(version<=installedVersion(context))return null;
+            if(version>Integer.MAX_VALUE||size<=0||size>LIMIT||
+               !name.equals("BIG-BROTHER-local-v2dev-"+version+".apk")||!digest.matches("[a-fA-F0-9]{64}"))
+                throw new IOException("Invalid Local update manifest");
+            return new Offer(version,size,BuildConfig.ENDPOINT+"/v6-mobile-update/"+name,digest,name);
+        }finally{conn.disconnect();}
+    }
     private static HttpsURLConnection open(URL url)throws IOException{
         String host=url.getHost();
-        if(!"https".equals(url.getProtocol())||url.getUserInfo()!=null||(url.getPort()!=-1&&url.getPort()!=443)||
-           !("github.com".equals(host)||"api.github.com".equals(host)||"release-assets.githubusercontent.com".equals(host)||"objects.githubusercontent.com".equals(host)))
+        boolean local="local".equals(BuildConfig.FLAVOR);
+        boolean allowed=local?("bigbrother.local".equals(host)&&url.getPort()==8443):
+            ((url.getPort()==-1||url.getPort()==443)&&("github.com".equals(host)||"api.github.com".equals(host)||"release-assets.githubusercontent.com".equals(host)||"objects.githubusercontent.com".equals(host)));
+        if(!"https".equals(url.getProtocol())||url.getUserInfo()!=null||!allowed)
             throw new IOException("Unexpected update server");
         HttpsURLConnection c=(HttpsURLConnection)url.openConnection();
         c.setInstanceFollowRedirects(false);c.setConnectTimeout(10000);c.setReadTimeout(15000);c.setUseCaches(false);
@@ -84,6 +109,7 @@ final class AppUpdater {
                 try{
                     int status=conn.getResponseCode();
                     if(status==301||status==302||status==303||status==307||status==308){
+                        if("local".equals(BuildConfig.FLAVOR))throw new IOException("Local update redirects are disabled");
                         String next=conn.getHeaderField("Location");if(next==null)throw new IOException("Missing redirect");
                         url=new URL(url,next);continue;
                     }
