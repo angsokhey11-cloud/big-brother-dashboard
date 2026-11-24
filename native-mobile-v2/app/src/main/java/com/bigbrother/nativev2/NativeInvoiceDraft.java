@@ -72,9 +72,12 @@ final class NativeInvoiceDraft {
         return out;
     }
     void open(){
-        text(root,"Draft preview only — Complete is not enabled. No accounting records will change.",14);
+        text(root,"Online V2 · Controlled device test\nRead-only draft. Complete is disabled. No accounting records will change.",14);
         status=text(root,"Loading invoice master data…",14);
-        button(root,"Reload master data",this::load);
+        button(root,"Reload master data",()->{
+            if(lines.isEmpty()){load();return;}
+            new android.app.AlertDialog.Builder(a).setTitle("Reload master data?").setMessage("Reloading clears current draft items and payment selection.").setNegativeButton("Keep draft",null).setPositiveButton("Reload",(d,w)->load()).show();
+        });
         number=field(root,"Invoice No. (INV-...)",InputType.TYPE_CLASS_TEXT);
         date=field(root,"Selling date (YYYY-MM-DD)",InputType.TYPE_CLASS_DATETIME|InputType.TYPE_DATETIME_VARIATION_DATE);
         date.setText(java.time.LocalDate.now(java.time.ZoneId.of("Asia/Phnom_Penh")).toString());
@@ -232,7 +235,7 @@ final class NativeInvoiceDraft {
         for(int i=0;i<rows.length();i++){JSONObject row=rows.optJSONObject(i);if(row!=null&&code.equals(val(row,"groupCode"))){if(found!=null)return null;found=row;}}
         if(found==null)return null;
         try{
-            BigDecimal n=new BigDecimal(first(found,"remainingQty","issuedQty"));
+            BigDecimal n=new BigDecimal(val(found,"remainingQty"));
             for(Line line:lines)if(line.group&&code.equals(line.code))n=n.subtract(line.qty.multiply(line.factor));
             return n.signum()<0?null:n;
         }catch(Exception e){return null;}
@@ -370,7 +373,7 @@ final class NativeInvoiceDraft {
         actualBankInput=field(root,"Actual bank amount (selected bank currency)",numeric);
         paymentSummary=text(root,"",16);exchangeSummary=text(root,"",14);bankSummary=text(root,"",14);
         bankDraft=new NativeBankDraft(a,root,api,worker,active);
-        observe(date);observe(dueOverride);
+        observe(date);observe(dueOverride);observe(number);
         for(EditText f:new EditText[]{rateInput,discountInput,partialInput,cashInput,bankInput,actualBankInput})observe(f);
         for(Spinner p:new Spinner[]{discountMode,paymentMethod,bankCurrency})observe(p);
         updatePayment();
@@ -387,6 +390,7 @@ final class NativeInvoiceDraft {
     }
     private void updatePayment(){
         if(paymentSummary==null||resettingPayment)return;
+        if(preflightResult!=null)preflightResult.setText("Draft inputs changed. Run fresh validation before reviewing.");
         try{duePreview.setText(customer==null?"Due date: select customer":"Due date: "+dueDate());}catch(Exception e){duePreview.setText("Due date: invalid date");}
         String method=String.valueOf(paymentMethod.getSelectedItem()),cur=curr();
         boolean partial=method.startsWith("Partially"),split="Cash + Bank".equals(method);
@@ -569,7 +573,7 @@ final class NativeInvoiceDraft {
                             for(java.util.Map.Entry<String,BigDecimal> e:groupAllocations.entrySet()){
                                 JSONObject row=null;
                                 for(int i=0;i<groups.length();i++){JSONObject x=groups.optJSONObject(i);if(x!=null&&e.getKey().equals(val(x,"groupCode"))){if(row!=null)throw new IllegalStateException("Ambiguous group balance.");row=x;}}
-                                if(row==null||new BigDecimal(first(row,"remainingQty","issuedQty")).compareTo(e.getValue())<0)throw new IllegalStateException("Group stock changed for "+e.getKey());
+                                if(row==null||new BigDecimal(val(row,"remainingQty")).compareTo(e.getValue())<0)throw new IllegalStateException("Group stock changed for "+e.getKey());
                             }
                         }
                     }
@@ -591,6 +595,7 @@ final class NativeInvoiceDraft {
     }
     private void renderLines(){
         if(linesBox==null)return;
+        if(preflightResult!=null)preflightResult.setText("Draft changed. Run fresh validation before reviewing.");
         linesBox.removeAllViews();BigDecimal sum=BigDecimal.ZERO;
         for(Line row:new ArrayList<>(lines)){
             BigDecimal amount=row.qty.multiply(row.price);sum=sum.add(amount);
