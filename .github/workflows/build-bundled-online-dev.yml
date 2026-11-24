@@ -6,6 +6,11 @@ on:
       - 'android-bundled-source-prep/**'
       - '.github/workflows/build-bundled-online-dev.yml'
   workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish verified APK to the bundled development update channel
+        type: boolean
+        default: false
 permissions:
   contents: read
 jobs:
@@ -74,3 +79,37 @@ jobs:
           retention-days: 90
       - if: always()
         run: rm -f "$RUNNER_TEMP/bb-bundled-signing.p12"
+
+  publish-development-update:
+    needs: bundled-online
+    if: github.ref == 'refs/heads/mobile-v2-development' && ((github.event_name == 'workflow_dispatch' && inputs.publish) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[publish-bundled-dev]')))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: bb-bundled-dev-release
+      cancel-in-progress: false
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: BIG-BROTHER-Online-Bundled-DEV
+          path: release-files
+      - name: Publish explicitly approved signed development APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          cd release-files
+          sha256sum -c BIG-BROTHER-Online-Bundled-DEV.apk.sha256
+          version=$((30000 + GITHUB_RUN_NUMBER))
+          file="BIG-BROTHER-Online-Bundled-DEV-$version.apk"
+          mv BIG-BROTHER-Online-Bundled-DEV.apk "$file"
+          tag=bundled-online-dev
+          if gh release view "$tag" --json isDraft,isPrerelease > release.json; then
+            python3 -c 'import json; r=json.load(open("release.json")); assert r["isPrerelease"] and not r["isDraft"]'
+            gh release upload "$tag" "$file"
+          else
+            gh release create "$tag" "$file" --target "$GITHUB_SHA" --prerelease --title "BIG BROTHER Online Bundled DEV" --notes "Signed development APK update channel. Not staff-approved production software."
+          fi
+          echo "Published development APK version $version."

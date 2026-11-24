@@ -125,7 +125,24 @@ def stage():
             # No automatic reload loop for an installed source failure.
             s = s.replace('        scheduleRetry();\n    }\n    @Override protected void onActivityResult','        stopRetry();\n    }\n    @Override protected void onActivityResult')
             s = s.replace('           retry!=null&&retry.getVisibility()==View.VISIBLE)scheduleRetry();','           retry!=null&&retry.getVisibility()==View.VISIBLE)stopRetry();')
+        if name == "MainActivity.java":
+            s = replace_once(s, "    private WebView browser;", "    private WebView browser;\n    private BundledUpdate bundledUpdate;")
+            s = replace_once(s, "        root.addView(browser,new FrameLayout.LayoutParams(-1,-1));", """        LinearLayout installedLayout = new LinearLayout(this);
+        installedLayout.setOrientation(LinearLayout.VERTICAL);
+        root.addView(installedLayout,new FrameLayout.LayoutParams(-1,-1));
+        LinearLayout updateBar = new LinearLayout(this);
+        installedLayout.addView(updateBar,new LinearLayout.LayoutParams(-1,-2));
+        bundledUpdate = new BundledUpdate(this,updateBar);
+        FrameLayout content = new FrameLayout(this);
+        installedLayout.addView(content,new LinearLayout.LayoutParams(-1,0,1));
+        content.addView(browser,new FrameLayout.LayoutParams(-1,-1));""")
+            s = replace_once(s, "        root.addView(panel,new FrameLayout.LayoutParams(-1,-1));", "        content.addView(panel,new FrameLayout.LayoutParams(-1,-1));")
+            s = replace_once(s, "        super.onResume();", "        super.onResume();\n        if(bundledUpdate!=null)reconnectHandler.postDelayed(()->{if(bundledUpdate!=null)bundledUpdate.check();},1500);")
+            s = replace_once(s, "        if(nativePrint!=null)nativePrint.destroy();", "        if(bundledUpdate!=null){bundledUpdate.destroy();bundledUpdate=null;}\n        if(nativePrint!=null)nativePrint.destroy();")
         p.write_text(s, encoding="utf-8")
+    shutil.copy2(ROOT / "android/BundledUpdate.java", java / "BundledUpdate.java")
+    paths=app/"src/main/res/xml/bb_camera_paths.xml"
+    paths.write_text(replace_once(paths.read_text(encoding="utf-8"), "</paths>", '    <cache-path name="apk_updates" path="apk_updates/"/>\n</paths>'), encoding="utf-8")
     p=app/"build.gradle"
     s=p.read_text(encoding="utf-8")
     s=replace_once(s,"applicationId 'com.bigbrother.online'","applicationId 'com.bigbrother.online.bundleddev'")
@@ -134,6 +151,7 @@ def stage():
     p.write_text(s,encoding="utf-8")
     p=app/"src/main/AndroidManifest.xml"
     s=replace_once(p.read_text(encoding="utf-8"),'android:label="BIG BROTHER Online"','android:label="BIG BROTHER Bundled DEV"')
+    s=replace_once(s,'    <uses-permission android:name="android.permission.INTERNET"/>','    <uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>')
     p.write_text(s,encoding="utf-8")
     icon=app/"src/main/res/drawable-nodpi/launcher.png"
     icon.parent.mkdir(parents=True,exist_ok=True)
