@@ -1,0 +1,76 @@
+name: Build BIG BROTHER Bundled Online DEV
+on:
+  push:
+    branches: [mobile-v2-development]
+    paths:
+      - 'android-bundled-source-prep/**'
+      - '.github/workflows/build-bundled-online-dev.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  bundled-online:
+    if: github.ref == 'refs/heads/mobile-v2-development'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Bundle pinned existing application sources and stage Android shell
+        run: python3 android-bundled-source-prep/tools/stage_android.py
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+      - run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+      - name: Prepare permanent signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.BB_STABLE_KEYSTORE_B64 }}
+          BB_STABLE_KEYSTORE_PASSWORD: ${{ secrets.BB_STABLE_KEYSTORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          umask 077
+          test -n "$KEYSTORE_B64"
+          test -n "$BB_STABLE_KEYSTORE_PASSWORD"
+          key="$RUNNER_TEMP/bb-bundled-signing.p12"
+          printf '%s' "$KEYSTORE_B64" | tr -d '\r\n\t ' | base64 --decode > "$key"
+          keytool -list -storetype PKCS12 -keystore "$key" -storepass "$BB_STABLE_KEYSTORE_PASSWORD" -alias bigbrother >/dev/null
+          echo "BB_STABLE_KEYSTORE_FILE=$key" >> "$GITHUB_ENV"
+          echo "BB_STABLE_VERSION_CODE=$((30000 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
+          echo "BB_STABLE_VERSION_NAME=3.0.$GITHUB_RUN_NUMBER" >> "$GITHUB_ENV"
+      - name: Compile signed bundled development APK
+        env:
+          BB_STABLE_KEYSTORE_PASSWORD: ${{ secrets.BB_STABLE_KEYSTORE_PASSWORD }}
+        run: gradle --no-daemon -p android-bundled-source-prep/build/android assembleRelease
+      - name: Verify signed APK and bundled source entry points
+        env:
+          BB_STABLE_KEYSTORE_PASSWORD: ${{ secrets.BB_STABLE_KEYSTORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          apk=android-bundled-source-prep/build/android/app/build/outputs/apk/release/app-release.apk
+          test -s "$apk"
+          signer="$ANDROID_HOME/build-tools/35.0.0/apksigner"
+          expected="$(keytool -exportcert -storetype PKCS12 -keystore "$BB_STABLE_KEYSTORE_FILE" -storepass "$BB_STABLE_KEYSTORE_PASSWORD" -alias bigbrother | sha256sum | cut -d' ' -f1)"
+          actual="$("$signer" verify --print-certs "$apk" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p')"
+          [[ "$expected" == "$actual" ]]
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$apk" > "$RUNNER_TEMP/bb-badging.txt"
+          grep -F "package: name='com.bigbrother.online.bundleddev' versionCode='$BB_STABLE_VERSION_CODE'" "$RUNNER_TEMP/bb-badging.txt"
+          python3 -c 'import sys,zipfile; z=zipfile.ZipFile(sys.argv[1]); assert all(p in z.namelist() for p in ["assets/big-brother-dashboard/mobile.html","assets/big-brother-dashboard/mobile.js","assets/big-brother-invoice-generator/mobile.html","assets/big-brother-ar/your-receivable-mobile.html"]); print("Bundled entries verified")' "$apk"
+          mkdir -p "$RUNNER_TEMP/bb-bundled-artifacts"
+          cp "$apk" "$RUNNER_TEMP/bb-bundled-artifacts/BIG-BROTHER-Online-Bundled-DEV.apk"
+          cp android-bundled-source-prep/build/bundle-report.json "$RUNNER_TEMP/bb-bundled-artifacts/"
+          cd "$RUNNER_TEMP/bb-bundled-artifacts"
+          sha256sum BIG-BROTHER-Online-Bundled-DEV.apk > BIG-BROTHER-Online-Bundled-DEV.apk.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BIG-BROTHER-Online-Bundled-DEV
+          path: ${{ runner.temp }}/bb-bundled-artifacts/*
+          if-no-files-found: error
+          retention-days: 90
+      - if: always()
+        run: rm -f "$RUNNER_TEMP/bb-bundled-signing.p12"
