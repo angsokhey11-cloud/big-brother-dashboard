@@ -231,34 +231,41 @@ final class BundledUpdate {
         c.setInstanceFollowRedirects(false);c.setConnectTimeout(10000);c.setReadTimeout(20000);c.setUseCaches(false);
         c.setRequestProperty("User-Agent","BIG-BROTHER-Bundled-Android");return c;
     }
+    // Public release file, not the rate-limited GitHub REST API.
     private Offer checkCatalog()throws Exception{
-        HttpsURLConnection c=open(new URL("https://api.github.com/repos/"+REPO+"/releases/tags/"+TAG));
-        try{
-            c.setRequestProperty("Accept","application/vnd.github+json");int status=c.getResponseCode();
-            if(status==404)throw new IOException("Update channel not found (404)");
-            if(status==403||status==429)throw new IOException("Update service rate limited ("+status+")");
-            if(status!=200)throw new IOException("Update check failed (HTTP "+status+")");
-            JSONObject release;
-            try(InputStream in=c.getInputStream();ByteArrayOutputStream out=new ByteArrayOutputStream()){
-                byte[] b=new byte[8192];int n;while((n=in.read(b))!=-1){if(out.size()+n>1024*1024)throw new IOException("Catalog too large");out.write(b,0,n);}
-                release=new JSONObject(out.toString("UTF-8"));
-            }
-            if(release.optBoolean("draft",true)||!release.optBoolean("prerelease",false)||!TAG.equals(release.optString("tag_name")))throw new IOException("Wrong release channel");
-            progress("Verifying application version…","Comparing available versions",80);
-            JSONArray assets=release.getJSONArray("assets");long current=installedVersion();Offer best=null;boolean eligibleName=false;
-            Pattern pattern=Pattern.compile("BIG-BROTHER-Online-Bundled-DEV-([0-9]+)\\.apk");
-            for(int i=0;i<assets.length();i++){
-                JSONObject row=assets.getJSONObject(i);String name=row.optString("name");Matcher m=pattern.matcher(name);
-                if(!m.matches())continue;
-                long v=Long.parseLong(m.group(1)),size=row.optLong("size",-1);String digest=row.optString("digest"),url=row.optString("browser_download_url");
-                if(v>current)eligibleName=true;
-                if(v<=current||v>Integer.MAX_VALUE||size<=0||size>LIMIT||!digest.matches("sha256:[a-fA-F0-9]{64}")||
-                    !url.equals("https://github.com/"+REPO+"/releases/download/"+TAG+"/"+name))continue;
-                if(best==null||v>best.version)best=new Offer(v,size,name,url,digest.substring(7));
-            }
-            if(best==null&&eligibleName)throw new IOException("New release metadata incomplete");
-            return best;
-        }finally{c.disconnect();}
+        URL url=new URL("https://github.com/"+REPO+"/releases/download/"+TAG+"/bb-mobile-update.json?t="+(System.currentTimeMillis()/60000L));
+        for(int redirects=0;redirects<=5;redirects++){
+            HttpsURLConnection c=open(url);
+            try{
+                c.setRequestProperty("Accept","application/json");
+                int status=c.getResponseCode();
+                if(status==301||status==302||status==303||status==307||status==308){
+                    String next=c.getHeaderField("Location");if(next==null)throw new IOException("Missing update redirect");
+                    url=new URL(url,next);continue;
+                }
+                if(status==404)throw new IOException("Update manifest temporarily unavailable");
+                if(status!=200)throw new IOException("Update file unavailable (HTTP "+status+")");
+                JSONObject manifest;
+                try(InputStream in=c.getInputStream();ByteArrayOutputStream out=new ByteArrayOutputStream()){
+                    byte[] b=new byte[4096];int n;while((n=in.read(b))!=-1){
+                        if(out.size()+n>32768)throw new IOException("Update manifest too large");out.write(b,0,n);
+                    }
+                    manifest=new JSONObject(out.toString("UTF-8"));
+                }
+                if(manifest.optInt("schema")!=1||!TAG.equals(manifest.optString("channel"))||
+                    !a.getPackageName().equals(manifest.optString("package")))throw new IOException("Wrong update channel");
+                progress("Verifying application version…","Comparing available versions",80);
+                long v=manifest.optLong("versionCode",-1),size=manifest.optLong("size",-1);
+                String name=manifest.optString("name"),digest=manifest.optString("sha256"),apkUrl=manifest.optString("url");
+                if(v<30000||v>Integer.MAX_VALUE||size<=0||size>LIMIT||!digest.matches("[a-fA-F0-9]{64}")||
+                    !name.equals("BIG-BROTHER-Online-Bundled-DEV-"+v+".apk")||
+                    !apkUrl.equals("https://github.com/"+REPO+"/releases/download/"+TAG+"/"+name))
+                    throw new IOException("Invalid update metadata");
+                if(v<=installedVersion())return null;
+                return new Offer(v,size,name,apkUrl,digest);
+            }finally{c.disconnect();}
+        }
+        throw new IOException("Too many update redirects");
     }
     private File download(Offer offer)throws Exception{
         File folder=new File(a.getCacheDir(),"apk_updates");

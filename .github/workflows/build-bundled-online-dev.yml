@@ -112,4 +112,33 @@ jobs:
           else
             gh release create "$tag" "$file" --target "$GITHUB_SHA" --prerelease --title "BIG BROTHER Online Bundled DEV" --notes "Signed development APK update channel. Not staff-approved production software."
           fi
-          echo "Published development APK version $version."
+          # Generate the small static update file only after the verified APK is uploaded.
+          # Older CI jobs must never replace the manifest for a newer APK.
+          gh release view "$tag" --json assets > published-assets.json
+          python3 - <<'PY'
+          import json, re, pathlib, hashlib, os
+          assets=json.load(open("published-assets.json"))["assets"]
+          eligible=[]
+          for a in assets:
+              m=re.fullmatch(r"BIG-BROTHER-Online-Bundled-DEV-(\d+)\.apk",a["name"])
+              if m and a.get("state","uploaded")=="uploaded":
+                  eligible.append((int(m.group(1)),a["name"]))
+          version,name=max(eligible)
+          pathlib.Path("manifest-target.txt").write_text(name)
+          PY
+          target="$(cat manifest-target.txt)"
+          if [[ "$target" != "$file" ]]; then
+            gh release download "$tag" --pattern "$target" --dir .
+          fi
+          python3 - "$target" <<'PY'
+          import json, pathlib, hashlib, sys
+          p=pathlib.Path(sys.argv[1])
+          version=int(p.stem.rsplit("-",1)[1])
+          payload={"schema":1,"channel":"bundled-online-dev","package":"com.bigbrother.online.bundleddev",
+              "versionCode":version,"name":p.name,"size":p.stat().st_size,
+              "sha256":hashlib.sha256(p.read_bytes()).hexdigest(),
+              "url":"https://github.com/angsokhey11-cloud/big-brother-dashboard/releases/download/bundled-online-dev/"+p.name}
+          pathlib.Path("bb-mobile-update.json").write_text(json.dumps(payload,separators=(",",":"))+"\n")
+          PY
+          gh release upload "$tag" bb-mobile-update.json --clobber
+          echo "Published development APK version $version and static update manifest."
