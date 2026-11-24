@@ -30,7 +30,7 @@ final class NativeBankDraft {
     private static final class Row {
         String id,currency,date,bank;
         BigDecimal remaining,approved;
-        Row(JSONObject r){
+        Row(JSONObject r) throws JSONException {
             id=r.optString("transaction_id").trim();
             currency=r.optString("currency").trim().toUpperCase(Locale.ROOT);
             date=r.optString("received_date").trim();

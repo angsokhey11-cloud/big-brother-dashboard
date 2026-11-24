@@ -21,7 +21,10 @@ final class NativeInvoiceDraft {
     private JSONObject location,batch,customer,prices;
     private boolean busy,customersReady;
     private int generation;
-    private TextView status,number,customerLabel,total;
+    private TextView status,customerLabel,total;
+    private EditText number;
+    private TextView preflightResult;
+    private boolean checkingDraft;
     private EditText date,productQuery,rateInput,discountInput,partialInput,cashInput,bankInput,actualBankInput;
     private Spinner discountMode,paymentMethod,bankCurrency;
     private TextView paymentSummary,exchangeSummary,bankSummary;
@@ -69,7 +72,7 @@ final class NativeInvoiceDraft {
         text(root,"Draft preview only — Complete is not enabled. No accounting records will change.",14);
         status=text(root,"Loading invoice master data…",14);
         button(root,"Reload master data",this::load);
-        number=text(root,"Invoice No. —",16);
+        number=field(root,"Invoice No. (INV-...)",InputType.TYPE_CLASS_TEXT);
         date=field(root,"Selling date (YYYY-MM-DD)",InputType.TYPE_CLASS_DATETIME|InputType.TYPE_DATETIME_VARIATION_DATE);
         date.setText(java.time.LocalDate.now(java.time.ZoneId.of("Asia/Phnom_Penh")).toString());
         text(root,"Batch / Direct Sale",15);batchPicker=new Spinner(a);root.addView(batchPicker);
@@ -96,6 +99,8 @@ final class NativeInvoiceDraft {
         text(root,"Invoice Items",18);linesBox=column(root);
         total=text(root,"Draft subtotal —",18);
         paymentPanel();
+        preflightResult=text(root,"Read-only checks; no invoice will be submitted.",14);
+        button(root,"Validate draft against server",this::preflight);
         Button complete=button(root,"Complete — migration pending",()->{});complete.setEnabled(false);
         load();
     }
@@ -124,7 +129,7 @@ final class NativeInvoiceDraft {
             }catch(Exception e){a.runOnUiThread(()->{if(active.getAsBoolean()){busy=false;status.setText("Master data unavailable — retry.");}});}
         });
     }
-    private void reset(){generation++;location=null;batch=null;customer=null;prices=null;warehouse=null;customersReady=false;lines.clear();customerBox.removeAllViews();productBox.removeAllViews();customerLabel.setText("Customer: not selected");number.setText("Invoice No. —");if(bankDraft!=null)bankDraft.customer("");clearPayment();renderLines();}
+    private void reset(){generation++;location=null;batch=null;customer=null;prices=null;warehouse=null;customersReady=false;lines.clear();customerBox.removeAllViews();productBox.removeAllViews();customerLabel.setText("Customer: not selected");number.setText("");if(bankDraft!=null)bankDraft.customer("");clearPayment();renderLines();}
     private boolean sameScope(){
         if(location==null)return false;
         int bi=batchPicker.getSelectedItemPosition(),li=locationPicker.getSelectedItemPosition();
@@ -155,7 +160,7 @@ final class NativeInvoiceDraft {
                 final JSONArray balances=stock==null?null:stock.getJSONArray("balances");
                 JSONArray rows=data.getJSONArray("customers");String no=val(seq,"invoiceNo");
                 if(no.isEmpty())throw new IllegalStateException();
-                a.runOnUiThread(()->{if(!active.getAsBoolean()||request!=generation)return;busy=false;warehouse=balances;customersReady=true;number.setText("Invoice No. "+no+" (suggested)");
+                a.runOnUiThread(()->{if(!active.getAsBoolean()||request!=generation)return;busy=false;warehouse=balances;customersReady=true;number.setText(no);
                     EditText search=field(customerBox,"Search customer in selected location",InputType.TYPE_CLASS_TEXT);
                     LinearLayout results=column(customerBox);
                     button(customerBox,"Find customer",()->{
@@ -378,6 +383,84 @@ final class NativeInvoiceDraft {
             }
         }catch(IllegalArgumentException e){paymentSummary.setText("Draft payment incomplete: "+e.getMessage());}
         if(bankDraft!=null)bankDraft.context(date.getText().toString().trim(),cur,method,bankRate,bankPlanned);
+    }
+    private String invoiceNumber(){
+        String raw=number.getText().toString().trim();
+        StringBuilder normalized=new StringBuilder();
+        for(int i=0;i<raw.length();i++){
+            char ch=raw.charAt(i);
+            int digit=Character.digit(ch,10);
+            normalized.append(digit>=0?(char)('0'+digit):ch);
+        }
+        String value=normalized.toString().toUpperCase(Locale.ROOT);
+        if(value.matches("[0-9]+"))value="INV-"+value;
+        if(!value.matches("INV-[0-9]+"))throw new IllegalArgumentException("Enter a valid invoice number.");
+        return value;
+    }
+    private void preflight(){
+        if(checkingDraft||busy)return;
+        try{
+            if(!sameScope()||!customersReady||customer==null||lines.isEmpty())throw new IllegalArgumentException("Apply batch/location, select customer and add items.");
+            String no=invoiceNumber(),cid=val(customer,"customerId"),loc=first(location,"locationCode","code");
+            if(cid.isEmpty()||loc.isEmpty())throw new IllegalArgumentException("Customer or location identity missing.");
+            String bid=batch==null?"":val(batch,"batchId"),sale=date.getText().toString().trim(),cur=curr();
+            java.time.LocalDate.parse(sale);
+            String method=String.valueOf(paymentMethod.getSelectedItem());
+            BigDecimal rate=DraftPayment.amount(rateInput.getText().toString());
+            if(rate.compareTo(BigDecimal.ONE)<=0)throw new IllegalArgumentException("Enter a valid daily exchange rate.");
+            BigDecimal subtotal=BigDecimal.ZERO;
+            java.util.LinkedHashMap<String,BigDecimal[]> allocations=new java.util.LinkedHashMap<>();
+            for(Line l:lines){
+                if(!cur.equals(l.currency))throw new IllegalArgumentException("Invoice currency changed.");
+                subtotal=subtotal.add(l.qty.multiply(l.price));
+                if(l.purchased.add(l.zero).signum()>0){
+                    if(l.purchased.add(l.zero).compareTo(l.qty.multiply(l.factor))!=0)throw new IllegalArgumentException("Invalid source allocation.");
+                    BigDecimal[] sum=allocations.computeIfAbsent(l.code,k->new BigDecimal[]{BigDecimal.ZERO,BigDecimal.ZERO});
+                    sum[0]=sum[0].add(l.purchased);sum[1]=sum[1].add(l.zero);
+                }
+            }
+            DraftPayment.calculate(subtotal,cur,discountMode.getSelectedItemPosition()==1,
+                DraftPayment.amount(discountInput.getText().toString()),method,
+                method.startsWith("Partially")?DraftPayment.amount(partialInput.getText().toString()):BigDecimal.ZERO,
+                "Cash + Bank".equals(method)?DraftPayment.amount(cashInput.getText().toString()):BigDecimal.ZERO,
+                "Cash + Bank".equals(method)?DraftPayment.amount(bankInput.getText().toString()):BigDecimal.ZERO);
+            checkingDraft=true;preflightResult.setText("Checking captured draft against current server data…");
+            worker.execute(()->{
+                String result;
+                try{
+                    JSONObject duplicate=api.generatorDuplicateCheck(no,cid);
+                    if(!Boolean.TRUE.equals(duplicate.opt("success"))||!(duplicate.opt("exists") instanceof Boolean))throw new IllegalStateException("Duplicate check unavailable.");
+                    if(Boolean.TRUE.equals(duplicate.opt("exists")))throw new IllegalStateException("This invoice number already exists for the selected customer.");
+                    JSONArray stock;
+                    if(bid.isEmpty()){
+                        JSONObject data=api.generatorWarehouse();
+                        if(!Boolean.TRUE.equals(data.opt("success")))throw new IllegalStateException("Warehouse balance unavailable.");
+                        stock=data.getJSONArray("balances");
+                    }else{
+                        JSONArray current=api.generatorBatches().getJSONArray("batches");
+                        JSONObject found=null;
+                        for(int i=0;i<current.length();i++){JSONObject x=current.optJSONObject(i);if(x!=null&&bid.equals(val(x,"batchId"))){found=x;break;}}
+                        if(found==null||!loc.equals(val(found,"locationCode"))||java.util.Arrays.asList("CLOSED","CANCELLED","CANCELED").contains(val(found,"status").toUpperCase(Locale.ROOT)))throw new IllegalStateException("Batch is closed, unavailable or location changed.");
+                        java.time.LocalDate d=java.time.LocalDate.parse(sale);
+                        String from=val(found,"sellingDateFrom"),to=val(found,"sellingDateTo");
+                        if(from.length()<10||to.length()<10||d.isBefore(java.time.LocalDate.parse(from.substring(0,10)))||d.isAfter(java.time.LocalDate.parse(to.substring(0,10))))throw new IllegalStateException("Selling date is outside the current batch range.");
+                        stock=found.getJSONArray("exactItems");
+                    }
+                    for(java.util.Map.Entry<String,BigDecimal[]> e:allocations.entrySet()){
+                        JSONObject row=null;
+                        for(int i=0;i<stock.length();i++){JSONObject x=stock.optJSONObject(i);if(x!=null&&e.getKey().equals(val(x,"productCode"))){if(row!=null)throw new IllegalStateException("Ambiguous stock source.");row=x;}}
+                        if(row==null)throw new IllegalStateException("Stock no longer available for "+e.getKey());
+                        BigDecimal p=new BigDecimal(bid.isEmpty()?val(row,"purchasedAvailable"):first(row,"purchasedPendingQty","purchasedRemainingQty"));
+                        BigDecimal z=new BigDecimal(bid.isEmpty()?val(row,"zeroCostAvailable"):first(row,"zeroCostPendingQty","zeroCostRemainingQty"));
+                        if(p.compareTo(e.getValue()[0])<0||z.compareTo(e.getValue()[1])<0)throw new IllegalStateException("Stock balance changed for "+e.getKey()+". Refresh and review.");
+                    }
+                    result="Captured draft: "+no+" / "+cid+" — duplicate, stock and batch checks passed at "+java.time.LocalTime.now(java.time.ZoneId.of("Asia/Phnom_Penh")).format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss"))+". Not a reservation or save authorization. Bank settlement and final submission remain disabled.";
+                }catch(IllegalStateException e){result="Draft check blocked: "+e.getMessage();}
+                catch(Exception e){result="Draft check unavailable. Verify connection, date and current stock, then retry.";}
+                final String message=result;
+                a.runOnUiThread(()->{checkingDraft=false;if(active.getAsBoolean())preflightResult.setText(message);});
+            });
+        }catch(Exception e){preflightResult.setText("Draft check blocked: "+(e instanceof IllegalArgumentException?e.getMessage():"Invalid invoice data."));}
     }
     private void renderLines(){
         if(linesBox==null)return;

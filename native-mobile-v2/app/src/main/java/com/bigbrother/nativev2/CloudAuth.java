@@ -126,6 +126,14 @@ final class CloudAuth {
         }
         return new JSONObject().put("rows",customerRows).put("admin",NativeRoutes.admin(current));
     }
+    synchronized JSONObject generatorDuplicateCheck(String no,String customerId)throws Exception{
+        if(!no.matches("INV-[0-9]+")||customerId.trim().isEmpty())throw new IOException("Invoice number or customer invalid");
+        return generatorRead("bb_sales_check_invoice_customer",new JSONObject().put("p_invoice_no",no).put("p_customer_id",customerId));
+    }
+    synchronized JSONObject generatorVerifySave(String id)throws Exception{
+        if(id.trim().isEmpty()||id.length()>128)throw new IOException("Invalid invoice identity");
+        return generatorRead("bb_sales_verify_invoice_save",new JSONObject().put("p_invoice_id",id));
+    }
     synchronized JSONObject generatorBootstrap()throws Exception{return generatorRead("bb_sales_invoice_bootstrap",new JSONObject());}
     synchronized JSONObject generatorWarehouse()throws Exception{return generatorRead("bb_sales_direct_stock_balances",new JSONObject());}
     synchronized JSONObject generatorBatches()throws Exception{return generatorRead("bb_sales_open_batches",new JSONObject());}
