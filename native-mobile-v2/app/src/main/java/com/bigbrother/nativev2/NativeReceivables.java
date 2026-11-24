@@ -19,7 +19,10 @@ final class NativeReceivables {
     private final ArrayList<JSONObject> rows=new ArrayList<>();
     private EditText search;private Spinner currency,statusFilter;
     private TextView status,totals;private LinearLayout cards;private Button more,refresh;
-    private boolean loading,loaded;private int limit=30;
+    private boolean loading,loaded,checking;private int limit=30,revision;
+    private final LinkedHashSet<String> selected=new LinkedHashSet<>();
+    private TextView selectionTotal;
+    private Button summaryButton;
     private static final int NAVY=Color.rgb(23,74,145);
     NativeReceivables(Activity a,LinearLayout root,CloudAuth api,ExecutorService worker,BooleanSupplier active,String route){
         this.a=a;this.root=root;this.api=api;this.worker=worker;this.active=active;this.route=route;
@@ -55,11 +58,15 @@ final class NativeReceivables {
         currency=select("All currencies","USD","KHR");
         statusFilter=select("All statuses","Overdue","Unpaid","Processing");
         totals=text(root,"Outstanding: —",18,true);
+        selectionTotal=text(root,"0 selected",14,true);
+        summaryButton=button("Customer Summary",this::summary);summaryButton.setEnabled(false);
+        button("Select all matching invoices",()->{if(loaded&&!checking){selected.clear();for(JSONObject r:rows)if(matches(r)&&selectable(r))selected.add(val(r,"invoiceId"));revision++;render();}});
+        button("Clear selection",()->{selected.clear();revision++;render();});
         cards=new LinearLayout(a);cards.setOrientation(LinearLayout.VERTICAL);root.addView(cards);
         more=button("Show more invoices",()->{limit+=30;render();});more.setVisibility(android.view.View.GONE);
         search.addTextChangedListener(new android.text.TextWatcher(){
             public void beforeTextChanged(CharSequence s,int start,int count,int after){}
-            public void onTextChanged(CharSequence s,int start,int before,int count){limit=30;render();}
+            public void onTextChanged(CharSequence s,int start,int before,int count){limit=30;selected.clear();revision++;render();}
             public void afterTextChanged(android.text.Editable e){}
         });
         android.widget.AdapterView.OnItemSelectedListener listener=new android.widget.AdapterView.OnItemSelectedListener(){
@@ -71,7 +78,7 @@ final class NativeReceivables {
     }
     private void load(){
         if(loading)return;
-        loading=true;loaded=false;rows.clear();render();refresh.setEnabled(false);status.setText("Loading authorized receivable list…");
+        loading=true;loaded=false;rows.clear();selected.clear();revision++;render();refresh.setEnabled(false);status.setText("Loading authorized receivable list…");
         worker.execute(()->{
             ArrayList<JSONObject> result=new ArrayList<>();boolean ok=false;
             try{
@@ -93,10 +100,110 @@ final class NativeReceivables {
             });
         });
     }
+    private boolean selectable(JSONObject r){return amount(r).signum()>0&&!"Processing".equalsIgnoreCase(val(r,"arStatus"));}
+    private boolean matches(JSONObject r){
+        String q=search.getText().toString().trim().toLowerCase(Locale.ROOT),c=String.valueOf(currency.getSelectedItem()),st=String.valueOf(statusFilter.getSelectedItem());
+        return ("All currencies".equals(c)||c.equals(ccy(r)))&&("All statuses".equals(st)||st.equalsIgnoreCase(val(r,"arStatus")))&&
+            (val(r,"invoiceNo")+" "+val(r,"customer")+" "+val(r,"customerId")+" "+val(r,"locationCode")).toLowerCase(Locale.ROOT).contains(q);
+    }
+    private ArrayList<JSONObject> picked(){
+        ArrayList<JSONObject> out=new ArrayList<>();
+        for(JSONObject r:rows)if(selected.contains(val(r,"invoiceId"))&&selectable(r)&&matches(r))out.add(r);
+        return out;
+    }
+    private void updateSelection(){
+        BigDecimal usd=BigDecimal.ZERO,khr=BigDecimal.ZERO;ArrayList<JSONObject> chosen=picked();
+        for(JSONObject r:chosen)if("USD".equals(ccy(r)))usd=usd.add(amount(r));else khr=khr.add(amount(r));
+        selectionTotal.setText(chosen.size()+" selected · "+money(usd,"USD")+" · "+money(khr,"KHR"));
+        summaryButton.setEnabled(loaded&&!checking&&!chosen.isEmpty());
+    }
+    private void detail(JSONObject row){
+        if(!loaded||checking)return;
+        String id=val(row,"invoiceId");
+        checking=true;updateSelection();status.setText("Loading invoice payment history…");
+        worker.execute(()->{
+            JSONObject data=null;try{data=api.receivableDetail(route,id);}catch(Exception ignored){}
+            final JSONObject result=data;
+            a.runOnUiThread(()->{
+                checking=false;if(!active.getAsBoolean())return;updateSelection();
+                if(result==null){status.setText("Invoice details unavailable. Refresh and retry.");return;}
+                status.setText("Read-only detail loaded · list balances are snapshot values");
+                StringBuilder b=new StringBuilder(val(row,"customer")+"\n"+val(row,"invoiceNo")+" · "+val(row,"invoiceDate")+"\nDue date: "+val(row,"dueDate")+"\nOutstanding (list snapshot): "+money(amount(row),ccy(row))+"\n\nPayment History\n");
+                JSONArray payments=result.optJSONArray("payments");
+                if(payments==null)b.append("Payment history unavailable.");
+                else if(payments.length()==0)b.append("No previous payments.");
+                else for(int i=0;i<payments.length();i++){
+                    JSONObject p=payments.optJSONObject(i);if(p==null)continue;
+                    try{
+                        String cur=ccy(p);if(!Arrays.asList("USD","KHR").contains(cur))throw new IllegalArgumentException();
+                        b.append(val(p,"paymentDate")).append(" · ").append(val(p,"paymentMethod")).append(" · ").append(money(new BigDecimal(val(p,"amount")),cur)).append("\n");
+                        if(!val(p,"transactionId").isEmpty())b.append("Transaction: ").append(val(p,"transactionId")).append("\n");
+                        if(!val(p,"approvedBy").isEmpty())b.append("Approved by: ").append(val(p,"approvedBy")).append("\n");
+                    }catch(Exception e){b.append("Payment record unavailable.\n");}
+                }
+                new android.app.AlertDialog.Builder(a).setTitle("Receivable details").setMessage(b.toString()).setPositiveButton("Close",null).show();
+            });
+        });
+    }
+    private void summary(){
+        ArrayList<JSONObject> chosen=picked();
+        if(checking||!loaded||chosen.isEmpty())return;
+        final int captured=revision;
+        checking=true;updateSelection();status.setText("Verifying selected balances with server…");
+        worker.execute(()->{
+            boolean valid=false;
+            try{
+                JSONArray fresh=api.receivableList(route).getJSONArray("receivables");
+                HashMap<String,JSONObject> map=new HashMap<>();
+                for(int i=0;i<fresh.length();i++){JSONObject r=fresh.getJSONObject(i);String id=val(r,"invoiceId");if(id.isEmpty()||map.put(id,r)!=null)throw new IllegalArgumentException();}
+                for(JSONObject old:chosen){
+                    JSONObject r=map.get(val(old,"invoiceId"));
+                    if(r==null||!selectable(r))throw new IllegalArgumentException();
+                    for(String k:new String[]{"invoiceNo","customerId","customer","locationCode","currency","invoiceDate","dueDate"})if(!val(old,k).equals(val(r,k)))throw new IllegalArgumentException();
+                    for(String k:new String[]{"grandTotal","amountPaid","outstanding"})if(new BigDecimal(val(old,k)).compareTo(new BigDecimal(val(r,k)))!=0)throw new IllegalArgumentException();
+                }
+                valid=true;
+            }catch(Exception ignored){}
+            final boolean verified=valid;
+            a.runOnUiThread(()->{
+                checking=false;if(!active.getAsBoolean())return;updateSelection();
+                if(!verified||captured!=revision){status.setText("Selection changed or cannot be verified. Refresh and select again.");return;}
+                status.setText("Selected outstanding balances verified.");
+                showSummary(chosen);
+            });
+        });
+    }
+    private static final class Group{
+        String name,id;int count;LocalDate start,end;BigDecimal usd=BigDecimal.ZERO,khr=BigDecimal.ZERO;
+        Group(String n,String i){name=n;id=i;}
+    }
+    private void showSummary(ArrayList<JSONObject> chosen){
+        LinkedHashMap<String,Group> groups=new LinkedHashMap<>();
+        BigDecimal usd=BigDecimal.ZERO,khr=BigDecimal.ZERO;
+        for(JSONObject r:chosen){
+            String id=val(r,"customerId"),name=val(r,"customer");
+            String key=id.isEmpty()?"invoice:"+val(r,"invoiceId"):"id:"+id;
+            Group g=groups.computeIfAbsent(key,k->new Group(name,id));g.count++;
+            LocalDate d=date(r);if(!d.equals(LocalDate.MAX)){if(g.start==null||d.isBefore(g.start))g.start=d;if(g.end==null||d.isAfter(g.end))g.end=d;}
+            if("USD".equals(ccy(r))){g.usd=g.usd.add(amount(r));usd=usd.add(amount(r));}
+            else{g.khr=g.khr.add(amount(r));khr=khr.add(amount(r));}
+        }
+        StringBuilder b=new StringBuilder(chosen.size()+" selected invoices · "+groups.size()+" customer groups\n\n");
+        DateTimeFormatter fmt=DateTimeFormatter.ofPattern("dd-MMM-uuuu",Locale.US);
+        if(groups.size()==1){
+            b.append(chosen.get(0).optString("customer")).append("\n");
+            for(JSONObject r:chosen)b.append(val(r,"invoiceDate")).append(" · ").append(val(r,"invoiceNo")).append(" · ").append(money(amount(r),ccy(r))).append("\n");
+        }else for(Group g:groups.values()){
+            b.append(g.name).append(g.id.isEmpty()?" (customer ID unavailable)":" · "+g.id).append("\n").append(g.count).append(" invoice(s) · ").append(g.start==null?"—":g.start.format(fmt)).append(" to ").append(g.end==null?"—":g.end.format(fmt)).append("\n");
+            b.append(money(g.usd,"USD")).append(" · ").append(money(g.khr,"KHR")).append("\n\n");
+        }
+        b.append("\nTOTAL OUTSTANDING\n").append(money(usd,"USD")).append("\n").append(money(khr,"KHR")).append("\n\nRead-only verified snapshot. No payment submitted.");
+        new android.app.AlertDialog.Builder(a).setTitle("Customer Invoice Summary").setMessage(b.toString()).setPositiveButton("Close",null).show();
+    }
     private void render(){
         if(cards==null||more==null)return;
         cards.removeAllViews();more.setVisibility(android.view.View.GONE);
-        if(!loaded){totals.setText("Outstanding: —");return;}
+        if(!loaded){totals.setText("Outstanding: —");updateSelection();return;}
         String q=search.getText().toString().trim().toLowerCase(Locale.ROOT),c=String.valueOf(currency.getSelectedItem()),st=String.valueOf(statusFilter.getSelectedItem());
         BigDecimal usd=BigDecimal.ZERO,khr=BigDecimal.ZERO;int matched=0;
         for(JSONObject r:rows){
@@ -111,9 +218,13 @@ final class NativeReceivables {
             text(card,display+"  ·  "+val(r,"invoiceNo")+"  ·  "+val(r,"arStatus"),13,false);
             text(card,val(r,"customer"),16,true);
             text(card,val(r,"locationCode")+"  ·  Outstanding "+money(amount(r),ccy(r)),17,true);
+            CheckBox check=new CheckBox(a);check.setText(selectable(r)?"Select invoice":"Processing · not selectable");check.setEnabled(selectable(r));check.setChecked(selected.contains(val(r,"invoiceId")));card.addView(check);
+            check.setOnCheckedChangeListener((v,on)->{if(on)selected.add(val(r,"invoiceId"));else selected.remove(val(r,"invoiceId"));revision++;updateSelection();});
+            Button detail=new Button(a);detail.setAllCaps(false);detail.setText("Invoice details");card.addView(detail);detail.setOnClickListener(v->detail(r));
         }
         totals.setText("Outstanding\n"+money(usd,"USD")+"  ·  "+money(khr,"KHR")+"\n"+matched+" invoice(s) · filtered totals");
         if(matched==0)text(cards,"No matching outstanding invoices.",14,false);
         if(matched>limit)more.setVisibility(android.view.View.VISIBLE);
+        updateSelection();
     }
 }

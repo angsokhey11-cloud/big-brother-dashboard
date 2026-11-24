@@ -150,6 +150,15 @@ final class CloudAuth {
         if(id.trim().isEmpty()||id.length()>128)throw new IOException("Invalid invoice identity");
         return generatorRead("bb_sales_verify_invoice_save",new JSONObject().put("p_invoice_id",id));
     }
+    synchronized JSONObject receivableDetail(String route,String id)throws Exception{
+        JSONObject current=profile();
+        if(!"online".equals(BuildConfig.FLAVOR)||!java.util.Arrays.asList("ar-all","ar-your","sales-support-your-receivable").contains(route)||!NativeRoutes.allowed(current,route,"canView")||id.trim().isEmpty())
+            throw new IOException("Receivable detail access denied");
+        String fn="ar-all".equals(route)?"bb_ar_detail_by_id_all":"bb_ar_detail_by_id";
+        JSONObject result=new JSONObject(post("/rest/v1/rpc/"+fn,new JSONObject().put("p_invoice_id",id),accessToken));
+        if(!Boolean.TRUE.equals(result.opt("success")))throw new IOException("Receivable detail unavailable");
+        return result;
+    }
     synchronized JSONObject receivableList(String route)throws Exception{
         JSONObject current=profile();
         if(!"online".equals(BuildConfig.FLAVOR)||!java.util.Arrays.asList("ar-all","ar-your","sales-support-your-receivable").contains(route)||!NativeRoutes.allowed(current,route,"canView"))
