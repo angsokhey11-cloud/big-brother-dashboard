@@ -22,6 +22,18 @@ def stage():
     assets = app / "src/main/assets"
     assets.mkdir(parents=True, exist_ok=True)
     shutil.copytree(ROOT / "build/web", assets, dirs_exist_ok=True)
+    # Installed-only: use the EXISTING account-scoped cached Invoice History
+    # view online too. Its normal live handoff checks permission and data,
+    # and falls back to the original live route if no local snapshot exists.
+    # Do not bypass the live invoice permission or allow cached writes.
+    menu = assets / "big-brother-dashboard/mobile-main-menu-stockcontrol-v5.js"
+    source = menu.read_text(encoding="utf-8")
+    source = replace_once(source,
+        "if(!forceLive&&(route!=='history'||offline?.canUseNetwork()!==true)&&!liveApproval&&!realPilot&&cached?.canOpen(route)){",
+        "if(!forceLive&&!liveApproval&&!realPilot&&cached?.canOpen(route)){")
+    menu.write_text(source, encoding="utf-8")
+    print("Installed Invoice History: existing cache-first route enabled")
+
     java = app / "src/main/java/com/bigbrother/online"
     for name in ("MainActivity.java", "BBNativeFileActions.java", "BBNativePrint.java"):
         p = java / name
