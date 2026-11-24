@@ -152,7 +152,7 @@ def stage():
     s=replace_once(s,"versionNameSuffix '-stable'","versionNameSuffix '-bundled-dev'")
     p.write_text(s,encoding="utf-8")
     p=app/"src/main/AndroidManifest.xml"
-    s=replace_once(p.read_text(encoding="utf-8"),'android:label="BIG BROTHER Online"','android:label="BIG BROTHER Bundled DEV"')
+    s=replace_once(p.read_text(encoding="utf-8"),'android:label="BIG BROTHER Online"','android:label="BIG BROTHER Mobile"')
     s=replace_once(s,'    <uses-permission android:name="android.permission.INTERNET"/>','    <uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>')
     p.write_text(s,encoding="utf-8")
     icon=app/"src/main/res/drawable-nodpi/launcher.png"
