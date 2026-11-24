@@ -242,10 +242,17 @@ public final class MainActivity extends Activity {
         for(String[] r:NativeRoutes.ALL)if(group.equals(r[1])&&NativeRoutes.allowed(profile,r[0],r[3]))routeTile(profile,r);
     }
     private void routeTile(JSONObject profile,String[] r){
-        boolean ready="history".equals(r[0])||"invoice".equals(r[0]);
+        boolean ar=java.util.Arrays.asList("ar-all","ar-your","sales-support-your-receivable").contains(r[0]);
+        boolean ready="history".equals(r[0])||"invoice".equals(r[0])||ar;
         Button item=button(r[2]+(ready?"  ›":"  ·  Migration pending"));
         item.setAllCaps(false);item.setEnabled(ready);
-        if(ready)item.setOnClickListener(v -> {if("invoice".equals(r[0]))showGenerator(profile);else showHistory(profile);});
+        if(ready)item.setOnClickListener(v -> {if("invoice".equals(r[0]))showGenerator(profile);else if(ar)showReceivables(profile,r[0],r[2]);else showHistory(profile);});
+    }
+    private void showReceivables(JSONObject profile,String route,String title){
+        screen();label(title,23,NAVY);
+        final LinearLayout page=root;
+        button("Back to Home").setOnClickListener(v->showNativeHome(profile));
+        new NativeReceivables(this,page,auth,worker,()->!destroyed&&root==page,route).open();
     }
     private void showGenerator(JSONObject profile){
         screen();
