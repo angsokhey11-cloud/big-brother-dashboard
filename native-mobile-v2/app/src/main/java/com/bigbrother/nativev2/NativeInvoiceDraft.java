@@ -25,6 +25,7 @@ final class NativeInvoiceDraft {
     private EditText date,productQuery,rateInput,discountInput,partialInput,cashInput,bankInput,actualBankInput;
     private Spinner discountMode,paymentMethod,bankCurrency;
     private TextView paymentSummary,exchangeSummary,bankSummary;
+    private NativeBankDraft bankDraft;
     private String lastCurrency;
     private boolean resettingPayment;
     private Spinner locationPicker,batchPicker,currency;
@@ -123,7 +124,7 @@ final class NativeInvoiceDraft {
             }catch(Exception e){a.runOnUiThread(()->{if(active.getAsBoolean()){busy=false;status.setText("Master data unavailable — retry.");}});}
         });
     }
-    private void reset(){generation++;location=null;batch=null;customer=null;prices=null;warehouse=null;customersReady=false;lines.clear();customerBox.removeAllViews();productBox.removeAllViews();customerLabel.setText("Customer: not selected");number.setText("Invoice No. —");clearPayment();renderLines();}
+    private void reset(){generation++;location=null;batch=null;customer=null;prices=null;warehouse=null;customersReady=false;lines.clear();customerBox.removeAllViews();productBox.removeAllViews();customerLabel.setText("Customer: not selected");number.setText("Invoice No. —");if(bankDraft!=null)bankDraft.customer("");clearPayment();renderLines();}
     private boolean sameScope(){
         if(location==null)return false;
         int bi=batchPicker.getSelectedItemPosition(),li=locationPicker.getSelectedItemPosition();
@@ -179,7 +180,7 @@ final class NativeInvoiceDraft {
     }
     private void loadPrices(JSONObject row){
         if(busy||!sameScope())return;
-        customer=row;prices=null;lines.clear();clearPayment();renderLines();customerLabel.setText("Customer: "+val(row,"name"));busy=true;
+        customer=row;prices=null;lines.clear();if(bankDraft!=null)bankDraft.customer(val(row,"customerId"));clearPayment();renderLines();customerLabel.setText("Customer: "+val(row,"name"));busy=true;
         status.setText("Loading customer prices…");int request=++generation;
         worker.execute(()->{
             JSONObject result=null;try{result=api.generatorPrices(val(row,"customerId")).optJSONObject("prices");}catch(Exception ignored){}
@@ -326,6 +327,8 @@ final class NativeInvoiceDraft {
         bankCurrency=select("USD","KHR");
         actualBankInput=field(root,"Actual bank amount (selected bank currency)",numeric);
         paymentSummary=text(root,"",16);exchangeSummary=text(root,"",14);bankSummary=text(root,"",14);
+        bankDraft=new NativeBankDraft(a,root,api,worker,active);
+        observe(date);
         for(EditText f:new EditText[]{rateInput,discountInput,partialInput,cashInput,bankInput,actualBankInput})observe(f);
         for(Spinner p:new Spinner[]{discountMode,paymentMethod,bankCurrency})observe(p);
         updatePayment();
@@ -333,6 +336,7 @@ final class NativeInvoiceDraft {
     private void clearPayment(){
         if(paymentSummary==null)return;
         resettingPayment=true;
+        if(bankDraft!=null)bankDraft.clear();
         for(EditText f:new EditText[]{discountInput,partialInput,cashInput,bankInput,actualBankInput})f.setText("");
         resettingPayment=false;updatePayment();
     }
@@ -349,6 +353,7 @@ final class NativeInvoiceDraft {
         bankCurrency.setVisibility(bank?View.VISIBLE:View.GONE);actualBankInput.setVisibility(bank?View.VISIBLE:View.GONE);
         exchangeSummary.setText("");bankSummary.setText("");
         BigDecimal subtotal=BigDecimal.ZERO;for(Line line:lines)subtotal=subtotal.add(line.qty.multiply(line.price));
+        BigDecimal bankPlanned=BigDecimal.ZERO,bankRate=BigDecimal.ZERO;
         try{
             DraftPayment.Totals t=DraftPayment.calculate(subtotal,cur,discountMode.getSelectedItemPosition()==1,
                 DraftPayment.amount(discountInput.getText().toString()),method,
@@ -356,7 +361,8 @@ final class NativeInvoiceDraft {
                 split?DraftPayment.amount(cashInput.getText().toString()):BigDecimal.ZERO,
                 split?DraftPayment.amount(bankInput.getText().toString()):BigDecimal.ZERO);
             paymentSummary.setText("Discount: "+money(t.discount,cur)+"\nGrand Total: "+money(t.grand,cur)+"\nAmount Paid: "+money(t.paid,cur)+"\nCredit Amount: "+money(t.outstanding,cur));
-            BigDecimal rate=DraftPayment.amount(rateInput.getText().toString());
+            bankPlanned=t.bank;
+            BigDecimal rate=DraftPayment.amount(rateInput.getText().toString());bankRate=rate;
             if(rate.compareTo(BigDecimal.ONE)>0){
                 String other="USD".equals(cur)?"KHR":"USD";
                 exchangeSummary.setText("Exchange equivalent: "+money(DraftPayment.exchange(t.grand,cur,other,rate),other));
@@ -371,6 +377,7 @@ final class NativeInvoiceDraft {
                     "No registered transfer verified. Draft only.");
             }
         }catch(IllegalArgumentException e){paymentSummary.setText("Draft payment incomplete: "+e.getMessage());}
+        if(bankDraft!=null)bankDraft.context(date.getText().toString().trim(),cur,method,bankRate,bankPlanned);
     }
     private void renderLines(){
         if(linesBox==null)return;

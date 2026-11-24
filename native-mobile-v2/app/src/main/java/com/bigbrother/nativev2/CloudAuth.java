@@ -114,6 +114,18 @@ final class CloudAuth {
         if(Boolean.FALSE.equals(data.opt("success")))throw new IOException("Invoice Generator request failed");
         return data;
     }
+    synchronized JSONObject generatorBankBalances(String customerId)throws Exception{
+        JSONObject current=profile();
+        if(!"online".equals(BuildConfig.FLAVOR)||!NativeRoutes.allowed(current,"invoice","canCreate")||customerId.trim().isEmpty())
+            throw new IOException("Bank balance permission denied");
+        org.json.JSONArray rows=new org.json.JSONArray(post("/rest/v1/rpc/bb_invoice_bank_bulk_sync",new JSONObject(),accessToken));
+        org.json.JSONArray customerRows=new org.json.JSONArray();
+        for(int i=0;i<rows.length();i++){
+            JSONObject row=rows.optJSONObject(i);
+            if(row!=null&&customerId.equals(row.optString("customer_id").trim()))customerRows.put(row);
+        }
+        return new JSONObject().put("rows",customerRows).put("admin",NativeRoutes.admin(current));
+    }
     synchronized JSONObject generatorBootstrap()throws Exception{return generatorRead("bb_sales_invoice_bootstrap",new JSONObject());}
     synchronized JSONObject generatorWarehouse()throws Exception{return generatorRead("bb_sales_direct_stock_balances",new JSONObject());}
     synchronized JSONObject generatorBatches()throws Exception{return generatorRead("bb_sales_open_batches",new JSONObject());}
