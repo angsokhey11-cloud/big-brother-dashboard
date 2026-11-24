@@ -24,6 +24,8 @@ jobs:
           persist-credentials: false
       - name: Bundle pinned existing application sources and stage Android shell
         run: python3 android-bundled-source-prep/tools/stage_android.py
+      - name: Verify bundled stock allocation prefill date regression
+        run: node android-bundled-source-prep/tools/test_stock_allocation_prefill.js
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
