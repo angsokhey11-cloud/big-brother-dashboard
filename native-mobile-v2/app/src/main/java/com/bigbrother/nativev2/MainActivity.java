@@ -43,6 +43,17 @@ public final class MainActivity extends Activity {
         root.setBackgroundColor(Color.WHITE);
         scroll.addView(root);
         setContentView(scroll);
+        if ("online".equals(BuildConfig.FLAVOR)) {
+            int brand=getResources().getIdentifier("bb_brand","drawable",getPackageName());
+            if(brand!=0){
+                ImageView logo=new ImageView(this);
+                logo.setImageResource(brand);logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                logo.setContentDescription("BIG BROTHER");
+                LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(dp(78),dp(78));
+                lp.gravity=android.view.Gravity.CENTER_HORIZONTAL;
+                root.addView(logo,lp);
+            }
+        }
         label("BIG BROTHER",28,Color.rgb(23,74,145));
         label(getString(R.string.app_name),18,Color.DKGRAY);
         label("Development build — not for accounting work",14,Color.DKGRAY);
