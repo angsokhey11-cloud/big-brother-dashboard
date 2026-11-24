@@ -1,0 +1,136 @@
+{
+  "schema": 1,
+  "owner": "angsokhey11-cloud",
+  "sourceHost": "https://angsokhey11-cloud.github.io/",
+  "desktopHost": "https://app.bigbrother.test/",
+  "modules": [
+    {
+      "name": "big-brother-invoice-generator",
+      "sha": "d4bd888868f5e479072f616efda8ac7778d2cc9d"
+    },
+    {
+      "name": "big-brother-invoice-reversal",
+      "sha": "2a98043108089ca894e658a8a03ce30d26e5c376"
+    },
+    {
+      "name": "big-brother-dashboard",
+      "sha": "5237c1bf86811fbba704c7aa2c339392eb796ece"
+    },
+    {
+      "name": "invoice-history",
+      "sha": "8948ac1eef318fbb0ab9ab3ab1ccf133595ad13e"
+    },
+    {
+      "name": "big-brother-ar",
+      "sha": "00df73a52c26c64e3381a88b38db83470d999700"
+    },
+    {
+      "name": "big-brother-payment-history",
+      "sha": "fa3625b2683d618ffaadf1615f1553a0ef81ec61"
+    },
+    {
+      "name": "big-brother-daily-sale-summary",
+      "sha": "d04eb7e60b9b59845ceea26440c7bb9645b0aaea"
+    },
+    {
+      "name": "bigbrother-staff-management",
+      "sha": "fafd0af0858458f12ffab04564d215cfd0a397c0"
+    },
+    {
+      "name": "big-brother-stock-managemenet",
+      "sha": "5d4118c4981e56c63ddc427fc196319c754f056f"
+    },
+    {
+      "name": "big-brother-purchase-recorder",
+      "sha": "191dc7bf68771e7f4af57ed227ddcefa34f60afb"
+    },
+    {
+      "name": "big-brother-puchase-history",
+      "sha": "6f1578b1d50e895b49b91e10cdd2181aee40d406"
+    },
+    {
+      "name": "big-brother-purchase-payable-invoice",
+      "sha": "71b5c12a23d6d00a1343d75f2e535e54e2a2aa51"
+    },
+    {
+      "name": "big-brother-purchase-payment-history",
+      "sha": "dba0838849d1022ea3eba9b43b2976b4040651ff"
+    },
+    {
+      "name": "big-brother-daily-cash-collection",
+      "sha": "2767b868dc55501932dfeb8c9529bda1bfade84f"
+    },
+    {
+      "name": "big-brother-daily-receivable-cash-summary",
+      "sha": "66c7280da53c77260e140cfa634885cc337d862f"
+    },
+    {
+      "name": "big-brother-admin-work",
+      "sha": "622c1079559bba7055073ddf0bb6e46f734750ff"
+    },
+    {
+      "name": "big-brother-customers-editor",
+      "sha": "787d7150c26d9e8f0d129d2092a18f755b97690b"
+    },
+    {
+      "name": "big-brother-clients-editor",
+      "sha": "2770e2a14f3e718a289a0739fcb87815d91c82a6"
+    },
+    {
+      "name": "big-brother-products-editor",
+      "sha": "38e750838b4b1dc49355d06a1fe4106fd5abda2c"
+    },
+    {
+      "name": "big-brother-sales-support",
+      "sha": "6be9efca998491f9131dc7c3412afa3530821438"
+    },
+    {
+      "name": "big-brother-public-cal",
+      "sha": "9026e4908f7343f3f2c3b4e02d40a4a408e41f39"
+    },
+    {
+      "name": "big-brother-expenses",
+      "sha": "d5fef9584826c2905830e4cd6d440fd95833997d"
+    },
+    {
+      "name": "big-brother-stock-report",
+      "sha": "bb6eedecee02afd35042fffe385eccf6ca6f96dd"
+    },
+    {
+      "name": "big-brother-damaged-stock",
+      "sha": "6f99f7140c7cc855874d22c8f3b521fb902b6e1b"
+    },
+    {
+      "name": "big-brother-master-data",
+      "sha": "47991ecde5149054dd13c06d8e8663886e5ca611"
+    },
+    {
+      "name": "big-brother-cogs",
+      "sha": "8c76e6bd7d8957705a4eae6e0b78f6480a4787f6"
+    },
+    {
+      "name": "big-brother-staff-relation",
+      "sha": "f626f50fa381d836c8bc840f1dcc2488047c892b"
+    },
+    {
+      "name": "big-brother-report",
+      "sha": "62987cccbe4e5445d45bff2f07eebc0c4c4fd6b3"
+    },
+    {
+      "name": "big-brother-notification-center",
+      "sha": "3923939f778d26d3af42b3991f52d93ea1765e8b"
+    },
+    {
+      "name": "big-brother-batch-selling-tracker",
+      "sha": "57031e70e32c2f3cdb12882515664c6d119314d3"
+    },
+    {
+      "name": "big-brother-real-invoice",
+      "sha": "e984a49f6821ee0036e74ff5873c7a50ea1e7037"
+    },
+    {
+      "name": "big-brother-stock-allocation",
+      "sha": "97ce6d98684992031973288c873396ebf6be8a43"
+    }
+  ]
+}

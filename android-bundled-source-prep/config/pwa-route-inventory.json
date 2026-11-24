@@ -1,0 +1,294 @@
+{
+  "sourceBranch": "main",
+  "entryPoints": [
+    "mobile.js",
+    "mobile-main-menu-stockcontrol-v5.js",
+    "mobile.html",
+    "index.html",
+    "sw.js"
+  ],
+  "desktopBaselineModuleCount": 32,
+  "pwaDirectReferenceCount": 29,
+  "modules": [
+    {
+      "name": "big-brother-admin-work",
+      "desktopPinned": true,
+      "references": 23,
+      "entryFiles": [
+        "mobile.js",
+        "mobile-main-menu-stockcontrol-v5.js",
+        "index.html"
+      ]
+    },
+    {
+      "name": "big-brother-ar",
+      "desktopPinned": true,
+      "references": 10,
+      "entryFiles": [
+        "mobile.js",
+        "mobile-main-menu-stockcontrol-v5.js",
+        "index.html"
+      ]
+    },
+    {
+      "name": "big-brother-batch-selling-tracker",
+      "desktopPinned": true,
+      "references": 2,
+      "entryFiles": [
+        "mobile.js",
+        "mobile-main-menu-stockcontrol-v5.js"
+      ]
+    },
+    {
+      "name": "big-brother-clients-editor",
+      "desktopPinned": true,
+      "references": 4,
+      "entryFiles": [
+        "mobile.js",
+        "mobile-main-menu-stockcontrol-v5.js"
+      ]
+    },
+    {
+      "name": "big-brother-cogs",
+      "desktopPinned": true,
+      "references": 6,
+      "entryFiles": [
+        "mobile.js",
+        "mobile-main-menu-stockcontrol-v5.js",
+        "index.html"
+      ]
+    },
+    {
+      "name": "big-brother-customers-editor",
+      "desktopPinned": true,
+      "references": 8,
+      "entryFiles": [
+        "mobile.js",
+        "mobile-main-menu-stockcontrol-v5.js",
+        "mobile.html"
+      ]
+    },
+    {
+      "name": "big-brother-daily-cash-collection",
+      "desktopPinned": true,
+      "references": 4,
+      "entryFiles": [
+        "mobile.js",
+        "mobile-main-menu-stockcontrol-v5.js",
+        "mobile.html"
+      ]
+    },
+    {
+      "name": "big-brother-daily-receivable-cash-summary",
+      "desktopPinned": true,
+      "references": 2,
+      "entryFiles": [
+        "mobile.js",
+        "mobile-main-menu-stockcontrol-v5.js"
+      ]
+    },
+    {
+      "name": "big-brother-daily-sale-summary",
+      "desktopPinned": true,
+      "references": 2,
+      "entryFiles": [
+        "mobile.js",
+        "mobile-main-menu-stockcontrol-v5.js"
+      ]
+    },
+    {
+      "name": "big-brother-damaged-stock",
+      "desktopPinned": true,
+      "references": 1,
+      "entryFiles": [
+        "mobile-main-menu-stockcontrol-v5.js"
+      ]
+    },
+    {
+      "name": "big-brother-dashboard",
+      "desktopPinned": true,
+      "references": 1,
+      "entryFiles": [
+        "mobile-main-menu-stockcontrol-v5.js"
+      ]
+    },
+    {
+      "name": "big-brother-expenses",
+      "desktopPinned": true,
+      "references": 13,
+      "entryFiles": [
+        "mobile.js",
+        "mobile-main-menu-stockcontrol-v5.js",
+        "index.html"
+      ]
+    },
+    {
+      "name": "big-brother-invoice-generator",
+      "desktopPinned": true,
+      "references": 4,
+      "entryFiles": [
+        "mobile.js",
+        "mobile-main-menu-stockcontrol-v5.js",
+        "index.html"
+      ]
+    },
+    {
+      "name": "big-brother-invoice-reversal",
+      "desktopPinned": true,
+      "references": 5,
+      "entryFiles": [
+        "mobile.js",
+        "mobile-main-menu-stockcontrol-v5.js",
+        "index.html"
+      ]
+    },
+    {
+      "name": "big-brother-master-data",
+      "desktopPinned": true,
+      "references": 6,
+      "entryFiles": [
+        "mobile.js",
+        "mobile-main-menu-stockcontrol-v5.js",
+        "index.html"
+      ]
+    },
+    {
+      "name": "big-brother-payment-history",
+      "desktopPinned": true,
+      "references": 8,
+      "entryFiles": [
+        "mobile.js",
+        "mobile-main-menu-stockcontrol-v5.js",
+        "index.html"
+      ]
+    },
+    {
+      "name": "big-brother-products-editor",
+      "desktopPinned": true,
+      "references": 9,
+      "entryFiles": [
+        "mobile.js",
+        "mobile-main-menu-stockcontrol-v5.js",
+        "index.html"
+      ]
+    },
+    {
+      "name": "big-brother-puchase-history",
+      "desktopPinned": true,
+      "references": 4,
+      "entryFiles": [
+        "mobile.js",
+        "mobile-main-menu-stockcontrol-v5.js",
+        "index.html"
+      ]
+    },
+    {
+      "name": "big-brother-purchase-payable-invoice",
+      "desktopPinned": true,
+      "references": 2,
+      "entryFiles": [
+        "mobile.js",
+        "mobile-main-menu-stockcontrol-v5.js"
+      ]
+    },
+    {
+      "name": "big-brother-purchase-payment-history",
+      "desktopPinned": true,
+      "references": 2,
+      "entryFiles": [
+        "mobile.js",
+        "mobile-main-menu-stockcontrol-v5.js"
+      ]
+    },
+    {
+      "name": "big-brother-purchase-recorder",
+      "desktopPinned": true,
+      "references": 4,
+      "entryFiles": [
+        "mobile.js",
+        "mobile-main-menu-stockcontrol-v5.js",
+        "index.html"
+      ]
+    },
+    {
+      "name": "big-brother-real-invoice",
+      "desktopPinned": true,
+      "references": 3,
+      "entryFiles": [
+        "mobile.js",
+        "mobile-main-menu-stockcontrol-v5.js",
+        "index.html"
+      ]
+    },
+    {
+      "name": "big-brother-report",
+      "desktopPinned": true,
+      "references": 6,
+      "entryFiles": [
+        "mobile.js",
+        "mobile-main-menu-stockcontrol-v5.js"
+      ]
+    },
+    {
+      "name": "big-brother-sales-support",
+      "desktopPinned": true,
+      "references": 20,
+      "entryFiles": [
+        "mobile.js",
+        "mobile-main-menu-stockcontrol-v5.js",
+        "mobile.html",
+        "index.html"
+      ]
+    },
+    {
+      "name": "big-brother-staff-relation",
+      "desktopPinned": true,
+      "references": 2,
+      "entryFiles": [
+        "mobile.js",
+        "mobile-main-menu-stockcontrol-v5.js"
+      ]
+    },
+    {
+      "name": "big-brother-stock-allocation",
+      "desktopPinned": true,
+      "references": 6,
+      "entryFiles": [
+        "mobile.js",
+        "mobile-main-menu-stockcontrol-v5.js"
+      ]
+    },
+    {
+      "name": "big-brother-stock-managemenet",
+      "desktopPinned": true,
+      "references": 11,
+      "entryFiles": [
+        "mobile.js",
+        "mobile-main-menu-stockcontrol-v5.js",
+        "index.html"
+      ]
+    },
+    {
+      "name": "big-brother-stock-report",
+      "desktopPinned": true,
+      "references": 19,
+      "entryFiles": [
+        "mobile.js",
+        "mobile-main-menu-stockcontrol-v5.js",
+        "index.html"
+      ]
+    },
+    {
+      "name": "invoice-history",
+      "desktopPinned": true,
+      "references": 6,
+      "entryFiles": [
+        "mobile.js",
+        "mobile-main-menu-stockcontrol-v5.js",
+        "mobile.html",
+        "index.html"
+      ]
+    }
+  ],
+  "notes": "Static direct first-party references only; transitive dependencies and latest module revisions still need audit. Desktop lock is a known pinned baseline, not necessarily current PWA HEAD."
+}
