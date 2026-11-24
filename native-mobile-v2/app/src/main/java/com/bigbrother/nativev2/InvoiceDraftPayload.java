@@ -27,7 +27,8 @@ final class InvoiceDraftPayload {
         JSONObject item=new JSONObject().put("lineId",lineId).put("productCode",code).put("productName",name)
             .put("productBarcode",barcode).put("productNote","").put("unit",baseUnit)
             .put("qty",baseQty).put("unitPrice",price.divide(factor,12,RoundingMode.HALF_UP)).put("amount",amount)
-            .put("entryType",group?"GROUP":"EXACT").put("productGroupCode",group?code:"").put("productGroupName",group?name:"").put("stockAllocations",sources);
+            .put("entryType",group?"GROUP":"EXACT").put("productGroupCode",group?code:"").put("productGroupName",group?name:"");
+        if(sources.length()>0)item.put("stockAllocations",sources); // service and group: omit explicit exact allocation
         if(factor.compareTo(BigDecimal.ONE)>0)item.put("sellingQty",qty).put("sellingUnit",sellingUnit).put("sellingUnitBaseQty",factor)
             .put("sellingUnitPrice",price).put("baseQty",baseQty).put("baseUnit",baseUnit);
         return item;

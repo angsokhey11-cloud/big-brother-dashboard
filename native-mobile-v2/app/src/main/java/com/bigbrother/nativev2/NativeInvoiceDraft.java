@@ -475,6 +475,16 @@ final class NativeInvoiceDraft {
             if(settlementRequestId.isEmpty())settlementRequestId=java.util.UUID.randomUUID().toString();
             JSONObject registered=t.bank.signum()>0?bankDraft.capturedSelection(val(customer,"customerId"),sale,cur,method,rate,t.bank):null;
             JSONObject payload=InvoiceDraftPayload.bundle(draftId,no,sale,due,batch==null?"":val(batch,"batchId"),first(location,"locationCode","code"),val(customer,"customerId"),val(customer,"name"),staffId,salesperson,method,cur,rate,t,items,registered,settlementRequestId);
+            BigDecimal authoritativeSubtotal=BigDecimal.ZERO;
+            JSONArray frozenItems=payload.getJSONObject("p_invoice").getJSONArray("items");
+            for(int i=0;i<frozenItems.length();i++){
+                JSONObject item=frozenItems.getJSONObject(i);
+                authoritativeSubtotal=authoritativeSubtotal.add(InvoiceContractParity.line(
+                    new BigDecimal(item.getString("qty")),new BigDecimal(item.getString("unitPrice")),new BigDecimal(item.getString("amount"))));
+            }
+            InvoiceContractParity.totals(authoritativeSubtotal,t.discount,t.subtotal,t.grand,t.paid,t.outstanding,method);
+            if(registered!=null&&registered.getJSONArray("sources").length()==1)
+                InvoiceContractParity.bank(new BigDecimal(registered.getString("actualAmount")),registered.getString("actualCurrency"),cur,rate,t.bank);
             if(visual){
                 JSONObject document=new JSONObject(payload.getJSONObject("p_invoice").toString());
                 document.put("phone",val(customer,"phone")).put("address",val(customer,"address"));
