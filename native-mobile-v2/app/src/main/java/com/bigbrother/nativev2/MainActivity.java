@@ -45,6 +45,18 @@ public final class MainActivity extends Activity {
         screen();
         if (!"online".equals(BuildConfig.FLAVOR)) {
             label("Local Brain authentication is not connected yet.",16,Color.DKGRAY);
+            TextView connection = label("",14,Color.DKGRAY);
+            Button probe = button("Check Local Brain connection");
+            probe.setOnClickListener(v -> {
+                probe.setEnabled(false); connection.setText("Checking secure LAN connection…");
+                worker.execute(() -> {
+                    String message;
+                    try { message = LocalConnection.check(); }
+                    catch (Exception e) { message = "Secure LAN connection failed. Check Wi-Fi, Local Brain V6 and Caddy certificate."; }
+                    final String result = message;
+                    runOnUiThread(() -> { if (!destroyed) { connection.setText(result); probe.setEnabled(true); } });
+                });
+            });
             button("Network settings").setOnClickListener(v -> startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS)));
             return;
         }
