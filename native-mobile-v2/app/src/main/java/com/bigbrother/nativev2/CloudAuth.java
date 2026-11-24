@@ -150,6 +150,21 @@ final class CloudAuth {
         if(id.trim().isEmpty()||id.length()>128)throw new IOException("Invalid invoice identity");
         return generatorRead("bb_sales_verify_invoice_save",new JSONObject().put("p_invoice_id",id));
     }
+    synchronized org.json.JSONArray receivableOriginalManifest(String route,org.json.JSONArray ids)throws Exception{
+        JSONObject current=profile();
+        if(!"online".equals(BuildConfig.FLAVOR)||!java.util.Arrays.asList("ar-all","ar-your","sales-support-your-receivable").contains(route)||!NativeRoutes.allowed(current,route,"canView")||ids.length()<1||ids.length()>35)
+            throw new IOException("Original attachment manifest access denied");
+        java.util.HashSet<String> requested=new java.util.HashSet<>();
+        for(int i=0;i<ids.length();i++){String id=ids.getString(i);if(id.trim().isEmpty()||!requested.add(id))throw new IOException("Invalid selected invoice ID");}
+        org.json.JSONArray rows=new org.json.JSONArray(post("/rest/v1/rpc/bb_ar_original_manifest",new JSONObject().put("p_invoice_ids",ids),accessToken));
+        java.util.HashSet<String> seen=new java.util.HashSet<>();
+        for(int i=0;i<rows.length();i++){
+            JSONObject row=rows.getJSONObject(i);
+            if(!requested.contains(row.optString("invoiceId"))||!seen.add(row.optString("invoiceId"))||row.optString("path").trim().isEmpty())
+                throw new IOException("Invalid original invoice manifest");
+        }
+        return rows;
+    }
     synchronized JSONObject receivableDetail(String route,String id)throws Exception{
         JSONObject current=profile();
         if(!"online".equals(BuildConfig.FLAVOR)||!java.util.Arrays.asList("ar-all","ar-your","sales-support-your-receivable").contains(route)||!NativeRoutes.allowed(current,route,"canView")||id.trim().isEmpty())

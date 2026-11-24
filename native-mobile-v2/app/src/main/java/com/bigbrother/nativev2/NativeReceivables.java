@@ -145,14 +145,7 @@ final class NativeReceivables {
             });
         });
     }
-    private void summary(){
-        ArrayList<JSONObject> chosen=picked();
-        if(checking||!loaded||chosen.isEmpty())return;
-        final int captured=revision;
-        checking=true;updateSelection();status.setText("Verifying selected balances with server…");
-        worker.execute(()->{
-            boolean valid=false;
-            try{
+    private void verifyChosen(ArrayList<JSONObject> chosen)throws Exception{
                 JSONArray fresh=api.receivableList(route).getJSONArray("receivables");
                 HashMap<String,JSONObject> map=new HashMap<>();
                 for(int i=0;i<fresh.length();i++){JSONObject r=fresh.getJSONObject(i);String id=val(r,"invoiceId");if(id.isEmpty()||map.put(id,r)!=null)throw new IllegalArgumentException();}
@@ -162,8 +155,16 @@ final class NativeReceivables {
                     for(String k:new String[]{"invoiceNo","customerId","customer","locationCode","currency","invoiceDate","dueDate"})if(!val(old,k).equals(val(r,k)))throw new IllegalArgumentException();
                     for(String k:new String[]{"grandTotal","amountPaid","outstanding"})if(new BigDecimal(val(old,k)).compareTo(new BigDecimal(val(r,k)))!=0)throw new IllegalArgumentException();
                 }
-                valid=true;
-            }catch(Exception ignored){}
+
+    }
+    private void summary(){
+        ArrayList<JSONObject> chosen=picked();
+        if(checking||!loaded||chosen.isEmpty())return;
+        final int captured=revision;
+        checking=true;updateSelection();status.setText("Verifying selected balances with server…");
+        worker.execute(()->{
+            boolean valid=false;
+            try{verifyChosen(chosen);valid=true;}catch(Exception ignored){}
             final boolean verified=valid;
             a.runOnUiThread(()->{
                 checking=false;if(!active.getAsBoolean())return;updateSelection();
@@ -198,7 +199,58 @@ final class NativeReceivables {
             b.append(money(g.usd,"USD")).append(" · ").append(money(g.khr,"KHR")).append("\n\n");
         }
         b.append("\nTOTAL OUTSTANDING\n").append(money(usd,"USD")).append("\n").append(money(khr,"KHR")).append("\n\nRead-only verified snapshot. No payment submitted.");
-        new android.app.AlertDialog.Builder(a).setTitle("Customer Invoice Summary").setMessage(b.toString()).setPositiveButton("Close",null).show();
+        final String snapshot=b.toString();
+        final int capturedRevision=revision;
+        new android.app.AlertDialog.Builder(a).setTitle("Customer Invoice Summary").setMessage(snapshot)
+            .setPositiveButton("Close",null)
+            .setNeutralButton("Check originals",(d,w)->checkOriginals(chosen,capturedRevision))
+            .setNegativeButton("Share PDF",(d,w)->shareSummary(chosen,capturedRevision,snapshot)).show();
+    }
+    private void checkOriginals(ArrayList<JSONObject> chosen,int captured){
+        if(checking||!loaded||revision!=captured)return;
+        if(chosen.size()>35){status.setText("Select up to 35 invoices to check original attachments.");return;}
+        checking=true;updateSelection();status.setText("Checking authorized original attachments…");
+        worker.execute(()->{
+            String result;
+            try{
+                verifyChosen(chosen);JSONArray ids=new JSONArray();for(JSONObject r:chosen)ids.put(val(r,"invoiceId"));
+                JSONArray manifest=api.receivableOriginalManifest(route,ids);HashSet<String> available=new HashSet<>();
+                for(int i=0;i<manifest.length();i++)available.add(val(manifest.getJSONObject(i),"invoiceId"));
+                StringBuilder b=new StringBuilder(available.size()+" of "+chosen.size()+" accessible originals\n\n");
+                for(JSONObject r:chosen)b.append(val(r,"invoiceNo")).append(" · ").append(val(r,"customer")).append(" · ").append(available.contains(val(r,"invoiceId"))?"Available":"Not uploaded or not accessible").append("\n");
+                result=b.toString();
+            }catch(Exception e){result="Original availability could not be verified. Refresh and retry.";}
+            final String message=result;
+            a.runOnUiThread(()->{checking=false;if(!active.getAsBoolean())return;updateSelection();if(revision!=captured){status.setText("Selection changed. Reopen summary.");return;}
+                status.setText("Original attachment check finished.");new android.app.AlertDialog.Builder(a).setTitle("Original invoice attachments").setMessage(message).setPositiveButton("Close",null).show();});
+        });
+    }
+    private void shareSummary(ArrayList<JSONObject> chosen,int captured,String snapshot){
+        if(checking||!loaded||revision!=captured)return;
+        checking=true;updateSelection();status.setText("Rechecking balances and preparing PDF…");
+        worker.execute(()->{
+            java.io.File file=null;
+            try{
+                verifyChosen(chosen);
+                file=ReceivableSummaryPdf.create(a,snapshot);
+            }catch(Exception e){if(file!=null)file.delete();file=null;}
+            final java.io.File prepared=file;
+            a.runOnUiThread(()->{
+                checking=false;
+                if(!active.getAsBoolean()||revision!=captured){if(prepared!=null)prepared.delete();return;}
+                updateSelection();
+                if(prepared==null){status.setText("Summary changed or PDF unavailable. Refresh and retry.");return;}
+                try{
+                    android.net.Uri uri=androidx.core.content.FileProvider.getUriForFile(a,a.getPackageName()+".exports",prepared);
+                    android.content.Intent intent=new android.content.Intent(android.content.Intent.ACTION_SEND);
+                    intent.setType("application/pdf");intent.putExtra(android.content.Intent.EXTRA_STREAM,uri);
+                    intent.setClipData(android.content.ClipData.newRawUri("Customer Summary PDF",uri));
+                    intent.addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    a.startActivity(android.content.Intent.createChooser(intent,"Share customer summary (Telegram or other app)"));
+                    status.setText("Summary PDF prepared · choose recipient in share app.");
+                }catch(Exception e){prepared.delete();status.setText("PDF sharing unavailable.");}
+            });
+        });
     }
     private void render(){
         if(cards==null||more==null)return;
