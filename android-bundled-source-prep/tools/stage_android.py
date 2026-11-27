@@ -39,6 +39,44 @@ def stage():
     apply_invoice_native_files(assets)
     from scanner_mobile_layout import apply as apply_scanner_mobile_layout
     apply_scanner_mobile_layout(assets)
+    # Daily Sale uses two installed paths: the live module and a cached read-only
+    # dashboard page. Build the cached UI from the SAME pinned V2 report, retaining
+    # its local data adapter and offline export/Telegram restrictions.
+    live = assets / "big-brother-daily-sale-summary/legacy-google-v1.html"
+    offline_page = assets / "big-brother-dashboard/mobile-offline-daily-sale-v1.html"
+    original = offline_page.read_text(encoding="utf-8")
+    source = live.read_text(encoding="utf-8")
+    assert 'id="bbSaleFilters"' in source and 'function buildDigitalSalePages(' in source
+    adapter = '<script src="mobile-offline-staff-adapter-v12.js?v=20261028-v12"></script>'
+    assert adapter in original and 'window.BBStaffOfflineV12.dailyApi(params)' in original
+    source = replace_once(source, '</head>', adapter + '\n<style>#shareTelegramBtn,#downloadSummaryBtn,#downloadPictureBtn{display:none!important}</style>\n</head>')
+    source, count = re.subn(r'async function api\(params\)\{[^\n]*\}', 'async function api(params){return window.BBStaffOfflineV12.dailyApi(params)}', source)
+    if count != 1:
+        raise RuntimeError("Daily Sale offline API marker changed")
+    source, count = re.subn(r'<script src="https://cdnjs\.cloudflare\.com/ajax/libs/(?:html2canvas|jspdf)/[^"]+"></script>\n?', '', source)
+    if count != 2:
+        raise RuntimeError("Daily Sale offline export dependencies changed")
+    offline_page.write_text(source, encoding="utf-8")
+    # The live module should be used whenever online, so the full Functions
+    # menu and Telegram/export actions are available immediately. Preserve
+    # cached access when offline; never use cached data to send a report.
+    source = menu.read_text(encoding="utf-8")
+    source = replace_once(source,
+        "if(!forceLive&&!liveApproval&&!realPilot&&cached?.canOpen(route)){",
+        "if(!forceLive&&!(route==='daily-sale-summary'&&offline?.canUseNetwork()===true)&&!liveApproval&&!realPilot&&cached?.canOpen(route)){")
+    source = replace_once(source,
+        "/big-brother-daily-sale-summary/mobile.html?embed=1&v=20260915-1",
+        "/big-brother-daily-sale-summary/mobile.html?embed=1&v=20261128-daily-sale-hd-v2b")
+    menu.write_text(source, encoding="utf-8")
+    cached_routes = assets / "big-brother-dashboard/mobile-offline-modules-v1.js"
+    source = cached_routes.read_text(encoding="utf-8")
+    source = replace_once(source, 'mobile-offline-daily-sale-v1.html?embed=1&v=20261028-v12-fast1', 'mobile-offline-daily-sale-v1.html?embed=1&v=20261128-daily-sale-hd-v2b')
+    cached_routes.write_text(source, encoding="utf-8")
+    wrapper = (assets / "big-brother-daily-sale-summary/mobile-daily-sale.js").read_text(encoding="utf-8")
+    assert "doc.getElementById('bbSaleFilters')" in wrapper
+    assert 'window.BBStaffOfflineV12.dailyApi(params)' in offline_page.read_text(encoding="utf-8")
+    print("Daily Sale V2: verified live and cached installed routes, offline permissions preserved")
+
     # The update entry lives in the existing Mobile Settings, not a header.
     mobile=assets/"big-brother-dashboard/mobile.html"
     source=mobile.read_text(encoding="utf-8")
