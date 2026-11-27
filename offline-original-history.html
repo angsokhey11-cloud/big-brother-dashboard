@@ -3312,6 +3312,50 @@ ${getHistoryInvoiceA4PrintFixCss()}</style></head><body>${invoice.outerHTML}</bo
   /*
    * Load newest invoices when page opens.
    */
+
+  function installHistoryProgressiveV2(offlineMode=false){
+    let rows=[], details=new Map(), offset=0, more=false, busy=false, epoch=0, filterKey='', observer=null;
+    const sessionId=()=>{try{return String(JSON.parse(localStorage.getItem('BB_SUPABASE_DEV_SESSION_V1')||'null')?.user?.id||'')}catch(_){return ''}};
+    const account=sessionId();
+    if(!account)throw Error('Signed-in account unavailable.');
+    const identity=row=>String(row.invoiceId||'NO:'+row.invoiceNo);
+    const valid=()=>sessionId()===account;
+    const footer=document.createElement('div');
+    footer.style.cssText='padding:16px;text-align:center';
+    const button=document.createElement('button');button.type='button';button.className='btn btn-secondary';button.textContent='Load next 20 invoices';footer.appendChild(button);
+    $('invoiceBody').closest('.table-card').after(footer);
+    footer.hidden=true;
+    function params(limit,skip){const f=historyAppliedFilters;return {action:'invoicePage',invoiceNo:f.invoiceNo||'',customer:$('customer').value.trim(),dateFrom:f.dateFrom||null,dateTo:f.dateTo||null,invoiceType:f.invoiceType||'',locationCode:f.locationCode||'',recent:!!Number(f.recentCount),limit,offset:skip}}
+    function draw(){renderInvoices(rows);$('summaryCount').textContent=rows.length+' invoices loaded'+(more?' · more available':'');footer.hidden=!more;button.disabled=busy;button.textContent=busy?'Loading invoices…':'Load next 20 invoices';}
+    function merge(page,target,cache){const seen=new Set(target.map(identity));for(const raw of page.invoices||[]){const {_bbDetail,...row}=raw,k=identity(row);if(_bbDetail&&String(_bbDetail.invoiceId)===String(row.invoiceId)&&Array.isArray(_bbDetail.items))cache.set(k,{invoice:_bbDetail,revision:historyLastRevision});if(!seen.has(k)){seen.add(k);target.push(row)}}}
+    readHistoryDeviceCache=()=>null;saveHistoryDeviceCache=()=>{};
+    readHistoryDetailCache=(no,id)=>valid()?details.get(String(id||'NO:'+no))||null:null;
+    saveHistoryDetailCache=(no,invoice,revision,id)=>{if(valid()&&invoice&&Array.isArray(invoice.items))details.set(String(id||invoice.invoiceId||'NO:'+no),{invoice,revision})};
+    removeHistoryDetailCache=(no,id)=>details.delete(String(id||'NO:'+no));
+    prefetchVisibleInvoiceDetails=async()=>{};
+    async function request(skip,limit){const page=await fetchApi(params(limit,skip));if(!page?.success||!Array.isArray(page.invoices))throw Error('Invoice page unavailable.');return page;}
+    loadInvoices=async function(options={}){
+      const key=historyCurrentFilterKey(),same=key===filterKey,keep=!!options.silent&&same&&rows.length>0;
+      const token=++epoch,goal=keep?rows.length:10,cap=Number(historyAppliedFilters.recentCount)||Infinity;
+      busy=true;hideError();if(!keep){rows=[];details.clear();offset=0;more=false;footer.hidden=true;$('invoiceBody').innerHTML='<tr><td colspan="13" class="empty">Loading latest invoices…</td></tr>'}
+      $('loading').textContent=keep?'Refreshing…':'Loading…';button.disabled=true;
+      try{
+        const next=[],cache=new Map();let skip=0,has=true;
+        while(has&&skip<Math.min(goal,cap)){
+          const limit=Math.min(skip===0?10:20,Math.min(goal,cap)-skip);
+          const p=await request(skip,limit);if(token!==epoch||!valid()||historyCurrentFilterKey()!==key)return;
+          merge(p,next,cache);skip=Number(p.nextOffset)||skip+p.invoices.length;has=!!p.hasMore&&p.invoices.length>0&&skip<cap;
+        }
+        rows=next;details=cache;offset=skip;more=has;filterKey=key;draw();
+      }catch(e){if(token===epoch&&valid())showError(e.message||'Unable to load invoices.');}
+      finally{if(token===epoch){busy=false;button.disabled=false;button.textContent='Load next 20 invoices';$('loading').textContent='';}}
+    };
+    async function nextPage(){if(busy||!more||!valid()||historyCurrentFilterKey()!==filterKey)return;const token=epoch,cap=Number(historyAppliedFilters.recentCount)||Infinity;busy=true;button.disabled=true;button.textContent='Loading invoices…';try{const p=await request(offset,Math.min(20,cap-offset));if(token!==epoch||!valid()||historyCurrentFilterKey()!==filterKey)return;merge(p,rows,details);offset=Number(p.nextOffset)||offset+p.invoices.length;more=!!p.hasMore&&p.invoices.length>0&&offset<cap;draw()}catch(e){if(token===epoch)showError(e.message||'Could not load more invoices.')}finally{if(token===epoch){busy=false;button.disabled=false;button.textContent='Load next 20 invoices'}}}
+    button.onclick=nextPage;
+    if('IntersectionObserver' in window){observer=new IntersectionObserver(entries=>{if(entries.some(x=>x.isIntersecting)&&!footer.hidden)void nextPage()},{rootMargin:'80px'});observer.observe(footer)}
+    if(offlineMode){startHistorySmartSync=()=>{};historySmartSyncTick=async()=>{}}
+  }
+
   (async function initializeInvoiceHistory() {
     await populateHistoryLocationFilter();
 

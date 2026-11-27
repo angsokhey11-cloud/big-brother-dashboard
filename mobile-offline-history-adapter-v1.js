@@ -38,6 +38,17 @@ async function fetchApi(params={}){
   if(action==='invoiceHistoryRevision'){
     const d=await all();return {success:true,revision:val(d.revision||d.syncedAt||'cached')};
   }
+  if(action==='invoicePage'){
+    const api=parentApi(),account=api.currentUserId();
+    const d=await all(),q=val(params.invoiceNo).toLowerCase(),customer=val(params.customer).toLowerCase(),loc=val(params.locationCode).toLowerCase(),type=val(params.invoiceType).toLowerCase(),start=val(params.dateFrom),end=val(params.dateTo);
+    const rows=d.invoices.filter(row=>{const date=val(row.invoiceDate).slice(0,10);return (!q||val(row.invoiceNo).toLowerCase().includes(q))&&(!customer||val(row.customer).toLowerCase().includes(customer))&&(!loc||val(row.locationCode).toLowerCase()===loc)&&(!type||val(row.invoiceType).toLowerCase()===type)&&(!start||date>=start)&&(!end||date<=end)});
+    rows.sort((a,b)=>(params.recent?((Date.parse(b.createdAt)||0)-(Date.parse(a.createdAt)||0)):0)||val(b.invoiceDate).localeCompare(val(a.invoiceDate))||val(b.invoiceNo).localeCompare(val(a.invoiceNo))||val(b.invoiceId).localeCompare(val(a.invoiceId)));
+    const offset=Math.max(0,Number(params.offset)||0),limit=Math.max(1,Math.min(20,Number(params.limit)||10)),selected=rows.slice(offset,offset+limit);
+    const record=await api.read('offline-history-lines-v1'),map=record?.value?.itemsByInvoiceId||{};
+    const invoices=await Promise.all(selected.map(async row=>{const saved=await api.read('offline-history-detail::'+keyFor(row)),cached=saved?.value?.invoice,lines=Object.prototype.hasOwnProperty.call(map,val(row.invoiceId))?map[val(row.invoiceId)]:cached?.items;return {...row,...(Array.isArray(lines)?{_bbDetail:{...(cached||{}),...row,items:lines}}:{})}}));
+    if(api.currentUserId()!==account)throw Error('Account changed. Reopen Invoice History.');
+    return {success:true,invoices,hasMore:offset+selected.length<rows.length,nextOffset:offset+selected.length};
+  }
   if(action==='invoiceList'){
     const d=await all(),q=val(params.invoiceNo).toLowerCase(),customer=val(params.customer).toLowerCase(),
       start=val(params.dateFrom),end=val(params.dateTo),type=val(params.invoiceType).toLowerCase();
