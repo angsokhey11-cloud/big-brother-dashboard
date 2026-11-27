@@ -134,11 +134,11 @@ async function saveMany(files){""")
         "if(!forceLive&&!(route==='daily-sale-summary'&&offline?.canUseNetwork()===true)&&!liveApproval&&!realPilot&&cached?.canOpen(route)){")
     source = replace_once(source,
         "/big-brother-daily-sale-summary/mobile.html?embed=1&v=20260915-1",
-        "/big-brother-daily-sale-summary/mobile.html?embed=1&v=20261128-history-invoice-v8")
+        "/big-brother-daily-sale-summary/mobile.html?embed=1&v=20261128-location-pin-v11")
     menu.write_text(source, encoding="utf-8")
     cached_routes = assets / "big-brother-dashboard/mobile-offline-modules-v1.js"
     source = cached_routes.read_text(encoding="utf-8")
-    source = replace_once(source, 'mobile-offline-daily-sale-v1.html?embed=1&v=20261028-v12-fast1', 'mobile-offline-daily-sale-v1.html?embed=1&v=20261128-history-invoice-v8')
+    source = replace_once(source, 'mobile-offline-daily-sale-v1.html?embed=1&v=20261028-v12-fast1', 'mobile-offline-daily-sale-v1.html?embed=1&v=20261128-location-pin-v11')
     cached_routes.write_text(source, encoding="utf-8")
     wrapper = (assets / "big-brother-daily-sale-summary/mobile-daily-sale.js").read_text(encoding="utf-8")
     assert "doc.getElementById('bbSaleFilters')" in wrapper
