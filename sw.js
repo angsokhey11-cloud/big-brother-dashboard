@@ -1,6 +1,8 @@
 /* BIG BROTHER Mobile + Desktop PWA service worker V2.0 — Web Push */
-const CACHE='bb-mobile-shell-v176';
+const CACHE='bb-mobile-shell-v177';
+const ORIGINAL_FALLBACKS={"/big-brother-batch-selling-tracker/index.html":"offline-original-tracker.html","/big-brother-sales-support/your-stock.html":"offline-original-your-stock.html","/big-brother-daily-cash-collection/legacy-google-v4.7.html":"offline-original-collection.html","/big-brother-daily-cash-collection/your-collection-mobile-cards-v1.html":"offline-original-collection-skin.html","/big-brother-daily-cash-collection/your-collection-mobile.html":"offline-original-collection-mobile.html","/invoice-history/legacy-google-v4.6.3.html":"offline-original-history.html","/big-brother-report/monthly-sales-mobile.html":"offline-original-monthly.html","/big-brother-report/monthly-product-groups-v1.js":"offline-original-monthly-groups.js","/big-brother-report/monthly-product-daily-v1.js":"offline-original-monthly-daily.js","/big-brother-report/monthly-daily-a4-export-v1.js":"offline-original-monthly-export.js","/big-brother-sales-support/index.html":"offline-original-support.html","/big-brother-sales-support/legacy-google-v1.10.html":"offline-original-support-engine.html","/big-brother-sales-support/dual-currency-sales-support-patch.js":"offline-original-support-currency.js"};
 const MOBILE_FILES=new Set([
+  ...Object.values(ORIGINAL_FALLBACKS),
   'mobile.html','mobile-function-icons-v1.js','mobile-home-theme-v5.css','mobile.css','mobile-sales-support.css','pwa-install.css','mobile.js','mobile-offline-workspace-v1.js','mobile-original-photo-cache-v1.js','mobile-original-photo-settings-v1.js','mobile-offline-modules-v1.js','mobile-universal-readonly-v1.js','mobile-offline-calculator.html','mobile-offline-your-customer-v1.html','mobile-offline-your-collection-mobile-v1.html','mobile-offline-your-collection-original-v1.html','mobile-offline-your-collection-adapter-v1.js','mobile-offline-your-collection-skin-v1.html','mobile-offline-calculator-source-v1.html','mobile-offline-calculator-dual-currency-v1.js','mobile-offline-calculator-adapter-v1.js','mobile-offline-history-original-v1.html','mobile-offline-history-mobile-v1.html','mobile-offline-history-adapter-v1.js','mobile-offline-monthly-sales-v1.html','mobile-offline-monthly-common-v1.js','mobile-offline-monthly-style-v1.css','mobile-offline-staff-adapter-v12.js','mobile-offline-your-stock-v12.html','mobile-offline-your-stock-source-v12.html','mobile-offline-tracker-v12.html','mobile-offline-tracker-source-v12.html','mobile-offline-daily-sale-v1.html','mobile-offline-stock.html','mobile-offline-stock-source-v1.html','mobile-user-overview.js',
   'mobile-sales-support-home.js','pwa-install.js','mobile-main-menu-v3.js','mobile-main-menu-stockcontrol-v5.js','mobile-ui-policy-v1.js',
   'mobile-navigation-v5.js','mobile-module-transition-v3.js','mobile-ios-decimal-v1.js','bb-web-push-client-v1.js','bb-native-online-push-v1.js','mobile-theme-v1.js','manifest.webmanifest','pwa-icon.svg','pwa-icon-maskable.svg','pwa-icon-192.png','pwa-icon-512.png','big-brother-angkor-login.png'
@@ -136,6 +138,7 @@ self.addEventListener('install',event=>{
       './mobile-offline-calculator-dual-currency-v1.js?v=20261028-sameui1',
       './mobile-offline-calculator-adapter-v1.js?v=20261028-seamless1','./mobile-offline-calculator-adapter-v1.js?v=20261128-shared-support-v1'
     ]);
+    for(const path of Object.values(ORIGINAL_FALLBACKS))critical.add('./'+path);
     await Promise.all([...critical].map(path=>
       cache.add(new Request(new URL(path,self.registration.scope),{cache:'reload'}))
     ));
@@ -166,10 +169,13 @@ self.addEventListener('fetch',event=>{
       const key=new URL(url.pathname,self.location.origin).href;
       try{
         const fresh=await fetch(request,{cache:'no-store'});
-        if(fresh.ok)await cache.put(key,fresh.clone());
-        return fresh;
+        if(fresh.ok){await cache.put(key,fresh.clone());return fresh;}
+        throw Error('Original source unavailable');
       }catch(error){
-        const saved=await cache.match(key);if(saved)return saved;throw error;
+        const saved=await cache.match(key);if(saved)return saved;
+        const local=ORIGINAL_FALLBACKS[url.pathname];
+        if(local){const bundled=await cache.match(new URL(local,self.registration.scope).href);if(bundled)return bundled;}
+        throw error;
       }
     })());return;
   }

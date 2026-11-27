@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#f4f7fb"><title>BIG BROTHER — Monthly Sales Mobile</title>
+<style>
+:root{--bg:#f4f7fb;--card:#fff;--line:#dce6f0;--text:#17304f;--muted:#708197;--navy:#17457a;--blue:#1f5fbf;--green:#198754;--red:#c93c46;--shadow:0 8px 24px rgba(23,63,119,.07)}*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}body{padding:10px 8px 24px}.app{max-width:760px;margin:auto}.head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:10px}.head h1{margin:0;font-size:19px;color:var(--navy)}.head p{margin:4px 0 0;font-size:9px;color:var(--muted);font-weight:700}.btn{border:0;border-radius:9px;padding:8px 10px;font-size:10px;font-weight:900}.btn.secondary{background:#eaf1f8;color:var(--navy)}.btn.primary{background:var(--blue);color:#fff}.toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;margin-bottom:9px}.field label{display:block;font-size:7px;color:var(--muted);font-weight:900;text-transform:uppercase;margin-bottom:4px}.field input{width:100%;border:1px solid #cbd7e4;border-radius:8px;padding:9px;font-size:10px;background:#fff;color:var(--text)}.kpis{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:9px}.kpi{background:#fff;border:1px solid var(--line);border-radius:11px;padding:10px;box-shadow:var(--shadow)}.kpi small{display:block;font-size:6.8px;color:var(--muted);font-weight:900;text-transform:uppercase}.kpi strong{display:block;margin-top:4px;font-size:15px;color:var(--navy)}.note,.status{border-radius:10px;padding:8px 10px;font-size:9px;line-height:1.35;margin-bottom:9px}.note{background:#edf5ff;border:1px solid #d3e3f7;color:#245da8}.status{background:#eefaf3;color:#17754c}.status.error{background:#fff0f1;color:var(--red)}.location{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:var(--shadow);margin-bottom:9px}.locHead{display:flex;justify-content:space-between;gap:8px;padding:10px;border-bottom:1px solid var(--line);background:#f8fbff}.locHead strong{font-size:12px;color:var(--navy)}.locHead span{font-size:10px;font-weight:900;color:var(--green)}.code{font-size:7px;color:var(--muted);margin-top:2px}.product{padding:9px 10px;border-bottom:1px solid #edf1f5}.product:last-child{border-bottom:0}.pTop{display:flex;justify-content:space-between;align-items:center;gap:8px}.productName{font-size:10px;font-weight:900;color:var(--text);line-height:1.25}.productUnit{flex:0 0 auto;font-size:8px;font-weight:900;color:var(--muted);background:#f3f6fa;border:1px solid #e0e7ef;border-radius:999px;padding:4px 7px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:7px}.mini small{display:block;font-size:6px;color:var(--muted);text-transform:uppercase;font-weight:900}.mini strong{font-size:8.5px}.empty{padding:28px 12px;text-align:center;color:var(--muted);font-size:10px}.boot{position:fixed;inset:0;background:var(--bg);z-index:90;display:flex;align-items:center;justify-content:center;padding:18px}.boot.hidden{display:none}.bootCard{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow);font-size:12px;font-weight:900;color:var(--navy);text-align:center}.bootCard span{display:block;margin-top:5px;font-size:9px;color:var(--muted);font-weight:700}
+
+.m-views{display:flex;gap:7px;margin-bottom:9px}
+.m-view-btn{flex:1;padding:11px 7px;border:1px solid #cbdbea;border-radius:9px;background:#fff;color:var(--navy);font-size:10px;font-weight:900}
+.m-view-btn.active{background:var(--navy);border-color:var(--navy);color:white}
+.m-product-filter{background:#fff;border:1px solid var(--line);border-radius:11px;padding:10px;margin-bottom:9px}
+.m-product-filter label{display:block;color:#516d88;font-size:9px;font-weight:900;margin-bottom:6px}
+.m-product-filter input{width:100%;border:1px solid #cbdbea;border-radius:9px;padding:11px;font-size:12px;background:#fff;color:var(--text)}
+.m-product-filter p{font-size:8.5px;color:var(--muted);margin:6px 0 0;line-height:1.4}
+.m-product-empty{padding:28px 15px;background:#fff;border:1px dashed #cbdbea;border-radius:11px;text-align:center;font-size:10px;color:#607790;margin-bottom:9px;line-height:1.5}
+.m-product-totals{display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:9px;color:var(--muted);margin-bottom:9px;font-weight:800}
+.m-product-totals strong{color:var(--navy);font-size:11px}
+.m-product-card{border:1px solid var(--line);border-radius:11px;margin-bottom:9px;background:#fff;overflow:hidden;box-shadow:var(--shadow)}
+.m-product-card>summary{display:block;list-style:none;padding:11px;cursor:pointer}
+.m-product-card>summary::-webkit-details-marker{display:none}
+.m-product-card .p-code{font-size:8px;color:var(--muted);margin-top:3px}
+.m-product-card .m-product-name{font-size:11px;color:var(--navy);font-weight:900}
+.m-product-card .m-product-expand{font-size:8px;color:var(--blue);font-weight:900;margin-top:9px}
+.m-product-card .grid{grid-template-columns:repeat(3,minmax(0,1fr));margin-top:10px}
+.m-location-breakdown{border-top:1px solid var(--line);background:#fbfcfe;padding:11px}
+.m-location-breakdown>strong{display:block;font-size:9px;color:#46627e;margin-bottom:7px}
+.m-location-line{padding:9px 0;border-bottom:1px solid #e9eff5}
+.m-location-line:last-child{border-bottom:0}
+.m-location-line b{font-size:10px;color:var(--navy)}
+.m-location-line span{font-size:8px;color:var(--muted)}
+.m-location-line .grid{margin-top:6px}
+</style></head><body>
+<div class="app"><div class="head"><div><h1>📊 Monthly Sales Report</h1><p>BIG BROTHER · product and location sales</p></div><button class="btn secondary" id="backBtn">Back</button></div><div class="toolbar"><div class="field"><label>Report Month</label><input id="month" type="month"></div><button class="btn primary" id="loadBtn">Load</button></div><div class="kpis"><div class="kpi"><small>Total Sale USD</small><strong id="totalSale">$0.00</strong></div><div class="kpi"><small>Gross Sales USD</small><strong id="grossSales">$0.00</strong></div><div class="kpi"><small>Sales Returns USD</small><strong id="returns">$0.00</strong></div><div class="kpi"><small>Invoices / Locations</small><strong id="counts">0 / 0</strong></div></div><div class="note">Total Sale USD = valid invoices converted to USD − sales returns using the original invoice exchange rate.</div><div id="status" hidden></div><div class="m-views" role="group" aria-label="Monthly report view"><button type="button" id="mProductMode" class="m-view-btn active" aria-pressed="true">Product Summary</button><button type="button" id="mLocationMode" class="m-view-btn" aria-pressed="false">By Location</button><button type="button" id="mDailyMode" class="m-view-btn" aria-pressed="false">By Date</button></div><div class="m-product-filter" id="mProductFilter"><label for="mProductSearch">Search product name or SKU</label><input type="search" id="mProductSearch" placeholder="e.g. Kirisu, Champei, KIR-2L" autocomplete="off"><p>Results combine every location. Tap a product to see its sales by location.</p></div><div id="mProductResults" aria-live="polite"></div><section id="mDailyPane" hidden></section><div id="locations" hidden><div class="empty">Loading report…</div></div></div>
+<div class="boot" id="boot"><div class="bootCard" id="bootCard">Loading Monthly Sales<span>Checking BIG BROTHER permission</span></div></div>
+<script src="monthly-product-groups-v1.js?v=20261117-group1"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script><script src="monthly-daily-a4-export-v1.js?v=20261117-a4b"></script><script src="monthly-product-daily-v1.js?v=20261117-daily3"></script><script>(async function(){'use strict';const SB='https://sjfhlaclgmkwwofzstok.supabase.co',KEY='sb_publishable_w762jR65CWwlO30fKQsYOw_6L9grx8S',SESSION_KEY='BB_SUPABASE_DEV_SESSION_V1';const $=id=>document.getElementById(id),num=v=>{const n=Number(v);return Number.isFinite(n)?n:0},esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#039;'}[c])),money=v=>'$'+num(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}),qty=v=>num(v).toLocaleString(undefined,{maximumFractionDigits:6});let session=null,productRows=[],productGroupDefs=[],activeMode='product';
+const dailyController=BBMonthlyProductDaily.create({
+  root:$('mDailyPane'), mobile:true, rpc:(name,args)=>rpc(name,args),
+  getProducts:()=>productRows, month:()=>$('month').value
+});function read(){try{return JSON.parse(localStorage.getItem(SESSION_KEY)||'null')}catch(_){return null}}async function parse(r){const t=await r.text();let d={};try{d=t?JSON.parse(t):{}}catch(_){d={message:t}}if(!r.ok)throw new Error(d.message||d.error_description||d.error||('Request failed ('+r.status+')'));return d}async function refresh(){const s=read();if(!s?.refresh_token)throw new Error('Please sign in to BIG BROTHER first.');const r=await fetch(SB+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:s.refresh_token})});session=await parse(r);localStorage.setItem(SESSION_KEY,JSON.stringify(session))}async function ensure(){session=read();if(!session?.access_token)throw new Error('Please sign in to BIG BROTHER first.');if(session.expires_at&&Number(session.expires_at)<Math.floor(Date.now()/1000)+45)await refresh()}async function liveMonthlyRpc(fn,args={}){await ensure();let r=await fetch(SB+'/rest/v1/rpc/'+fn,{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},body:JSON.stringify(args),cache:'no-store'});if(r.status===401){await refresh();r=await fetch(SB+'/rest/v1/rpc/'+fn,{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},body:JSON.stringify(args),cache:'no-store'})}return parse(r)}async function rpc(fn,args={}){
+ const host=window.parent?.BBMobileOfflineWorkspaceV1,user=host?.currentUserId();
+ const value=await liveMonthlyRpc(fn,args);
+ if(user&&host.currentUserId()===user&&session?.user?.id===user){
+  const year=Number(args.p_year),month=Number(args.p_month),period=year+'-'+String(month).padStart(2,'0');
+  if(fn==='bb_report_monthly_sales'&&value?.totals&&month>=1&&month<=12)await host.write('offline-monthly::'+period,value);
+  if(fn==='bb_report_monthly_sales_product_groups'&&value)await host.write('offline-monthly-groups-v1',value);
+  if(fn==='bb_report_monthly_product_sold_daily'&&value&&month>=1&&month<=12&&String(args.p_product_code||'').length<=160)await host.write('offline-monthly-daily::'+period+'::'+String(args.p_product_code||''),value);
+ }
+ return value;
+}
+function key(v){return String(v||'').trim().toLowerCase()}async function permission(){const p=await rpc('bb_current_access_profile');const g=(p?.modules||[]).find(x=>key(x.moduleKey)==='route.monthly-sales-report');if(!g?.canView)throw new Error('Monthly Sales Report View permission is required.')}function status(t,e=false){$('status').hidden=!t;$('status').className='status'+(e?' error':'');$('status').textContent=t||''}function aggregateProducts(locations){
+  const map=new Map(),fields=['grossQty','returnQty','netQty','grossSalesUSD','returnsUSD','totalSaleUSD'];
+  for(const x of locations||[])for(const p of x.products||[]){
+    const code=String(p.productCode||'').trim(),name=String(p.productName||code||'Unnamed product').trim(),unit=String(p.unit||'').trim();
+    const id=(code?'code:'+code.toLocaleLowerCase():'name:'+name.toLocaleLowerCase())+'|unit:'+unit.toLocaleLowerCase();
+    let row=map.get(id);
+    if(!row){row={code,name,unit,locations:[]};for(const field of fields)row[field]=0;map.set(id,row);}
+    for(const field of fields)row[field]+=num(p[field]);
+    const l={name:String(x.locationName||x.locationCode||'-'),code:String(x.locationCode||'')};
+    for(const field of fields)l[field]=num(p[field]);
+    row.locations.push(l);
+  }
+  return Array.from(map.values()).sort((a,b)=>(a.code||a.name).localeCompare(b.code||b.name,undefined,{numeric:true}));
+}
+function renderProductSearch(){
+  const q=String($('mProductSearch').value||'').trim().toLocaleLowerCase();
+  if(!q){$('mProductResults').innerHTML='<div class="m-product-empty">Search for a product to view its monthly sales. The full product list stays hidden until you search.</div>';return;}
+  const rows=productRows.filter(p=>BBMonthlyProductFamilies.matches(p,q));
+  if(!rows.length){$('mProductResults').innerHTML='<div class="m-product-empty">No matching products sold this month. Try another name or SKU.</div>';return;}
+  const total=rows.reduce((v,p)=>v+num(p.totalSaleUSD),0);
+  $('mProductResults').innerHTML='<div class="m-product-totals"><span>'+rows.length+' matching product(s)</span><strong>Net Sales '+money(total)+'</strong></div>'
+    +rows.map(p=>p.isGroup?BBMonthlyProductFamilies.mobileCard(p,{esc,qty,money}):'<details class="m-product-card"><summary><div class="m-product-name">'+esc(p.name)+'</div><div class="p-code">SKU: '+esc(p.code||'—')+' · '+esc(p.unit||'—')+' · '+p.locations.length+' location(s)</div><div class="grid">'
+      +'<div class="mini"><small>Gross Qty</small><strong>'+qty(p.grossQty)+'</strong></div>'
+      +'<div class="mini"><small>Return Qty</small><strong>'+qty(p.returnQty)+'</strong></div>'
+      +'<div class="mini"><small>Net Qty</small><strong>'+qty(p.netQty)+'</strong></div>'
+      +'<div class="mini"><small>Gross USD</small><strong>'+money(p.grossSalesUSD)+'</strong></div>'
+      +'<div class="mini"><small>Returns USD</small><strong>'+money(p.returnsUSD)+'</strong></div>'
+      +'<div class="mini"><small>Net Sales USD</small><strong>'+money(p.totalSaleUSD)+'</strong></div>'
+      +'</div><div class="m-product-expand">Sales by location ▾</div></summary>'
+      +'<div class="m-location-breakdown"><strong>Location breakdown</strong>'
+      +p.locations.slice().sort((a,b)=>b.totalSaleUSD-a.totalSaleUSD).map(l=>'<div class="m-location-line"><b>'+esc(l.name)+'</b> <span>'+esc(l.code)+'</span><div class="grid">'
+        +'<div class="mini"><small>Net Qty</small><strong>'+qty(l.netQty)+'</strong></div>'
+        +'<div class="mini"><small>Returns USD</small><strong>'+money(l.returnsUSD)+'</strong></div>'
+        +'<div class="mini"><small>Net Sales</small><strong>'+money(l.totalSaleUSD)+'</strong></div>'
+        +'</div></div>').join('')+'</div></details>').join('');
+}
+function setMode(mode){
+ activeMode=mode==='location'?'location':mode==='daily'?'daily':'product';
+ const isProduct=activeMode==='product',isLocation=activeMode==='location',isDaily=activeMode==='daily';
+ for(const [id,selected] of [['mProductMode',isProduct],['mLocationMode',isLocation],['mDailyMode',isDaily]]){
+   $(id).classList.toggle('active',selected);
+   $(id).setAttribute('aria-pressed',String(selected));
+ }
+ $('mProductFilter').hidden=!isProduct;
+ $('mProductResults').hidden=!isProduct;
+ $('locations').hidden=!isLocation;
+ dailyController.setVisible(isDaily,isDaily?$('mProductSearch').value:'');
+}
+function render(d){const t=d.totals||{};$('totalSale').textContent=money(t.totalSaleUSD);$('grossSales').textContent=money(t.grossSalesUSD);$('returns').textContent=money(t.returnsUSD);$('counts').textContent=`${t.invoiceCount||0} / ${t.locationCount||0}`;$('locations').innerHTML=(d.locations||[]).map(x=>`<section class="location"><div class="locHead"><div><strong>${esc(x.locationName||x.locationCode||'-')}</strong><div class="code">${esc(x.locationCode||'')}</div></div><span>${money(x.totalSaleUSD)}</span></div>${(x.products||[]).map(p=>`<div class="product"><div class="pTop"><div class="productName">${esc(p.productName||'-')}</div><div class="productUnit">${esc(p.unit||'-')}</div></div><div class="grid"><div class="mini"><small>Gross Qty</small><strong>${qty(p.grossQty)}</strong></div><div class="mini"><small>Return Qty</small><strong>${qty(p.returnQty)}</strong></div><div class="mini"><small>Net Qty</small><strong>${qty(p.netQty)}</strong></div><div class="mini"><small>Gross USD</small><strong>${money(p.grossSalesUSD)}</strong></div><div class="mini"><small>Returns USD</small><strong>${money(p.returnsUSD)}</strong></div><div class="mini"><small>Invoices</small><strong>${p.invoiceCount||0}</strong></div></div></div>`).join('')||'<div class="empty">No products.</div>'}</section>`).join('')||'<div class="empty">No sales for this month.</div>';productRows=BBMonthlyProductFamilies.combine(aggregateProducts(d.locations||[]),productGroupDefs);dailyController.reset();renderProductSearch();setMode(activeMode);status(`${d.periodLabel||''} · Generated ${d.generatedAt||''}`)}async function load(){const v=$('month').value,m=v.match(/^(\d{4})-(\d{2})$/);if(!m)return status('Choose a report month.',true);$('loadBtn').disabled=true;try{const [d,groupResult]=await Promise.all([rpc('bb_report_monthly_sales',{p_year:+m[1],p_month:+m[2]}),rpc('bb_report_monthly_sales_product_groups',{}).then(groups=>({groups})).catch(error=>({error}))]);productGroupDefs=groupResult.groups||[];render(d);if(groupResult.error)status('Product groups unavailable: '+String(groupResult.error.message||groupResult.error),true);$('boot').classList.add('hidden')}catch(e){status(e?.message||e,true);$('bootCard').innerHTML='Could not open Monthly Sales<span>'+esc(e?.message||e)+'</span>'}finally{$('loadBtn').disabled=false}}$('month').value=new Date().toISOString().slice(0,7);$('loadBtn').onclick=load;$('mProductSearch').addEventListener('input',renderProductSearch);$('mProductMode').onclick=()=>setMode('product');$('mLocationMode').onclick=()=>setMode('location');$('mDailyMode').onclick=()=>setMode('daily');$('backBtn').onclick=()=>history.back();try{await permission();await load()}catch(e){$('bootCard').innerHTML='Could not open Monthly Sales<span>'+esc(e?.message||e)+'</span>'}})();</script></body></html>
