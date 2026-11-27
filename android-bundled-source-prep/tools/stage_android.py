@@ -40,12 +40,12 @@ def stage():
     file_adapter=assets/"big-brother-ar/receivable-file-actions-v1.js"
     file_source=file_adapter.read_text(encoding="utf-8")
     file_source=replace_once(file_source,"[\'save\',\'share\',\'open\'].includes(action)","[\'save\',\'share\',\'open\',\'downloadPictures\'].includes(action)")
-    file_source=replace_once(file_source,"async function saveMany(files){", """async function downloadMany(files){
+    file_source=replace_once(file_source,"async function saveMany(files){", """async function downloadMany(files,onProgress){
  requireApkBridge();
  if(!native())throw Error('Android download bridge unavailable.');
  if(!Array.isArray(files)||!files.length||files.some(f=>f.type!=='image/png'))throw Error('Only PNG pages can be downloaded.');
  for(let i=0;i<files.length;i++){
-   try{await sendNative('downloadPictures',[files[i]]);}
+   try{await sendNative('downloadPictures',[files[i]]);if(typeof onProgress==='function')onProgress(i+1,files.length);}
    catch(error){throw Error(i+' of '+files.length+' pictures saved. '+error.message);}
  }
  return 'native';
@@ -98,10 +98,31 @@ async function saveMany(files){""")
 """+source[end:]
     source=replace_once(source,"  }catch(error){console.error(error);alert(error.message||'Could not download Daily Sale picture.');}", """    const bridge=window.BBARFileActionsV1;
     if(!bridge?.isNative())throw Error('Android file bridge unavailable. Reopen BIG BROTHER.');
-    await bridge.downloadMany(files);
+    const status=document.createElement('div');
+    status.setAttribute('role','status');status.setAttribute('aria-live','polite');
+    status.style.cssText='position:fixed;bottom:20px;left:12px;right:12px;max-width:440px;margin:auto;z-index:2147483646;background:#fff;border:1px solid #c9d8ec;border-radius:12px;padding:14px;box-shadow:0 6px 24px #17304f40;color:#17304f;font-size:14px';
+    const title=document.createElement('strong'),detail=document.createElement('div'),progress=document.createElement('progress');
+    title.textContent='Downloading Daily Sale Pictures';detail.style.marginTop='8px';
+    progress.max=files.length;progress.value=0;progress.style.cssText='width:100%;height:12px;margin-top:8px;accent-color:#245da8';
+    detail.textContent='Saving 0 of '+files.length+' pictures to Downloads';
+    status.append(title,detail,progress);document.body.appendChild(status);
+    let saved=0;
+    try{
+      await bridge.downloadMany(files,(done,total)=>{
+        saved=done;progress.value=done;detail.textContent=done+' of '+total+' pictures saved · '+Math.round(done/total*100)+'%';
+      });
+      title.textContent='Download completed';title.style.color='#16754a';
+      detail.textContent=saved+' HD PNG pictures saved to Downloads.';
+      btn.textContent='Download completed';
+      setTimeout(()=>status.remove(),7000);
+    }catch(error){
+      title.textContent='Download incomplete';title.style.color='#b42318';
+      detail.textContent=saved+' of '+files.length+' pictures saved. '+error.message;
+      setTimeout(()=>status.remove(),12000);throw error;
+    }
   }catch(error){console.error(error);alert(error.message||'Could not download Daily Sale picture.');}""")
     live.write_text(source,encoding="utf-8")
-    assert 'await bridge.downloadMany(files)' in source and "pdf.output('blob')" in source
+    assert 'await bridge.downloadMany(files,(done,total)' in source and "pdf.output('blob')" in source
     assert 'const rowsPerPage=15' in source and 'bbInvoiceStage' in source
 
     # The live module should be used whenever online, so the full Functions
