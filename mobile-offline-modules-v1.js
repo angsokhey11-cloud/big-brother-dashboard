@@ -561,7 +561,7 @@ async function open(name){
         :name==='sales-support-your-customer'?'./mobile-offline-your-customer-v1.html?embed=1&v=20261113-add-location1'
         :name==='sales-support-your-collection'?'./mobile-offline-your-collection-mobile-v1.html?embed=1&v=20261128-shared-collection-v1'
         :name==='history'?'./mobile-offline-history-mobile-v1.html?embed=1&v=20261128-shared-history-v1'
-        :name==='monthly-sales-report'?'./mobile-offline-monthly-sales-v1.html?embed=1&v=20261028-monthly1'
+        :name==='monthly-sales-report'?'./mobile-offline-monthly-sales-v1.html?embed=1&v=20261128-shared-monthly-v1'
         :name==='sales-support-your-stock'?'./mobile-offline-your-stock-v12.html?embed=1&v=20261128-shared-stock-v1'
         :name==='sales-support-batch-selling-tracker'?'./mobile-offline-tracker-v12.html?embed=1&v=20261128-shared-tracker-v1'
         :name==='daily-sale-summary'?'./mobile-offline-daily-sale-v1.html?embed=1&v=20261128-shared-daily-v1'
