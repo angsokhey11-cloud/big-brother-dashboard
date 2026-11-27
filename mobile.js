@@ -392,7 +392,7 @@ function openModule(route,updateUrl=true,forceLive=false){
   // All three A/R routes use the original cached UI, even in installed PWA.
   // Other routes retain their current offline fallback until migrated.
   const realArPilot=['ar-your','ar-all','sales-support-your-receivable'].includes(route);
-  if(!forceLive&&(route!=='history'||offline?.canUseNetwork()!==true)&&!liveApproval&&!realArPilot&&cached?.canOpen(route)){
+  if(!forceLive&&offline?.canUseNetwork()===false&&!liveApproval&&!realArPilot&&cached?.canOpen(route)){
     void cached.open(route).then(ok=>{
       if(!ok){
         if(offline?.canUseNetwork())openModule(route,updateUrl,true);
@@ -402,7 +402,7 @@ function openModule(route,updateUrl=true,forceLive=false){
     return true;
   }
   const universal=window.BBMobileUniversalReadOnlyV1;
-  if(!forceLive&&!liveApproval&&!realArPilot&&universal&&!['history','sales-support-your-invoices','monthly-sales-report','sales-support-your-stock','sales-support-batch-selling-tracker','daily-sale-summary'].includes(route)){
+  if(!forceLive&&offline?.canUseNetwork()===false&&!liveApproval&&!realArPilot&&universal&&!['history','sales-support-your-invoices','monthly-sales-report','sales-support-your-stock','sales-support-batch-selling-tracker','daily-sale-summary'].includes(route)){
     // Every permitted route can use its previously saved, non-executable
     // original UI first, even while internet is slow.
     void universal.open(route).then(ok=>{

@@ -22,17 +22,8 @@ def stage():
     assets = app / "src/main/assets"
     assets.mkdir(parents=True, exist_ok=True)
     shutil.copytree(ROOT / "build/web", assets, dirs_exist_ok=True)
-    # Installed-only: use the EXISTING account-scoped cached Invoice History
-    # view online too. Its normal live handoff checks permission and data,
-    # and falls back to the original live route if no local snapshot exists.
-    # Do not bypass the live invoice permission or allow cached writes.
+    # Online routes now use the original current UI; cached routes remain offline-only.
     menu = assets / "big-brother-dashboard/mobile-main-menu-stockcontrol-v5.js"
-    source = menu.read_text(encoding="utf-8")
-    source = replace_once(source,
-        "if(!forceLive&&(route!=='history'||offline?.canUseNetwork()!==true)&&!liveApproval&&!realPilot&&cached?.canOpen(route)){",
-        "if(!forceLive&&!liveApproval&&!realPilot&&cached?.canOpen(route)){")
-    menu.write_text(source, encoding="utf-8")
-    print("Installed Invoice History: existing cache-first route enabled")
     from history_fast import apply as apply_history_fast
     apply_history_fast(assets)
     from invoice_native_files import apply as apply_invoice_native_files
@@ -125,13 +116,9 @@ async function saveMany(files){""")
     assert 'await bridge.downloadMany(files,(done,total)' in source and "pdf.output('blob')" in source
     assert 'const rowsPerPage=15' in source and 'bbInvoiceStage' in source
 
-    # The live module should be used whenever online, so the full Functions
-    # menu and Telegram/export actions are available immediately. Preserve
-    # cached access when offline; never use cached data to send a report.
+    # Keep live navigation policy and installed route version aligned.
     source = menu.read_text(encoding="utf-8")
-    source = replace_once(source,
-        "if(!forceLive&&!liveApproval&&!realPilot&&cached?.canOpen(route)){",
-        "if(!forceLive&&!(route==='daily-sale-summary'&&offline?.canUseNetwork()===true)&&!liveApproval&&!realPilot&&cached?.canOpen(route)){")
+    assert "if(!forceLive&&offline?.canUseNetwork()===false&&" in source
     source = replace_once(source,
         "/big-brother-daily-sale-summary/mobile.html?embed=1&v=20260915-1",
         "/big-brother-daily-sale-summary/mobile.html?embed=1&v=20261128-location-pin-v11")
