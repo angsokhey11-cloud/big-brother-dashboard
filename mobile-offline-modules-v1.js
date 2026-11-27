@@ -557,8 +557,8 @@ async function open(name){
        name==='sales-support-your-stock'||name==='sales-support-batch-selling-tracker'||name==='daily-sale-summary'||
        full?.value?.success){
       const url=name==='sales-support-calculator'
-        ?'./mobile-offline-calculator.html?mobile=1&view=calculator&v=20261028-seamless1'
-        :name==='sales-support-your-customer'?'./mobile-offline-your-customer-v1.html?embed=1&v=20261113-add-location1'
+        ?'./mobile-offline-calculator.html?mobile=1&view=calculator&v=20261128-shared-support-v1'
+        :name==='sales-support-your-customer'?'./mobile-offline-your-customer-v1.html?embed=1&v=20261128-shared-support-v1'
         :name==='sales-support-your-collection'?'./mobile-offline-your-collection-mobile-v1.html?embed=1&v=20261128-shared-collection-v1'
         :name==='history'?'./mobile-offline-history-mobile-v1.html?embed=1&v=20261128-shared-history-v1'
         :name==='monthly-sales-report'?'./mobile-offline-monthly-sales-v1.html?embed=1&v=20261128-shared-monthly-v1'

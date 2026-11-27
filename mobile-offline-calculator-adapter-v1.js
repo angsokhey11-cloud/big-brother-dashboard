@@ -14,7 +14,10 @@ function parentApi(){
   }catch(error){throw new Error(error.message||'Saved mobile data is unavailable.')}
 }
 async function bootstrap(){
-  const record=await parentApi().read('offline-calc-bootstrap');
+  const api=parentApi();
+  const customerMode=new URLSearchParams(location.search).get('view')==='your-customer';
+  const record=await api.read(customerMode?'offline-your-customer-v1':'offline-calc-bootstrap');
+  if(customerMode&&record?.value?.success){const calc=await api.read('offline-calc-bootstrap');return {...record.value,products:calc?.value?.products||[]};}
   if(!record?.value?.success)throw new Error('Calculator data has not been downloaded yet. Open online once to sync.');
   return record.value;
 }
