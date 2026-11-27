@@ -252,7 +252,7 @@ function openDirect(route,push=true,forceLive=false){
  // archived read-only page; especially important for notification taps.
  const liveApproval=route==='admin-staff-request';
  const realPilot=realArPilot(route);
- if(!forceLive&&(route!=='history'||offline?.canUseNetwork()!==true)&&!liveApproval&&!realPilot&&cached?.canOpen(route)){
+ if(!forceLive&&offline?.canUseNetwork()===false&&!liveApproval&&!realPilot&&cached?.canOpen(route)){
    void cached.open(route).then(ok=>{
      if(!ok){
        if(offline?.canUseNetwork())openDirect(route,push,true);
@@ -262,7 +262,7 @@ function openDirect(route,push=true,forceLive=false){
    return true;
  }
  const universal=window.BBMobileUniversalReadOnlyV1;
- if(!forceLive&&!liveApproval&&!realPilot&&universal&&!['history','sales-support-your-invoices','monthly-sales-report','sales-support-your-stock','sales-support-batch-selling-tracker','daily-sale-summary'].includes(route)){
+ if(!forceLive&&offline?.canUseNetwork()===false&&!liveApproval&&!realPilot&&universal&&!['history','sales-support-your-invoices','monthly-sales-report','sales-support-your-stock','sales-support-batch-selling-tracker','daily-sale-summary'].includes(route)){
    void universal.open(route).then(ok=>{
      if(!ok){
        if(offline?.canUseNetwork())openDirect(route,push,true);
