@@ -57,6 +57,37 @@ def stage():
     if count != 2:
         raise RuntimeError("Daily Sale offline export dependencies changed")
     offline_page.write_text(source, encoding="utf-8")
+
+    # Native file export: use the existing signed Android bridge and local libraries.
+    import tempfile, tarfile
+    vendor=assets/"big-brother-dashboard/vendor"
+    with tempfile.TemporaryDirectory() as td:
+        subprocess.run(["npm","pack","jspdf@2.5.1","--ignore-scripts","--pack-destination",td],check=True)
+        with tarfile.open(pathlib.Path(td)/"jspdf-2.5.1.tgz") as tar:
+            data=tar.extractfile("package/dist/jspdf.umd.min.js").read()
+            assert 100000<len(data)<2000000
+            (vendor/"jspdf.umd.min.js").write_bytes(data)
+            (vendor/"jspdf-LICENSE.txt").write_bytes(tar.extractfile("package/LICENSE").read())
+    source=live.read_text(encoding="utf-8")
+    source=replace_once(source,"https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js","/big-brother-dashboard/vendor/html2canvas.min.js")
+    source=replace_once(source,"https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js","/big-brother-dashboard/vendor/jspdf.umd.min.js")
+    source=replace_once(source,"</head>",'<script src="/big-brother-ar/receivable-file-actions-v1.js"></script>\n</head>')
+    source=replace_once(source,"    pdf.save('BIG_BROTHER_Daily_Sale_'+safeFilePart(g.saleDate)+'_'+safeFilePart(g.salesman)+'_'+safeFilePart(g.locationCode)+'.pdf');", """    const bridge=window.BBARFileActionsV1;
+    if(!bridge?.isNative())throw Error('Android file bridge unavailable. Reopen BIG BROTHER.');
+    await bridge.save(new File([pdf.output('blob')],'BIG_BROTHER_Daily_Sale_'+safeFilePart(g.saleDate)+'_'+safeFilePart(g.salesman)+'_'+safeFilePart(g.locationCode)+'.pdf',{type:'application/pdf'}));""")
+    source=replace_once(source,"    await readySaleFonts();\n    for(let i=0;i<pages.length;i++){","    await readySaleFonts();\n    const files=[];\n    for(let i=0;i<pages.length;i++){")
+    start=source.index("        const url=URL.createObjectURL(blob),link=document.createElement('a');")
+    end=source.index("      }finally{canvas.width=0;canvas.height=0;}",start)
+    source=source[:start]+"""        files.push(new File([blob],saleDigitalFilename(g,i,pages.length,'png'),{type:'image/png'}));
+"""+source[end:]
+    source=replace_once(source,"  }catch(error){console.error(error);alert(error.message||'Could not download Daily Sale picture.');}", """    const bridge=window.BBARFileActionsV1;
+    if(!bridge?.isNative())throw Error('Android file bridge unavailable. Reopen BIG BROTHER.');
+    await bridge.saveMany(files);
+  }catch(error){console.error(error);alert(error.message||'Could not download Daily Sale picture.');}""")
+    live.write_text(source,encoding="utf-8")
+    assert 'await bridge.saveMany(files)' in source and "pdf.output('blob')" in source
+    assert 'const rowsPerPage=15' in source and 'bbInvoiceStage' in source
+
     # The live module should be used whenever online, so the full Functions
     # menu and Telegram/export actions are available immediately. Preserve
     # cached access when offline; never use cached data to send a report.
@@ -66,11 +97,11 @@ def stage():
         "if(!forceLive&&!(route==='daily-sale-summary'&&offline?.canUseNetwork()===true)&&!liveApproval&&!realPilot&&cached?.canOpen(route)){")
     source = replace_once(source,
         "/big-brother-daily-sale-summary/mobile.html?embed=1&v=20260915-1",
-        "/big-brother-daily-sale-summary/mobile.html?embed=1&v=20261128-daily-sale-hd-v2b")
+        "/big-brother-daily-sale-summary/mobile.html?embed=1&v=20261128-history-invoice-v8")
     menu.write_text(source, encoding="utf-8")
     cached_routes = assets / "big-brother-dashboard/mobile-offline-modules-v1.js"
     source = cached_routes.read_text(encoding="utf-8")
-    source = replace_once(source, 'mobile-offline-daily-sale-v1.html?embed=1&v=20261028-v12-fast1', 'mobile-offline-daily-sale-v1.html?embed=1&v=20261128-daily-sale-hd-v2b')
+    source = replace_once(source, 'mobile-offline-daily-sale-v1.html?embed=1&v=20261028-v12-fast1', 'mobile-offline-daily-sale-v1.html?embed=1&v=20261128-history-invoice-v8')
     cached_routes.write_text(source, encoding="utf-8")
     wrapper = (assets / "big-brother-daily-sale-summary/mobile-daily-sale.js").read_text(encoding="utf-8")
     assert "doc.getElementById('bbSaleFilters')" in wrapper
