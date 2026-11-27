@@ -37,6 +37,22 @@ def stage():
     apply_history_fast(assets)
     from invoice_native_files import apply as apply_invoice_native_files
     apply_invoice_native_files(assets)
+    file_adapter=assets/"big-brother-ar/receivable-file-actions-v1.js"
+    file_source=file_adapter.read_text(encoding="utf-8")
+    file_source=replace_once(file_source,"[\'save\',\'share\',\'open\'].includes(action)","[\'save\',\'share\',\'open\',\'downloadPictures\'].includes(action)")
+    file_source=replace_once(file_source,"async function saveMany(files){", """async function downloadMany(files){
+ requireApkBridge();
+ if(!native())throw Error('Android download bridge unavailable.');
+ if(!Array.isArray(files)||!files.length||files.some(f=>f.type!=='image/png'))throw Error('Only PNG pages can be downloaded.');
+ for(let i=0;i<files.length;i++){
+   try{await sendNative('downloadPictures',[files[i]]);}
+   catch(error){throw Error(i+' of '+files.length+' pictures saved. '+error.message);}
+ }
+ return 'native';
+}
+async function saveMany(files){""")
+    file_source=replace_once(file_source,"save,saveMany,share,open,diagnostics,ping","save,saveMany,downloadMany,share,open,diagnostics,ping")
+    file_adapter.write_text(file_source,encoding="utf-8")
     from scanner_mobile_layout import apply as apply_scanner_mobile_layout
     apply_scanner_mobile_layout(assets)
     # Daily Sale uses two installed paths: the live module and a cached read-only
@@ -82,10 +98,10 @@ def stage():
 """+source[end:]
     source=replace_once(source,"  }catch(error){console.error(error);alert(error.message||'Could not download Daily Sale picture.');}", """    const bridge=window.BBARFileActionsV1;
     if(!bridge?.isNative())throw Error('Android file bridge unavailable. Reopen BIG BROTHER.');
-    await bridge.saveMany(files);
+    await bridge.downloadMany(files);
   }catch(error){console.error(error);alert(error.message||'Could not download Daily Sale picture.');}""")
     live.write_text(source,encoding="utf-8")
-    assert 'await bridge.saveMany(files)' in source and "pdf.output('blob')" in source
+    assert 'await bridge.downloadMany(files)' in source and "pdf.output('blob')" in source
     assert 'const rowsPerPage=15' in source and 'bbInvoiceStage' in source
 
     # The live module should be used whenever online, so the full Functions
@@ -214,6 +230,37 @@ def stage():
             s = s.replace('        scheduleRetry();\n    }\n    @Override protected void onActivityResult','        stopRetry();\n    }\n    @Override protected void onActivityResult')
             s = s.replace('           retry!=null&&retry.getVisibility()==View.VISIBLE)scheduleRetry();','           retry!=null&&retry.getVisibility()==View.VISIBLE)stopRetry();')
         if name == "BBNativeFileActions.java":
+            # Dedicated direct Downloads action for Daily Sale PNGs; leave existing
+            # PDF, share, open and other modules' save/ZIP behavior unchanged.
+            s = replace_once(s, '!"open".equals(action))', '!"open".equals(action)&&!"downloadPictures".equals(action))')
+            s = replace_once(s, '            final int request=requestId;', """            if("downloadPictures".equals(action)){
+                try {
+                    if(types.size()!=1 || !"image/png".equals(types.get(0)))throw new IllegalArgumentException("Only one PNG per download request.");
+                    if(android.os.Build.VERSION.SDK_INT<29)throw new IllegalStateException("Direct Downloads requires Android 10 or newer.");
+                    File part=files.get(0);
+                    String display=part.getName().replaceFirst("^[0-9]+_[0-9]+_","");
+                    if(!display.startsWith("BIG_BROTHER_Daily_Sale_"))throw new IllegalArgumentException("Invalid Daily Sale filename.");
+                    android.content.ContentResolver resolver=activity.getContentResolver();
+                    android.content.ContentValues values=new android.content.ContentValues();
+                    values.put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME,display);
+                    values.put(android.provider.MediaStore.MediaColumns.MIME_TYPE,"image/png");
+                    values.put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH,android.os.Environment.DIRECTORY_DOWNLOADS);
+                    values.put(android.provider.MediaStore.MediaColumns.IS_PENDING,1);
+                    Uri dest=resolver.insert(android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI,values);
+                    if(dest==null)throw new IllegalStateException("Downloads unavailable.");
+                    try{
+                        try(InputStream in=new java.io.FileInputStream(part);OutputStream out=resolver.openOutputStream(dest)){
+                            if(out==null)throw new IllegalStateException("Could not open Downloads file.");
+                            byte[] buffer=new byte[65536];int n;while((n=in.read(buffer))!=-1)out.write(buffer,0,n);
+                        }
+                        values.clear();values.put(android.provider.MediaStore.MediaColumns.IS_PENDING,0);
+                        if(resolver.update(dest,values,null,null)<1)throw new IllegalStateException("Could not finalize download.");
+                    }catch(Exception e){resolver.delete(dest,null,null);throw e;}
+                    report(reply,requestId,true,"PNG saved to Downloads.");
+                }finally{for(File part:files)part.delete();}
+                return;
+            }
+            final int request=requestId;""")
             # Multi-page Save creates one ZIP with all original PNG pages.
             s = replace_once(s, 'if(!"share".equals(action)&&entries.length()!=1)', 'if("open".equals(action)&&entries.length()!=1)')
             s = replace_once(s, '            final int request=requestId;', """            if("save".equals(action)&&files.size()>1){
