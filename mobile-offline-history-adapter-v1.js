@@ -17,8 +17,17 @@ const parentApi=()=>{
 };
 const val=x=>String(x??'').trim();
 const keyFor=row=>val(row.invoiceId)||'NO:'+val(row.invoiceNo);
+let pending=null,pendingAccount='',pendingAt=0;
 async function all(){
-  const r=await parentApi().read('offline-history-list-v1');
+  const api=parentApi(),account=api.currentUserId();
+  if(!pending||pendingAccount!==account||Date.now()-pendingAt>1000){
+    pendingAccount=account;pendingAt=Date.now();
+    const request=api.read('offline-history-list-v1');
+    pending=request;
+    request.catch(()=>{if(pending===request)pending=null});
+  }
+  const r=await pending;
+  if(api.currentUserId()!==account)throw Error('Account changed. Reopen Invoice History.');
   if(!r?.value?.success||!Array.isArray(r.value.invoices))
     throw Error('Invoice History has not synchronized. Connect to internet once.');
   return r.value;

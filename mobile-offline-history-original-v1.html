@@ -4,6 +4,8 @@ const response=await fetch('/invoice-history/legacy-google-v4.6.3.html?bb_saved_
 let html=await response.text();const marker="(async function initializeInvoiceHistory() {";
 if(html.split(marker).length!==2)throw Error('Invoice history initialization changed.');
 html=html.replace(marker,()=>marker+"\n    const bridge=window.BBOfflineHistoryAdapter;\n    if(!bridge)throw Error('Saved invoice adapter unavailable.');\n    fetchApi=bridge.fetchApi;\n    historyJsonp=bridge.historyJsonp;\n    postHistoryAction=bridge.postHistoryAction;\n    requireHistoryPrimaryAdmin=bridge.requirePrimaryAdmin;\n    readHistoryDetailCache=function(){return null};\n    saveHistoryDetailCache=function(){};\n    readHistoryDeviceCache=function(){return null};\n    saveHistoryDeviceCache=function(){};\n    startHistorySmartSync=function(){};\n    prefetchVisibleInvoiceDetails=async function(){};\n");
+html=html.replace('    await populateHistoryLocationFilter();','    void populateHistoryLocationFilter();');
+html=html.replace(/<link\b[^>]*href="https:\/\/fonts\.googleapis\.com[^"]*"[^>]*>/gi,'');
 html=html.replace(/<script\b[^>]*\bsrc=["'][^"']+["'][^>]*>\s*<\/script>/gi,'');
 const head=html.toLowerCase().indexOf('</head>');if(head<0)throw Error('Invoice interface head missing.');
 html=html.slice(0,head)+'<scr'+'ipt src="mobile-offline-history-adapter-v1.js?v=20261028-alllines1"></scr'+'ipt>'+html.slice(head);

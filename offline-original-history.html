@@ -1571,6 +1571,7 @@ html,body,input,select,textarea,td{font-family:Arial,Helvetica,'Noto Sans Khmer'
       // Load the invoice list WITHOUT server-side Location filtering first.
       // Older invoices may not have Location Code stored in Sales Database yet,
       // so we enrich their location from Master Database before filtering.
+      const listStarted=performance.now();
       const data = await fetchApi({
         action: "invoiceList",
         invoiceNo: String(historyAppliedFilters.invoiceNo || "").trim(),
@@ -1580,6 +1581,7 @@ html,body,input,select,textarea,td{font-family:Arial,Helvetica,'Noto Sans Khmer'
         invoiceType: historyAppliedFilters.invoiceType || ""
       });
 
+      console.info('[BB History] list RPC ms',Math.round(performance.now()-listStarted));
       let invoices = Array.isArray(data.invoices) ? data.invoices : [];
 
       // Fill blank Location Code values from Master Database.
@@ -1617,7 +1619,9 @@ html,body,input,select,textarea,td{font-family:Arial,Helvetica,'Noto Sans Khmer'
       const revision = String(data.revision || historyLastRevision || "");
       if (revision) historyLastRevision = revision;
 
+      const renderStarted=performance.now();
       renderInvoices(invoices);
+      console.info('[BB History] render ms',Math.round(performance.now()-renderStarted));
       saveHistoryDeviceCache(invoices, revision);
 
       // Preload the newest invoice details in the background.
@@ -1906,7 +1910,7 @@ html,body,input,select,textarea,td{font-family:Arial,Helvetica,'Noto Sans Khmer'
 
   async function enrichHistoryInvoiceLocations(invoices) {
     const rows = Array.isArray(invoices) ? invoices : [];
-    if (!rows.length) return rows;
+    if (!rows.length || rows.every(row=>String(row.locationCode||'').trim())) return rows;
 
     // Load the Master mapping once, then resolve all rows locally.
     try {
