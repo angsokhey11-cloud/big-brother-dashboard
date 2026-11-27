@@ -14,11 +14,11 @@
     },
     {
       "name": "big-brother-dashboard",
-      "sha": "36669d7e4d9a6aca58bb1f2fa314de655d7850d6"
+      "sha": "51edb75be6288da90bd36153c5eee8390006bf04"
     },
     {
       "name": "invoice-history",
-      "sha": "8948ac1eef318fbb0ab9ab3ab1ccf133595ad13e"
+      "sha": "b4014be0283d20fc9f15015548256343a9781bcb"
     },
     {
       "name": "big-brother-ar",
@@ -82,7 +82,7 @@
     },
     {
       "name": "big-brother-sales-support",
-      "sha": "6be9efca998491f9131dc7c3412afa3530821438"
+      "sha": "4a2ef90c56b5dd00bd3dbe179326c2d1b4848d4d"
     },
     {
       "name": "big-brother-public-cal",
@@ -114,7 +114,7 @@
     },
     {
       "name": "big-brother-report",
-      "sha": "62987cccbe4e5445d45bff2f07eebc0c4c4fd6b3"
+      "sha": "28bf6d6494a4a32761e06399d5a7856be6b7bea6"
     },
     {
       "name": "big-brother-notification-center",

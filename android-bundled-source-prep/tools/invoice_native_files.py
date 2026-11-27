@@ -58,7 +58,7 @@ async function share(files,title,text){''')
       if (!navigator.share) {''')
     s=once(s,'alert("Could not save the invoice image. Please try again.");','alert("Could not save invoice: "+String(error?.message||error));')
     gen.write_text(s,encoding="utf-8")
-    for path in [assets/"invoice-history/legacy-google-v4.6.3.html",assets/"big-brother-dashboard/mobile-offline-history-original-v1.html"]:
+    for path in [assets/"invoice-history/legacy-google-v4.6.3.html",assets/"big-brother-dashboard/offline-original-history.html"]:
         s=path.read_text(encoding="utf-8")
         # Live engine already has lazy image library; offline original lacked it.
         s=s.replace("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js",library)

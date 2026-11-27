@@ -54,17 +54,10 @@ async function saveMany(files){""")
     original = offline_page.read_text(encoding="utf-8")
     source = live.read_text(encoding="utf-8")
     assert 'id="bbSaleFilters"' in source and 'function buildDigitalSalePages(' in source
-    adapter = '<script src="mobile-offline-staff-adapter-v12.js?v=20261028-v12"></script>'
-    assert adapter in original and 'window.BBStaffOfflineV12.dailyApi(params)' in original
-    source = replace_once(source, '</head>', adapter + '\n<style>#shareTelegramBtn,#downloadSummaryBtn,#downloadPictureBtn{display:none!important}</style>\n</head>')
-    source, count = re.subn(r'async function api\(params\)\{[^\n]*\}', 'async function api(params){return window.BBStaffOfflineV12.dailyApi(params)}', source)
-    if count != 1:
-        raise RuntimeError("Daily Sale offline API marker changed")
-    source, count = re.subn(r'<script src="https://cdnjs\.cloudflare\.com/ajax/libs/(?:html2canvas|jspdf)/[^"]+"></script>\n?', '', source)
-    if count != 2:
-        raise RuntimeError("Daily Sale offline export dependencies changed")
-    offline_page.write_text(source, encoding="utf-8")
-
+    assert "BBStaffOfflineV12.dailyApi" in original
+    # The shared PWA loader is now the installed offline route too.
+    # It fetches the pinned original from the local asset host.
+    
     # Native file export: use the existing signed Android bridge and local libraries.
     import tempfile, tarfile
     vendor=assets/"big-brother-dashboard/vendor"
@@ -119,18 +112,19 @@ async function saveMany(files){""")
     # Keep live navigation policy and installed route version aligned.
     source = menu.read_text(encoding="utf-8")
     assert "if(!forceLive&&offline?.canUseNetwork()===false&&" in source
-    source = replace_once(source,
-        "/big-brother-daily-sale-summary/mobile.html?embed=1&v=20260915-1",
-        "/big-brother-daily-sale-summary/mobile.html?embed=1&v=20261128-location-pin-v11")
-    menu.write_text(source, encoding="utf-8")
     cached_routes = assets / "big-brother-dashboard/mobile-offline-modules-v1.js"
-    source = cached_routes.read_text(encoding="utf-8")
-    source = replace_once(source, 'mobile-offline-daily-sale-v1.html?embed=1&v=20261028-v12-fast1', 'mobile-offline-daily-sale-v1.html?embed=1&v=20261128-location-pin-v11')
-    cached_routes.write_text(source, encoding="utf-8")
+    assert "20261128-shared-daily-v1" in cached_routes.read_text(encoding="utf-8")
     wrapper = (assets / "big-brother-daily-sale-summary/mobile-daily-sale.js").read_text(encoding="utf-8")
     assert "doc.getElementById('bbSaleFilters')" in wrapper
-    assert 'window.BBStaffOfflineV12.dailyApi(params)' in offline_page.read_text(encoding="utf-8")
-    print("Daily Sale V2: verified live and cached installed routes, offline permissions preserved")
+    # Use native-patched bundled history source in the offline loader; restore
+    # only the approved local export bridge and library after its script filter.
+    hist_loader=assets/"big-brother-dashboard/mobile-offline-history-original-v1.html"
+    hs=hist_loader.read_text(encoding="utf-8")
+    hs=replace_once(hs,"/invoice-history/legacy-google-v4.6.3.html?bb_saved_ui=1","/big-brother-dashboard/offline-original-history.html")
+    hs=replace_once(hs,"document.open();document.write(html);document.close();", """html=html.replace('</head>','<scr'+'ipt src="/big-brother-dashboard/vendor/html2canvas.min.js"></scr'+'ipt><scr'+'ipt src="/big-brother-ar/receivable-file-actions-v1.js"></scr'+'ipt></head>');
+document.open();document.write(html);document.close();""")
+    hist_loader.write_text(hs,encoding="utf-8")
+    print("Nine original offline UI routes retained; native History exports preserved")
 
     # The update entry lives in the existing Mobile Settings, not a header.
     mobile=assets/"big-brother-dashboard/mobile.html"
