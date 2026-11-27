@@ -84,7 +84,8 @@ async function dailyApi(params={}){
     const result=await api.read('offline-staff-v12::daily-invoices::DEFAULT');
     if(!result?.value||!Array.isArray(result.value.invoices))throw Error('Daily Sale Summary has not been synchronized yet.');
     // An A/R opening balance is NOT daily sales revenue.
-    return {...result.value,invoices:result.value.invoices.filter(row=>!String(row.invoiceId||'').startsWith('AR-MIG-'))};
+    const profile=await api.read('access-profile');
+    return {...result.value,locations:Array.isArray(profile?.value?.locations)?profile.value.locations:[],invoices:result.value.invoices.filter(row=>!String(row.invoiceId||'').startsWith('AR-MIG-'))};
   }
   if(action==='dailySaleItems'){
     const ids=(Array.isArray(params.invoiceIds)?params.invoiceIds:[]).map(x=>String(x).trim()).filter(Boolean);

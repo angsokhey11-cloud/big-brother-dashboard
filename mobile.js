@@ -388,6 +388,7 @@ function openModule(route,updateUrl=true,forceLive=false){
   const cached=window.BBMobileOfflineModulesV1;
   // Approval pages are transactional. Never show a cached read-only copy
   // when the user taps Review/Approve or opens a notification.
+  if(route==='daily-sale-summary'&&offline?.canUseNetwork()===true)void fetch('/big-brother-daily-sale-summary/legacy-google-v1.html',{cache:'no-store'}).catch(()=>{});
   const liveApproval=route==='admin-staff-request';
   // All three A/R routes use the original cached UI, even in installed PWA.
   // Other routes retain their current offline fallback until migrated.

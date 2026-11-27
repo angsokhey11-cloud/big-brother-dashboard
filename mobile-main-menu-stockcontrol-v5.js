@@ -250,6 +250,7 @@ function openDirect(route,push=true,forceLive=false){
  const cached=window.BBMobileOfflineModulesV1,offline=window.BBMobileOfflineWorkspaceV1;
  // Approval actions must always load current live data rather than an
  // archived read-only page; especially important for notification taps.
+ if(route==='daily-sale-summary'&&offline?.canUseNetwork()===true)void fetch('/big-brother-daily-sale-summary/legacy-google-v1.html',{cache:'no-store'}).catch(()=>{});
  const liveApproval=route==='admin-staff-request';
  const realPilot=realArPilot(route);
  if(!forceLive&&offline?.canUseNetwork()===false&&!liveApproval&&!realPilot&&cached?.canOpen(route)){
