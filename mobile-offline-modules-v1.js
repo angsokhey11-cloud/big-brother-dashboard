@@ -565,7 +565,7 @@ async function open(name){
         :name==='sales-support-your-stock'?'./mobile-offline-your-stock-v12.html?embed=1&v=20261128-shared-stock-v1'
         :name==='sales-support-batch-selling-tracker'?'./mobile-offline-tracker-v12.html?embed=1&v=20261128-shared-tracker-v1'
         :name==='daily-sale-summary'?'./mobile-offline-daily-sale-v1.html?embed=1&v=20261128-shared-daily-v1'
-        :'./mobile-offline-stock.html?embed=1&v=20261028-seamless1';
+        :'./mobile-offline-stock.html?embed=1&v=20261128-shared-live-stock-v1';
       if(!openNativeRoute(name,true,restoringAtStart))return false;
       if(frame.getAttribute('src')!==url){
         // Replace the frame rather than pushing its internal navigation history.
