@@ -1,5 +1,5 @@
 /* BIG BROTHER Mobile + Desktop PWA service worker V2.0 — Web Push */
-const CACHE='bb-mobile-shell-v177';
+const CACHE='bb-mobile-shell-v178';
 const ORIGINAL_FALLBACKS={"/big-brother-batch-selling-tracker/index.html":"offline-original-tracker.html","/big-brother-sales-support/your-stock.html":"offline-original-your-stock.html","/big-brother-daily-cash-collection/legacy-google-v4.7.html":"offline-original-collection.html","/big-brother-daily-cash-collection/your-collection-mobile-cards-v1.html":"offline-original-collection-skin.html","/big-brother-daily-cash-collection/your-collection-mobile.html":"offline-original-collection-mobile.html","/invoice-history/legacy-google-v4.6.3.html":"offline-original-history.html","/big-brother-report/monthly-sales-mobile.html":"offline-original-monthly.html","/big-brother-report/monthly-product-groups-v1.js":"offline-original-monthly-groups.js","/big-brother-report/monthly-product-daily-v1.js":"offline-original-monthly-daily.js","/big-brother-report/monthly-daily-a4-export-v1.js":"offline-original-monthly-export.js","/big-brother-sales-support/index.html":"offline-original-support.html","/big-brother-sales-support/legacy-google-v1.10.html":"offline-original-support-engine.html","/big-brother-sales-support/dual-currency-sales-support-patch.js":"offline-original-support-currency.js"};
 const MOBILE_FILES=new Set([
   ...Object.values(ORIGINAL_FALLBACKS),
@@ -167,6 +167,12 @@ self.addEventListener('fetch',event=>{
     event.respondWith((async()=>{
       const cache=await caches.open(CACHE);
       const key=new URL(url.pathname,self.location.origin).href;
+      // Explicit saved report loaders must not wait for a failing connection.
+      if(url.searchParams.get('bb_saved_ui')==='1'){
+        const local=ORIGINAL_FALLBACKS[url.pathname];
+        const saved=(local&&await cache.match(new URL(local,self.registration.scope).href))||await cache.match(key);
+        if(saved)return saved;
+      }
       try{
         const fresh=await fetch(request,{cache:'no-store'});
         if(fresh.ok){await cache.put(key,fresh.clone());return fresh;}
