@@ -1,5 +1,5 @@
 /* BIG BROTHER Mobile + Desktop PWA service worker V2.0 — Web Push */
-const CACHE='bb-mobile-shell-v172';
+const CACHE='bb-mobile-shell-v173';
 const MOBILE_FILES=new Set([
   'mobile.html','mobile-function-icons-v1.js','mobile-home-theme-v5.css','mobile.css','mobile-sales-support.css','pwa-install.css','mobile.js','mobile-offline-workspace-v1.js','mobile-original-photo-cache-v1.js','mobile-original-photo-settings-v1.js','mobile-offline-modules-v1.js','mobile-universal-readonly-v1.js','mobile-offline-calculator.html','mobile-offline-your-customer-v1.html','mobile-offline-your-collection-mobile-v1.html','mobile-offline-your-collection-original-v1.html','mobile-offline-your-collection-adapter-v1.js','mobile-offline-your-collection-skin-v1.html','mobile-offline-calculator-source-v1.html','mobile-offline-calculator-dual-currency-v1.js','mobile-offline-calculator-adapter-v1.js','mobile-offline-history-original-v1.html','mobile-offline-history-mobile-v1.html','mobile-offline-history-adapter-v1.js','mobile-offline-monthly-sales-v1.html','mobile-offline-monthly-common-v1.js','mobile-offline-monthly-style-v1.css','mobile-offline-staff-adapter-v12.js','mobile-offline-your-stock-v12.html','mobile-offline-your-stock-source-v12.html','mobile-offline-tracker-v12.html','mobile-offline-tracker-source-v12.html','mobile-offline-daily-sale-v1.html','mobile-offline-stock.html','mobile-offline-stock-source-v1.html','mobile-user-overview.js',
   'mobile-sales-support-home.js','pwa-install.js','mobile-main-menu-v3.js','mobile-main-menu-stockcontrol-v5.js','mobile-ui-policy-v1.js',
@@ -45,7 +45,7 @@ const PRECACHE=[
   './mobile-sales-support-home.js?v=20261128-shared-daily-v1',
   './mobile-original-photo-cache-v1.js?v=20261028-photo-cache1',
   './mobile-original-photo-settings-v1.js?v=20261028-photo-cache1',
-  './mobile-offline-modules-v1.js?v=20261128-shared-collection-v1',
+  './mobile-offline-modules-v1.js?v=20261128-shared-history-v1',
   './mobile-universal-readonly-v1.js?v=20261128-shared-daily-v1',
   './mobile-offline-your-customer-v1.html?embed=1&v=20261028-interactive1',
   './mobile-offline-your-collection-mobile-v1.html?embed=1&v=20261128-shared-collection-v1',
@@ -56,8 +56,8 @@ const PRECACHE=[
   './mobile-offline-stock-source-v1.html?v=20261028-seamless1',
   './mobile-offline-calculator.html?mobile=1&view=calculator&v=20261028-seamless1',
   './mobile-offline-calculator-source-v1.html?v=20261028-seamless1',
-  './mobile-offline-history-original-v1.html?embed=1&mobileSkin=1&v=20261028-alllines1',
-  './mobile-offline-history-mobile-v1.html?embed=1&v=20261028-alllines1',
+  './mobile-offline-history-original-v1.html?embed=1&mobileSkin=1&v=20261128-shared-history-v1',
+  './mobile-offline-history-mobile-v1.html?embed=1&v=20261128-shared-history-v1',
   './mobile-offline-history-adapter-v1.js?v=20261028-alllines1',
   './mobile-offline-monthly-sales-v1.html?embed=1&v=20261028-monthly1',
   './mobile-offline-monthly-common-v1.js?v=20261028-monthly1',
@@ -109,7 +109,7 @@ self.addEventListener('install',event=>{
       './mobile-user-overview.js?v=20261107-perf-overview-staff1',
       './mobile-original-photo-cache-v1.js?v=20261028-photo-cache1',
   './mobile-original-photo-settings-v1.js?v=20261028-photo-cache1',
-  './mobile-offline-modules-v1.js?v=20261128-shared-collection-v1',
+  './mobile-offline-modules-v1.js?v=20261128-shared-history-v1',
       './mobile-universal-readonly-v1.js?v=20261128-shared-daily-v1',
       './mobile-offline-your-customer-v1.html?embed=1&v=20261028-interactive1',
   './mobile-offline-your-collection-mobile-v1.html?embed=1&v=20261128-shared-collection-v1',
@@ -120,8 +120,8 @@ self.addEventListener('install',event=>{
       './mobile-offline-stock-source-v1.html?v=20261028-seamless1',
       './mobile-offline-calculator.html?mobile=1&view=calculator&v=20261028-seamless1',
       './mobile-offline-calculator-source-v1.html?v=20261028-seamless1',
-      './mobile-offline-history-original-v1.html?embed=1&mobileSkin=1&v=20261028-alllines1',
-      './mobile-offline-history-mobile-v1.html?embed=1&v=20261028-alllines1',
+      './mobile-offline-history-original-v1.html?embed=1&mobileSkin=1&v=20261128-shared-history-v1',
+      './mobile-offline-history-mobile-v1.html?embed=1&v=20261128-shared-history-v1',
       './mobile-offline-history-adapter-v1.js?v=20261028-alllines1',
       './mobile-offline-monthly-sales-v1.html?embed=1&v=20261028-monthly1',
       './mobile-offline-monthly-common-v1.js?v=20261028-monthly1',
@@ -142,7 +142,7 @@ self.addEventListener('install',event=>{
     await Promise.allSettled(PRECACHE.filter(path=>path!=='./mobile.html'&&!critical.has(path))
       .map(path=>cache.add(new Request(new URL(path,self.registration.scope),{cache:'reload'}))));
     // Save the public source as part of each shell update, when reachable.
-    await Promise.allSettled(['/big-brother-daily-sale-summary/legacy-google-v1.html','/big-brother-batch-selling-tracker/index.html','/big-brother-sales-support/your-stock.html','/big-brother-daily-cash-collection/legacy-google-v4.7.html','/big-brother-daily-cash-collection/your-collection-mobile-cards-v1.html','/big-brother-daily-cash-collection/your-collection-mobile.html'].map(path=>cache.add(new Request(new URL(path,self.location.origin),{cache:'reload'}))));
+    await Promise.allSettled(['/big-brother-daily-sale-summary/legacy-google-v1.html','/big-brother-batch-selling-tracker/index.html','/big-brother-sales-support/your-stock.html','/big-brother-daily-cash-collection/legacy-google-v4.7.html','/big-brother-daily-cash-collection/your-collection-mobile-cards-v1.html','/big-brother-daily-cash-collection/your-collection-mobile.html','/invoice-history/legacy-google-v4.6.3.html'].map(path=>cache.add(new Request(new URL(path,self.location.origin),{cache:'reload'}))));
     await self.skipWaiting();
   })());
 });
@@ -160,7 +160,7 @@ self.addEventListener('fetch',event=>{
   if(request.method!=='GET')return;
   const url=new URL(request.url);
   // Cache only the public original report source, never live data or APIs.
-  if(url.origin===self.location.origin&&['/big-brother-daily-sale-summary/legacy-google-v1.html','/big-brother-batch-selling-tracker/index.html','/big-brother-sales-support/your-stock.html','/big-brother-daily-cash-collection/legacy-google-v4.7.html','/big-brother-daily-cash-collection/your-collection-mobile-cards-v1.html','/big-brother-daily-cash-collection/your-collection-mobile.html'].includes(url.pathname)){
+  if(url.origin===self.location.origin&&['/big-brother-daily-sale-summary/legacy-google-v1.html','/big-brother-batch-selling-tracker/index.html','/big-brother-sales-support/your-stock.html','/big-brother-daily-cash-collection/legacy-google-v4.7.html','/big-brother-daily-cash-collection/your-collection-mobile-cards-v1.html','/big-brother-daily-cash-collection/your-collection-mobile.html','/invoice-history/legacy-google-v4.6.3.html'].includes(url.pathname)){
     event.respondWith((async()=>{
       const cache=await caches.open(CACHE);
       const key=new URL(url.pathname,self.location.origin).href;
