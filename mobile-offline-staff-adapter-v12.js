@@ -75,6 +75,7 @@ async function rpc(name,args={}){
   if(name==='bb_sales_support_my_stock')return readStock('stock-my',batch,force);
   if(name==='bb_sales_support_admin_your_stock')return readStock('stock-admin',batch,force);
   if(name==='bb_sales_support_batch_adjustment_totals')return readStockAdjustment(batch);
+  if(name==='bb_sales_support_batch_carryforward_totals')return read('stock-carry',batch);
   if(name==='bb_sales_support_batch_selling_tracker')return read('tracker',batch);
   throw Error('Only synchronized read-only reports can run offline.');
 }
